@@ -20,21 +20,11 @@ public sealed class NativeDriverRecommendationPage : ContentPage
     private readonly 기사위치표시설정Service _preferences;
     private readonly DriverRecommendationSelectionState _selection = new();
     private readonly DriverNativeMapView _map = new() { HighlightSelectedRecommendation = true };
-    private readonly CarouselView _cards = new()
-    {
-        Loop = false, HeightRequest = 116, IsBounceEnabled = false,
-        PeekAreaInsets = new Thickness(40, 0),
-        ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Horizontal)
-        {
-            ItemSpacing = 12, SnapPointsType = SnapPointsType.MandatorySingle, SnapPointsAlignment = SnapPointsAlignment.Center
-        }
-    };
+    // 한 화면에는 한 카드만 연결합니다. 가상 셀의 CurrentItem/스크롤 위치와 선택이 갈리지 않게 합니다.
+    private readonly ContentView _cards = new() { Margin = new Thickness(16, 0) };
+    private readonly HashSet<DriverRecommendationSelectionKey> _expandedDetails = [];
+    private DriverRequestItem? _displayedItem;
     private readonly List<WeakReference<RecommendationCardSurface>> _cardSurfaces = [];
-    private readonly Label _position = new()
-    {
-        FontSize = 13, FontAutoScalingEnabled = false, TextColor = Color.FromArgb("#586B78"),
-        HorizontalTextAlignment = TextAlignment.End
-    };
     private readonly Label _status = new() { FontSize = 14, FontAutoScalingEnabled = false, TextColor = Color.FromArgb("#92400E"), LineBreakMode = LineBreakMode.WordWrap };
     private readonly Button _back = new() { Text = "운행 지도로", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false };
     private readonly Button _retry = new() { Text = "현재 상태 확인", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false };
@@ -42,7 +32,7 @@ public sealed class NativeDriverRecommendationPage : ContentPage
     private string? _lastFramedCoordinates;
     private Window? _window;
     private IDispatcherTimer? _timer;
-    private bool _visible, _foreground, _refreshing, _busy, _prompting, _synchronizing, _needsConfirmation;
+    private bool _visible, _foreground, _refreshing, _busy, _prompting, _needsConfirmation;
     private long _generation;
     private DateTime _nextRefreshAtUtc;
     private DriverRecommendationSelectionKey? _initialSelection;
@@ -55,19 +45,15 @@ public sealed class NativeDriverRecommendationPage : ContentPage
         _routes = routes; _workspace = workspace; _preferences = preferences;
         Title = "배차 추천";
         NavigationPage.SetHasNavigationBar(this, false);
-        _cards.ItemTemplate = new DataTemplate(BuildCard);
-        _cards.CurrentItemChanged += (_, args) =>
-        {
-            if (_synchronizing || _busy || _prompting || args.CurrentItem is not DriverRequestItem item) return;
-            if (_selection.Select(item.의뢰Id, item.추천라운드)) ShowSelection();
-        };
-        _cards.SizeChanged += (_, _) => QueueVisibleReceipt();
+        _cards.Content = BuildCard();
+        _cards.SizeChanged += (_, _) => { ResizeCardToConditions(); QueueVisibleReceipt(); };
         _back.Clicked += async (_, _) => { if (!_busy && !_prompting) await Navigation.PopAsync(); };
         _retry.Clicked += async (_, _) => await RefreshAsync();
-        var header = new Grid { Padding = 12, ColumnDefinitions = { new() { Width = GridLength.Auto }, new() { Width = GridLength.Star } }, BackgroundColor = Colors.White };
+        var header = new Grid { Padding = 12, ColumnSpacing = 16,
+            ColumnDefinitions = { new() { Width = GridLength.Auto }, new() { Width = GridLength.Star } }, BackgroundColor = Colors.White };
         header.Add(_back, 0, 0);
-        header.Add(new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center,
-            Children = { new Label { Text = "배차 추천", FontSize = 20, FontAutoScalingEnabled = false, HorizontalTextAlignment = TextAlignment.End }, _position } }, 1, 0);
+        header.Add(new Label { Text = "배차 추천", FontSize = 20, FontAutoScalingEnabled = false,
+            VerticalOptions = LayoutOptions.Center, HorizontalTextAlignment = TextAlignment.Start }, 1, 0);
         _status.Margin = new Thickness(16, 0); _status.Padding = 8; _status.BackgroundColor = Colors.White;
         _retry.Margin = new Thickness(16, 0);
         var bottom = new VerticalStackLayout
@@ -122,7 +108,7 @@ public sealed class NativeDriverRecommendationPage : ContentPage
     private void ApplyPreferences() { _map.ShowDirectionArrow = _preferences.방향화살표표시; _map.IsDirectionTrackingActive = _visible && _foreground; }
     private void OnInvalidated() => Dispatcher.Dispatch(() =>
     {
-        ++_generation; _selection.Refresh([], DateTime.UtcNow);
+        ++_generation; _expandedDetails.Clear(); _selection.Refresh([], DateTime.UtcNow);
         _map.CurrentLocation = null; ClearMapProjection();
         _status.Text = _workspace.ErrorMessage; SynchronizeCards(); UpdateActions();
     });
@@ -157,9 +143,9 @@ public sealed class NativeDriverRecommendationPage : ContentPage
                 _status.Text = !_workspace.IsReady ? _workspace.ErrorMessage : "추천 상태를 확인하지 못했습니다. 현재 상태를 다시 확인해 주세요.";
                 ClearMapProjection(); return;
             }
-            _selection.Refresh(_samples.추천의뢰목록, DateTime.UtcNow);
+            _selection.RefreshSingle(_samples.추천의뢰목록, DateTime.UtcNow, _initialSelection);
             _needsConfirmation = false;
-            if (_initialSelection is { } initial) { _selection.Select(initial.RequestId, initial.Round); _initialSelection = null; }
+            _initialSelection = null;
             _map.CurrentLocation = _samples.기사현재위치;
             _status.Text = _workspace.UnconfirmedAcceptanceRequestId is not null
                 ? "수락 결과를 확인하고 있습니다. 새로 수락하지 않고 현재 상태를 다시 확인해 주세요."
@@ -180,20 +166,17 @@ public sealed class NativeDriverRecommendationPage : ContentPage
 
     private void SynchronizeCards()
     {
-        _synchronizing = true;
-        _cards.ItemsSource = _selection.Items;
-        if (_selection.SelectedIndex >= 0)
-        { _cards.CurrentItem = _selection.Selected; _cards.Position = _selection.SelectedIndex; }
-        _synchronizing = false; _cards.IsVisible = _selection.Items.Count > 0;
+        _displayedItem = _selection.Selected;
+        _cards.Content!.BindingContext = _displayedItem;
+        _cards.IsVisible = _displayedItem is not null;
         ShowSelection();
     }
 
     private void ShowSelection()
     {
-        var item = _selection.Selected;
-        _position.Text = item is null ? "추천 0건" : $"{_selection.SelectedIndex + 1} / {_selection.Items.Count} · 예상 경로";
         if (_status.Text == CoordinateWarning) _status.Text = string.Empty;
         RefreshMapProjection();
+        ResizeCardToConditions();
         UpdateActions(); QueueVisibleReceipt();
     }
 
@@ -217,7 +200,7 @@ public sealed class NativeDriverRecommendationPage : ContentPage
             markers.Add(new(item.의뢰Id,
                 pickup ? (double)item.픽업_위도!.Value : 0d, pickup ? (double)item.픽업_경도!.Value : 0d,
                 dropoff ? (double)item.하차_위도!.Value : 0d, dropoff ? (double)item.하차_경도!.Value : 0d,
-                item.화물종류, item.요약설명, item.픽업지, item.하차지, $"{index + 1} 픽업", $"{index + 1} 전달"));
+                item.화물종류, item.요약설명, item.픽업지, item.하차지, "상차", "하차"));
         }
         if (!_projectedMarkers.SequenceEqual(markers)) { _map.Markers = markers; _projectedMarkers = markers; }
         var selected = _selection.Selected;
@@ -264,27 +247,44 @@ public sealed class NativeDriverRecommendationPage : ContentPage
 
     private View BuildCard()
     {
+        var weight = Text(string.Empty, 18, true);
+        var quantity = Text(string.Empty, 18, true);
+        var pickup = Text(string.Empty, 14);
+        var dropoff = Text(string.Empty, 14);
+        var pickupWindow = Text(string.Empty, 14);
+        var dropoffWindow = Text(string.Empty, 14);
+        var metrics = TwoColumns(
+            new VerticalStackLayout { Spacing = 2, Children = { Caption("총중량"), weight } },
+            new VerticalStackLayout { Spacing = 2, Children = { Caption("수량"), quantity } });
+        var route = TwoColumns(
+            new VerticalStackLayout { Spacing = 4, Children = { Text("상차", 14, true), pickup, pickupWindow } },
+            new VerticalStackLayout { Spacing = 4, Children = { Text("하차", 14, true), dropoff, dropoffWindow } });
         var fare = Text(string.Empty, 18, true);
-        var fareCaption = Text("배달료", 11);
-        fareCaption.TextColor = Color.FromArgb("#586B78");
-        var pickup = Text(string.Empty, 13);
-        var dropoff = Text(string.Empty, 13);
-        var summary = new Grid { ColumnSpacing = 8, VerticalOptions = LayoutOptions.Center,
-            ColumnDefinitions = { new() { Width = new GridLength(104) }, new() { Width = GridLength.Star } } };
-        summary.Add(new VerticalStackLayout { Spacing = 0, VerticalOptions = LayoutOptions.Center,
-            Children = { fareCaption, fare } }, 0, 0);
-        summary.Add(new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center,
-            Children = { pickup, dropoff } }, 1, 0);
+        var detailsButton = new Button { Text = "상세", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false,
+            BackgroundColor = Color.FromArgb("#EAF5F3"), TextColor = Color.FromArgb("#0F766E") };
+        var fareRow = new Grid { ColumnSpacing = 8,
+            ColumnDefinitions = { new() { Width = GridLength.Star }, new() { Width = GridLength.Auto } } };
+        fareRow.Add(new VerticalStackLayout { Spacing = 0, Children = { Caption("운임"), fare } }, 0, 0);
+        fareRow.Add(detailsButton, 1, 0);
+        var cargo = Text(string.Empty, 14);
+        var mode = Text(string.Empty, 14);
+        var vehicle = Text(string.Empty, 14);
+        var fullPickupWindow = Text(string.Empty, 14);
+        var fullDropoffWindow = Text(string.Empty, 14);
+        var details = new VerticalStackLayout { IsVisible = false, Spacing = 6,
+            Children = { new BoxView { HeightRequest = 1, Color = Color.FromArgb("#DCE5E9") },
+                Text("운송 상세", 15, true), cargo, mode, vehicle, fullPickupWindow, fullDropoffWindow } };
+        var summary = new VerticalStackLayout { Spacing = 12, VerticalOptions = LayoutOptions.Start,
+            Children = { metrics, route, fareRow, details } };
         var reject = new Button { Text = "거절", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false,
             BackgroundColor = Color.FromArgb("#2563EB"), TextColor = Colors.White };
         var accept = new Button { Text = "수락", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false,
             BackgroundColor = Color.FromArgb("#FB923C"), TextColor = Color.FromArgb("#172B36") };
-        var actions = new Grid { ColumnSpacing = 8,
-            ColumnDefinitions = { new() { Width = GridLength.Star }, new() { Width = GridLength.Star } } };
-        actions.Add(reject, 0, 0); actions.Add(accept, 1, 0);
-        var body = new Grid { RowSpacing = 4,
+        var actions = TwoColumns(reject, accept);
+        var body = new Grid { RowSpacing = 8,
             RowDefinitions = { new() { Height = GridLength.Star }, new() { Height = GridLength.Auto } } };
-        body.Add(new ScrollView { Content = summary, VerticalScrollBarVisibility = ScrollBarVisibility.Default }, 0, 0);
+        var summaryScroll = new ScrollView { Content = summary, VerticalScrollBarVisibility = ScrollBarVisibility.Default };
+        body.Add(summaryScroll, 0, 0);
         body.Add(actions, 0, 1);
         var primary = new BoxView { WidthRequest = 4 };
         var secondary = new BoxView { WidthRequest = 4 };
@@ -293,35 +293,118 @@ public sealed class NativeDriverRecommendationPage : ContentPage
         layout.Add(primary, 0, 0); layout.Add(secondary, 1, 0); layout.Add(body, 2, 0);
         var card = new Border
         {
-            Margin = new Thickness(0, 2), Padding = new Thickness(8, 4), BackgroundColor = Color.FromArgb("#F8FAFC"),
+            Margin = new Thickness(0, 2), Padding = new Thickness(8, 8), BackgroundColor = Color.FromArgb("#F8FAFC"),
             Stroke = Color.FromArgb("#DCE5E9"), StrokeThickness = 1,
             StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = new CornerRadius(12) }, Content = layout
         };
-        var surface = new RecommendationCardSurface(card, reject, accept);
+        var surface = new RecommendationCardSurface(card, summary, summaryScroll, body, reject, accept, detailsButton);
         _cardSurfaces.Add(new(surface));
-        reject.Clicked += async (_, _) => { if (surface.Key is { } key) await DecideAsync(key, accept: false); };
-        accept.Clicked += async (_, _) => { if (surface.Key is { } key) await DecideAsync(key, accept: true); };
+        detailsButton.Clicked += (_, _) =>
+        {
+            if (_busy || _prompting || surface.Key is not { } key || key != _selection.SelectedKey) return;
+            if (!_expandedDetails.Add(key)) _expandedDetails.Remove(key);
+            details.IsVisible = _expandedDetails.Contains(key);
+            detailsButton.Text = details.IsVisible ? "상세 접기" : "상세";
+            ResizeCardToConditions();
+        };
+        reject.Clicked += async (_, _) =>
+        {
+            if (surface.Key is { } key && surface.DisplayedConditions is { } conditions)
+                await DecideAsync(key, accept: false, conditions);
+        };
+        accept.Clicked += async (_, _) =>
+        {
+            if (surface.Key is { } key && surface.DisplayedConditions is { } conditions)
+                await DecideAsync(key, accept: true, conditions);
+        };
         card.BindingContextChanged += (_, _) =>
         {
+            var previousKey = surface.Key;
             surface.Key = null;
+            surface.DisplayedConditions = null;
             if (card.BindingContext is not DriverRequestItem item) { UpdateActions(); return; }
-            surface.Key = DriverRecommendationSelectionState.Key(item);
+            var key = DriverRecommendationSelectionState.Key(item);
+            surface.Key = key;
+            weight.Text = item.화물중량표시;
+            quantity.Text = item.화물수량표시;
+            pickup.Text = item.픽업지;
+            dropoff.Text = item.하차지;
+            pickupWindow.Text = item.간략상차시간표시 + (item.당일상차필수 ? " · 당일 상차 필수" : string.Empty);
+            dropoffWindow.Text = item.간략하차시간표시 + (item.당일하차필수 ? " · 당일 하차 필수" : string.Empty);
             fare.Text = item.OfferPricing.HasEvidence ? item.OfferPricing.TotalText : item.운임표시;
-            pickup.Text = $"픽업지  {item.픽업지}"; dropoff.Text = $"전달지  {item.하차지}";
+            cargo.Text = $"화물 · {item.화물종류}\n총중량 · {item.화물중량표시} / 수량 · {item.화물수량표시}";
+            mode.Text = $"운송 방식 · {item.운송조건표시}";
+            vehicle.Text = $"차량 · {item.차량조건표시}";
+            fullPickupWindow.Text = $"상차 · {item.상차시간표시}" + (item.당일상차필수 ? " · 당일 상차 필수" : string.Empty);
+            fullDropoffWindow.Text = $"하차 · {item.하차시간표시}" + (item.당일하차필수 ? " · 당일 하차 필수" : string.Empty);
+            accept.Text = item.수락버튼표시;
+            SemanticProperties.SetDescription(accept, item.수락버튼표시 is "독차" or "혼적" ? $"{item.수락버튼표시} 추천 수락" : "현재 추천 수락");
+            surface.DisplayedConditions = item.CaptureCargoConditions();
+            details.IsVisible = _expandedDetails.Contains(key);
+            detailsButton.Text = details.IsVisible ? "상세 접기" : "상세";
             primary.Color = Color.FromArgb(item.OfferVisual.PrimaryColor);
             secondary.IsVisible = item.OfferVisual.IsCombined;
             secondary.Color = Color.FromArgb(item.OfferVisual.SecondaryColor ?? item.OfferVisual.PrimaryColor);
             UpdateActions();
+            _cards.Dispatcher.Dispatch(ResizeCardToConditions);
+            if (previousKey != key)
+                _cards.Dispatcher.Dispatch(async () =>
+                {
+                    if (surface.Key == key && _selection.SelectedKey == key)
+                        await surface.Scroll.ScrollToAsync(0, 0, false);
+                });
         };
         return card;
     }
 
-    private sealed class RecommendationCardSurface(Border root, Button reject, Button accept)
+    private static Grid TwoColumns(View left, View right)
+    {
+        var columns = new Grid { ColumnSpacing = 12,
+            ColumnDefinitions = { new() { Width = GridLength.Star }, new() { Width = GridLength.Star } } };
+        columns.Add(left, 0, 0); columns.Add(right, 1, 0);
+        return columns;
+    }
+
+    private static Label Caption(string text)
+    {
+        var label = Text(text, 12);
+        label.TextColor = Color.FromArgb("#586B78");
+        return label;
+    }
+
+    private void ResizeCardToConditions()
+    {
+        if (!_visible || _cards.Width <= 0 || _selection.Selected is not { } selected) return;
+        var key = DriverRecommendationSelectionState.Key(selected);
+        var surface = _cardSurfaces.Select(reference => reference.TryGetTarget(out var value) ? value : null)
+            .FirstOrDefault(value => value?.Key == key);
+        if (surface is null) return;
+        // 실제 카드 폭으로 긴 주소·익일 시간창을 측정하고, 작은 화면에서는 기존 본문 스크롤을 유지합니다.
+        var width = surface.Summary.Width > 0 ? surface.Summary.Width
+            : Math.Max(1, _cards.Width - 32);
+        var measured = ((Microsoft.Maui.IView)surface.Summary).Measure(width, double.PositiveInfinity);
+        // 고정 행동 행 외에 본문 간격·테두리 여백·실제 선택 테두리까지 높이에 포함합니다.
+        var actionHeight = Math.Max(surface.Reject.HeightRequest, surface.Accept.HeightRequest);
+        var desired = measured.Height + actionHeight + surface.Body.RowSpacing
+            + surface.Root.Padding.VerticalThickness + surface.Root.Margin.VerticalThickness
+            + surface.Root.StrokeThickness * 2 + 4;
+        var viewport = Height > 0 ? Height : _window?.Height ?? 0;
+        if (viewport > 0) desired = Math.Min(desired, viewport * 0.60);
+        if (double.IsFinite(desired) && desired > 0 && Math.Abs(_cards.HeightRequest - desired) > 1)
+            _cards.HeightRequest = desired;
+    }
+
+    private sealed class RecommendationCardSurface(Border root, View summary, ScrollView scroll, Grid body, Button reject, Button accept, Button details)
     {
         public DriverRecommendationSelectionKey? Key { get; set; }
+        public DriverCargoConditionSnapshot? DisplayedConditions { get; set; }
         public Border Root { get; } = root;
+        public View Summary { get; } = summary;
+        public ScrollView Scroll { get; } = scroll;
+        public Grid Body { get; } = body;
         public Button Reject { get; } = reject;
         public Button Accept { get; } = accept;
+        public Button Details { get; } = details;
     }
 
     private static Label Text(string text, double size = 16, bool bold = false)
@@ -332,13 +415,19 @@ public sealed class NativeDriverRecommendationPage : ContentPage
     private bool IsCurrent(long generation) => _visible && _foreground && generation == _generation;
     private bool CanRespondTo(DriverRecommendationSelectionKey key) => _visible && _foreground && !_refreshing && !_needsConfirmation
         && _workspace.CanRespondToRecommendation && _selection.SelectedKey == key && _selection.FindLive(key, DateTime.UtcNow) is not null;
-    private bool CanAct() => !_busy && !_prompting && _selection.SelectedKey is { } key && CanRespondTo(key);
+    private bool HasDisplayedSelection(DriverRecommendationSelectionKey key)
+        => _displayedItem is { } displayed && _cards.Content?.BindingContext is DriverRequestItem bound
+            && ReferenceEquals(displayed, bound) && DriverRecommendationSelectionState.Key(bound) == key
+            && _cardSurfaces.Any(reference => reference.TryGetTarget(out var surface)
+                && surface.Key == key && surface.DisplayedConditions is not null);
+    private bool CanAct() => !_busy && !_prompting && _selection.SelectedKey is { } key
+        && CanRespondTo(key) && HasDisplayedSelection(key);
     private void UpdateActions()
     {
         var now = DateTime.UtcNow;
         var selectedLive = _selection.Selected is { } selected && DriverRecommendationSelectionState.IsLive(selected, now);
         var canAct = CanAct();
-        _cards.IsEnabled = !_busy && !_prompting; _cards.IsSwipeEnabled = !_busy && !_prompting;
+        _cards.IsEnabled = !_busy && !_prompting;
         _cardSurfaces.RemoveAll(x => !x.TryGetTarget(out _));
         foreach (var reference in _cardSurfaces)
         {
@@ -347,6 +436,7 @@ public sealed class NativeDriverRecommendationPage : ContentPage
             surface.Root.Stroke = Color.FromArgb(isSelectedSurface ? "#64748B" : "#DCE5E9");
             surface.Root.StrokeThickness = isSelectedSurface ? 2 : 1;
             surface.Accept.IsEnabled = surface.Reject.IsEnabled = isSelectedSurface && canAct;
+            surface.Details.IsEnabled = isSelectedSurface && !_busy && !_prompting;
         }
         _back.IsEnabled = !_busy && !_prompting; _retry.IsEnabled = !_busy && !_prompting && !_refreshing && _foreground;
         if (_selection.Selected is not null && !selectedLive)
@@ -365,14 +455,21 @@ public sealed class NativeDriverRecommendationPage : ContentPage
     private void QueueVisibleReceipt() => Dispatcher.Dispatch(async () =>
     {
         if (!CanAct() || _cards.Width <= 0 || _cards.Height <= 0 || _selection.Selected is not { } item
-            || _cards.CurrentItem is not DriverRequestItem visible || DriverRecommendationSelectionState.Key(visible) != DriverRecommendationSelectionState.Key(item)) return;
+            || _displayedItem is not DriverRequestItem visible || DriverRecommendationSelectionState.Key(visible) != DriverRecommendationSelectionState.Key(item)) return;
         await _workspace.AcknowledgePresentedAsync(item.의뢰Id, item.추천라운드);
     });
 
-    private async Task DecideAsync(DriverRecommendationSelectionKey key, bool accept)
+    private async Task DecideAsync(DriverRecommendationSelectionKey key, bool accept, DriverCargoConditionSnapshot reviewedConditions)
     {
         if (!CanAct() || key != _selection.SelectedKey || _selection.FindLive(key, DateTime.UtcNow) is not { } selected
-            || _cards.CurrentItem is not DriverRequestItem visible || DriverRecommendationSelectionState.Key(visible) != key) return;
+            || _displayedItem is not DriverRequestItem visible || DriverRecommendationSelectionState.Key(visible) != key) return;
+        if (accept && reviewedConditions != selected.CaptureCargoConditions())
+        {
+            _needsConfirmation = true;
+            _status.Text = "운송 조건이 변경됐습니다. 현재 상태를 확인한 뒤 다시 검토해 주세요.";
+            UpdateActions();
+            return;
+        }
         // 확인 창을 띄우기 전에 잠가 같은 카드의 연속 탭과 다른 카드의 응답을 함께 막습니다.
         _prompting = true; UpdateActions();
         var generation = _generation; var workspaceGeneration = _workspace.Generation;
@@ -395,7 +492,7 @@ public sealed class NativeDriverRecommendationPage : ContentPage
                 if (reason is null) return;
             }
             if (!IsCurrent(generation) || workspaceGeneration != _workspace.Generation || !CanRespondTo(key)
-                || _cards.CurrentItem is not DriverRequestItem current || DriverRecommendationSelectionState.Key(current) != key) return;
+                || _displayedItem is not DriverRequestItem current || DriverRecommendationSelectionState.Key(current) != key) return;
             _busy = true; _prompting = false; UpdateActions();
             await _workspace.RefreshAsync();
             if (!IsCurrent(generation) || workspaceGeneration != _workspace.Generation || _selection.SelectedKey != key) return;
@@ -407,6 +504,12 @@ public sealed class NativeDriverRecommendationPage : ContentPage
             }
             var request = _samples.추천의뢰목록.FirstOrDefault(x => DriverRecommendationSelectionState.Key(x) == key && DriverRecommendationSelectionState.IsLive(x, DateTime.UtcNow));
             if (request is null) { _needsConfirmation = true; _status.Text = "추천이 변경됐습니다. 현재 상태를 확인해 주세요."; return; }
+            if (accept && reviewedConditions != request.CaptureCargoConditions())
+            {
+                _needsConfirmation = true;
+                _status.Text = "운송 조건이 변경됐습니다. 현재 상태를 확인한 뒤 다시 검토해 주세요.";
+                return;
+            }
             if (accept && HasWarnings(request) && acknowledged != WarningFingerprint(request))
             { _needsConfirmation = true; _status.Text = "주의사항이 변경됐습니다. 다시 확인해 주세요."; return; }
             using var bounded = CancellationTokenSource.CreateLinkedTokenSource(_workspace.LifetimeToken);

@@ -1,0 +1,58 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@inject NavigationManager Navigation
+
+@if (ShowProgress)
+{
+    <div class="shipper-mobile-progress" aria-label="운송 의뢰 작성 진행">
+        <span>@CurrentNumber / @ShipperRequestMobileStepCatalog.Steps.Count 단계</span>
+        <progress value="@CurrentNumber" max="@ShipperRequestMobileStepCatalog.Steps.Count" aria-label="현재 작성 단계"></progress>
+    </div>
+}
+@if (ShowFooter)
+{
+    @if (Errors.Count > 0 && Next is not null)
+    {
+        <div class="shipper-mobile-navigation__guidance" role="status"><strong>다음으로 가기 전에 확인해 주세요</strong><ul>@foreach (var error in Errors) { <li>@error</li> }</ul></div>
+    }
+    @if (navigationError is not null) { <p role="alert">@navigationError</p> }
+    <nav class="shipper-mobile-navigation" aria-label="작성 단계 이동">
+        <button type="button" @onclick="PreviousAsync"><MudIcon Icon="@Icons.Material.Outlined.ArrowBack" Size="Size.Small" /><span>@PreviousLabel</span></button>
+        @if (Next is { } next)
+        {
+            <button type="button" class="shipper-mobile-navigation__next" disabled="@(Errors.Count > 0)" @onclick="NextAsync"><span>다음 · @ShipperRequestMobileStepCatalog.Get(next).Title</span><MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" /></button>
+        }
+    </nav>
+}
+
+@code {
+    [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
+    [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
+    [Parameter] public ShipperRequestMobileStep CurrentStep { get; set; }
+    [Parameter] public bool ShowProgress { get; set; } = true;
+    [Parameter] public bool ShowFooter { get; set; } = true;
+    [Parameter] public string RootBackHref { get; set; } = ShipperRequestPageRoutes.Root;
+    [Parameter] public string RootBackLabel { get; set; } = "돌아가기";
+    [Parameter] public EventCallback BeforeNavigate { get; set; }
+    private string? navigationError;
+    private IReadOnlyList<string> Errors => ViewModel.GetMobileStepErrors(CurrentStep);
+    private ShipperRequestMobileStep? Previous => ShipperRequestMobileStepCatalog.Previous(CurrentStep);
+    private ShipperRequestMobileStep? Next => ShipperRequestMobileStepCatalog.Next(CurrentStep);
+    private string PreviousLabel => Previous is { } previous ? "이전 · " + ShipperRequestMobileStepCatalog.Get(previous).Title : RootBackLabel;
+    private async Task PreviousAsync() => await NavigateAsync(Previous is { } previous ? NavigationContext.PathFor(previous) : RootBackHref);
+    private async Task NextAsync()
+    {
+        if (Errors.Count > 0 || Next is not { } next) return;
+        await NavigateAsync(NavigationContext.PathFor(next));
+    }
+    private async Task NavigateAsync(string path)
+    {
+        navigationError = null;
+        try
+        {
+            if (BeforeNavigate.HasDelegate) await BeforeNavigate.InvokeAsync();
+            Navigation.NavigateTo(Navigation.ToAbsoluteUri(path.TrimStart('/')).ToString());
+        }
+        catch { navigationError = "다음 화면을 열지 못했습니다. 입력 내용은 유지됩니다. 다시 시도해 주세요."; }
+    }
+    private int CurrentNumber => ShipperRequestMobileStepCatalog.Get(CurrentStep).Number;
+}

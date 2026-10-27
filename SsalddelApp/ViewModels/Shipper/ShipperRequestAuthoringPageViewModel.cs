@@ -22,6 +22,13 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     private readonly NavigationManager _navigation;
     private readonly IAuthSession? _auth;
     private readonly IWorkflowRecoveryStore? _recovery;
+    private readonly IWorkflowRecoveryContext? _recoveryContext;
+    private WorkflowRecoverySnapshot? _recoveryIdentity;
+    private string _recoveryScope = RecoveryScope;
+    private string _draftScope = "shipper-request-draft.v1";
+    private WorkflowRecoveryRecord? _draftRecord;
+    private readonly SemaphoreSlim _draftGate = new(1, 1);
+    private bool _unboundLegacyRecovery;
     private readonly ShipperSubmissionResultSession _submissionResults;
     private bool _initialized;
     private bool _initializing;
@@ -36,13 +43,15 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public ShipperRequestAuthoringPageViewModel(운송의뢰작성ViewModel state,
         IShipperOperationsService operations, NavigationManager navigation,
-        IAuthSession? auth = null, IWorkflowRecoveryStore? recovery = null)
+        IAuthSession? auth = null, IWorkflowRecoveryStore? recovery = null,
+        IWorkflowRecoveryContext? recoveryContext = null)
     {
         State = state;
         _operations = operations;
         _navigation = navigation;
         _auth = auth;
         _recovery = recovery;
+        _recoveryContext = recoveryContext;
         _submissionResults = new(
             () => _auth is null ? new("local-session", "0", true)
                 : new(_auth.UserId, _auth.SessionRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), _auth.IsLoggedIn),
@@ -81,6 +90,16 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     public async Task InitializeAsync()
     {
+        if (_recoveryContext is not null && _recoveryIdentity is not null && !_recoveryContext.IsCurrent(_recoveryIdentity))
+        {
+            _submissionResults.Invalidate();
+            _initialized = _initializing = IsBusy = false;
+            RegistrationEnabled = null;
+            _recoveryIdentity = null;
+            _pending = null; _pendingRequest = null; _pendingNotFound = false;
+            _draftRecord = null; _unboundLegacyRecovery = false;
+            State.Reset(); ResetPrivacyConsent();
+        }
         if (_submissionResults.IsDisposed || _initialized || _initializing) return;
         _initializing = true;
         var generation = _submissionResults.Generation;
@@ -89,20 +108,45 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             if (_auth is not null) await _auth.RestoreAsync();
             generation = _submissionResults.Generation;
             var context = CurrentContext();
+            _recoveryIdentity = _recoveryContext?.Capture();
+            _recoveryScope = _recoveryIdentity?.Scope(RecoveryScope) ?? RecoveryScope;
+            _draftScope = _recoveryIdentity?.Scope("shipper-request-draft.v1") ?? "shipper-request-draft.v1";
             if (_auth is not null && _recovery is null)
                 throw new InvalidOperationException("이전 접수를 보호할 저장소를 확인하지 못했습니다.");
             // 화물 조건 없는 초기 추천을 차량 목록이나 적재 적합성 근거로 사용하지 않습니다.
             VehicleTypes = [];
             if (_recovery is not null)
             {
-                var pending = await _recovery.LoadAsync(context.Owner, RecoveryScope, CancellationToken.None);
+                var pending = await _recovery.LoadAsync(context.Owner, _recoveryScope, CancellationToken.None);
                 if (!IsCurrent(context)) return;
+                // 이전 비서버별 기록의 서버를 추측해 새 서버로 재전송하거나 조회하지 않습니다.
+                if (pending is null && _recoveryIdentity is not null)
+                {
+                    var legacy = await _recovery.LoadAsync(context.Owner, RecoveryScope, CancellationToken.None);
+                    if (!IsCurrent(context)) return;
+                    if (legacy is not null)
+                    {
+                        _unboundLegacyRecovery = true;
+                        pending = legacy with { PayloadJson = null };
+                    }
+                }
                 ApplyPending(pending);
+                if (pending is null) await RestoreDraftAsync(context);
             }
             RegistrationEnabled = true;
             _initialized = true;
             RegistrationBoundaryMessage = "등록만으로 자동 배차·계약·결제를 확정하지 않습니다. 응답을 확인하지 못한 접수는 같은 번호로 결과를 먼저 확인합니다.";
-            if (_pending is not null) await RecoverPendingCoreAsync(context);
+            if (_unboundLegacyRecovery)
+            {
+                StatusMessage = "이전 접수의 서버를 확인하지 못했습니다. 원래 서버에서 결과를 확인한 뒤 계속해 주세요. 새 요청은 보내지 않습니다.";
+                StatusSeverity = Severity.Warning;
+            }
+            else if (_pending is not null) await RecoverPendingCoreAsync(context);
+            else if (_draftRecord?.PayloadJson is not null)
+            {
+                StatusMessage = "저장한 입력을 복원했습니다. 주소·조건과 동의를 다시 확인해 주세요. 의뢰는 전송하지 않았습니다.";
+                StatusSeverity = Severity.Info;
+            }
             else { StatusMessage = string.Empty; StatusSeverity = Severity.Info; }
         }
         catch (Exception ex)
@@ -117,28 +161,39 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         finally { if (generation == _submissionResults.Generation) _initializing = false; }
     }
 
-    public Task SaveAsync()
+    public async Task SaveAsync()
     {
+        if (!await SaveDraftAsync()) return;
         StatusSeverity = State.서버등록가능 ? Severity.Success : Severity.Warning;
         StatusMessage = State.서버등록가능
-            ? "현재 화면에 초안을 유지했습니다. 앱 재시작 후 복원을 위한 저장은 아닙니다. 내용을 확인한 뒤 운송 의뢰를 등록해 주세요."
-            : "현재 화면에 초안을 유지했습니다. 앱 재시작 후 복원을 위한 저장은 아닙니다. 등록 전 필수 입력을 보완해 주세요.";
-        return Task.CompletedTask;
+            ? "보호 저장소에 입력을 저장했습니다. 앱을 다시 열어도 복원할 수 있습니다. 등록 전 내용을 확인해 주세요."
+            : "입력을 저장했습니다. 앱을 다시 열어도 복원할 수 있습니다. 등록 전 필수 입력을 보완해 주세요.";
     }
-    public Task AutoSaveAsync() => Task.CompletedTask;
-    public Task ResetAsync()
+    public async Task AutoSaveAsync() { await SaveDraftAsync(); }
+    public async Task ResetAsync()
     {
         if (IsBusy || HasPendingRequest)
         {
             StatusSeverity = Severity.Warning;
             StatusMessage = "이전에 보낸 접수 결과를 먼저 확인해 주세요. 새 요청으로 바꾸지 않았습니다.";
-            return Task.CompletedTask;
+            return;
         }
+        var context = CurrentContext();
+        try { await ClearDraftAsync(context); }
+        catch (Exception)
+        {
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Warning;
+                StatusMessage = "저장한 입력을 정리하지 못해 초기화하지 않았습니다. 다시 시도해 주세요.";
+            }
+            return;
+        }
+        if (!IsCurrent(context)) return;
         State.Reset();
         ResetPrivacyConsent();
         StatusSeverity = Severity.Info;
         StatusMessage = "운송 의뢰 입력값을 초기화했습니다.";
-        return Task.CompletedTask;
     }
     public async Task<decimal?> EstimateFareAsync(string vehicleType, decimal distanceKm)
         => await _operations.EstimateFareAsync(new 화주운송기준운임견적요청
@@ -182,6 +237,12 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         }
         var generation = _consentGeneration;
         var requestId = _consentRequestId;
+        if (!IsCurrent(context))
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "계정 또는 연결 서버가 변경되었습니다. 작성 준비를 다시 확인해 주세요.";
+            return;
+        }
         IsBusy = true;
         try
         {
@@ -235,9 +296,15 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             return;
         }
         var context = CurrentContext();
+        if (!IsCurrent(context))
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "계정 또는 연결 서버가 변경되었습니다. 작성 준비를 다시 확인해 주세요. 의뢰는 보내지 않았습니다.";
+            return;
+        }
         var id = Guid.NewGuid();
         _pendingRequest = CreateRequest(ClientRequestId(id));
-        _pending = new(context.Owner, RecoveryScope, id,
+        _pending = new(context.Owner, _recoveryScope, id,
             JsonSerializer.Serialize(new SubmissionPayload(_pendingRequest, State.ToDraft())), DateTime.UtcNow);
         await SendPendingAsync(context);
     }
@@ -283,7 +350,16 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
                 if (IsCurrent(context)) await RecoverPendingCoreAsync(context);
                 return;
             }
-            if (_recovery is not null) await _recovery.SaveAsync(_pending, CancellationToken.None);
+            if (_recovery is not null)
+            {
+                await _recovery.SaveAsync(_pending, CancellationToken.None);
+                if (!IsCurrent(context)) return;
+                var saved = await _recovery.LoadAsync(context.Owner, _recoveryScope, CancellationToken.None);
+                if (!IsCurrent(context)) return;
+                if (saved?.RequestId != _pending.RequestId || saved.Owner != context.Owner || saved.Scope != _recoveryScope
+                    || saved.Target != _pending.Target || saved.PayloadJson != _pending.PayloadJson)
+                    throw new InvalidDataException("원 요청의 보호 저장을 다시 확인하지 못했습니다. 새 등록은 보내지 않았습니다.");
+            }
             if (!IsCurrent(context)) return;
             var created = await _operations.AddRequestAsync(_pendingRequest);
             if (!IsCurrent(context)) return;
@@ -296,7 +372,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             {
                 try
                 {
-                    var stored = await _recovery.LoadAsync(context.Owner, RecoveryScope, CancellationToken.None);
+                    var stored = await _recovery.LoadAsync(context.Owner, _recoveryScope, CancellationToken.None);
                     if (!IsCurrent(context)) return;
                     if (stored is not null && (stored.RequestId != _pending?.RequestId || stored.PayloadJson is null)) ApplyPending(stored);
                 }
@@ -312,7 +388,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
 
     private async Task RecoverPendingCoreAsync(SubmissionContext context)
     {
-        if (_pending is null || !IsCurrent(context)) return;
+        if (_pending is null || !IsCurrent(context) || _unboundLegacyRecovery) return;
         _pendingNotFound = false;
         var result = await _submissionResults.ReconcileAsync(context,
             () => _operations.GetRequestByClientRequestIdAsync(ClientRequestId(_pending.RequestId)),
@@ -338,8 +414,10 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
     private async Task FinishPendingAsync(ShipperRequestItem created, SubmissionContext context)
     {
         if (string.IsNullOrWhiteSpace(created.의뢰Id)) throw new InvalidDataException("등록된 운송 의뢰 번호를 확인하지 못했습니다.");
+        await ClearDraftAsync(context);
+        if (!IsCurrent(context)) return;
         if (_pending is not null && _recovery is not null)
-            await _recovery.RemoveAsync(context.Owner, RecoveryScope, _pending.RequestId, CancellationToken.None);
+            await _recovery.RemoveAsync(context.Owner, _recoveryScope, _pending.RequestId, CancellationToken.None);
         if (!IsCurrent(context)) return;
         _pending = null;
         _pendingRequest = null;
@@ -399,7 +477,8 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         if (payload is not null) State.ApplyDraft(payload.Draft);
     }
     private SubmissionContext CurrentContext() => _submissionResults.Capture();
-    private bool IsCurrent(SubmissionContext context) => _submissionResults.IsCurrent(context);
+    private bool IsCurrent(SubmissionContext context) => _submissionResults.IsCurrent(context)
+        && (_recoveryContext is null || _recoveryIdentity is not null && _recoveryContext.IsCurrent(_recoveryIdentity));
     private void OnAuthenticationChanged()
     {
         if (_auth is null || _sessionRevision == _auth.SessionRevision) return;
@@ -411,6 +490,9 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         _pending = null;
         _pendingRequest = null;
         _pendingNotFound = false;
+        _draftRecord = null;
+        _recoveryIdentity = null;
+        _unboundLegacyRecovery = false;
         State.Reset();
         ResetPrivacyConsent();
         StatusMessage = "로그인한 계정의 접수 결과를 다시 확인해 주세요.";
@@ -437,4 +519,101 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
         ClearPrivacyConsent();
     }
     private sealed record SubmissionPayload(ShipperRequestItem Request, 운송모델작성Draft Draft);
+
+    private async Task RestoreDraftAsync(SubmissionContext context)
+    {
+        if (_recovery is null) return;
+        var record = await _recovery.LoadAsync(context.Owner, _draftScope, CancellationToken.None);
+        if (!IsCurrent(context) || record is null) return;
+        ValidateDraft(record, context.Owner);
+        if (record.PayloadJson is null)
+        {
+            await _recovery.RemoveAsync(context.Owner, _draftScope, record.RequestId, CancellationToken.None);
+            return;
+        }
+        var draft = JsonSerializer.Deserialize<운송모델작성Draft>(record.PayloadJson)
+            ?? throw new InvalidDataException("저장한 입력을 확인하지 못했습니다.");
+        State.ApplyDraft(draft);
+        ResetPrivacyConsent();
+        _draftRecord = record;
+    }
+
+    private async Task<bool> SaveDraftAsync()
+    {
+        if (_submissionResults.IsDisposed || !_initialized || IsBusy || HasPendingRequest) return false;
+        if (_recovery is null)
+        {
+            StatusSeverity = Severity.Warning;
+            StatusMessage = "재실행 복원을 위한 보호 저장소를 확인하지 못했습니다. 현재 화면의 입력은 유지합니다.";
+            return false;
+        }
+        SubmissionContext context;
+        try { context = CurrentContext(); }
+        catch (InvalidOperationException) { return false; }
+        var scope = _draftScope;
+        var json = JsonSerializer.Serialize(State.ToDraft());
+        await _draftGate.WaitAsync();
+        try
+        {
+            if (!IsCurrent(context) || IsBusy || HasPendingRequest) return false;
+            var stored = await _recovery.LoadAsync(context.Owner, scope, CancellationToken.None);
+            if (!IsCurrent(context) || IsBusy || HasPendingRequest) return false;
+            if (stored is not null) ValidateDraft(stored, context.Owner);
+            if (stored?.PayloadJson is null && stored is not null)
+            {
+                await _recovery.RemoveAsync(context.Owner, scope, stored.RequestId, CancellationToken.None);
+                if (!IsCurrent(context)) return false;
+                stored = null;
+            }
+            var record = new WorkflowRecoveryRecord(context.Owner, scope, stored?.RequestId ?? Guid.NewGuid(), json,
+                stored?.CreatedAtUtc ?? DateTime.UtcNow);
+            await _recovery.SaveAsync(record, CancellationToken.None);
+            if (!IsCurrent(context)) return false;
+            var saved = await _recovery.LoadAsync(context.Owner, scope, CancellationToken.None);
+            if (!IsCurrent(context)) return false;
+            if (saved?.RequestId != record.RequestId || saved.Owner != context.Owner || saved.Scope != scope
+                || saved.Target is not null || saved.PayloadJson != json)
+                throw new InvalidDataException("저장한 입력을 다시 확인하지 못했습니다.");
+            _draftRecord = saved;
+            return true;
+        }
+        catch (Exception)
+        {
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Warning;
+                StatusMessage = "입력을 보호 저장소에 저장하지 못했습니다. 현재 화면의 입력을 유지했으니 다시 저장해 주세요.";
+            }
+            return false;
+        }
+        finally { _draftGate.Release(); }
+    }
+
+    private async Task ClearDraftAsync(SubmissionContext context)
+    {
+        if (_recovery is null) return;
+        var scope = _draftScope;
+        await _draftGate.WaitAsync();
+        try
+        {
+            if (!IsCurrent(context)) return;
+            var record = await _recovery.LoadAsync(context.Owner, scope, CancellationToken.None);
+            if (!IsCurrent(context)) return;
+            if (record is not null)
+            {
+                ValidateDraft(record, context.Owner);
+                await _recovery.RemoveAsync(context.Owner, scope, record.RequestId, CancellationToken.None);
+                if (!IsCurrent(context)) return;
+            }
+            _draftRecord = null;
+        }
+        finally { _draftGate.Release(); }
+    }
+
+    private void ValidateDraft(WorkflowRecoveryRecord record, string owner)
+    {
+        WorkflowRecoveryPolicy.Validate(record);
+        if (record.Owner != owner || record.Scope != _draftScope || record.Target is not null)
+            throw new InvalidDataException("저장한 입력의 계정과 서버가 다릅니다.");
+    }
 }

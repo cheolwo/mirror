@@ -6,7 +6,7 @@ public sealed record 배달권기반배차조율요청
 
     public int 최대기사수 { get; init; } = 100;
 
-    public int 기사당최대추천건수 { get; init; } = 2;
+    public int 기사당최대추천건수 { get; init; } = 1;
 
     public bool 인접배달권기사포함 { get; init; } = true;
 }

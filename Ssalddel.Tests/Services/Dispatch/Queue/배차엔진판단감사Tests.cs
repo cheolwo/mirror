@@ -32,12 +32,14 @@ public sealed class 배차엔진판단감사Tests
         var queue = CreateQueue();
         queue.기사지급예정액 = 27000m;
         db.운송원장.Add(queue);
+        db.화주운송의뢰.Add(new 살뜰.도메인.화주.화주운송의뢰 { 의뢰Id = queue.의뢰Id });
         await db.SaveChangesAsync();
         var food = new StubFoodPricingService();
         var service = new 배차대기원장전환Service(db, Options.Create(new 배차큐정책Options()),
             null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!, food,
             운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
-            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         var result = await service.추천시작Async(queue.의뢰Id, "cargo-driver");
         Assert.True(result.전환여부);
         Assert.Equal(0, food.CallCount);
@@ -211,6 +213,7 @@ public sealed class 배차엔진판단감사Tests
         queue.배차큐단계 = 상태값.배차큐단계.배차추천;
         queue.배차노출상태 = 상태값.배차노출상태.추천대기;
         db.운송원장.Add(queue);
+        db.화주운송의뢰.Add(new 살뜰.도메인.화주.화주운송의뢰 { 의뢰Id = queue.의뢰Id });
         await db.PersistSeedAsync(); // 최종 판본 재조회는 실제 저장된 기준선을 읽는다.
 
         var selection = 배차추천후보선정결과.선정됨(
@@ -233,7 +236,8 @@ public sealed class 배차엔진판단감사Tests
             new NoOpRecommendationNotificationService(),
             new NoOpDriverStateService(),
             null!,
-            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
         var method = typeof(배차대기원장전환Service).GetMethod(
             "추천거절후다음후보로진행Async",

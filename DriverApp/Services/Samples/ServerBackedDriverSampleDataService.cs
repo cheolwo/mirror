@@ -327,7 +327,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             _예약목록.Count);
     }
 
-    private static DriverRequestItem ToRequestItem(기사배차추천항목응답 source)
+    internal static DriverRequestItem ToRequestItem(기사배차추천항목응답 source)
     {
         return new DriverRequestItem
         {
@@ -336,11 +336,16 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             AssignedActivities = source.AssignedActivities,
             Pricing = source.Pricing,
             화물종류 = source.화물종류,
-            운송방식 = "서버 추천",
+            운송방식 = source.운송방식 ?? string.Empty,
+            차량종류 = source.차량종류,
+            화물중량Kg = source.화물중량Kg,
+            화물수량 = source.화물수량,
+            상차시간창시작일시 = source.상차시간창시작일시,
+            상차시간창종료일시 = source.상차시간창종료일시,
+            하차시간창시작일시 = source.하차시간창시작일시,
+            하차시간창종료일시 = source.하차시간창종료일시,
             운송의뢰유형코드 = source.운송의뢰유형코드,
             운송의뢰유형표시 = source.운송의뢰유형표시,
-            차량톤수 = "조건 확인",
-            차량형태 = source.차량적합여부 ? "적합" : "부적합",
             인수증필요 = true,
             공동주문운송여부 = source.공동주문운송여부,
             세대배송포함여부 = source.세대배송포함여부,

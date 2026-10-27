@@ -283,23 +283,38 @@
     [SupplyParameterFromQuery(Name = "reviewLedgerId")]
     public string? ReviewLedgerId { get; set; }
 
-    private bool isLoading;
+    private readonly 운송의뢰취소검토DecisionState decisionState = new();
+    private 운송의뢰상세ReadSession? readSession;
+    private 운송의뢰상세ReadSession ReadSession => readSession ??= new(
+        id => DataService.의뢰상세조회Async(id),
+        async () =>
+        {
+            var metadata = await WorkflowMetadata.GetVersionWorkflowMetadataAsync();
+            return metadata.Flags.TryGetValue(DomesticTransportFeatureKey, out var enabled) && enabled;
+        },
+        LedgerObserver,
+        () => RequestId,
+        () => isSaving,
+        action => InvokeAsync(action),
+        StateHasChanged,
+        () => message = null);
+
+    private bool isLoading { get => ReadSession.IsLoading; set => ReadSession.IsLoading = value; }
     private bool isSaving;
-    private bool requiresLogin;
-    private bool isMemoryMode;
-    private bool isNotFound;
-    private bool? isTransportWorkflowEnabled;
+    private bool requiresLogin { get => ReadSession.RequiresLogin; set => ReadSession.RequiresLogin = value; }
+    private bool isMemoryMode { get => ReadSession.IsMemoryMode; set => ReadSession.IsMemoryMode = value; }
+    private bool isNotFound { get => ReadSession.IsNotFound; set => ReadSession.IsNotFound = value; }
+    private bool? isTransportWorkflowEnabled { get => ReadSession.IsTransportWorkflowEnabled; set => ReadSession.IsTransportWorkflowEnabled = value; }
     private bool showSensitiveLocation;
-    private bool showCancellationConfirmation;
-    private string? loadedRequestId;
-    private string? errorMessage;
+    private bool showCancellationConfirmation => decisionState.ShowConfirmation;
+    private string? loadedRequestId { get => ReadSession.LoadedRequestId; set => ReadSession.LoadedRequestId = value; }
+    private string? errorMessage { get => ReadSession.ErrorMessage; set => ReadSession.ErrorMessage = value; }
     private string? message;
-    private string? cancellationReason;
-    private string? confirmationRequestId;
+    private string? cancellationReason { get => decisionState.Reason; set => decisionState.Reason = value; }
+    private string? confirmationRequestId { get => decisionState.ConfirmationRequestId; set => decisionState.ConfirmationRequestId = value; }
     private Severity messageSeverity = Severity.Info;
-    private 화주운송의뢰응답? request;
-    private 지도신청가원장Response? cancellationReview;
-    private CancellationTokenSource? pollingCts;
+    private 화주운송의뢰응답? request { get => ReadSession.Request; set => ReadSession.Request = value; }
+    private 지도신청가원장Response? cancellationReview { get => decisionState.Review; set => decisionState.Review = value; }
 
     private string LoginHref => $"/login?returnUrl={Uri.EscapeDataString($"/requests/{RequestId}")}";
     private string WorkflowDetailHref => $"/transports/{Uri.EscapeDataString(RequestId)}";
@@ -308,33 +323,19 @@
     private string RouteArea => $"{PickupArea} → {DropoffArea}";
 
     private 관리자운송의뢰취소환불판단 CancellationDecision
-        => request is null
-            ? new(false, false, "처리 불가", "의뢰를 먼저 조회해 주세요.")
-            : 관리자운송의뢰취소환불정책.평가(
-                request.의뢰상태,
-                request.결제상태,
-                request.정산상태,
-                request.배차상태);
+        => decisionState.Decision(request);
 
     private string? ConfirmationError
-        => 관리자운송의뢰취소환불정책.명시적확인오류(
-            request?.의뢰Id,
-            confirmationRequestId,
-            cancellationReason);
+        => decisionState.ConfirmationError(request?.의뢰Id);
 
     private bool ConfirmationStarted
-        => !string.IsNullOrWhiteSpace(confirmationRequestId)
-           || !string.IsNullOrWhiteSpace(cancellationReason);
+        => decisionState.ConfirmationStarted;
 
     private bool CanSubmitCancellation
-        => !isSaving
-           && CancellationDecision.처리가능
-           && ConfirmationError is null;
+        => decisionState.CanSubmitCancellation(request, isSaving);
 
     private bool CanSubmitReviewDecision
-        => !isSaving
-           && cancellationReview is not null
-           && ConfirmationError is null;
+        => decisionState.CanSubmitReviewDecision(request, isSaving);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -371,87 +372,10 @@
 
     private Task LoadAsync() => LoadAsync(showMessage: true);
 
-    private async Task LoadAsync(bool showMessage)
-    {
-        if (isLoading || isSaving || isTransportWorkflowEnabled != true)
-        {
-            return;
-        }
+    private Task LoadAsync(bool showMessage) => ReadSession.LoadAsync(showMessage);
 
-        if (string.IsNullOrWhiteSpace(RequestId))
-        {
-            request = null;
-            isNotFound = true;
-            return;
-        }
-
-        isLoading = true;
-        isNotFound = false;
-        errorMessage = null;
-        var previousRequest = request;
-        if (showMessage)
-        {
-            message = null;
-        }
-
-        try
-        {
-            request = await DataService.의뢰상세조회Async(RequestId);
-            isNotFound = request is null;
-        }
-        catch (Exception ex)
-        {
-            request = showMessage ? null : previousRequest;
-            requiresLogin = IsAuthenticationFailure(ex);
-            if (ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound })
-            {
-                request = null;
-                isNotFound = true;
-            }
-            else if (IsFeatureDisabledFailure(ex))
-            {
-                isTransportWorkflowEnabled = false;
-            }
-            else if (!requiresLogin && showMessage)
-            {
-                errorMessage = ResolveLoadFailureMessage(ex);
-            }
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task<bool> EnsureTransportWorkflowEnabledAsync()
-    {
-        if (isMemoryMode)
-        {
-            isTransportWorkflowEnabled = true;
-            return true;
-        }
-
-        if (isTransportWorkflowEnabled.HasValue)
-        {
-            return isTransportWorkflowEnabled.Value;
-        }
-
-        try
-        {
-            var metadata = await WorkflowMetadata.GetVersionWorkflowMetadataAsync();
-            isTransportWorkflowEnabled = metadata.Flags.TryGetValue(
-                DomesticTransportFeatureKey,
-                out var enabled)
-                && enabled;
-            return isTransportWorkflowEnabled.Value;
-        }
-        catch (Exception)
-        {
-            isTransportWorkflowEnabled = null;
-            errorMessage = "국내 운송 의뢰 상세 조회 가능 여부를 확인하지 못했습니다. 잠시 뒤 다시 시도해 주세요.";
-            return false;
-        }
-    }
+    private Task<bool> EnsureTransportWorkflowEnabledAsync()
+        => ReadSession.EnsureTransportWorkflowEnabledAsync();
 
     private async Task RetryLoadAsync()
     {
@@ -468,17 +392,13 @@
 
     private void OpenCancellationConfirmation()
     {
-        showCancellationConfirmation = true;
-        cancellationReason = null;
-        confirmationRequestId = null;
+        decisionState.Open();
         message = null;
     }
 
     private void CloseCancellationConfirmation()
     {
-        showCancellationConfirmation = false;
-        cancellationReason = null;
-        confirmationRequestId = null;
+        decisionState.Close();
     }
 
     private async Task CancelAsync()
@@ -581,9 +501,7 @@
         try
         {
             var reviews = await CancellationReviewService.목록Async();
-            cancellationReview = reviews.FirstOrDefault(item =>
-                string.Equals(item.원장Id, ReviewLedgerId, StringComparison.Ordinal)
-                && string.Equals(item.운영원본Id, RequestId, StringComparison.Ordinal));
+            decisionState.SelectReview(reviews, ReviewLedgerId, RequestId);
             if (cancellationReview is null)
             {
                 messageSeverity = Severity.Info;
@@ -597,87 +515,9 @@
         }
     }
 
-    private void EnsureObserverStarted()
-    {
-        if (pollingCts is not null)
-        {
-            return;
-        }
+    private void EnsureObserverStarted() => ReadSession.EnsureObserverStarted();
 
-        LedgerObserver.Changed += OnLedgerChanged;
-        LedgerObserver.RefreshRequested += OnLedgerRefreshRequested;
-        pollingCts = new CancellationTokenSource();
-        _ = RunPollingAsync(pollingCts.Token);
-    }
-
-    private async Task RunPollingAsync(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(
-            TransportRequestLedgerRefreshPolicy.FallbackPollingInterval);
-        try
-        {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
-            {
-                if (string.IsNullOrWhiteSpace(RequestId)
-                    || isLoading
-                    || isSaving
-                    || requiresLogin
-                    || isTransportWorkflowEnabled != true)
-                {
-                    continue;
-                }
-
-                await InvokeAsync(async () =>
-                {
-                    await LoadAsync(showMessage: false);
-                    StateHasChanged();
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private void OnLedgerChanged(TransportRequestLedgerChange change)
-    {
-        if (!IsCurrentRequest(change.RequestId))
-        {
-            return;
-        }
-
-        _ = InvokeAsync(async () =>
-        {
-            await LoadAsync(showMessage: false);
-            StateHasChanged();
-        });
-    }
-
-    private void OnLedgerRefreshRequested(TransportRequestLedgerRefreshRequest refreshRequest)
-    {
-        if (!IsCurrentRequest(refreshRequest.RequestId))
-        {
-            return;
-        }
-
-        _ = InvokeAsync(async () =>
-        {
-            await LoadAsync(showMessage: false);
-            StateHasChanged();
-        });
-    }
-
-    private bool IsCurrentRequest(string requestId)
-        => !string.IsNullOrWhiteSpace(RequestId)
-           && string.Equals(RequestId.Trim(), requestId.Trim(), StringComparison.OrdinalIgnoreCase);
-
-    public void Dispose()
-    {
-        LedgerObserver.Changed -= OnLedgerChanged;
-        LedgerObserver.RefreshRequested -= OnLedgerRefreshRequested;
-        pollingCts?.Cancel();
-        pollingCts?.Dispose();
-    }
+    public void Dispose() => readSession?.Dispose();
 
     private static string ReviewLabel(화주운송의뢰응답 item)
     {
@@ -723,18 +563,5 @@
         => candidates.Any(candidate => string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsAuthenticationFailure(Exception exception)
-        => exception is HttpRequestException
-           {
-               StatusCode: System.Net.HttpStatusCode.Unauthorized
-                   or System.Net.HttpStatusCode.Forbidden
-           }
-           || exception.Message.Contains("로그인이 필요", StringComparison.Ordinal);
-
-    private static bool IsFeatureDisabledFailure(Exception exception)
-        => exception.Message.Contains("FeatureDisabled", StringComparison.OrdinalIgnoreCase);
-
-    private static string ResolveLoadFailureMessage(Exception exception)
-        => exception is HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound }
-            ? "운송 의뢰 상세 API를 찾을 수 없습니다. 현재 배포 버전과 기능 상태를 확인해 주세요."
-            : "운송 의뢰 상세를 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.";
+        => 운송의뢰상세ReadSession.IsAuthenticationFailure(exception);
 }

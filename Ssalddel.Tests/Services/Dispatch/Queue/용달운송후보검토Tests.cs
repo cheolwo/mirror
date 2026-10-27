@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Ssalddel.Contracts.Common.Drivers;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
+using 살뜰.Services.Dispatch.AI;
 using 살뜰.Services.Dispatch.Queue;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Storage.Local;
@@ -18,6 +19,33 @@ namespace Ssalddel.Tests.Services.Dispatch.Queue;
 
 public sealed class 용달운송후보검토Tests
 {
+    [Theory]
+    [InlineData("Qualification.Pending")]
+    [InlineData("Qualification.Suspended")]
+    public async Task 자격이유효하지않은기사는_점수계산전에_제외사유를남긴다(string reason)
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("blocked", 1m));
+        fixture.Qualification = new DeniedQualification(reason);
+
+        var trace = await fixture.Policy().후보검토Async(fixture.Queue);
+
+        Assert.Null(trace.선정후보);
+        Assert.Empty(trace.최종허용기사Ids);
+        Assert.Equal(reason, Assert.Single(trace.후보목록).판정Code);
+        Assert.Equal(0, fixture.Score.Calls);
+    }
+
+    [Fact]
+    public async Task 자격연결누락을_허용으로대체하지않는다()
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("blocked", 1m));
+        fixture.Qualification = null;
+        var trace = await fixture.Policy().후보검토Async(fixture.Queue);
+        Assert.Null(trace.선정후보);
+        Assert.Equal("FreightCargo.RequiredInformationMissing", trace.중단사유Code);
+        Assert.Equal(0, fixture.Score.Calls);
+    }
+
     [Fact]
     public async Task 실제추천은같은한번의계산과관찰결과를반환하고원장을바꾸지않는다()
     {
@@ -75,7 +103,7 @@ public sealed class 용달운송후보검토Tests
     [InlineData("rejected", "DriverRejected")]
     [InlineData("stopped", "DriverNotDriving")]
     [InlineData("stale", "DriverLocationUnavailableOrStale")]
-    [InlineData("distance", "DistanceUnavailable")]
+    [InlineData("distance", "IdleSchedulePickupRouteUnverified")]
     [InlineData("radius", "OutsideApproachAllowance")]
     [InlineData("fit", "VehicleIncompatible")]
     public async Task 실제탈락한첫관문과그때까지확인한거리만남긴다(string condition, string expected)
@@ -194,6 +222,120 @@ public sealed class 용달운송후보검토Tests
         Assert.Equal(0, fixture.Score.Calls);
     }
 
+    [Fact]
+    public async Task 화물AI는_다른적격후보를선택하고_규칙관찰과현재수행근거를보존한다()
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("near", 1m), Snapshot("other", 2m));
+        await fixture.PersistQueueAsync();
+        var before = JsonSerializer.Serialize(fixture.Queue);
+        var ai = new CandidateAI(new("other", "Applied"));
+
+        var result = await fixture.Policy(ai).다음후보선정Async(fixture.Queue);
+
+        Assert.Equal("other", result?.DriverId);
+        Assert.Equal(98m, result?.추천점수);
+        Assert.EndsWith("CargoDispatchAI.Applied", result?.추천사유);
+        Assert.False(result!.화물수행근거!.활성업무있음);
+        Assert.Equal(new 배차경로좌표(2m, 0m), result.화물수행근거.기준좌표);
+        var baseline = Assert.Single(fixture.Observer.Traces);
+        Assert.Equal("near", baseline.선정후보?.DriverId);
+        Assert.DoesNotContain("CargoDispatchAI", baseline.선정후보!.추천사유);
+        Assert.All(baseline.후보목록, x => Assert.NotNull(x.픽업도착예상시각Utc));
+        Assert.Same(baseline, ai.Input);
+        Assert.Equal(1, ai.Calls);
+        Assert.Equal(2, fixture.States.GeoReads);
+        Assert.Equal(before, JsonSerializer.Serialize(fixture.Queue));
+        Assert.Empty(fixture.Db.ChangeTracker.Entries().Where(x => x.State != EntityState.Unchanged));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 화물AI응답대기중_선택기사차량이중지되거나삭제되면_현재규칙후보로복귀한다(bool remove)
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("near", 1m), Snapshot("other", 2m));
+        await fixture.PersistQueueAsync();
+        var ai = new CandidateAI(new("other", "Applied"), async () =>
+        {
+            var driver = await fixture.Db.용달기사.SingleAsync(x => x.기사Id == "other");
+            if (remove) fixture.Db.용달기사.Remove(driver); else driver.상태 = "중지";
+            await fixture.Db.SaveChangesAsync();
+        });
+
+        var result = await fixture.Policy(ai).다음후보선정Async(fixture.Queue);
+
+        Assert.Equal("near", result?.DriverId);
+        Assert.EndsWith("CargoDispatchAI.CandidateChanged", result?.추천사유);
+        Assert.NotNull(result!.화물수행근거);
+        Assert.Equal("near", Assert.Single(fixture.Observer.Traces).선정후보?.DriverId);
+        Assert.Equal(1, ai.Calls);
+        Assert.Equal(0, fixture.Queue.추천라운드);
+    }
+
+    [Theory]
+    [InlineData("request-fare")]
+    [InlineData("stored-queue")]
+    [InlineData("caller-queue")]
+    public async Task 화물AI응답대기중_원입력이나원장판본이달라지면_과거추천을반환하지않는다(string change)
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("near", 1m), Snapshot("other", 2m));
+        await fixture.PersistQueueAsync();
+        var ai = new CandidateAI(new("other", "Applied"), async () =>
+        {
+            if (change == "request-fare")
+                (await fixture.Db.화주운송의뢰.SingleAsync()).최종운임 = 20000m;
+            else if (change == "stored-queue") fixture.Queue.운임 = 20000m;
+            else fixture.Queue.추천라운드++;
+            if (change != "caller-queue") await fixture.Db.SaveChangesAsync();
+        });
+
+        var result = await fixture.Policy(ai).다음후보선정Async(fixture.Queue);
+
+        Assert.Null(result);
+        Assert.Equal("near", Assert.Single(fixture.Observer.Traces).선정후보?.DriverId);
+        Assert.Equal(1, ai.Calls);
+        Assert.Null(fixture.Queue.확정기사Id);
+    }
+
+    [Fact]
+    public async Task 화물AI시간초과는_대기중달라진현재규칙결과로복귀하고_초기관찰을바꾸지않는다()
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("near", 1m), Snapshot("other", 2m));
+        await fixture.PersistQueueAsync();
+        var ai = new CandidateAI(new(null, "Timeout"), async () =>
+        {
+            (await fixture.Db.용달기사.SingleAsync(x => x.기사Id == "near")).상태 = "중지";
+            await fixture.Db.SaveChangesAsync();
+        });
+
+        var result = await fixture.Policy(ai).다음후보선정Async(fixture.Queue);
+
+        Assert.Equal("other", result?.DriverId);
+        Assert.EndsWith("CargoDispatchAI.Timeout", result?.추천사유);
+        Assert.Equal(new 배차경로좌표(2m, 0m), result!.화물수행근거!.기준좌표);
+        Assert.Equal("near", Assert.Single(fixture.Observer.Traces).선정후보?.DriverId);
+        Assert.Equal(3, fixture.Score.Calls);
+    }
+
+    [Fact]
+    public async Task 화물AI비활성은_모델과추가정본요구없이_기존한번의규칙관찰을유지한다()
+    {
+        await using var fixture = await Fixture.CreateAsync(Snapshot("near", 1m), Snapshot("other", 2m));
+        // 기존 최소 fixture처럼 DB queue 정본이 없어도 비활성 경로는 새 선행조건을 요구하지 않는다.
+        Assert.Empty(await fixture.Db.운송원장.ToArrayAsync());
+        var ai = new CandidateAI(new("other", "Applied")) { Enabled = false };
+
+        var result = await fixture.Policy(ai).다음후보선정Async(fixture.Queue);
+
+        Assert.Equal("near", result?.DriverId);
+        Assert.Equal(0, ai.Calls);
+        Assert.Equal(1, fixture.States.GeoReads);
+        Assert.Equal(2, fixture.Score.Calls);
+        Assert.Same(Assert.Single(fixture.Observer.Traces).선정후보, result);
+        Assert.DoesNotContain("CargoDispatchAI", result!.추천사유);
+        Assert.Empty(await fixture.Db.운송원장.ToArrayAsync());
+    }
+
     private static 국내화물운송기사상태Snapshot Snapshot(string id, decimal distance, int waitingMinutes = 0)
     {
         var now = DateTime.UtcNow;
@@ -211,6 +353,8 @@ public sealed class 용달운송후보검토Tests
         public Routes Routes { get; } = new();
         public Locations Locations { get; } = new();
         public Rejected Rejected { get; } = new();
+        public Ssalddel.Services.Dispatch.Compliance.I신규화물업무자격Guard? Qualification { get; set; }
+            = Ssalddel.Tests.Support.Simulation운송자격Guard.Instance;
         public 운송원장 Queue { get; } = new()
         {
             의뢰Id = "request", 운송번호 = "request", 배차업무유형 = 상태값.배차업무유형.용달운송,
@@ -223,8 +367,9 @@ public sealed class 용달운송후보검토Tests
                 .UseInMemoryDatabase($"cargo-candidate-trace-{Guid.NewGuid():N}").Options, new Encryption());
             db.화주운송의뢰.Add(new()
             {
-                의뢰Id = "request", 픽업_위도 = 0m, 픽업_경도 = 0m, 화물종류 = "상자",
-                픽업_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 픽업_시간창_종료일시 = DateTime.UtcNow.AddHours(12)
+                의뢰Id = "request", 픽업_위도 = 0m, 픽업_경도 = 0m, 하차_위도 = 0m, 하차_경도 = 0m, 화물종류 = "상자",
+                픽업_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 픽업_시간창_종료일시 = DateTime.UtcNow.AddHours(12),
+                하차_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 하차_시간창_종료일시 = DateTime.UtcNow.AddHours(13)
             });
             foreach (var state in states)
                 db.용달기사.Add(new() { 기사Id = state.DriverId, 차량 = "fixture", 상태 = "활동중" });
@@ -232,11 +377,40 @@ public sealed class 용달운송후보검토Tests
             return new(db, new(states));
         }
 
-        public 용달운송배차업무정책 Policy() => new(Db, Locations, States,
+        public async Task PersistQueueAsync()
+        {
+            Db.운송원장.Add(Queue);
+            await Db.SaveChangesAsync();
+        }
+
+        public 용달운송배차업무정책 Policy(ICargoDispatchCandidateAI? candidateAI = null) => new(Db, Locations, States,
             Options.Create(new 배차큐정책Options { 기사후보검색반경Km = 10m }), Routes,
             Fit, new 배차추천판정Service(), Score, Rejected, Observer,
-            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            신규업무자격: Qualification, candidateAI: candidateAI);
         public ValueTask DisposeAsync() => Db.DisposeAsync();
+    }
+
+    private sealed class CandidateAI(CargoDispatchAISelection selection, Func<Task>? beforeReturn = null) : ICargoDispatchCandidateAI
+    {
+        public bool Enabled { get; init; } = true;
+        public int Calls { get; private set; }
+        public 용달운송후보검토결과? Input { get; private set; }
+        public async Task<CargoDispatchAISelection> SelectAsync(용달운송후보검토결과 trace, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Calls++;
+            Input = trace;
+            if (beforeReturn is not null) await beforeReturn();
+            return selection;
+        }
+    }
+
+    private sealed class DeniedQualification(string reason) : Ssalddel.Services.Dispatch.Compliance.I신규화물업무자격Guard
+    {
+        public bool RequiresCargoEvidence => false;
+        public Task<Ssalddel.Contracts.Driver.Profile.운송자격평가결과> 평가Async(string driverId, CancellationToken ct = default)
+            => Task.FromResult(new Ssalddel.Contracts.Driver.Profile.운송자격평가결과(false, reason, "내부 검토 대기", "Pending"));
     }
 
     private sealed class Observer : I용달운송후보검토Observer
@@ -309,7 +483,9 @@ public sealed class 용달운송후보검토Tests
         public decimal? CalculateDistanceKm(배차경로좌표 source, 배차경로좌표 target) => MissingDistance ? null : Math.Abs(source.Latitude - target.Latitude);
         public Task<배차경로좌표?> ResolveOriginLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? location, 배차추천검색조건? criteria) => throw new NotSupportedException();
         public Task<배차경로좌표?> ResolveRouteAnchorLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? location) => throw new NotSupportedException();
-        public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination) => throw new NotSupportedException();
+        public Task<배차경로예상결과?> EstimateRouteAsync(배차경로좌표? origin, 배차경로좌표? destination)
+            => Task.FromResult<배차경로예상결과?>(MissingDistance || origin is null || destination is null ? null
+                : new(CalculateDistanceKm(origin, destination), TimeSpan.FromMinutes(2), 0m, "fixture", true) { RouteOption = "trafast" });
         public Task<배차경로예상결과?> EstimateOrderedRouteAsync(배차경로좌표? origin, IReadOnlyList<배차경로좌표> stops, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<배차삽입경로예상결과?> EstimateInsertionDelayAsync(배차경로좌표? origin, 배차경로좌표? anchor, 배차경로좌표? pickup, 배차경로좌표? dropoff) => throw new NotSupportedException();
     }

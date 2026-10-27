@@ -6,6 +6,8 @@ using 살뜰.도메인.운송;
 using 살뜰.도메인.차량;
 using 살뜰.도메인.화물;
 using 살뜰.도메인.화주;
+using System.Text.Json;
+using 살뜰.Services.Dispatch.Coordination;
 
 namespace 살뜰.Services.Dispatch.Recommendation;
 
@@ -31,7 +33,10 @@ public sealed record 화물배차수락적격성결과(
     IReadOnlyList<string> 경고메시지,
     IReadOnlyList<string> 권장경로순서,
     decimal? 총소요시간분,
-    decimal? 최대시간위반분);
+    decimal? 최대시간위반분)
+{
+    public IReadOnlyList<string> 검증한계 { get; init; } = [];
+}
 
 public interface I화물배차수락적격성Service
 {
@@ -40,6 +45,15 @@ public interface I화물배차수락적격성Service
         화주운송의뢰 후보의뢰,
         IReadOnlyCollection<string> 확인한경고코드,
         CancellationToken cancellationToken = default);
+
+    Task<화물배차수락적격성결과> 평가Async(
+        string 기사Id,
+        화주운송의뢰 후보의뢰,
+        IReadOnlyCollection<string> 확인한경고코드,
+        IReadOnlyDictionary<string, 화물상하차작업시간> 명시작업시간,
+        CancellationToken cancellationToken)
+        => Task.FromResult(new 화물배차수락적격성결과(false, 화물배차수락오류코드.일정근거부족,
+            "명시한 상하차 작업시간의 검증을 지원하지 않는 일정 서비스입니다.", [], [], [], null, null));
 }
 
 /// <summary>
@@ -55,43 +69,70 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
     private readonly I차량화물적합성Service _차량적합성Service;
     private readonly I기사운송일정구성Service _일정구성Service;
     private readonly I운송일정삽입평가Service _일정삽입평가Service;
+    private readonly I기사실차적재근거조회Service _실차조회;
+    private readonly 화물구간적재검증Service _구간검증;
 
     public 화물배차수락적격성Service(
         SsalddelContext db,
         IDriverLocationStore 기사위치Store,
         I차량화물적합성Service 차량적합성Service,
         I기사운송일정구성Service 일정구성Service,
-        I운송일정삽입평가Service 일정삽입평가Service)
+        I운송일정삽입평가Service 일정삽입평가Service,
+        I기사실차적재근거조회Service? 실차조회 = null,
+        화물구간적재검증Service? 구간검증 = null)
     {
         _db = db;
         _기사위치Store = 기사위치Store;
         _차량적합성Service = 차량적합성Service;
         _일정구성Service = 일정구성Service;
         _일정삽입평가Service = 일정삽입평가Service;
+        _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
+        _구간검증 = 구간검증 ?? new 화물구간적재검증Service(new Ssalddel.Services.LogisticsProcessing.VehicleLoading.차량적재추천Engine());
     }
 
-    public async Task<화물배차수락적격성결과> 평가Async(
+    public Task<화물배차수락적격성결과> 평가Async(
         string 기사Id,
         화주운송의뢰 후보의뢰,
         IReadOnlyCollection<string> 확인한경고코드,
         CancellationToken cancellationToken = default)
+        => 평가CoreAsync(기사Id, 후보의뢰, 확인한경고코드, null, cancellationToken);
+
+    public Task<화물배차수락적격성결과> 평가Async(
+        string 기사Id,
+        화주운송의뢰 후보의뢰,
+        IReadOnlyCollection<string> 확인한경고코드,
+        IReadOnlyDictionary<string, 화물상하차작업시간> 명시작업시간,
+        CancellationToken cancellationToken)
+        => 명시작업시간 is null
+            ? Task.FromResult(Block(화물배차수락오류코드.일정근거부족, "명시한 상하차 작업시간 자료가 없습니다."))
+            : 평가CoreAsync(기사Id, 후보의뢰, 확인한경고코드, 명시작업시간, cancellationToken);
+
+    private async Task<화물배차수락적격성결과> 평가CoreAsync(
+        string 기사Id,
+        화주운송의뢰 후보의뢰,
+        IReadOnlyCollection<string> 확인한경고코드,
+        IReadOnlyDictionary<string, 화물상하차작업시간>? 명시작업시간,
+        CancellationToken cancellationToken)
     {
         var activeTransports = await _db.운송원장
             .AsNoTracking()
-            .Where(x => x.기사_운송자 == 기사Id
-                        && x.배차업무유형 == 상태값.배차업무유형.용달운송
+            .Where(x => (x.기사_운송자 == 기사Id || x.확정기사Id == 기사Id)
+                        && x.배차큐단계 == 상태값.배차큐단계.확정
                         && x.상태 != "인수완료"
                         && x.의뢰Id != 후보의뢰.의뢰Id)
             .ToListAsync(cancellationToken);
+        if (await 화물후속픽업기준Service.반납책임있음Async(_db, 기사Id, cancellationToken))
+            return Block("DriverWork.ReturnCustodyPending", "기존 물품의 반환 책임을 마친 뒤 새 화물을 수락할 수 있습니다.");
+        if (activeTransports.Any(x => string.IsNullOrWhiteSpace(x.의뢰Id)
+                || x.배차업무유형 != 상태값.배차업무유형.용달운송
+                || x.상태 is "취소" or "반환대기"
+                || !string.IsNullOrWhiteSpace(x.확정기사Id) && x.확정기사Id != 기사Id
+                || !string.IsNullOrWhiteSpace(x.기사_운송자) && x.기사_운송자 != 기사Id)
+            || activeTransports.Select(x => x.의뢰Id).Distinct(StringComparer.Ordinal).Count() != activeTransports.Count)
+            return Block(화물배차수락오류코드.일정근거부족, "진행 중 업무의 의뢰·기사·수행 책임을 명확히 확인해야 합니다.");
 
-        var driver = await _db.용달기사
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.기사Id == 기사Id, cancellationToken);
-        var vehicle = string.IsNullOrWhiteSpace(driver?.차량)
-            ? null
-            : await _db.차량제원.AsNoTracking().FirstOrDefaultAsync(
-                x => x.차량코드 == driver.차량 || x.차량명 == driver.차량,
-                cancellationToken);
+        var actualVehicle = await _실차조회.조회Async(기사Id, cancellationToken);
+        var vehicle = actualVehicle.유효제원;
         var candidateCargo = await _db.화물요구조건
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.의뢰Id == 후보의뢰.의뢰Id, cancellationToken);
@@ -124,19 +165,8 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
             warningMessages.AddRange(vehicleResult.경고);
         }
 
-        if (activeTransports.Count > 0)
         {
-            if (IsSingleOnly(후보의뢰, candidateCargo))
-            {
-                return Block(화물배차수락오류코드.차량적합실패, "단독 운송 또는 혼적 금지 화물은 진행 중 운송과 함께 수락할 수 없습니다.");
-            }
-
-            if (IsSensitive(후보의뢰))
-            {
-                return Block(화물배차수락오류코드.차량적합실패, "파손 주의·냉장·냉동 화물은 현재 진행 중 운송과의 호환 근거가 없어 추가 수락할 수 없습니다.");
-            }
-
-            var activeIds = activeTransports.Select(x => x.운송번호).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray();
+            var activeIds = activeTransports.Select(x => x.의뢰Id).Distinct(StringComparer.Ordinal).ToArray();
             var activeRequests = await _db.화주운송의뢰.AsNoTracking()
                 .Where(x => Enumerable.Contains(activeIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
@@ -144,15 +174,11 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                 .Where(x => Enumerable.Contains(activeIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
 
-            if (activeTransports.Any(x => activeRequests.TryGetValue(x.운송번호, out var request)
-                                          && IsSingleOnly(request, activeCargo.GetValueOrDefault(x.운송번호))))
-            {
-                return Block(화물배차수락오류코드.차량적합실패, "현재 진행 중인 단독 운송 또는 혼적 금지 화물이 있어 추가 화물을 수락할 수 없습니다.");
-            }
-            if (activeRequests.Values.Any(IsSensitive))
-            {
-                return Block(화물배차수락오류코드.차량적합실패, "현재 진행 중인 민감 화물과 새 화물의 혼적 호환 근거가 없습니다.");
-            }
+            var mixReasons = 화물구간적재검증Service.혼적차단사유(activeRequests.Values
+                .Select(x => new 화물구간적재작업(x, activeCargo.GetValueOrDefault(x.의뢰Id)))
+                .Append(new(후보의뢰, candidateCargo)).ToArray());
+            if (mixReasons.Count > 0)
+                return Block(화물배차수락오류코드.차량적합실패, string.Join(" ", mixReasons));
 
             if (!_기사위치Store.TryGetLatest(기사Id, out var currentLocation)
                 || !HasRouteAndWindowEvidence(후보의뢰)
@@ -168,6 +194,39 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                 기사Id,
                 new 배차경로좌표(currentLocation.Latitude, currentLocation.Longitude),
                 cancellationToken);
+            // 추천이 만들어진 과거 기준시각 대신 현재 수행 시작 시각으로 약속을 다시 확인한다.
+            plan = plan with { 기준시각 = DateTime.UtcNow };
+            IReadOnlyDictionary<string, 화물상하차작업시간>? handling = 명시작업시간;
+            if (handling is null)
+            {
+                var queue = await _db.운송원장.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == 후보의뢰.의뢰Id, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(queue?.추천판정근거Json))
+                {
+                    try { handling = JsonSerializer.Deserialize<국내화물추천저장근거>(queue.추천판정근거Json)?.수행계획?.상하차작업시간; }
+                    catch (JsonException) { return Block(화물배차수락오류코드.추천판본불일치, "추천 수행계획 근거를 읽을 수 없어 다시 추천받아야 합니다."); }
+                }
+            }
+            var handlingSources = activeRequests.Values.Append(후보의뢰).ToArray();
+            if (handling is not null || handlingSources.Any(x => x.픽업_작업시간분.HasValue || x.하차_작업시간분.HasValue))
+            {
+                handling = 국내화물배차조율입력Factory.작업시간입력결합(handlingSources, handling, out var conflicts);
+                if (conflicts.Length > 0)
+                    return Block(화물배차수락오류코드.추천판본불일치, "저장된 상하차 작업시간과 추천 계획이 다릅니다. 최신 추천을 확인해 주세요.");
+            }
+            if (handling is not null)
+            {
+                bool TimeConfirmed(string id, string stage) => handling.TryGetValue(id, out var time) && time is not null
+                    && (stage == "pickup" ? time.상차분 : time.하차분) is >= 0m;
+                if (!TimeConfirmed(후보의뢰.의뢰Id, "pickup") || !TimeConfirmed(후보의뢰.의뢰Id, "dropoff")
+                    || plan.항목목록.Any(x => !TimeConfirmed(x.의뢰Id, x.단계유형)))
+                    return Block(화물배차수락오류코드.일정근거부족, "후보와 진행 중 운송의 남은 상하차 작업시간을 모두 확인해야 합니다.");
+                plan = plan with
+                {
+                    상하차작업시간 = handling,
+                    항목목록 = plan.항목목록.Select(x => x with { 작업시간분 = handling.GetValueOrDefault(x.의뢰Id) is { } times
+                        ? x.단계유형 == "pickup" ? times.상차분 : times.하차분 : null }).ToArray()
+                };
+            }
             var schedule = await _일정삽입평가Service.평가Async(plan, 후보의뢰, cancellationToken);
             if (!schedule.삽입가능여부 || !schedule.전체완수가능여부 || !schedule.후보포함실제경로확인됨)
             {
@@ -190,9 +249,9 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                     Attempt = x,
                     Capacity = EvaluateSegmentCapacity(
                         vehicle!, activeTransports, activeRequests, activeCargo,
-                        후보의뢰, candidateCargo, x.경로순서)
+                        후보의뢰, candidateCargo, x.도착예상목록)
                 })
-                .FirstOrDefault(x => x.Capacity.수락가능);
+                .FirstOrDefault(x => x.Capacity.적합여부);
             if (feasibleCapacityAttempt is null)
             {
                 return Block(
@@ -217,86 +276,33 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                     warningMessages);
             }
 
-            return new(true, null, null, warningCodes, warningMessages, acceptedAttempt.경로순서, acceptedAttempt.총소요시간분, acceptedAttempt.최대시간위반분);
+            return new(true, null, null, warningCodes, warningMessages, acceptedAttempt.경로순서, acceptedAttempt.총소요시간분, acceptedAttempt.최대시간위반분)
+            {
+                검증한계 = handling is null || !handling.TryGetValue(후보의뢰.의뢰Id, out var times) || !times.확인됨
+                    || plan.항목목록.Any(x => x.작업시간분 is null)
+                    ? ["상하차 작업시간이 일부 미확인입니다. 구형 일정의 0분 가정은 확인된 작업시간이 아닙니다."] : []
+            };
         }
 
-        if (warningCodes.Except(확인한경고코드, StringComparer.Ordinal).Any())
-        {
-            return Block(
-                화물배차수락오류코드.경고확인필요,
-                "수락 전에 차량·화물 주의사항을 명시적으로 확인해야 합니다.",
-                warningCodes: warningCodes,
-                warningMessages: warningMessages);
-        }
-
-        return new(true, null, null, warningCodes, warningMessages, [], null, null);
     }
 
-    private static 화물배차수락적격성결과 EvaluateSegmentCapacity(
+    private 화물구간적재검증결과 EvaluateSegmentCapacity(
         차량제원 vehicle,
         IReadOnlyList<운송원장> activeTransports,
         IReadOnlyDictionary<string, 화주운송의뢰> activeRequests,
         IReadOnlyDictionary<string, 화물요구조건> activeCargo,
         화주운송의뢰 candidate,
         화물요구조건? candidateCargo,
-        IReadOnlyList<string> routeOrder)
+        IReadOnlyList<운송일정도착예상항목> arrivals)
     {
-        var requirements = new Dictionary<string, CapacityRequirement>(StringComparer.Ordinal);
-        foreach (var transport in activeTransports)
-        {
-            if (!activeRequests.TryGetValue(transport.운송번호, out var request)
-                || !TryCreateRequirement(request, activeCargo.GetValueOrDefault(transport.운송번호), out var requirement))
-            {
-                return Block(화물배차수락오류코드.일정근거부족, "진행 중 화물의 중량·부피·팔레트 근거가 없어 구간별 적재 여유를 검증할 수 없습니다.");
-            }
-            requirements[transport.운송번호] = requirement;
-        }
-        if (!TryCreateRequirement(candidate, candidateCargo, out var candidateRequirement))
-        {
-            return Block(화물배차수락오류코드.일정근거부족, "새 화물의 중량·부피·팔레트 근거가 없어 구간별 적재 여유를 검증할 수 없습니다.");
-        }
-        requirements[candidate.의뢰Id] = candidateRequirement;
-
-        var loaded = new HashSet<string>(activeTransports
-            .Where(x => 상차완료상태목록.Contains(x.상태, StringComparer.Ordinal))
-            .Select(x => x.운송번호), StringComparer.Ordinal);
-
-        foreach (var step in routeOrder)
-        {
-            var id = requirements.Keys.FirstOrDefault(x => step.EndsWith(x, StringComparison.Ordinal));
-            if (id is null) continue;
-            if (step.Contains(" 상차 ", StringComparison.Ordinal)) loaded.Add(id);
-            if (!Fits(vehicle, loaded.Select(x => requirements[x])))
-            {
-                return Block(화물배차수락오류코드.차량적합실패, "권장 경로의 일부 구간에서 차량 적재 중량·부피 또는 팔레트 한도를 초과합니다.");
-            }
-            if (step.Contains(" 하차 ", StringComparison.Ordinal)) loaded.Remove(id);
-        }
-
-        return new(true, null, null, [], [], routeOrder, null, null);
-    }
-
-    private static bool Fits(차량제원 vehicle, IEnumerable<CapacityRequirement> requirements)
-    {
-        var list = requirements.ToArray();
-        if (list.Sum(x => x.WeightKg) > vehicle.최대적재중량Kg) return false;
-        if (vehicle.권장최대CBM.HasValue && list.Sum(x => x.VolumeCbm) > vehicle.권장최대CBM.Value) return false;
-        if (vehicle.팔레트적재개수.HasValue && list.Sum(x => x.Pallets) > vehicle.팔레트적재개수.Value) return false;
-        return true;
-    }
-
-    private static bool TryCreateRequirement(화주운송의뢰 request, 화물요구조건? cargo, out CapacityRequirement requirement)
-    {
-        var weight = cargo?.화물무게Kg ?? request.화물중량Kg;
-        var volume = request.화물부피Cbm;
-        var pallets = cargo?.팔레트개수 ?? request.화물팔레트개수;
-        if (!weight.HasValue || !volume.HasValue || !pallets.HasValue)
-        {
-            requirement = default;
-            return false;
-        }
-        requirement = new CapacityRequirement(weight.Value, volume.Value, pallets.Value);
-        return true;
+        if (activeTransports.Any(x => !activeRequests.ContainsKey(x.의뢰Id)))
+            return new(false, false, "FreightSegment.EvidenceMissing", ["진행 중 운송의 화물 원장을 확인하지 못했습니다."], []);
+        var jobs = activeTransports.Select(x => new 화물구간적재작업(activeRequests[x.의뢰Id],
+            activeCargo.GetValueOrDefault(x.의뢰Id), 상차완료상태목록.Contains(x.상태, StringComparer.Ordinal)))
+            .Append(new(candidate, candidateCargo)).ToArray();
+        var typed = arrivals.Select(x => new 기사운송일정항목(x.의뢰Id, x.단계유형, x.주소,
+            null, null, x.시간창종료일시, x.순서, null, false, x.의뢰Id == candidate.의뢰Id)).ToArray();
+        return _구간검증.평가(vehicle, jobs, typed);
     }
 
     private static bool HasRouteAndWindowEvidence(화주운송의뢰 request)
@@ -306,21 +312,6 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
            && request.하차_경도.HasValue
            && request.픽업_시간창_종료일시 != default
            && request.하차_시간창_종료일시.HasValue;
-
-    private static bool IsSingleOnly(화주운송의뢰 request, 화물요구조건? cargo)
-    {
-        if (cargo is { 독차필수: true } || cargo is { 혼적허용: false }) return true;
-        var text = string.Join(' ', new[] { request.운송방식, request.서비스레벨, request.요청사항 }.Where(x => !string.IsNullOrWhiteSpace(x))!);
-        return text.Contains("단독", StringComparison.OrdinalIgnoreCase)
-               || text.Contains("혼적불가", StringComparison.OrdinalIgnoreCase)
-               || text.Contains("경유불가", StringComparison.OrdinalIgnoreCase)
-               || text.Contains("묶음불가", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsSensitive(화주운송의뢰 request)
-        => request.화물파손주의여부
-           || (!string.IsNullOrWhiteSpace(request.화물온도조건)
-               && !string.Equals(request.화물온도조건, "상온", StringComparison.OrdinalIgnoreCase));
 
     private static 화물배차수락적격성결과 Block(
         string code,
@@ -332,5 +323,4 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
         IReadOnlyList<string>? warningMessages = null)
         => new(false, code, message, warningCodes ?? [], warningMessages ?? [], route ?? [], totalMinutes, maxViolation);
 
-    private readonly record struct CapacityRequirement(decimal WeightKg, decimal VolumeCbm, int Pallets);
 }

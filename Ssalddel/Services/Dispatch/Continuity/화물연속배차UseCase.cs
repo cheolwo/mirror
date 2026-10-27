@@ -434,14 +434,25 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
     public async Task<화물경로위험Dto> 현재위험조회Async(string 기사Id, CancellationToken cancellationToken = default)
     {
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        var latest = await _db.화물운송시간약속.AsNoTracking()
-            .Where(x => x.기사Id == 기사Id)
-            .OrderBy(x => x.최종도착한계시각Utc)
+        // 이전 완료 약속이나 담당이 바뀐 운송으로 현재 경로의 위험을 계산하지 않는다.
+        var active = _db.운송원장.AsNoTracking().Where(x =>
+            x.배차업무유형 == 상태값.배차업무유형.용달운송
+            && x.배차큐단계 == 상태값.배차큐단계.확정
+            && x.상태 != 상태값.배차상태.인수완료 && x.상태 != 상태값.배차상태.취소 && x.상태 != "반환대기"
+            && (x.기사_운송자 == 기사Id || x.확정기사Id == 기사Id)
+            && (string.IsNullOrEmpty(x.기사_운송자) || x.기사_운송자 == 기사Id)
+            && (string.IsNullOrEmpty(x.확정기사Id) || x.확정기사Id == 기사Id));
+        var current = await (from promise in _db.화물운송시간약속.AsNoTracking()
+            join transport in active on promise.의뢰Id equals transport.의뢰Id
+            where promise.기사Id == 기사Id
+            orderby promise.최종도착한계시각Utc, promise.Id
+            select new { Promise = promise, Transport = transport })
             .FirstOrDefaultAsync(cancellationToken);
-        if (latest is null)
+        if (current is null)
         {
             return new 화물경로위험Dto { 사유Code = "TimeCommitmentMissing" };
         }
+        var latest = current.Promise;
 
         if (!_위치Store.TryGetLatest(기사Id, out var location))
         {
@@ -452,9 +463,16 @@ public sealed class 화물연속배차UseCase : I화물연속배차UseCase
             };
         }
 
-        var transport = await _db.운송원장.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.의뢰Id == latest.의뢰Id, cancellationToken);
-        var destination = transport is null ? null : 좌표(transport.하차_위도, transport.하차_경도);
+        if (!기사위치신선도정책.유효한가(location.ReceivedAtUtc, now, _queueOptions.기사위치유효시간분))
+        {
+            return new 화물경로위험Dto
+            {
+                의뢰Id = latest.의뢰Id,
+                사유Code = "CurrentLocationStale"
+            };
+        }
+
+        var destination = 좌표(current.Transport.하차_위도, current.Transport.하차_경도);
         if (destination is null)
         {
             return new 화물경로위험Dto

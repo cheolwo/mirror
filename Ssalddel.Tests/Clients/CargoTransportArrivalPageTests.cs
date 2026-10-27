@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -36,6 +37,12 @@ public sealed class CargoTransportArrivalPageTests
         Assert.False(fixture.Arriving);
         Assert.False(fixture.PlaceConfirmed); // 현장 주소 확인은 서버 도착 기록과 별도입니다.
         Assert.Equal(0, fixture.Completion.Calls);
+        var notice = Assert.Single(fixture.Feedback.History);
+        Assert.Equal(pickup ? "상차지 도착을 확인했습니다" : "하차지 도착을 확인했습니다", notice.Title);
+        Assert.False(notice.IsFinal);
+        fixture.Feedback.Dismiss();
+        await fixture.InitializeAsync(11);
+        Assert.Single(fixture.Feedback.History); Assert.Null(fixture.Feedback.Current);
     }
 
     [Theory]
@@ -56,6 +63,7 @@ public sealed class CargoTransportArrivalPageTests
         Assert.False(fixture.Arriving);
         Assert.Equal(Severity.Error, fixture.Status.심각도);
         Assert.Contains("synthetic 503", fixture.Status.메시지);
+        Assert.Empty(fixture.Feedback.History);
 
         fixture.Api.Arrive = fixture.SuccessfulArrival;
         await fixture.ArriveAsync();
@@ -82,6 +90,7 @@ public sealed class CargoTransportArrivalPageTests
         Assert.False(fixture.CanComplete);
         Assert.False(fixture.Arriving);
         Assert.Equal(0, fixture.Completion.Calls);
+        Assert.Empty(fixture.Feedback.History);
 
         fixture.Api.Detail = fixture.CanonicalDetail;
         await fixture.InitializeAsync(11);
@@ -104,6 +113,7 @@ public sealed class CargoTransportArrivalPageTests
         Assert.Equal(fixture.BeforeState, fixture.Transport!.현재단계);
         Assert.Equal(Severity.Error, fixture.Status.심각도);
         Assert.Contains("도착 처리 결과", fixture.Status.메시지);
+        Assert.Empty(fixture.Feedback.History);
     }
 
     [Theory]
@@ -228,6 +238,7 @@ public sealed class CargoTransportArrivalPageTests
         Assert.Null(fixture.Status.메시지);
         Assert.False(fixture.CanArrive);
         Assert.False(fixture.Arriving);
+        Assert.Empty(fixture.Feedback.History);
     }
 
     [Theory]
@@ -251,6 +262,7 @@ public sealed class CargoTransportArrivalPageTests
         Assert.Equal(fixture.BeforeState, fixture.Transport!.현재단계);
         Assert.False(fixture.CanArrive);
         Assert.Equal(0, fixture.Completion.Calls);
+        Assert.Empty(fixture.Feedback.History);
     }
 
     [Theory]
@@ -284,6 +296,7 @@ public sealed class CargoTransportArrivalPageTests
         public TransportApiStub Api { get; }
         public CompletionService Completion { get; } = new();
         public 기사PageViewModelBase Page => (기사PageViewModelBase?)pickup ?? dropoff!;
+        public WorkflowCompletionFeedback Feedback => pickup?.CompletionFeedback ?? dropoff!.CompletionFeedback;
         public 기사운송샘플항목? Transport => pickup?.운송 ?? dropoff?.운송;
         public 기사운송작업상태ViewModel Status => pickup?.작업상태 ?? dropoff!.작업상태;
         public bool CanArrive => pickup?.도착가능 ?? dropoff!.도착가능;

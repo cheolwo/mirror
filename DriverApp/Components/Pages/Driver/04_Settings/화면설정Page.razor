@@ -3,7 +3,6 @@
 @inject DriverViewVisibilityService ViewVisibilityService
 @inject DriverHomeDisplayPreferenceService HomeDisplayPreferenceService
 @inject 추천카드표시설정Service CardPreferenceService
-@inject IDriverSampleDataService SampleData
 @inject 기사위치표시설정Service LocationDisplayPreferences
 
 <PageTitle>화면 설정</PageTitle>
@@ -69,29 +68,15 @@
                                OnClick="@(() => SetCardMode(DriverApp.Models.Driver.추천카드표시모드.자세히))">자세히</MudButton>
                 </MudStack>
 
-                <MudText Typo="Typo.caption" Color="Color.Secondary">미리보기</MudText>
-                @* preview card uses first sample request *@
-                @if (SampleData.추천의뢰목록.Count > 0)
-                {
-                    var preview = SampleData.추천의뢰목록[0];
-                    <MudPaper Class="pa-3 mt-2" Elevation="0" Outlined="true">
-                        <MudStack Spacing="1">
-                            <MudText Typo="Typo.subtitle1">@preview.픽업지 → @preview.하차지</MudText>
-                            <MudStack Row="true" Spacing="1">
-                                @if (CardPreferenceService.CalculatePolicy().운송방식표시)
-                                {
-                                    <MudChip T="string" Color="Color.Primary">@preview.운송방식</MudChip>
-                                }
-                                @if (CardPreferenceService.CalculatePolicy().시간조건표시 && preview.당일상차필수)
-                                {
-                                    <MudChip T="string" Color="Color.Warning">당상</MudChip>
-                                }
-                            </MudStack>
-                            <MudText Typo="Typo.body2">@preview.차량조건표시 · {0}</MudText>
-                            <MudText Typo="Typo.h6" Color="Color.Error">@preview.운임표시</MudText>
-                        </MudStack>
-                    </MudPaper>
-                }
+                <MudText Typo="Typo.caption" Color="Color.Secondary">미리보기 · 예시 조건</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">운송 방식·차량·화물·시간 조건은 모든 보기에서 표시합니다.</MudText>
+                <MudPaper Class="pa-3 mt-2" Elevation="0" Outlined="true">
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle1">상차지 → 하차지</MudText>
+                        <DriverCargoConditions Request="@PreviewRequest" />
+                        <MudText Typo="Typo.h6" Color="Color.Error">예시 운임 · @PreviewRequest.운임표시</MudText>
+                    </MudStack>
+                </MudPaper>
             </MudStack>
         </MudPaper>
 
@@ -129,6 +114,16 @@
 </MudContainer>
 
 @code {
+    private static readonly DriverRequestItem PreviewRequest = new()
+    {
+        운송방식 = "혼적", 차량종류 = "1톤 카고", 화물중량Kg = 120m, 화물수량 = 8,
+        상차시간창시작일시 = new DateTime(2026, 10, 24, 1, 0, 0, DateTimeKind.Utc),
+        상차시간창종료일시 = new DateTime(2026, 10, 24, 2, 0, 0, DateTimeKind.Utc),
+        하차시간창시작일시 = new DateTime(2026, 10, 24, 5, 0, 0, DateTimeKind.Utc),
+        하차시간창종료일시 = new DateTime(2026, 10, 24, 6, 0, 0, DateTimeKind.Utc),
+        예상수익 = 45000m
+    };
+
     private bool isBusy;
     private string? message;
     private Severity messageSeverity = Severity.Info;

@@ -9,6 +9,11 @@ public class 기사운송요약응답
     public long Id { get; set; }
     public string 운송번호 { get; set; } = string.Empty;
     public string 상태 { get; set; } = string.Empty;
+    /// <summary>원의뢰에 입력된 운송 방식입니다. 표시 명칭과 별개로 원문을 보존합니다.</summary>
+    public string? 운송방식 { get; set; }
+    public string? 차량종류 { get; set; }
+    public decimal? 화물중량Kg { get; set; }
+    public int? 화물수량 { get; set; }
     public string 출발지 { get; set; } = string.Empty;
     public string 도착지 { get; set; } = string.Empty;
     public string 기사_운송자 { get; set; } = string.Empty;

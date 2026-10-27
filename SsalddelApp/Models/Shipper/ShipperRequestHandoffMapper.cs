@@ -8,17 +8,19 @@ public static class ShipperRequestHandoffMapper
 {
     public static LocationContactDTO CreatePickup(운송모델작성Draft draft)
         => Create(draft.픽업도로명주소, draft.픽업상세주소, draft.픽업연락처이름,
-            draft.픽업연락처전화번호, draft.픽업시간창시작일시, draft.픽업시간창종료일시);
+            draft.픽업연락처전화번호, draft.픽업시간창시작일시, draft.픽업시간창종료일시, draft.픽업위도, draft.픽업경도, draft.픽업작업시간분);
 
     public static LocationContactDTO CreateDropoff(운송모델작성Draft draft)
         => Create(draft.하차도로명주소, draft.하차상세주소, draft.하차연락처이름,
-            draft.하차연락처전화번호, draft.하차시간창시작일시, draft.하차시간창종료일시);
+            draft.하차연락처전화번호, draft.하차시간창시작일시, draft.하차시간창종료일시, draft.하차위도, draft.하차경도, draft.하차작업시간분);
 
     public static LocationContactDTO? Copy(LocationContactDTO? source, string? roadAddress = null)
     {
         if (source is null && roadAddress is null) return null;
         return new LocationContactDTO
         {
+            작업시간분 = source?.작업시간분,
+            작업시간입력초기화 = source?.작업시간입력초기화 == true,
             주소 = new AddressDTO
             {
                 도로명주소 = roadAddress ?? source?.주소?.도로명주소 ?? string.Empty,
@@ -37,10 +39,12 @@ public static class ShipperRequestHandoffMapper
         };
     }
 
-    private static LocationContactDTO Create(string address, string? detail, string name, string phone, DateTime? start, DateTime? end)
+    private static LocationContactDTO Create(string address, string? detail, string name, string phone, DateTime? start, DateTime? end,
+        decimal? latitude, decimal? longitude, decimal? handlingMinutes)
         => new()
         {
-            주소 = new AddressDTO { 도로명주소 = address, 상세주소 = detail },
+            작업시간분 = handlingMinutes,
+            주소 = new AddressDTO { 도로명주소 = address, 상세주소 = detail, 위도 = latitude, 경도 = longitude },
             연락처 = new ContactDTO { 이름 = name, 전화번호 = phone },
             시간창 = ToUtcWindow(start, end)
         };

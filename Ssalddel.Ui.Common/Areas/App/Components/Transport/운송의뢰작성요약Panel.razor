@@ -28,13 +28,22 @@
             <MudText Typo="Typo.subtitle2">현재 초안</MudText>
             <MudText Typo="Typo.body2">화물: @Display(ViewModel.화물종류)</MudText>
             <MudText Typo="Typo.body2">적재: @Display(ViewModel.화물적재형태)</MudText>
+            <MudText Typo="Typo.body2">포장 수량: @(ViewModel.화물수량?.ToString() ?? "미확인")개 · 전체 포장 포함 중량: @(ViewModel.화물중량Kg?.ToString("0.###") ?? "미입력") kg</MudText>
+            <MudText Typo="Typo.body2">포장 1개 크기: @(ViewModel.화물길이Mm?.ToString() ?? "미입력") × @(ViewModel.화물폭Mm?.ToString() ?? "미입력") × @(ViewModel.화물높이Mm?.ToString() ?? "미입력") mm</MudText>
+            <MudText Typo="Typo.body2">입력 부피: @Volume(ViewModel.화물부피Cbm) · 크기로 계산한 부피: @Volume(ViewModel.적재입력.치수추정부피Cbm)</MudText>
+            <MudText Typo="Typo.body2">차량 확인에 쓸 부피: @Volume(ViewModel.적재입력.유효부피Cbm)</MudText>
+            <MudText Typo="Typo.body2">바닥 방향 변경: @Permission(ViewModel.화물바닥회전가능여부) · 위에 쌓기: @Permission(ViewModel.화물적층가능여부)</MudText>
             <MudText Typo="Typo.body2">구간: @Display(ViewModel.상차도로명주소) → @Display(ViewModel.하차도로명주소)</MudText>
             <MudText Typo="Typo.body2">상차 담당자: @Display(ViewModel.상차연락처이름) · @MaskedPhone(ViewModel.상차연락처전화번호)</MudText>
             <MudText Typo="Typo.body2">상차 시간창: @Window(ViewModel.상차시간창시작일시, ViewModel.상차시간창종료일시) (한국시간)</MudText>
             <MudText Typo="Typo.body2">하차 담당자: @Display(ViewModel.하차연락처이름) · @MaskedPhone(ViewModel.하차연락처전화번호)</MudText>
             <MudText Typo="Typo.body2">하차 시간창: @Window(ViewModel.하차시간창시작일시, ViewModel.하차시간창종료일시) (한국시간)</MudText>
             <MudText Typo="Typo.body2">차량/결제: @Display(ViewModel.차량종류) · @ViewModel.결제수단</MudText>
-            <MudText Typo="Typo.body2">추천 차량: @(string.Join(", ", ViewModel.추천차량종류목록))</MudText>
+            <MudText Typo="Typo.body2">추천 차량: @(ViewModel.추천차량종류목록.Count > 0 ? string.Join(", ", ViewModel.추천차량종류목록) : "확인된 추천 없음")</MudText>
+            @if (ViewModel.적용차량재확인필요)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Warning">화물 조건이 바뀌었습니다. 차량을 다시 확인해 주세요.</MudText>
+            }
             <MudText Typo="Typo.body2">부가비용: @ViewModel.부가비용합계.ToString("N0")원</MudText>
         </MudStack>
 
@@ -55,6 +64,9 @@
         단계.완료 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked;
 
     private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "미입력" : value;
+
+    private static string Volume(decimal? value) => value.HasValue ? $"{value.Value:0.######} m³" : "미입력";
+    private static string Permission(bool? value) => value.HasValue ? (value.Value ? "가능" : "불가") : "미확인";
 
     private static string MaskedPhone(string? value)
     {

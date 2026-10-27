@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ssalddel.Contracts.Driver.Profile;
 using Ssalddel.ApiMetadata;
+using Ssalddel.Application.Driver.Qualification;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Driver.Profile01;
 
@@ -38,11 +40,25 @@ public sealed class 용달기사Controller : ControllerBase
     }
 
     [HttpGet("me")]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     public async Task<IActionResult> 내용달기사조회()
     {
         var result = await _useCase.내프로필조회Async(GetCurrentUserId());
         return this.ToActionResult(result);
     }
+
+    [HttpGet("me/transport-qualification")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    public async Task<IActionResult> 내운송자격조회([FromServices] I운송자격UseCase qualification, CancellationToken cancellationToken)
+        => this.ToActionResult(await qualification.본인조회Async(GetCurrentUserId(), cancellationToken));
+
+    [HttpPost("me/transport-qualification")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    public async Task<IActionResult> 운송자격제출([FromServices] I운송자격UseCase qualification,
+        [FromBody] 운송자격제출요청 request, CancellationToken cancellationToken)
+        => this.ToActionResult(await qualification.제출Async(GetCurrentUserId(), request, cancellationToken));
 
     private string? GetCurrentUserId()
     {

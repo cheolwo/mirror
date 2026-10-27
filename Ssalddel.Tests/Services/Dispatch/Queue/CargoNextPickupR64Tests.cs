@@ -44,7 +44,7 @@ public sealed class CargoNextPickupR64Tests
         Assert.NotNull(selected);
         Assert.False(selected.화물수행근거!.활성업무있음);
         Assert.Equal(new 배차경로좌표(38.09m, 127m), selected.화물수행근거.기준좌표);
-        Assert.Equal(0, f.Routes.RouteCalls);
+        Assert.True(f.Routes.RouteCalls > 0);
     }
 
     [Theory]
@@ -182,7 +182,8 @@ public sealed class CargoNextPickupR64Tests
         public 용달운송배차업무정책 Policy(ISharedDriverWorkAdmissionService? shared = null)
             => new(Db, new Locations(), States, Options.Create(new 배차큐정책Options { 기사후보검색반경Km = 5m }),
                 Routes, new Fit(), new 배차추천판정Service(), new Score(), new Rejected(), 운영배차: Availability,
-                후속픽업: Anchor(), 일정평가: new 운송일정삽입평가Service(Routes), sharedAdmission: shared);
+                후속픽업: Anchor(), 일정평가: new 운송일정삽입평가Service(Routes), sharedAdmission: shared,
+                신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
     private sealed class States : I국내화물운송기사상태Store

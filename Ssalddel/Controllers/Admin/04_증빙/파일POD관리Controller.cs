@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Ssalddel.Application.Evidence;
 using Ssalddel.Controllers;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Evidence04;
 
@@ -31,6 +32,7 @@ public sealed class 파일POD관리Controller : ControllerBase
     }
 
     [HttpGet]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     public IActionResult 목록조회([FromQuery] string? fileType, [FromQuery] string? requestId)
     {
         var result = _useCase.목록조회(fileType, requestId);

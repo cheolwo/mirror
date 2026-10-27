@@ -1,0 +1,41 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceAccess Access
+
+<PageTitle>받을 업무·적재 설정 · 살뜰</PageTitle>
+@if (!_ready)
+{
+    <MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+        <MudButton Href="/workspace/cargo-driver" Style="min-height:48px">지도 업무로 돌아가기</MudButton>
+        @if (_failed)
+        {
+            <MudAlert Severity="Severity.Error">로그인 상태를 확인하지 못했습니다. 다시 확인해 주세요.</MudAlert>
+            <MudButton OnClick="InitializeAsync" Style="min-height:48px">다시 확인</MudButton>
+        }
+        else { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+    </MudContainer>
+}
+else
+{
+    <DriverWorkParticipationScreen ReturnHref="/workspace/cargo-driver" LoginHref="@LoginHref" />
+}
+
+@code {
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _ready, _failed, _disposed;
+    private static string LoginHref => RoleWorkspaceNavigation.WithReturn("/workspace-login/cargo-driver", "/workspace/cargo-driver/settings")!;
+    protected override Task OnInitializedAsync() => InitializeAsync();
+    private async Task InitializeAsync()
+    {
+        _failed = false;
+        try
+        {
+            await Access.EnsureInitializedAsync(RoleWorkspaceCatalog.CargoDriver, _lifetime.Token);
+            if (!_disposed) _ready = true;
+        }
+        catch (OperationCanceledException) when (_disposed) { }
+        catch { if (!_disposed) _failed = true; }
+    }
+    public void Dispose() { _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); }
+}

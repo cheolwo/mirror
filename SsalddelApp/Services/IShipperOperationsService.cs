@@ -35,8 +35,20 @@ public interface IShipperOperationsService
     Task<IReadOnlyList<재고항목응답>> GetInventoryAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> GetVehicleTypesAsync(CancellationToken cancellationToken = default);
+    Task<차량추천응답> RecommendVehiclesAsync(차량추천요청 request, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("현재 화물 조건의 차량 추천 연결을 확인해 주세요.");
 
     Task<decimal> EstimateFareAsync(string vehicleType, decimal distanceKm, CancellationToken cancellationToken = default);
+
+    // 구판 구현에는 거리만 있는 요청만 위임합니다. 확인된 좌표·추가비를 조용히 버리지 않습니다.
+    Task<decimal> EstimateFareAsync(화주운송기준운임견적요청 request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.상차위도.HasValue || request.상차경도.HasValue || request.하차위도.HasValue || request.하차경도.HasValue
+            || request.대기료 is not null and not 0m || request.수작업비 is not null and not 0m || request.할증 is not null and not 0m)
+            throw new NotSupportedException("현재 운임 서비스가 위치·추가비를 포함한 견적을 지원하지 않습니다.");
+        return EstimateFareAsync(request.차량종류 ?? string.Empty, request.예상거리Km ?? 0m, cancellationToken);
+    }
 
     Task<ShipperRequestItem> AddRequestAsync(ShipperRequestItem request, CancellationToken cancellationToken = default);
 

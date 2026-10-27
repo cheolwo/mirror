@@ -68,13 +68,15 @@ public sealed class FoodCargoDispatchBoundaryTests
         await using var db = CreateDb();
         var queue = CreateQueue(상태값.배차업무유형.용달운송);
         queue.기사지급예정액 = 27000m;
+        db.화주운송의뢰.Add(new() { 의뢰Id = queue.의뢰Id, 화물종류 = "합성 경계 시험 물품" });
         db.운송원장.Add(queue);
         await db.SaveChangesAsync();
         var cargo = new CargoStatePort();
         var notification = new NotificationPort();
         var pricing = new FoodPricingPort();
         var food = new FoodRecordPort { ThrowOnRecommendation = true };
-        var service = CreateService(db, cargo, notification, pricing, food);
+        var service = CreateService(db, cargo, notification, pricing, food,
+            qualification: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
         var result = await service.추천시작Async(queue.의뢰Id, "cargo-driver");
 
@@ -310,11 +312,13 @@ public sealed class FoodCargoDispatchBoundaryTests
         NotificationPort notification,
         FoodPricingPort pricing,
         I음식배달기사추천기록Service? food,
-        CandidatePort? selection = null)
+        CandidatePort? selection = null,
+        Ssalddel.Services.Dispatch.Compliance.I신규화물업무자격Guard? qualification = null)
         => new(db, Options.Create(new 배차큐정책Options()), selection!, notification,
             cargo, new 음식배달배차흐름Resolver(), pricing, food,
             운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
-            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+            신규업무자격: qualification);
 
     private sealed class CandidatePort(배차추천후보선정결과 result) : I배차추천후보선정Service
     {

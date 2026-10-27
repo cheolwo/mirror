@@ -10,6 +10,68 @@ public sealed class DriverRecommendationSelectionR69Tests
     private static readonly DateTime Now = new(2026, 10, 16, 8, 0, 0, DateTimeKind.Utc);
 
     [Fact]
+    public void SingleOffer_KeepsCurrentServerRoundWhenOrderChangesOrPushPrefersAnother()
+    {
+        var state = new DriverRecommendationSelectionState();
+        state.RefreshSingle([Offer("A"), Offer("B")], Now);
+        var updated = Offer("A"); updated.픽업지 = "재조회한 상차 장소";
+
+        state.RefreshSingle([Offer("B"), updated], Now.AddSeconds(1), new("B", 1));
+
+        Assert.Same(updated, Assert.Single(state.Items));
+        Assert.Equal(new("A", 1), state.SelectedKey);
+        Assert.False(state.Select("B", 1));
+    }
+
+    [Fact]
+    public void SingleOffer_UsesValidPushHintOnlyWhenThereIsNoCurrentOffer()
+    {
+        var state = new DriverRecommendationSelectionState();
+        state.RefreshSingle([Offer("A"), Offer("B")], Now, new("B", 1));
+        Assert.Equal("B", Assert.Single(state.Items).의뢰Id);
+        Assert.Equal("배차대기", state.Selected!.배차상태);
+    }
+
+    [Fact]
+    public void SingleOffer_OnlyTakesNextServerOfferWhenFreshResponseRemovesCurrent()
+    {
+        var state = new DriverRecommendationSelectionState();
+        var a = Offer("A"); var b = Offer("B");
+        state.RefreshSingle([a, b], Now);
+
+        state.RefreshSingle([b], Now.AddSeconds(1));
+
+        Assert.Same(b, Assert.Single(state.Items));
+        Assert.Equal("배차대기", a.배차상태);
+        Assert.Equal("배차대기", b.배차상태);
+    }
+
+    [Fact]
+    public void SingleOffer_DropsExpiredRoundAndUsesFirstLiveServerOfferWithoutAcceptingIt()
+    {
+        var state = new DriverRecommendationSelectionState();
+        var expired = Offer("A"); expired.추천만료시각 = Now;
+        var b = Offer("B"); var c = Offer("C");
+        state.RefreshSingle([expired, b, c], Now, new("A", 1));
+        Assert.Same(b, Assert.Single(state.Items));
+        Assert.Equal("배차대기", b.배차상태);
+    }
+
+    [Fact]
+    public void SingleOffer_NewRoundIsReboundAndEmptyFreshResponseClearsCard()
+    {
+        var state = new DriverRecommendationSelectionState();
+        state.RefreshSingle([Offer("A")], Now);
+        var nextRound = Offer("A", 2);
+        state.RefreshSingle([nextRound], Now.AddSeconds(1));
+        Assert.Same(nextRound, Assert.Single(state.Items));
+        Assert.Equal(new("A", 2), state.SelectedKey);
+        state.RefreshSingle([], Now.AddSeconds(2));
+        Assert.Empty(state.Items);
+        Assert.Null(state.SelectedKey);
+    }
+
+    [Fact]
     public void TwoOffers_ProduceTwoDistinctCards_WithoutSelectingBothForAcceptance()
     {
         var first = Offer("A"); var second = Offer("B");

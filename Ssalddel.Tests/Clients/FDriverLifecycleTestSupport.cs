@@ -214,8 +214,15 @@ namespace Ssalddel.Tests.Clients
             return new MainPageModel(new(), session, new(http, session), api, location ?? new FDriverTestLocationService(), new());
         }
         public static CancellationToken WorkspaceToken(MainPageModel model)
-            => ((CancellationTokenSource)typeof(MainPageModel).GetField("_workspaceCancellation", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .GetValue(model)!).Token;
+            => ((FDriverWorkspaceRefreshSession)typeof(MainPageModel).GetField("_workspaceRefresh", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(model)!).Lifetime.Token;
+        private static FDriverLocationTransmissionSession LocationTransmissions(MainPageModel model)
+            => (FDriverLocationTransmissionSession)typeof(MainPageModel).GetField("_locationTransmissions", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(model)!;
+        public static DateTime? LastLocationSentAtUtc(MainPageModel model) => LocationTransmissions(model).LastSentAtUtc;
+        public static void LastLocationSentAtUtc(MainPageModel model, DateTime? value)
+            => typeof(FDriverLocationTransmissionSession).GetField("_lastSentAtUtc", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(LocationTransmissions(model), value);
         public static Task RefreshBackground(MainPageModel model)
             => (Task)typeof(MainPageModel).GetMethod("RefreshWorkspaceFromBackgroundAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .Invoke(model, ["검증 갱신", WorkspaceToken(model)])!;

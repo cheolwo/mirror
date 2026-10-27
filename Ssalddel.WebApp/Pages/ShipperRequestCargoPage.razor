@@ -4,7 +4,13 @@
 
 <PageTitle>운송 의뢰 작성 - 화물 정보</PageTitle>
 
+<WebShipperSubmissionRecoveryPanel PageModel="PageModel" />
+@if (!PageModel.HasSubmission && !PageModel.IsBusy)
+{
 <ShipperRequestCargoScreen ViewModel="PageModel.State"
+                           MobileStep="ShipperRequestMobileStep.Cargo"
+                           Title="무엇을 보내나요?"
+                           Description="품목과 수량, 취급 조건을 입력해 주세요."
                            NavigationContext="RouteContext"
                            RootBackHref="@(RouteContext.ReturnPath ?? RouteContext.RootPath)"
                            BulkHref="@ShipperRequestPageRoutes.Bulk"
@@ -18,6 +24,7 @@
         }
     </BeforeContent>
 </ShipperRequestCargoScreen>
+}
 
 @code {
     private ShipperRequestNavigationContext RouteContext

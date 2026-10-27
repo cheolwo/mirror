@@ -48,12 +48,23 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     ? item.기준시각.Value
                     : rawArrival;
 
+                if (item.작업시간분 is < 0m || item.작업시간분 > (decimal)(DateTime.MaxValue - effectiveArrival).TotalMinutes)
+                {
+                    violations.Add($"{item.의뢰Id} {item.단계유형} 작업시간이 유효하지 않습니다.");
+                    allActualRoutes = false;
+                }
+                // 누락은 확인된 0분이 아니다. 기존 계산은 호환하되 신규 계획 검증에서 별도로 누락을 차단한다.
+                var serviceMinutes = item.작업시간분 is >= 0m
+                    && item.작업시간분 <= (decimal)(DateTime.MaxValue - effectiveArrival).TotalMinutes ? item.작업시간분.Value : 0m;
+                var completedAt = effectiveArrival.AddMinutes((double)serviceMinutes);
+                totalMinutes += (decimal)(effectiveArrival - rawArrival).TotalMinutes + serviceMinutes;
+
                 decimal? violationMinutes = null;
                 var violates = false;
-                if (item.시간창종료일시.HasValue && effectiveArrival > item.시간창종료일시.Value)
+                if (item.시간창종료일시.HasValue && completedAt > item.시간창종료일시.Value)
                 {
                     violates = true;
-                    violationMinutes = (decimal)(effectiveArrival - item.시간창종료일시.Value).TotalMinutes;
+                    violationMinutes = (decimal)(completedAt - item.시간창종료일시.Value).TotalMinutes;
                     maxViolation = !maxViolation.HasValue
                         ? violationMinutes
                         : Math.Max(maxViolation.Value, violationMinutes.Value);
@@ -70,7 +81,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     violates,
                     violationMinutes.HasValue ? Math.Round(violationMinutes.Value, 2) : null));
 
-                nowTime = effectiveArrival;
+                nowTime = completedAt;
                 nowPoint = item.좌표;
             }
 

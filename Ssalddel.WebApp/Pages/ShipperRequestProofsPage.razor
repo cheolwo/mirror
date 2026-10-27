@@ -1,5 +1,6 @@
 @page "/shipper/request/{RequestId}/proofs"
 @inject ShipperRequestDetailPageViewModel PageModel
+@implements IDisposable
 
 <PageTitle>운송 의뢰 증빙</PageTitle>
 
@@ -8,7 +9,20 @@
                             HomeHref="@ShipperRoutes.Home"
                             NewRequestHref="@ShipperRoutes.Request"
                             LoginHref="/login"
-                            RefreshRequested="RefreshAsync" />
+                            RefreshRequested="RefreshAsync">
+    <ReceiptContent>
+        <ShipperReceiptRegistrationPanel ReadinessMessage="@PageModel.ReceiptReadinessMessage"
+                                         ReceiptNumber="@PageModel.ReceiptNumber" ReceiptNumberChanged="PageModel.SetReceiptNumber"
+                                         Memo="@PageModel.ReceiptMemo" MemoChanged="PageModel.SetReceiptMemo"
+                                         AcceptanceConfirmed="PageModel.ReceiptAcceptanceConfirmed"
+                                         AcceptanceConfirmedChanged="PageModel.SetReceiptAcceptanceConfirmed"
+                                         Registered="@(PageModel.State.Request?.ReceiptRegisteredAt is not null || !string.IsNullOrWhiteSpace(PageModel.State.Request?.ReceiptNumber))"
+                                         RegisteredNumber="@(PageModel.State.Request?.ReceiptNumber ?? string.Empty)"
+                                         InputLocked="PageModel.ReceiptInputLocked" NeedsResultCheck="PageModel.ReceiptNeedsResultCheck"
+                                         CanRegister="PageModel.CanRegisterReceipt" IsBusy="@(PageModel.ReceiptSubmitting || PageModel.ReceiptChecking)"
+                                         RegisterRequested="RegisterAsync" CheckRequested="CheckAsync" />
+    </ReceiptContent>
+</ShipperRequestProofsScreen>
 
 @code {
     [Parameter] public string? RequestId { get; set; }
@@ -19,9 +33,20 @@
     private ShipperRequestDetailNavigationContext RouteContext
         => new() { ReturnPath = ReturnPath };
 
+    protected override void OnInitialized() => PageModel.StateChanged += Update;
+
     protected override Task OnParametersSetAsync()
-        => PageModel.LoadAsync(RequestId);
+        => PageModel.InitializeReceiptAsync(RequestId);
 
     private Task RefreshAsync()
-        => PageModel.LoadAsync(RequestId);
+        => PageModel.InitializeReceiptAsync(RequestId);
+
+    private Task RegisterAsync() => PageModel.RegisterReceiptAsync();
+    private Task CheckAsync() => PageModel.ConfirmReceiptResultAsync();
+    private void Update() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        PageModel.StateChanged -= Update;
+        PageModel.LeaveReceipt();
+    }
 }

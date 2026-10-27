@@ -1,0 +1,77 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverCurrentWork
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers
+@implements IDisposable
+@inject IDriverCurrentWorkClient Client
+
+<main class="driver-current-work" data-testid="driver-current-work" aria-busy="@(current?.IsBusy == true ? "true" : "false")">
+    <header class="driver-current-work__header">
+        <a class="driver-current-work__back" href="/">역할 선택</a>
+        <div class="driver-current-work__heading"><h1>지금 할 일</h1>
+            <button type="button" disabled="@(current is null || current.IsBusy)" @onclick="Refresh">다시 확인</button>
+        </div>
+    </header>
+    @if (current is not null)
+    {
+        @if (current.AccountNotice is { } notice)
+        { <p class="driver-current-work__notice" role="status">@notice</p> }
+        <div class="driver-current-work__sections">
+            @foreach (var section in current.Sections)
+            {
+                <section class="driver-current-work__section" data-work-kind="@section.Key" data-load-state="@section.State"
+                         aria-label="@section.Title">
+                    <header><DriverOfferBadge Visual="@Visual(section)" />
+                        @if (section.State is DriverCurrentWorkLoadState.Ready or DriverCurrentWorkLoadState.Empty)
+                        { <span class="driver-current-work__count">@(section.Items.Count)@section.Unit</span> }
+                    </header>
+                    @if (section.Items.Count > 0)
+                    {
+                        <ul class="driver-current-work__items">
+                            @foreach (var item in section.Items)
+                            {
+                                <li><div class="driver-current-work__copy"><h2>@item.Title</h2><p>@item.Status</p>
+                                    <small>@item.NextAction</small></div>
+                                    <a class="driver-current-work__continue" href="@item.Href" aria-label="@(item.Title + " 이어서 하기")">이어서 하기</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="driver-current-work__state" role="status">@section.Notice</p>
+                        @if (section.State is DriverCurrentWorkLoadState.LoginRequired or DriverCurrentWorkLoadState.OtherAccount)
+                        { <a class="driver-current-work__login" href="@section.LoginHref">기사 로그인</a> }
+                    }
+                </section>
+            }
+        </div>
+    }
+    <p class="driver-current-work__boundary">업무별로 나누어 보여줍니다. 수락·픽업·전달과 필요한 확인은 이어서 연 전문 화면에서 진행해 주세요.</p>
+    <a href="/driver/notifications/settings">추천 알림 설정</a>
+</main>
+
+@code {
+    [Parameter] public DriverCurrentWorkPageViewModel? Model { get; set; }
+    private DriverCurrentWorkPageViewModel? current;
+    private bool ownsModel;
+    protected override async Task OnInitializedAsync()
+    {
+        current = Model ?? new DriverCurrentWorkPageViewModel(Client);
+        ownsModel = Model is null;
+        current.Changed += Changed;
+        if (ownsModel) await current.LoadAsync();
+    }
+    private Task Refresh() => current?.LoadAsync() ?? Task.CompletedTask;
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    private static DriverOfferVisual Visual(DriverCurrentWorkSection section) => section.Key switch
+    {
+        "food" => new(section.Title, "음식 픽업·전달", DriverOfferPresentation.FoodColor) { IconPath = DriverOfferPresentation.FoodIconPath },
+        "cargo" => new(section.Title, "물품 상차·하차", DriverOfferPresentation.CargoColor) { IconPath = DriverOfferPresentation.CargoIconPath },
+        _ => new(section.Title, "거점 피킹·고객 전달", DriverOfferPresentation.WarehouseColor) { IconPath = DriverOfferPresentation.PickingIconPath }
+    };
+    public void Dispose()
+    {
+        if (current is null) return;
+        current.Changed -= Changed;
+        if (ownsModel) current.Dispose();
+    }
+}

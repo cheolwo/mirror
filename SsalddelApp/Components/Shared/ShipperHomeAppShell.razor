@@ -39,6 +39,9 @@ else
                                 BoundaryNote="의뢰 작성과 조회만으로 배차·계약·결제·통관·출고가 자동 확정되지는 않습니다." />
         </AuthenticatedIntro>
         <AnonymousContent>
+            <MudButton Href="@ShipperRoutes.PublicCargo" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mb-3">
+                로그인 없이 화물 목록 둘러보기
+            </MudButton>
             <ShipperHomeAppLoginPanel OnAuthenticated="HandleAuthenticatedAsync" />
         </AnonymousContent>
     </ShipperHomeScreen>

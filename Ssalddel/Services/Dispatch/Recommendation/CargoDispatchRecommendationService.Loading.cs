@@ -3,6 +3,7 @@ using 살뜰.도메인.공통;
 using 살뜰.도메인.차량;
 using 살뜰.도메인.화물;
 using 살뜰.도메인.화주;
+using 살뜰.도메인.운송;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -52,13 +53,15 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 .ToDictionaryAsync(r => r.의뢰Id, StringComparer.Ordinal);
         }
 
-        private async Task<차량제원?> LoadVehicleSpecAsync(string? driverVehicle)
+        private async Task<Dictionary<long, 운임구성>> LoadDriverFareMapAsync(IEnumerable<화주운송의뢰> requests)
         {
-            return driverVehicle is null
-                ? null
-                : await _db.차량제원
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.차량코드 == driverVehicle || x.차량명 == driverVehicle);
+            var ids = requests.Where(request => request.운임구성Id.HasValue)
+                .Select(request => request.운임구성Id!.Value).Distinct().ToArray();
+            return ids.Length == 0 ? [] : await _db.운임구성.AsNoTracking()
+                .Where(fare => Enumerable.Contains(ids, fare.Id)).ToDictionaryAsync(fare => fare.Id);
         }
+
+        private async Task<차량제원?> LoadVehicleSpecAsync(string driverId)
+            => (await _실차적재조회.조회Async(driverId)).유효제원;
     }
 }

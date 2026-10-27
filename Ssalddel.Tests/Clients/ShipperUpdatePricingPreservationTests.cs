@@ -281,7 +281,7 @@ public sealed class ShipperUpdatePricingPreservationTests
     }
 
     [Fact]
-    public async Task 최초등록의기존기본정산과서비스값은유지한다()
+    public async Task 최초등록은정산기본값을보존하고미입력조건을자동문구로채우지않는다()
     {
         await using var fixture = await Fixture.CreateAsync(KnownResponse());
 
@@ -303,11 +303,94 @@ public sealed class ShipperUpdatePricingPreservationTests
         Assert.Equal(증빙방식.인수증, payload.정산조건?.증빙방식);
         Assert.Equal(수납주체.플랫폼, payload.정산조건?.수납주체);
         Assert.Equal("SsalddelApp 서버 API 생성", payload.정산조건?.정산메모);
-        Assert.Equal("standard", payload.요금옵션?.서비스레벨);
-        Assert.Equal("SsalddelApp 서버 API 생성", payload.요금옵션?.요청사항);
+        Assert.Null(payload.요금옵션?.서비스레벨);
+        Assert.Null(payload.요금옵션?.요청사항);
         Assert.Equal(12.3m, payload.요금옵션?.예상거리Km);
         Assert.Equal(81000m, payload.요금옵션?.기사지급예정운임);
         Assert.NotNull(payload.요금옵션?.알선정책);
+    }
+
+    [Fact]
+    public async Task 치수와회전적층만수정해도_화물원입력과변경조건을전송한다()
+    {
+        var response = KnownResponse();
+        response.화물!.바닥회전가능여부 = true;
+        response.화물.적층가능여부 = true;
+        await using var fixture = await Fixture.CreateAsync(response);
+        var loaded = (await fixture.Service.GetRequestAsync(Fixture.RequestId))!;
+        var state = new 화주운송의뢰상태ViewModel();
+        state.목록적용([loaded]);
+        var model = new 화주운송의뢰수정ViewModel(fixture.Service, state);
+        Assert.True(model.선택항목적용());
+        model.초안.화물원본!.길이Mm = 1200;
+        model.초안.화물원본.바닥회전가능여부 = false;
+        model.초안.화물원본.적층가능여부 = false;
+
+        Assert.True(await model.실행Async());
+
+        var sent = Assert.IsType<CargoDTO>(fixture.Handler.UpdatedPayload?.화물);
+        Assert.Equal(1200, sent.길이Mm);
+        Assert.False(sent.바닥회전가능여부);
+        Assert.False(sent.적층가능여부);
+        Assert.Equal(12.5m, sent.중량Kg);
+        Assert.Equal(7, sent.수량);
+        Assert.Equal(.48m, sent.부피Cbm);
+        Assert.Equal(1000, loaded.화물원본!.길이Mm);
+        Assert.True(loaded.화물원본.적층가능여부);
+    }
+
+    [Fact]
+    public async Task 추정부피조회후연락처만수정하면_계산값을원입력으로전송하지않는다()
+    {
+        var response = KnownResponse();
+        var input = 화물적재입력Policy.입력생성(response.화물!) with
+        {
+            입력부피Cbm = null, 바닥회전가능여부 = false, 적층가능여부 = false
+        };
+        response.적재조건 = 화물적재입력Policy.계산(input);
+        response.화물!.부피Cbm = response.적재조건.유효부피Cbm;
+        response.화물.바닥회전가능여부 = false;
+        response.화물.적층가능여부 = false;
+        response.화물길이Mm = input.길이Mm;
+        response.화물폭Mm = input.폭Mm;
+        response.화물높이Mm = input.높이Mm;
+        response.팔레트개수 = input.팔레트개수;
+        await using var fixture = await Fixture.CreateAsync(response);
+        var loaded = (await fixture.Service.GetRequestAsync(Fixture.RequestId))!;
+        Assert.Null(loaded.화물원본!.부피Cbm);
+        Assert.Equal(response.적재조건.입력지문, loaded.적재조건?.입력지문);
+        Assert.Equal(response.적재조건.유효부피Cbm, loaded.적재조건?.유효부피Cbm);
+        var state = new 화주운송의뢰상태ViewModel();
+        state.목록적용([loaded]);
+        var model = new 화주운송의뢰수정ViewModel(fixture.Service, state);
+        Assert.True(model.선택항목적용());
+        Assert.Equal(loaded.적재조건, model.초안.적재조건);
+        Assert.Equal(1000, model.초안.화물길이Mm);
+        model.초안.픽업정보!.연락처.전화번호 = "010-5555-6666";
+
+        Assert.True(await model.실행Async());
+
+        Assert.Null(fixture.Handler.UpdatedPayload?.화물);
+        Assert.Equal("010-5555-6666", fixture.Handler.UpdatedPayload?.픽업?.연락처.전화번호);
+    }
+
+    [Fact]
+    public async Task 직접입력부피지우기는_계산부피로대체하지않고명시의도로전송한다()
+    {
+        var response = KnownResponse();
+        response.적재조건 = 화물적재입력Policy.계산(화물적재입력Policy.입력생성(response.화물!));
+        response.화물!.부피Cbm = response.적재조건.유효부피Cbm;
+        await using var fixture = await Fixture.CreateAsync(response);
+        var loaded = (await fixture.Service.GetRequestAsync(Fixture.RequestId))!;
+        loaded.화물원본!.부피Cbm = null;
+        loaded.화물원본.부피입력초기화 = true;
+
+        await fixture.Service.UpdateRequestAsync(loaded);
+
+        var sent = Assert.IsType<CargoDTO>(fixture.Handler.UpdatedPayload?.화물);
+        Assert.True(sent.부피입력초기화);
+        Assert.Null(sent.부피Cbm);
+        Assert.Equal(1000, sent.길이Mm);
     }
 
     private static decimal? ToDecimal(double? value) => value.HasValue ? (decimal)value.Value : null;

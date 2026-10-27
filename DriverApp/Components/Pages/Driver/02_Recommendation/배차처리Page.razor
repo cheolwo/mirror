@@ -28,7 +28,7 @@
                         <MudButton Class="ml-2"
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"
-                                   Href="@DriverRoutes.LoginFor(DriverRoutes.RecommendationDecision(의뢰Id))">
+                                   Href="@DriverRoutes.LoginFor(결정복귀경로)">
                             로그인하고 계속
                         </MudButton>
                     </MudAlert>
@@ -49,8 +49,9 @@
                     <MudText Typo="Typo.h6">@의뢰.요약설명</MudText>
                     <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">의뢰 @의뢰Id</MudChip>
                     <MudText Typo="Typo.body1">@의뢰.경로표시</MudText>
+                    <DriverCargoConditions Request="@의뢰" />
                     <MudText Typo="Typo.body2">예상수익 @의뢰.운임표시 / 추천점수 @((의뢰.추천점수 ?? 0m).ToString("0"))점</MudText>
-                    <MudAlert Severity="Severity.Info">서버 배차 처리 API로 수락, 보류, 거절 상태를 갱신합니다.</MudAlert>
+                    <MudAlert Severity="Severity.Info">운송 조건을 확인한 후 추천을 수락하거나 거절해 주세요. 독차·혼적은 이 의뢰에 정해진 운송 방식입니다.</MudAlert>
                 }
                 @if (_인증됨 && string.IsNullOrWhiteSpace(_데이터오류) && !_데이터로딩중)
                 {
@@ -69,18 +70,23 @@
                         <MudAlert Severity="Severity.Warning">@string.Join(" · ", 의뢰.경고목록)</MudAlert>
                         <MudCheckBox T="bool" @bind-Value="_경고확인완료" Label="차량·화물 주의사항을 확인했습니다." />
                     }
-                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="@(의뢰 is null || (의뢰.경고목록.Count > 0 && !_경고확인완료))" OnClick="배차수락">배차 수락</MudButton>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="@(의뢰 is null)" OnClick="배차보류">보류</MudButton>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
                         @if (_거절입력표시)
                         {
-                            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(의뢰 is null)" OnClick="배차거절">거절 확정</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="@거절버튼모양" Disabled="@(의뢰 is null)" OnClick="배차거절" aria-label="선택한 사유로 추천 거절 확정">거절 확정</MudButton>
                         }
                         else
                         {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="@(의뢰 is null)" OnClick="@(() => _거절입력표시 = true)">거절</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="@거절버튼모양" Disabled="@(의뢰 is null)" OnClick="@(() => _거절입력표시 = true)" aria-label="추천 거절 사유 입력">거절</MudButton>
                         }
-                    </MudStack>
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" Style="@수락버튼모양" Disabled="@수락불가" OnClick="배차수락" aria-label="@($"{의뢰?.수락버튼표시 ?? "수락"} · 추천 수락")">
+                            <span style="display:flex;flex-direction:column;align-items:center;min-width:0;">
+                                <strong>@(의뢰?.수락버튼표시 ?? "수락")</strong>
+                                <span style="font-size:12px;line-height:20px;">추천 수락</span>
+                            </span>
+                        </MudButton>
+                    </div>
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Disabled="@(의뢰 is null)" OnClick="배차보류">보류</MudButton>
                 }
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.RecommendationDetail(의뢰Id)">추천 상세로</MudButton>
             </MudStack>
@@ -92,6 +98,9 @@
     [Parameter]
     public string 의뢰Id { get; set; } = string.Empty;
 
+    [SupplyParameterFromQuery(Name = "intent")]
+    public string? Intent { get; set; }
+
     private DriverRequestItem? 의뢰 => Samples.추천의뢰조회(의뢰Id);
     private string _처리상태 = "아직 처리 전입니다.";
     private Severity _처리Severity = Severity.Normal;
@@ -102,13 +111,28 @@
     private string? _데이터오류;
     private bool _경고확인완료;
     private string? _경고확인의뢰Id;
+    private string? _입력결정의도;
+
+    private string? 확인된의도 => Intent is "accept" or "reject" ? Intent : null;
+    private string 결정복귀경로 => 확인된의도 is { } intent
+        ? $"{DriverRoutes.RecommendationDecision(의뢰Id)}?intent={intent}"
+        : DriverRoutes.RecommendationDecision(의뢰Id);
+    private bool 수락불가 => 의뢰 is null || (의뢰.경고목록.Count > 0 && !_경고확인완료);
+    private string 거절버튼모양 => $"min-height:64px;background:#1d4ed8;color:#fff;opacity:{(의뢰 is null ? "0.45" : "1")};";
+    private string 수락버튼모양 => $"min-height:64px;background:#c2410c;color:#fff;opacity:{(수락불가 ? "0.45" : "1")};";
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.Equals(_경고확인의뢰Id, 의뢰Id, StringComparison.Ordinal))
+        if (!string.Equals(_경고확인의뢰Id, 의뢰Id, StringComparison.Ordinal)
+            || !string.Equals(_입력결정의도, 확인된의도, StringComparison.Ordinal))
         {
             _경고확인의뢰Id = 의뢰Id;
+            _입력결정의도 = 확인된의도;
             _경고확인완료 = false;
+            _거절입력표시 = 확인된의도 == "reject";
+            _거절사유 = "동선이 맞지 않음";
+            _처리상태 = "아직 처리 전입니다.";
+            _처리Severity = Severity.Normal;
         }
 
         await 데이터조회Async(force: false);

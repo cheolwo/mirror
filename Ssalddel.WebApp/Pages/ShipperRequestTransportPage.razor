@@ -4,10 +4,14 @@
 
 <PageTitle>운송 의뢰 작성 - 운송 정보</PageTitle>
 
+<WebShipperSubmissionRecoveryPanel PageModel="PageModel" />
+@if (!PageModel.HasSubmission && !PageModel.IsBusy)
+{
 <ShipperRequestTransportScreen ViewModel="PageModel.State"
                                NavigationContext="RouteContext"
                                RootBackHref="@RouteContext.RootPath"
                                Changed="PageModel.AutoSaveAsync" />
+}
 
 @code {
     private ShipperRequestNavigationContext RouteContext

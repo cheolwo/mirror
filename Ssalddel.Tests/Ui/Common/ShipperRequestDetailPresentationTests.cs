@@ -91,7 +91,7 @@ public sealed class ShipperRequestDetailPresentationTests
             "위치 갱신 지연 12분",
             ShipperRequestDetailPresentation.ResolveDriverLocationFreshness(snapshot, now));
         Assert.Equal(
-            "미산정 · 경로·교통 정보 연결 전",
+            "미산정",
             ShipperRequestDetailPresentation.ResolveEtaStatus(snapshot));
     }
 }

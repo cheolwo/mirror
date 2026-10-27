@@ -115,7 +115,15 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
             throw new ArgumentException("완료할 운송과 단계를 확인해 주세요.");
         if (photo.Bytes is not { Length: > 0 and <= DriverTransportCompletionPhotoLimits.MaximumUploadBytes })
             throw new ArgumentException("사진은 5MB 이하로 다시 촬영해 주세요.");
+        var photoScope = _recoveryStore as IDriverCargoPhotoRecoveryScope;
+        var photoIdentity = photoScope?.Capture(owner, cancellationToken);
         using var operation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        void EnsureCurrentPhotoSession()
+        {
+            EnsureCurrentSession(owner, revision, operation.Token);
+            if (photoScope is not null && (photoIdentity is null || !photoScope.IsCurrent(photoIdentity)))
+                throw new OperationCanceledException("서버가 변경되어 이전 사진 완료 요청을 계속하지 않았습니다.", operation.Token);
+        }
         void AuthenticationChanged()
         {
             if (!_authSession.IsAuthenticated || _authSession.SessionRevision != revision || _authSession.UserId != owner)
@@ -129,11 +137,11 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
         var completionAttempted = false;
         try
         {
-            EnsureCurrentSession(owner, revision, operation.Token);
+            EnsureCurrentPhotoSession();
             if (_recoveryStore is not null || !string.IsNullOrWhiteSpace(photo.ExistingObjectName))
             {
                 var current = await _transportApi.상세조회Async(photo.TransportId, operation.Token);
-                EnsureCurrentSession(owner, revision, operation.Token);
+                EnsureCurrentPhotoSession();
                 if (current is null || current.Id != photo.TransportId)
                     throw new InvalidOperationException("현재 계정의 운송을 확인하지 못했습니다.");
                 var alreadyComplete = photo.Kind == DriverTransportCompletionPhotoKind.Pickup
@@ -145,20 +153,27 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
                     throw new InvalidOperationException("현재 운송 단계에서는 이 완료 요청을 보낼 수 없습니다.");
             }
             if (_recoveryStore is not null)
-                await _recoveryStore.SaveAsync(owner, photo, operation.Token);
-            EnsureCurrentSession(owner, revision, operation.Token);
+            {
+                if (photoScope is not null) await photoScope.SaveAsync(photoIdentity!, photo, operation.Token);
+                else await _recoveryStore.SaveAsync(owner, photo, operation.Token);
+            }
+            EnsureCurrentPhotoSession();
             upload = await ResolveUploadAsync(photo, operation.Token);
-            EnsureCurrentSession(owner, revision, operation.Token);
+            EnsureCurrentPhotoSession();
             if (string.IsNullOrWhiteSpace(upload.ObjectName))
                 throw new InvalidOperationException("사진 업로드 결과를 확인하지 못했습니다.");
             if (_recoveryStore is not null)
-                await _recoveryStore.SaveAsync(owner, photo with { ExistingObjectName = upload.ObjectName, ExistingUrl = upload.Url }, operation.Token);
-            EnsureCurrentSession(owner, revision, operation.Token);
+            {
+                var uploadedPhoto = photo with { ExistingObjectName = upload.ObjectName, ExistingUrl = upload.Url };
+                if (photoScope is not null) await photoScope.SaveAsync(photoIdentity!, uploadedPhoto, operation.Token);
+                else await _recoveryStore.SaveAsync(owner, uploadedPhoto, operation.Token);
+            }
+            EnsureCurrentPhotoSession();
             try
             {
                 completionAttempted = true;
                 await CompleteTransportAsync(photo, upload, operation.Token);
-                EnsureCurrentSession(owner, revision, operation.Token);
+                EnsureCurrentPhotoSession();
             }
             catch (Exception ex) when (IsCompletionRetryableFailure(ex) && !operation.IsCancellationRequested)
             {
@@ -182,7 +197,7 @@ public sealed class HttpDriverTransportCompletionPhotoService : IDriverTransport
         catch (OperationCanceledException) { throw; }
         catch (Exception) when (!completionAttempted)
         {
-            EnsureCurrentSession(owner, revision, operation.Token);
+            EnsureCurrentPhotoSession();
             return new DriverTransportCompletionPhotoResult(
                 Uploaded: !string.IsNullOrWhiteSpace(upload?.ObjectName), CompletionRecorded: false,
                 Message: "완료 요청 전 준비를 마치지 못했습니다. 현재 운송을 확인한 뒤 다시 진행해 주세요.",

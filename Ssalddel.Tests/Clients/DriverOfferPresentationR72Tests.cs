@@ -14,6 +14,29 @@ namespace Ssalddel.Tests.Clients;
 
 public sealed class DriverOfferPresentationR72Tests
 {
+    [Fact]
+    public void 음식과화물과피킹은_색외에도서로다른그림으로구별한다()
+    {
+        var food = DriverOfferPresentation.Resolve(DriverWorkKinds.FoodDelivery, [DriverOfferActivityCodes.Pickup, DriverOfferActivityCodes.Deliver]);
+        var cargo = DriverOfferPresentation.Resolve(DriverWorkKinds.CargoTransport, [DriverOfferActivityCodes.Pickup, DriverOfferActivityCodes.Deliver]);
+        var picking = DriverOfferPresentation.Resolve(DriverWorkKinds.CargoTransport, [DriverOfferActivityCodes.Pick]);
+        Assert.Equal(DriverOfferPresentation.FoodIconPath, food.IconPath);
+        Assert.Equal(DriverOfferPresentation.CargoIconPath, cargo.IconPath);
+        Assert.Equal(DriverOfferPresentation.PickingIconPath, picking.IconPath);
+        Assert.NotEqual(food.IconPath, cargo.IconPath);
+        Assert.NotEqual(cargo.IconPath, picking.IconPath);
+        Assert.DoesNotContain("포장", picking.ActivityText);
+    }
+
+    [Fact]
+    public void 알수없는업무는그림으로종류를단정하지않는다()
+    {
+        var unknown = DriverOfferPresentation.Resolve("future-kind", [DriverOfferActivityCodes.Deliver]);
+        Assert.Equal(DriverOfferPresentation.WorkIconPath, unknown.IconPath);
+        Assert.Equal(DriverOfferPresentation.WarehouseColor, unknown.PrimaryColor);
+        Assert.Contains("확인 필요", unknown.Label);
+    }
+
     [Theory]
     [InlineData(DriverWorkKinds.FoodDelivery, "#2563EB", "음식 배달")]
     [InlineData(DriverWorkKinds.QuickDelivery, "#DC2626", "소형 물품·퀵")]

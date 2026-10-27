@@ -20,6 +20,19 @@ public sealed class DriverRecommendationSelectionState
         SelectedKey = Items.Count == 0 ? null : Key(Items[Math.Clamp(previousIndex, 0, Items.Count - 1)]);
     }
 
+    /// <summary>새 서버 조회의 유효 제안 한 건만 표시합니다. 검토 중인 동일 차수는 서버 순서가 달라져도 유지합니다.</summary>
+    public void RefreshSingle(IEnumerable<DriverRequestItem> candidates, DateTime nowUtc,
+        DriverRecommendationSelectionKey? initialPreference = null)
+    {
+        var live = candidates.Where(x => IsLive(x, nowUtc)).DistinctBy(Key).ToArray();
+        var current = live.FirstOrDefault(x => Key(x) == SelectedKey);
+        var preferred = SelectedKey is null && initialPreference is not null
+            ? live.FirstOrDefault(x => Key(x) == initialPreference) : null;
+        // 후보의 우선순위를 새로 계산하지 않습니다. 현재 건이 사라진 새 정본에서만 서버 순서의 첫 제안을 받습니다.
+        var next = current ?? preferred ?? live.FirstOrDefault();
+        Refresh(next is null ? [] : [next], nowUtc);
+    }
+
     public bool Select(string requestId, int round)
     {
         var key = new DriverRecommendationSelectionKey(requestId, round);

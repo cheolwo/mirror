@@ -2,6 +2,7 @@ using ShipRequest = Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Contracts.Common.Operations;
 using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
+using Ssalddel.Contracts.Common.Transport;
 
 namespace Ssalddel.Application.Shipper.Request;
 
@@ -15,7 +16,8 @@ internal static class 화주운송의뢰매퍼
         운영체제업무인계Dto? operatingSystemHandoff = null,
         운영체제업무인계Dto? completionHandoff = null,
         IReadOnlyList<ShipRequest.비정상운송사건Dto>? abnormalTransportIncidents = null,
-        운임구성? fareComposition = null)
+        운임구성? fareComposition = null,
+        string? driverLocationStatusCode = null)
     {
         ShipRequest.정산시점? settlementTime = Enum.TryParse<ShipRequest.정산시점>(entity.정산시점, ignoreCase: false, out var parsedSettlementTime)
             ? parsedSettlementTime
@@ -53,6 +55,7 @@ internal static class 화주운송의뢰매퍼
             기사최근위도 = driverLocation?.위도,
             기사최근경도 = driverLocation?.경도,
             기사최근위치시각Utc = driverLocation?.기록시각,
+            기사위치상태Code = driverLocationStatusCode ?? 기사위치상태Codes.Unavailable,
             운송방식 = entity.운송방식,
             차량종류 = entity.차량종류,
             결제수단 = entity.결제수단,

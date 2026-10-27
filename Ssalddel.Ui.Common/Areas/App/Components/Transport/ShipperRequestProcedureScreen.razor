@@ -3,6 +3,7 @@
 <ShipperRequestScreenFrame ViewModel="ViewModel"
                            NavigationContext="NavigationContext"
                            Step="ShipperRequestAuthoringStep.Procedure"
+                           MobileStep="MobileStep"
                            ScreenCode="@ScreenCode"
                            Title="@Title"
                            Description="@Description"
@@ -10,7 +11,12 @@
                            RootBackHref="@RootBackHref"
                            RootBackLabel="@RootBackLabel"
                            Changed="Changed">
-    <운송의뢰추천Panel ViewModel="ViewModel" OnApplied="NotifyChangedAsync" />
+    @if (MobileStep == ShipperRequestMobileStep.Vehicle)
+    { <Ssalddel운송정보입력정책Panel 화물적재형태="@ViewModel.화물적재형태" /> }
+
+    @if (MobileStep is null or ShipperRequestMobileStep.Vehicle)
+    {
+    <운송의뢰추천Panel ViewModel="ViewModel" OnApplied="NotifyChangedAsync" RecommendationRequested="RecommendationRequested" IsBusy="IsBusy" />
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="3">
@@ -25,7 +31,7 @@
                     <button type="button"
                             class="@VehicleClass(vehicle)"
                             role="radio"
-                            aria-checked="@IsSelectedVehicle(vehicle)"
+                            aria-checked="@(IsSelectedVehicle(vehicle) ? "true" : "false")"
                             @onclick="@(() => SelectVehicleAsync(vehicle))">
                         <img src="@VehicleImage(vehicle)" alt="" aria-hidden="true" />
                         <span>
@@ -40,6 +46,19 @@
                 }
             </div>
 
+            @if (MobileStep == ShipperRequestMobileStep.Vehicle)
+            {
+                <MudSelect @bind-Value="ViewModel.운송방식" Label="운송 방식" Variant="Variant.Outlined"><MudSelectItem Value="@("혼적")">혼적</MudSelectItem><MudSelectItem Value="@("단독")">단독</MudSelectItem><MudSelectItem Value="@("세대 배송")">세대 배송</MudSelectItem></MudSelect>
+                <MudSelect @bind-Value="ViewModel.서비스레벨" Label="서비스 수준" Variant="Variant.Outlined" Clearable="true"><MudSelectItem Value="@("일반")">일반</MudSelectItem><MudSelectItem Value="@("당일")">당일</MudSelectItem><MudSelectItem Value="@("예약")">예약</MudSelectItem></MudSelect>
+            }
+        </MudStack>
+    </MudPaper>
+    }
+
+    @if (MobileStep is null or ShipperRequestMobileStep.Payment)
+    {
+    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+        <MudStack Spacing="3">
             <MudStack Spacing="0">
                 <MudText Typo="Typo.subtitle1">이번 의뢰의 금액·추가 작업 조건</MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">기준 운임은 참고 견적입니다. 예정액은 이번 의뢰의 조건이며, 확정 기사 대가나 결제·실지급 완료를 뜻하지 않습니다.</MudText>
@@ -90,7 +109,25 @@
 
     <운송의뢰결제후속절차Panel ViewModel="ViewModel" />
 
-    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+    @if (MobileStep == ShipperRequestMobileStep.Payment)
+    {
+        <details class="shipper-mobile-optional"><summary>추가 절차·알선 조건 (선택)</summary>@AdditionalProcedure</details>
+    }
+    else
+    { @AdditionalProcedure }
+
+    @if (!string.IsNullOrWhiteSpace(CommunityConsultationHref))
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            운임이나 차량 선택이 애매하면 상세 주소·담당자·전화번호를 제외한 뒤 커뮤니티에서 먼저 질문할 수 있습니다.
+            <MudButton Href="@CommunityConsultationHref" Variant="Variant.Text" Color="Color.Info" StartIcon="@Icons.Material.Filled.Forum">커뮤니티 질문 작성</MudButton>
+        </MudAlert>
+    }
+    }
+</ShipperRequestScreenFrame>
+
+@code {
+    private RenderFragment AdditionalProcedure => @<MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Spacing="0">
                 <MudText Typo="Typo.subtitle1">알선·재알선 경계</MudText>
@@ -125,35 +162,15 @@
                 </MudAlert>
             }
         </MudStack>
-    </MudPaper>
-
-    @if (!string.IsNullOrWhiteSpace(CommunityConsultationHref))
-    {
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-            운임이나 차량 선택이 애매하면 상세 주소·담당자·전화번호를 제외한 뒤 커뮤니티에서 먼저 질문할 수 있습니다.
-            <MudButton Href="@CommunityConsultationHref" Variant="Variant.Text" Color="Color.Info" StartIcon="@Icons.Material.Filled.Forum">커뮤니티 질문 작성</MudButton>
-        </MudAlert>
-    }
-</ShipperRequestScreenFrame>
-
-@code {
-    private static readonly IReadOnlyList<string> DefaultVehicleTypes =
-    [
-        "오토바이 퀵",
-        "1톤 카고",
-        "1.4톤 윙바디",
-        "2.5톤 탑차",
-        "냉동탑차",
-        "5톤 트럭",
-        "컨테이너 트레일러"
-    ];
-
+    </MudPaper>;
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
+    [Parameter] public ShipperRequestMobileStep? MobileStep { get; set; }
     [Parameter] public string Title { get; set; } = "절차·결제 정보";
     [Parameter] public string Description { get; set; } = "차량, 운임, 부가비용과 알선 정책을 확인합니다. 이 단계에서 배차나 결제를 확정하지 않습니다.";
     [Parameter] public IReadOnlyList<string> VehicleTypes { get; set; } = [];
+    [Parameter] public Func<Ssalddel.Contracts.Shipper.Request.차량추천요청, CancellationToken, Task<Ssalddel.Contracts.Shipper.Request.차량추천응답>>? RecommendationRequested { get; set; }
     [Parameter] public Func<string, decimal, Task<decimal?>>? FareEstimateRequested { get; set; }
     [Parameter] public bool IsBusy { get; set; }
     [Parameter] public bool ShowNavigation { get; set; } = true;
@@ -165,15 +182,11 @@
     private string FareStatusMessage { get; set; } = string.Empty;
     private bool FareStatusIsError { get; set; }
     private IReadOnlyList<string> EffectiveVehicleTypes
-        => (VehicleTypes.Count == 0 ? DefaultVehicleTypes : VehicleTypes)
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        => ViewModel.추천차량종류목록;
 
     private async Task SelectVehicleAsync(string vehicle)
     {
-        ViewModel.차량종류 = vehicle;
-        await NotifyChangedAsync();
+        if (ViewModel.서버추천차량선택(vehicle)) await NotifyChangedAsync();
     }
 
     private async Task EstimateFareAsync()

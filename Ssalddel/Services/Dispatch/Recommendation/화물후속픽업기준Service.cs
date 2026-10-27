@@ -63,6 +63,9 @@ public sealed class 화물후속픽업기준Service(SsalddelContext db, I기사�
             .OrderBy(x => x.의뢰Id).Take(11).ToArrayAsync(ct);
 
     private Task<bool> 반납책임있음Async(string id, CancellationToken ct)
+        => 반납책임있음Async(db, id, ct);
+
+    internal static Task<bool> 반납책임있음Async(SsalddelContext db, string id, CancellationToken ct)
         => (from wave in db.Set<분산배송WaveRecord>().AsNoTracking()
             join order in db.Set<분산배송주문Record>().AsNoTracking() on wave.WaveId equals order.WaveId
             join reservation in db.Set<분산재고예약Record>().AsNoTracking() on order.OrderId equals reservation.OrderId

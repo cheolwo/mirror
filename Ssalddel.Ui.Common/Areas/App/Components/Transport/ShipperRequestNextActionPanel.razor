@@ -1,0 +1,38 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+
+@{
+    var next = ShipperRequestDetailPresentation.ResolveNextAction(Item);
+}
+<section aria-label="현재 상태와 다음 행동" data-testid="shipper-request-next-action">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h6">@next.Title</MudText>
+            <MudText Typo="Typo.body2">@next.Reason</MudText>
+            <MudText Typo="Typo.caption"><strong>담당</strong> · @next.ResponsibleParty</MudText>
+            @if (next.State is ShipperRequestProgressState.Attention or ShipperRequestProgressState.Pending)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@next.Guidance</MudText>
+            }
+            @if (next.RelatedScreen != CurrentScreen)
+            {
+                <MudLink Href="@Context.PathFor(next.RelatedScreen, Item.RequestId)">
+                    @LinkLabel(next.RelatedScreen)
+                </MudLink>
+            }
+        </MudStack>
+    </MudPaper>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ShipperRequestDetailSnapshot Item { get; set; } = default!;
+    [Parameter, EditorRequired] public ShipperRequestDetailNavigationContext Context { get; set; } = new();
+    [Parameter] public ShipperRequestDetailScreenKind CurrentScreen { get; set; } = ShipperRequestDetailScreenKind.Summary;
+
+    private static string LinkLabel(ShipperRequestDetailScreenKind screen)
+        => screen switch
+        {
+            ShipperRequestDetailScreenKind.Payment => "결제·정산",
+            ShipperRequestDetailScreenKind.Proofs => "증빙",
+            _ => "진행 이력"
+        };
+}

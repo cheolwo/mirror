@@ -50,7 +50,7 @@ public sealed class ShipperReceiptRegistrationR70Tests
         Assert.Equal("receipt-a", f.Model.State.Request?.ReceiptNumber);
         Assert.NotNull(f.Model.State.Request?.ReceiptRegisteredAt);
         Assert.Equal("입금대기", f.Model.State.Request?.SettlementStatus);
-        Assert.Contains("입금·정산 상태는 별도", f.Model.State.StatusMessage);
+        Assert.Contains("입금·정산은 별도 확인", f.Model.State.StatusMessage);
         Assert.False(f.Model.ReceiptNeedsResultCheck); Assert.False(f.Model.CanRegisterReceipt);
     }
 
@@ -62,7 +62,7 @@ public sealed class ShipperReceiptRegistrationR70Tests
         { f.Operations.Record(request); throw new IOException("response lost"); };
         f.Confirm(); await f.Model.RegisterReceiptAsync();
         Assert.Single(f.Operations.Posts); Assert.Equal(2, f.Operations.Reads);
-        Assert.Contains("인수증 등록을 확인", f.Model.State.StatusMessage);
+        Assert.Contains("인수증 등록 완료", f.Model.State.StatusMessage);
         Assert.False(f.Model.ReceiptNeedsResultCheck);
     }
 

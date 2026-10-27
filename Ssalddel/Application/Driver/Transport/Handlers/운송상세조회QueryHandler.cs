@@ -1,3 +1,4 @@
+using Ssalddel.Application.Common.Transport;
 using Ssalddel.Contracts.Driver.Transport;
 
 namespace Ssalddel.Application.Driver.Transport;
@@ -38,6 +39,10 @@ public sealed class 운송상세조회QueryHandler : IRequestHandler<운송상�
                 x.클라이언트요청Id,
                 x.주문자UserId,
                 x.결제수단,
+                x.운송방식,
+                x.차량종류,
+                x.화물중량Kg,
+                x.화물수량,
                 예상거리Km = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.예상거리Km).FirstOrDefault(),
                 거리계산방식 = _db.운임구성.Where(f => f.Id == x.운임구성Id && f.의뢰Id == x.의뢰Id).Select(f => f.거리계산방식).FirstOrDefault(),
                 x.증빙방식,
@@ -71,13 +76,17 @@ public sealed class 운송상세조회QueryHandler : IRequestHandler<운송상�
             운임 = entity.운임,
             예상거리Km = shipperRequest?.예상거리Km,
             거리계산방식 = shipperRequest?.거리계산방식,
+            운송방식 = shipperRequest?.운송방식,
+            차량종류 = shipperRequest?.차량종류,
+            화물중량Kg = shipperRequest?.화물중량Kg,
+            화물수량 = shipperRequest?.화물수량,
             결제방식 = shipperRequest?.결제수단 ?? string.Empty,
             상차담당자명 = shipperRequest?.픽업_연락처_이름 ?? string.Empty,
             상차연락처 = shipperRequest?.픽업_연락처_전화번호 ?? string.Empty,
-            상차시간창시작일시 = shipperRequest?.픽업_시간창_시작일시 is { } pickupStart && pickupStart != default ? pickupStart : null,
-            상차시간창종료일시 = shipperRequest?.픽업_시간창_종료일시 is { } pickupEnd && pickupEnd != default ? pickupEnd : null,
-            하차시간창시작일시 = shipperRequest?.하차_시간창_시작일시 is { } dropoffStart && dropoffStart != default ? dropoffStart : null,
-            하차시간창종료일시 = shipperRequest?.하차_시간창_종료일시 is { } dropoffEnd && dropoffEnd != default ? dropoffEnd : null,
+            상차시간창시작일시 = 화물운송조건Projector.시각(shipperRequest?.픽업_시간창_시작일시),
+            상차시간창종료일시 = 화물운송조건Projector.시각(shipperRequest?.픽업_시간창_종료일시),
+            하차시간창시작일시 = 화물운송조건Projector.시각(shipperRequest?.하차_시간창_시작일시),
+            하차시간창종료일시 = 화물운송조건Projector.시각(shipperRequest?.하차_시간창_종료일시),
             수령자명 = shipperRequest?.하차_연락처_이름 ?? string.Empty,
             수령자연락처 = shipperRequest?.하차_연락처_전화번호 ?? string.Empty,
             전달요청 = shipperRequest?.요청사항 ?? string.Empty,
@@ -87,6 +96,7 @@ public sealed class 운송상세조회QueryHandler : IRequestHandler<운송상�
             첨부Json = 화물운송사진증빙Policy.ClientAttachments(entity.첨부_json),
             메모 = entity.메모
         };
+        기사운송보수Projector.투영(response, entity);
         기사운송업무상태Projector.투영(response, entity,
             await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
         if (생활배송기사정보공개Policy.생활배송인가(shipperRequest?.클라이언트요청Id))

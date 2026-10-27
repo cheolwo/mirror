@@ -1,13 +1,16 @@
 <MudStack Spacing="2" Class="@Class">
     <MudText Typo="Typo.subtitle1">@Title</MudText>
-    <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+    @if (!string.IsNullOrWhiteSpace(Description))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Description</MudText>
+    }
 
     @if (!string.IsNullOrWhiteSpace(PreviewUrl))
     {
         <img src="@PreviewUrl"
              alt="@PreviewAlt"
              style="width: 100%; max-height: 320px; object-fit: cover; border-radius: 8px;" />
-        <MudText Typo="Typo.caption" Color="Color.Secondary">첨부 파일: @FileName</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">사진 첨부됨</MudText>
     }
 
     @if (!string.IsNullOrWhiteSpace(StatusMessage))

@@ -2,5 +2,5 @@ namespace DriverApp.Services;
 
 public interface IDriverNativeMapNavigator
 {
-    Task OpenAsync();
+    Task OpenAsync(CancellationToken cancellationToken = default);
 }

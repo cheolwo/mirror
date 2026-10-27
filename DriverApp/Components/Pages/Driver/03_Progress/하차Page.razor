@@ -4,12 +4,16 @@
 @using Ssalddel.Contracts.Common.Workflow
 @using Ssalddel.Contracts.Common.Versioning
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
+@inject IDriverNativeMapNavigator NativeMapNavigator
+@inject IAuthSession Session
 @inherits MvvmComponentBase<기사하차PageViewModel>
 
 <PageTitle>하차</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Spacing="3">
+        <WorkflowCompletionPanel State="ViewModel.CompletionFeedback" ReturnHref="ViewModel.CompletionReturnHref" ReturnLabel="운송 화면으로" />
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">하차</MudText>
@@ -18,6 +22,9 @@
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
+                <MudButton Variant="Variant.Text" Color="Color.Secondary"
+                           Disabled="@(ViewModel.처리중 || ViewModel.도착처리중 || ViewModel.완료처리중 || ViewModel.사진.촬영중 || _지도여는중 || ViewModel.로그인필요)"
+                           OnClick="@(() => ViewModel.InitializeAsync(운송Id))">운송 상태 다시 확인</MudButton>
                 <업무오류복구Panel Message="@조회오류"
                                Error="@표시실패" Context="@조회맥락"
                                ContextKey="@($"driver-dropoff:{운송Id}")"
@@ -46,6 +53,12 @@
                 else if (ViewModel.하차완료확인)
                 {
                     <MudAlert Severity="Severity.Success">하차 완료</MudAlert>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_지도여는중"
+                               OnClick="지도열기Async">지도에서 다음 업무 확인</MudButton>
+                    @if (!string.IsNullOrWhiteSpace(_지도오류))
+                    {
+                        <MudAlert Severity="Severity.Warning">@_지도오류</MudAlert>
+                    }
                 }
                 else
                 {
@@ -240,6 +253,8 @@
                                                @bind-IssueType="ViewModel.예외.유형"
                                                @bind-Memo="ViewModel.예외.메모"
                                                IsReporting="@ViewModel.예외.신고중"
+                                               CanSubmit="@ViewModel.예외.신고가능"
+                                               ResultUncertain="@ViewModel.예외.결과확인필요"
                                                OnSubmit="@(() => ViewModel.예외.신고Command.ExecuteAsync(null))" />
 
                     <DriverTransportProofPanel Title="하차 사진"
@@ -270,6 +285,59 @@
 </MudContainer>
 
 @code {
+    private bool _폐기됨;
+    private bool _지도여는중;
+    private string? _지도오류;
+    private CancellationTokenSource? _지도이동취소;
+    private long _지도요청운송Id;
+
+    private async Task 지도열기Async()
+    {
+        if (_폐기됨 || _지도여는중 || ViewModel.처리중 || ViewModel.완료처리중
+            || ViewModel.완료결과확인필요 || !ViewModel.하차완료확인 || ViewModel.로그인필요
+            || ViewModel.운송Id != 운송Id || !Session.IsAuthenticated) return;
+        var transportId = 운송Id; var owner = Session.UserId; var revision = Session.SessionRevision;
+        using var cancellation = new CancellationTokenSource();
+        _지도이동취소 = cancellation;
+        _지도요청운송Id = transportId;
+        _지도여는중 = true;
+        _지도오류 = null;
+        try
+        {
+            await ViewModel.InitializeAsync(transportId);
+            if (_폐기됨 || cancellation.IsCancellationRequested || 운송Id != transportId || !Session.IsAuthenticated
+                || Session.UserId != owner || Session.SessionRevision != revision) return;
+            if (ViewModel.완료결과확인필요 || !ViewModel.하차완료확인 || ViewModel.로그인필요
+                || !string.IsNullOrWhiteSpace(ViewModel.오류메시지))
+            {
+                _지도오류 = "하차 완료 상태를 다시 확인한 뒤 지도를 열어 주세요.";
+                return;
+            }
+            await NativeMapNavigator.OpenAsync(cancellation.Token);
+        }
+        catch (Exception)
+        {
+            if (!_폐기됨 && !cancellation.IsCancellationRequested && 운송Id == transportId && Session.IsAuthenticated
+                && Session.UserId == owner && Session.SessionRevision == revision)
+                _지도오류 = "하차 완료 기록은 유지됩니다. 지도를 열지 못했으니 다시 시도해 주세요.";
+        }
+        finally
+        {
+            if (ReferenceEquals(_지도이동취소, cancellation)) _지도이동취소 = null;
+            _지도여는중 = false;
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _폐기됨 = true;
+            _지도이동취소?.Cancel();
+        }
+        base.Dispose(disposing);
+    }
+
     private string? 조회오류 => ViewModel.처리중 || ViewModel.로그인필요
         ? null
         : !string.IsNullOrWhiteSpace(ViewModel.오류메시지)
@@ -287,6 +355,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_지도요청운송Id != 운송Id) _지도이동취소?.Cancel();
+        _지도오류 = null;
         await ViewModel.InitializeAsync(운송Id);
     }
 }

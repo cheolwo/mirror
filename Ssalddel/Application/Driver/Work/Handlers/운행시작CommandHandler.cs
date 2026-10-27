@@ -16,6 +16,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Ssalddel.Services.Outbox;
+using Ssalddel.Services.Dispatch.Compliance;
 
 namespace Ssalddel.Application.Driver.Work;
 
@@ -45,6 +46,7 @@ public sealed class 운행시작CommandHandler : IRequestHandler<운행시작Com
     private readonly ICommunityDriverAvailabilityService _communityDriverAvailabilityService;
     private readonly ILogger<운행시작CommandHandler> _logger;
     private readonly I기사운행시작후속Service _후속;
+    private readonly I신규화물업무자격Guard? _신규업무자격;
 
     public 운행시작CommandHandler(
         SsalddelContext db,
@@ -57,7 +59,8 @@ public sealed class 운행시작CommandHandler : IRequestHandler<운행시작Com
         I참여자실행권한검사 권한검사,
         ICommunityDriverAvailabilityService communityDriverAvailabilityService,
         ILogger<운행시작CommandHandler> logger,
-        I기사운행시작후속Service? 후속 = null)
+        I기사운행시작후속Service? 후속 = null,
+        I신규화물업무자격Guard? 신규업무자격 = null)
     {
         _db = db;
         _dispatchRecommendationService = dispatchRecommendationService;
@@ -72,6 +75,7 @@ public sealed class 운행시작CommandHandler : IRequestHandler<운행시작Com
         _후속 = 후속 ?? new 기사운행시작후속Service(db, driverWorkQueueStore, 국내화물운송기사상태Service,
             음식배달권실행공간Store, 국내화물배달권실행공간Store,
             NullLogger<기사운행시작후속Service>.Instance);
+        _신규업무자격 = 신규업무자격;
     }
 
     public async Task<Result<기사운행시작응답>> Handle(운행시작Command request, CancellationToken cancellationToken)
@@ -134,6 +138,13 @@ public sealed class 운행시작CommandHandler : IRequestHandler<운행시작Com
                         return Result.Ok(current); // 구형 호출도 중복 근무를 만들지 않습니다.
                     return Result.Fail<기사근무>(new Error("이미 운행 중입니다. 현재 근무를 확인해 주세요.")
                         .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", "DriverWork.AlreadyStarted"));
+                }
+                if (request.운송실행유형 != 운송실행유형코드.음식배달)
+                {
+                    var qualification = await 신규화물업무자격검사.평가Async(_신규업무자격, request.기사Id, cancellationToken);
+                    if (!qualification.CanReceiveNewWork)
+                        return Result.Fail<기사근무>(new Error(qualification.Message)
+                            .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", qualification.ReasonCode));
                 }
                 var now = DateTime.UtcNow;
                 var staleSlots = await _db.기사근무.Where(x => x.ActiveDriverId == request.기사Id).ToArrayAsync(cancellationToken);

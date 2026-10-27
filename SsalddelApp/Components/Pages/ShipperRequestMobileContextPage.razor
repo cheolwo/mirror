@@ -1,0 +1,74 @@
+@page "/shipper/request/package"
+@page "/shipper/request/pickup"
+@page "/shipper/request/dropoff"
+@page "/shipper/request/schedule"
+@page "/shipper/request/vehicle"
+@layout ShipperMobileLayout
+@inject ShipperRequestAuthoringPageViewModel PageModel
+@inject NavigationManager Navigation
+@implements IDisposable
+@using Microsoft.AspNetCore.Components.Routing
+
+<PageTitle>@Current.Title</PageTitle>
+
+@if (PageModel.HasPendingRequest)
+{
+    <MudAlert Severity="Severity.Warning">이전에 보낸 접수 결과를 먼저 확인해 주세요.</MudAlert>
+    <MudButton Href="@RouteContext.PathFor(ShipperRequestMobileStep.Review)" Variant="Variant.Filled" Color="Color.Primary">접수 결과 확인</MudButton>
+}
+else if (Step == ShipperRequestMobileStep.Package)
+{
+    <ShipperRequestCargoScreen ViewModel="PageModel.State" MobileStep="Step"
+        NavigationContext="RouteContext" Title="@Current.Title" Description="@Current.Description"
+        RootBackHref="@(RouteContext.ReturnPath ?? ShipperRoutes.ShipperHome)" RootBackLabel="돌아가기"
+        Changed="PageModel.AutoSaveAsync" />
+}
+else if (Step == ShipperRequestMobileStep.Vehicle)
+{
+    <ShipperRequestProcedureScreen ViewModel="PageModel.State" MobileStep="Step"
+        NavigationContext="RouteContext" Title="@Current.Title" Description="@Current.Description"
+        VehicleTypes="PageModel.VehicleTypes" RecommendationRequested="PageModel.RecommendVehiclesAsync" FareEstimateRequested="PageModel.EstimateFareAsync"
+        IsBusy="PageModel.IsBusy" Changed="PageModel.AutoSaveAsync" />
+}
+else
+{
+    <ShipperRequestTransportScreen ViewModel="PageModel.State" MobileStep="Step"
+        NavigationContext="RouteContext" Title="@Current.Title" Description="@Current.Description"
+        Changed="PageModel.AutoSaveAsync" />
+}
+
+@code {
+    private bool disposed;
+    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (disposed || StepAt(args.Location) is null) return;
+        _ = InvokeAsync(() => { if (!disposed && StepAt(Navigation.Uri) is not null) StateHasChanged(); });
+    }
+    public void Dispose()
+    {
+        disposed = true;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    private ShipperRequestNavigationContext RouteContext => ShipperRequestNavigationContext.Parse(Navigation.Uri);
+    private ShipperRequestMobileStep Step => StepAt(Navigation.Uri)
+        ?? throw new InvalidOperationException("지원하지 않는 운송 의뢰 입력 단계입니다.");
+    private ShipperRequestMobileStep? StepAt(string location) => Navigation.ToBaseRelativePath(location).Split('?')[0].TrimEnd('/') switch
+    {
+        "shipper/request/package" => ShipperRequestMobileStep.Package,
+        "shipper/request/pickup" => ShipperRequestMobileStep.Pickup,
+        "shipper/request/dropoff" => ShipperRequestMobileStep.Dropoff,
+        "shipper/request/schedule" => ShipperRequestMobileStep.Schedule,
+        "shipper/request/vehicle" => ShipperRequestMobileStep.Vehicle,
+        _ => null
+    };
+    private ShipperRequestMobileStepDefinition Current => ShipperRequestMobileStepCatalog.Get(Step);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await PageModel.InitializeAsync();
+        StateHasChanged();
+    }
+}

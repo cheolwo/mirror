@@ -169,7 +169,9 @@ public sealed partial class FoodDispatchWorkflowScenarioFixture : IAsyncDisposab
         new EfSsalddelFoodOrderStore(db), Options.Create(_queueOptions), Availability(db),
         수요참여: Demand(db), candidateAI: AI());
     private 배차추천알림Service Notifications(SsalddelContext db) => new(db,
-        new AppScopedDriverPushTokenStore(db, _legacyTokens), _push, NullLogger<배차추천알림Service>.Instance);
+        new AppScopedDriverPushTokenStore(db, _legacyTokens), _push, NullLogger<배차추천알림Service>.Instance,
+        신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance,
+        notificationSettings: _notificationSettings, availability: Availability(db));
     private 배차대기원장전환Service Transition(SsalddelContext db)
     {
         var ai = AI();
@@ -332,7 +334,8 @@ public sealed partial class FoodDispatchWorkflowScenarioFixture : IAsyncDisposab
     {
         await using var db = CreateContext();
         await new 배차추천알림Service(db, new AppScopedDriverPushTokenStore(db, _legacyTokens), _push,
-            NullLogger<배차추천알림Service>.Instance, clock)
+            NullLogger<배차추천알림Service>.Instance, clock,
+            notificationSettings: _notificationSettings, availability: Availability(db))
             .업무유형별대기알림발송Async(상태값.배차업무유형.음식배달);
         _steps.Add("FoodNotificationOutboxDrainedToRecordingFCMBoundary");
     }

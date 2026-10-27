@@ -38,9 +38,30 @@ public class MainActivity : MauiAppCompatActivity
         _session = DriverAppServiceProvider.Services.GetRequiredService<IAuthSession>();
         _session.Changed += OnSessionChanged;
         _ = CaptureRecommendationIntentAsync(Intent);
-        RequestPostNotificationsPermissionIfNeeded();
-        FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new FcmTokenCompleteListener());
+        InitializePushSafely();
     }
+
+    private void InitializePushSafely()
+    {
+        try
+        {
+            if (Firebase.FirebaseApp.InitializeApp(this) is null)
+            {
+                LogPushInitializationFailure();
+                return;
+            }
+            RequestPostNotificationsPermissionIfNeeded();
+            FirebaseMessaging.Instance.GetToken().AddOnCompleteListener(new FcmTokenCompleteListener());
+        }
+        catch (Exception)
+        {
+            // Push 설정 실패가 일반 업무 화면의 시작을 막지 않도록 한다.
+            LogPushInitializationFailure();
+        }
+    }
+
+    private static void LogPushInitializationFailure()
+        => global::Android.Util.Log.Warn("SsalddelFcm", "Push initialization is unavailable; foreground work remains available.");
 
     protected override void OnNewIntent(Intent? intent)
     {

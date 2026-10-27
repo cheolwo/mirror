@@ -1,0 +1,45 @@
+@using DriverApp.Models.Driver
+
+<section class="driver-cargo-conditions @(Compact ? "driver-cargo-conditions--compact" : "")" aria-label="운송 조건">
+    @if (Compact)
+    {
+        <div class="driver-cargo-conditions__quantity" aria-label="화물 총중량과 수량">
+            <div><span>총중량</span><strong>@Request.화물중량표시</strong></div>
+            <div><span>수량</span><strong>@Request.화물수량표시</strong></div>
+        </div>
+        <div class="driver-cargo-conditions__route" aria-label="상차와 하차 조건">
+            <div>
+                <span>상차</span><p>@Request.픽업지</p>
+                <strong class="driver-cargo-conditions__time">@Request.간략상차시간표시</strong>
+            </div>
+            <div>
+                <span>하차</span><p>@Request.하차지</p>
+                <strong class="driver-cargo-conditions__time">@Request.간략하차시간표시</strong>
+            </div>
+        </div>
+        <p class="driver-cargo-conditions__vehicle">@Request.운송조건표시 · @Request.차량조건표시</p>
+        @if (Request.당일상차필수 || Request.당일하차필수)
+        {
+            <p class="driver-cargo-conditions__required">필수 조건 · @(Request.당일상차필수 ? "당일 상차" : string.Empty) @(Request.당일하차필수 ? "당일 하차" : string.Empty)</p>
+        }
+    }
+    else
+    {
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.body2">운송 방식 · @Request.운송조건표시</MudText>
+            <MudText Typo="Typo.body2">차량 · @Request.차량조건표시</MudText>
+            <MudText Typo="Typo.body2">중량 · @Request.화물중량표시 / 수량 · @Request.화물수량표시</MudText>
+            <MudText Typo="Typo.body2">상차 · @Request.상차시간표시</MudText>
+            <MudText Typo="Typo.body2">하차 · @Request.하차시간표시</MudText>
+            @if (Request.당일상차필수 || Request.당일하차필수)
+            {
+                <MudText Typo="Typo.body2">필수 조건 · @(Request.당일상차필수 ? "당일 상차" : string.Empty) @(Request.당일하차필수 ? "당일 하차" : string.Empty)</MudText>
+            }
+        </MudStack>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public DriverRequestItem Request { get; set; } = default!;
+    [Parameter] public bool Compact { get; set; }
+}

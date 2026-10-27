@@ -4,13 +4,21 @@
 
 <PageTitle>운송 의뢰 작성 - 절차·결제 정보</PageTitle>
 
+<WebShipperSubmissionRecoveryPanel PageModel="PageModel" />
+@if (!PageModel.HasSubmission && !PageModel.IsBusy)
+{
 <ShipperRequestProcedureScreen ViewModel="PageModel.State"
+                               MobileStep="ShipperRequestMobileStep.Payment"
+                               Title="비용은 어떻게 정하나요?"
+                               Description="운임과 지급 조건을 확인해 주세요."
                                NavigationContext="RouteContext"
                                RootBackHref="@RouteContext.RootPath"
                                VehicleTypes="PageModel.VehicleTypes"
+                               RecommendationRequested="PageModel.RecommendVehiclesAsync"
                                IsBusy="PageModel.IsBusy"
                                CommunityConsultationHref="@CommunityConsultationHref"
                                Changed="PageModel.AutoSaveAsync" />
+}
 
 @code {
     private ShipperRequestNavigationContext RouteContext

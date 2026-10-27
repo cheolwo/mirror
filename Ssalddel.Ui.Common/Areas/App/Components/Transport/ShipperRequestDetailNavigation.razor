@@ -9,7 +9,6 @@
             <MudIcon Icon="@item.Icon" Size="Size.Small" />
             <span>
                 <strong>@item.Label</strong>
-                <small>@item.Description</small>
             </span>
         </a>
     }
@@ -24,7 +23,7 @@
     [
         new(ShipperRequestDetailScreenKind.Summary, "요약", "의뢰·경로", Icons.Material.Filled.Description),
         new(ShipperRequestDetailScreenKind.Timeline, "진행 이력", "결제부터 정산", Icons.Material.Filled.Timeline),
-        new(ShipperRequestDetailScreenKind.Payment, "결제", "수납·FakePG", Icons.Material.Filled.Payments),
+        new(ShipperRequestDetailScreenKind.Payment, "결제", "수납", Icons.Material.Filled.Payments),
         new(ShipperRequestDetailScreenKind.Proofs, "증빙", "POD·인수증", Icons.Material.Filled.FactCheck)
     ];
 

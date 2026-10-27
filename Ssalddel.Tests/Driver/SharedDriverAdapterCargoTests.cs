@@ -65,10 +65,10 @@ public sealed partial class 배차수락CommandHandlerTests
         {
             AllowsWorkKind = kind => kind == DriverWorkKinds.QuickDelivery
         };
-        var offers = await new 공개배차Service(db, admission).GetPublicDispatchesAsync("driver-1");
+        var offers = await new 공개배차Service(db, admission, 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetPublicDispatchesAsync("driver-1");
         Assert.Equal("quick", Assert.Single(offers).의뢰Id);
         admission.AllowsWorkKind = kind => kind == DriverWorkKinds.CargoTransport;
-        offers = await new 공개배차Service(db, admission).GetPublicDispatchesAsync("driver-1");
+        offers = await new 공개배차Service(db, admission, 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetPublicDispatchesAsync("driver-1");
         Assert.Equal("cargo", Assert.Single(offers).의뢰Id);
     }
 }

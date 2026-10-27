@@ -23,6 +23,15 @@ public sealed class CargoTransportDropoffCompletionTests
         Assert.Equal([11L, 11L], f.Api.DetailIds); Assert.Equal(1, f.Completion.Calls);
         Assert.True(f.Page.하차완료확인); Assert.False(f.Page.완료가능); Assert.False(f.Page.사진.사진있음);
         Assert.False(f.Page.완료결과확인필요); Assert.Contains("완료를 확인", f.Page.작업상태.메시지);
+        var notice = Assert.Single(f.Page.CompletionFeedback.History);
+        Assert.Equal("하차와 인계가 완료되었습니다", notice.Title); Assert.True(notice.IsFinal);
+        Assert.Contains("정산과 실제 지급은 별도로", notice.Message);
+        Assert.Same(notice, f.Page.CompletionFeedback.Current);
+        Assert.Equal(DriverRoutes.CurrentTransport, f.Page.CompletionReturnHref);
+        f.Page.CompletionFeedback.Dismiss();
+        Assert.Null(f.Page.CompletionFeedback.Current);
+        await f.Page.InitializeAsync(11);
+        Assert.Single(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionFeedback.Current);
         await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
     }
 
@@ -34,10 +43,12 @@ public sealed class CargoTransportDropoffCompletionTests
         await f.Page.완료Async();
         Assert.True(f.Page.완료결과확인필요); Assert.False(f.Page.완료가능);
         Assert.True(f.Page.사진.사진있음); Assert.True(f.Page.인계.완료);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
         await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
         f.Api.FailRead = false; f.Api.State = "인수완료";
         await f.Page.InitializeAsync(11);
         Assert.True(f.Page.하차완료확인); Assert.False(f.Page.완료결과확인필요); Assert.False(f.Page.완료가능);
+        Assert.Single(f.Page.CompletionFeedback.History);
     }
 
     [Fact]
@@ -48,6 +59,7 @@ public sealed class CargoTransportDropoffCompletionTests
         await f.Page.완료Async();
         Assert.True(f.Page.완료가능); Assert.True(f.Page.인계.완료); Assert.True(f.Page.사진.사진있음);
         Assert.False(f.Page.완료결과확인필요); Assert.Equal(1, f.Completion.Calls);
+        Assert.Empty(f.Page.CompletionFeedback.History);
         f.Completion.Send = photo => { Assert.Equal("private/proof-one", photo.ExistingObjectName); f.Api.State = "인수완료";
             return Task.FromResult(new DriverTransportCompletionPhotoResult(true, true, "recorded")); };
         await f.Page.완료Async(); Assert.Equal(2, f.Completion.Calls); Assert.True(f.Page.하차완료확인);
@@ -66,7 +78,22 @@ public sealed class CargoTransportDropoffCompletionTests
         Assert.True(f.Completion.Token.IsCancellationRequested);
         pending.SetResult(new(true, true, "late result", ObjectName: "private/old-proof")); await completing;
         Assert.Single(f.Api.DetailIds); Assert.False(f.Page.완료가능); Assert.Null(f.Page.하차완료.결과);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
         if (!dispose) { Assert.Null(f.Page.운송); Assert.False(f.Page.사진.사진있음); }
+    }
+
+    [Fact]
+    public async Task 이미완료된운송을열거나_다른운송으로전환하면_이전완료알림을만들지않는다()
+    {
+        using var f = new Fixture(); f.Api.State = "인수완료";
+        await f.Page.InitializeAsync(11);
+        Assert.True(f.Page.하차완료확인); Assert.Empty(f.Page.CompletionFeedback.History);
+        Assert.Null(f.Page.CompletionReturnHref);
+        f.Api.State = "하차지도착"; await f.Prepare();
+        f.Completion.Send = _ => { f.Api.State = "인수완료"; return Task.FromResult(new DriverTransportCompletionPhotoResult(true, true, "recorded")); };
+        await f.Page.완료Async(); Assert.Single(f.Page.CompletionFeedback.History);
+        await f.Page.InitializeAsync(22);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
     }
 
     [Theory]

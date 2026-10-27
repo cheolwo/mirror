@@ -109,7 +109,7 @@ public sealed class 기사위치갱신응답
     public decimal Aging점수 { get; set; }
     public DateTime Aging기준시각 { get; set; }
     public decimal? 상차접근허용반경Km { get; set; }
-    public int 권장위치전송간격초 { get; set; } = 300;
+    public int 권장위치전송간격초 { get; set; } = 30;
     public string? 커뮤니티현재공개지역 { get; set; }
 }
 

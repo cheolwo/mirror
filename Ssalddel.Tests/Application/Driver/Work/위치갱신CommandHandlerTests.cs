@@ -18,11 +18,80 @@ using 살뜰.Services.Storage.Local;
 using 살뜰.Services.Transport;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.기사;
+using Microsoft.Extensions.Options;
 
 namespace Ssalddel.Tests.Application.Driver.Work;
 
 public sealed class 위치갱신CommandHandlerTests
 {
+    [Theory]
+    [InlineData("latitude")]
+    [InlineData("longitude")]
+    [InlineData("zero")]
+    [InlineData("accuracy")]
+    [InlineData("future")]
+    [InlineData("stale")]
+    public async Task 무효이거나오래된GPS는_원장과최신위치에저장하지않는다(string condition)
+    {
+        await using var f = await Fixture.CreateAsync();
+        await f.SeedAsync(상태값.기사운행상태.운행중);
+        var request = Request(기사앱식별자.CargoYongdalDriverApp);
+        request = condition switch
+        {
+            "latitude" => request with { 위도 = 91m },
+            "longitude" => request with { 경도 = -181m },
+            "zero" => request with { 위도 = 0m, 경도 = 0m },
+            "accuracy" => request with { 정확도_m = -1m },
+            "future" => request with { 기록시각 = DateTime.UtcNow.AddSeconds(5) },
+            _ => request with { 기록시각 = DateTime.UtcNow.AddMinutes(-11) }
+        };
+        Assert.True((await f.Handler.Handle(request, default)).IsFailed);
+        await f.AssertNoLocationAsync();
+        Assert.Null(await f.StateStore.GetAsync("driver"));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task 동일하거나역순으로도착한GPS가_이미확인한최신위치를덮어쓰지않는다(int seconds)
+    {
+        await using var f = await Fixture.CreateAsync();
+        await f.SeedAsync(상태값.기사운행상태.운행중);
+        var recorded = DateTime.UtcNow.AddSeconds(-3);
+        var first = Request(기사앱식별자.CargoYongdalDriverApp) with { 기록시각 = recorded };
+        Assert.True((await f.Handler.Handle(first, default)).IsSuccess);
+        var previous = first with { 위도 = 38m, 기록시각 = recorded.AddSeconds(seconds) };
+        Assert.True((await f.Handler.Handle(previous, default)).IsFailed);
+        Assert.Single(await f.Db.기사위치기록.ToArrayAsync());
+        Assert.True(f.Locations.TryGetLatest("driver", out var latest));
+        Assert.Equal(first.위도, latest.Latitude);
+        Assert.Equal(recorded, latest.RecordedAtUtc);
+    }
+
+    [Theory]
+    [InlineData(null, 30)]
+    [InlineData(90, 90)]
+    public async Task 운행중_기본전송간격은30초이고_명시한서버정책을존중한다(int? configured, int expected)
+    {
+        await using var f = await Fixture.CreateAsync(); f.IntervalSeconds = configured;
+        await f.SeedAsync(상태값.기사운행상태.운행중);
+        var result = await f.Handler.Handle(Request(기사앱식별자.CargoYongdalDriverApp), default);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expected, result.Value.권장위치전송간격초);
+        Assert.Equal(30, new Ssalddel.Contracts.Driver.Work.기사위치갱신응답().권장위치전송간격초);
+    }
+
+    [Fact]
+    public async Task 다른기사의위치를전송하려는요청은저장하지않는다()
+    {
+        await using var f = await Fixture.CreateAsync();
+        await f.SeedAsync(상태값.기사운행상태.운행중);
+        var request = new 위치갱신Command("other-driver", 기사앱식별자.CargoYongdalDriverApp,
+            37m, 127m, 5m, null, 상태값.기사운행상태.운행중, DateTime.UtcNow);
+        Assert.True((await f.Handler.Handle(request, default)).IsFailed);
+        await f.AssertNoLocationAsync();
+    }
+
     [Fact]
     public async Task 종료후_늦은운행중위치요청은_근무와배달권을_되살리지않는다()
     {
@@ -214,10 +283,12 @@ public sealed class 위치갱신CommandHandlerTests
         public InMemory국내화물배달권실행공간Store CargoScopes { get; } = new();
         public CommunityDriverAvailabilityService Community { get; } = new(new SystemCommunityDriverAvailabilityClock());
         public BeforeLocationSave BeforeLocationSave { get; } = new();
+        public int? IntervalSeconds { get; set; }
         public 국내화물운송기사상태Service States => new(StateStore);
         public 위치갱신CommandHandler Handler => new(Db, Locations, States, FoodScopes, CargoScopes,
             new ApproachNotifications(), new CurrentUser(), new 참여자실행권한검사(), Community,
-            new ReverseGeocoding(), new LedgerRealtime(), NullLogger<위치갱신CommandHandler>.Instance);
+            new ReverseGeocoding(), new LedgerRealtime(), NullLogger<위치갱신CommandHandler>.Instance,
+            IntervalSeconds is { } interval ? Options.Create(new 배차큐정책Options { 기사위치전송간격초 = interval }) : null);
         public 운행종료CommandHandler Stop(SsalddelContext db) => new(db, WorkQueue, States,
             FoodScopes, CargoScopes, new CurrentUser(), new 참여자실행권한검사(), Community,
             NullLogger<운행종료CommandHandler>.Instance);

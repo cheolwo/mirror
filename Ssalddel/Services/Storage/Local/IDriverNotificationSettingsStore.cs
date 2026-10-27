@@ -12,5 +12,7 @@ namespace 살뜰.Services.Storage.Local
         bool 소리사용,
         bool 진동사용,
         bool 야간알림제한,
-        bool 정차후모아보기);
+        bool 정차후모아보기,
+        bool 음식배달추천알림사용 = false,
+        bool 화물운송추천알림사용 = false);
 }

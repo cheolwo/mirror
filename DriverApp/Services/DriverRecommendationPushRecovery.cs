@@ -12,11 +12,12 @@ public sealed record DriverRecommendationPushRecoveryResult(DriverRecommendation
 /// <summary>알림의 식별자를 현재 기사 정본과 대조합니다. 수락 명령을 호출하지 않습니다.</summary>
 public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverSampleDataService samples,
     IDriverHomeMapService map, IDriverRecommendationNotificationService notifications,
-    IDriverRecommendationPushTargetStore store, TimeProvider? timeProvider = null)
+    IDriverRecommendationPushTargetStore store, TimeProvider? timeProvider = null,
+    IDriverCargoRecommendationAlertService? cargoAlerts = null)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
-    private (string Owner, string RequestId, int Round, DateTime? ExpiresAt)? _lastPublished;
+    private (string Owner, long Revision, string RequestId, int Round, DateTime? ExpiresAt)? _lastPublished;
 
     public async Task<DriverRecommendationPushRecoveryResult> CaptureAsync(IReadOnlyDictionary<string, string> data,
         bool openRequested, CancellationToken cancellationToken = default)
@@ -68,6 +69,7 @@ public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverS
                 || (target.Hint.OwnerId is not null && target.Hint.OwnerId != owner))
             {
                 await store.ClearAsync(cancellationToken);
+                cargoAlerts?.Cancel();
                 _lastPublished = null;
                 return new(DriverRecommendationPushRecoveryStatus.SessionChanged);
             }
@@ -91,6 +93,7 @@ public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverS
                     ? samples.운송목록.FirstOrDefault(x => x.의뢰Id == target.Hint.RequestId) : null;
                 if (accepted is not null)
                 {
+                    cargoAlerts?.Cancel();
                     notifications.MarkHandled(target.Hint.RequestId);
                     if (!target.OpenRequested) await store.ClearAsync(cancellationToken);
                     return new(DriverRecommendationPushRecoveryStatus.AlreadyAccepted,
@@ -108,7 +111,16 @@ public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverS
                     || target.Hint.ExpiresAtUtc <= now)
                     return await DiscardAsync(target, owner!, revision, cancellationToken);
 
-                var publication = (owner!, request.의뢰Id, request.추천라운드, request.추천만료시각);
+                if (!target.OpenRequested && cargoAlerts is not null)
+                    await cargoAlerts.TryPublishAsync(owner!, revision, request, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!IsCurrent(owner!, revision))
+                {
+                    await store.ClearAsync(cancellationToken);
+                    cargoAlerts?.Cancel();
+                    return new(DriverRecommendationPushRecoveryStatus.SessionChanged);
+                }
+                var publication = (owner!, revision, request.의뢰Id, request.추천라운드, request.추천만료시각);
                 if (_lastPublished != publication && map.BuildMarkers([request]).FirstOrDefault() is { } marker)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -154,6 +166,7 @@ public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverS
     private async Task<DriverRecommendationPushRecoveryResult> DiscardAsync(DriverRecommendationPushTarget target,
         string owner, long revision, CancellationToken cancellationToken)
     {
+        cargoAlerts?.Cancel();
         notifications.MarkDismissed(target.Hint.RequestId);
         await store.ClearAsync(cancellationToken);
         return new(DriverRecommendationPushRecoveryStatus.ExpiredOrUnavailable, DriverRoutes.Recommendations,
@@ -166,7 +179,9 @@ public sealed class DriverRecommendationPushRecovery(IAuthSession auth, IDriverS
 
     private void ClearForeignPublication()
     {
-        if (_lastPublished is not { } published || (auth.IsAuthenticated && published.Owner == auth.UserId)) return;
+        if (_lastPublished is not { } published || (auth.IsAuthenticated && published.Owner == auth.UserId
+            && published.Revision == auth.SessionRevision)) return;
+        cargoAlerts?.Cancel();
         if (notifications.GetCurrent() is { } current && current.Request.의뢰Id == published.RequestId
             && current.Request.추천라운드 == published.Round)
             notifications.MarkDismissed(published.RequestId);

@@ -17,6 +17,11 @@ public static class ShipperRequestPageRoutes
 {
     public const string Root = "/shipper/request";
     public const string Cargo = "/shipper/request/cargo";
+    public const string Package = "/shipper/request/package";
+    public const string Pickup = "/shipper/request/pickup";
+    public const string Dropoff = "/shipper/request/dropoff";
+    public const string Schedule = "/shipper/request/schedule";
+    public const string Vehicle = "/shipper/request/vehicle";
     public const string Transport = "/shipper/request/transport";
     public const string Procedure = "/shipper/request/procedure";
     public const string Review = "/shipper/request/review";
@@ -32,6 +37,9 @@ public static class ShipperRequestPageRoutes
             ShipperRequestAuthoringStep.Review => Review,
             _ => throw new ArgumentOutOfRangeException(nameof(step), step, "지원하지 않는 운송 의뢰 작성 단계입니다.")
         };
+
+    public static string PathFor(ShipperRequestMobileStep step)
+        => ShipperRequestMobileStepCatalog.Get(step).Path;
 }
 
 /// <summary>
@@ -51,6 +59,9 @@ public sealed record ShipperRequestNavigationContext
     public string RootPath => BuildPath(ShipperRequestPageRoutes.Root);
 
     public string PathFor(ShipperRequestAuthoringStep step)
+        => BuildPath(ShipperRequestPageRoutes.PathFor(step));
+
+    public string PathFor(ShipperRequestMobileStep step)
         => BuildPath(ShipperRequestPageRoutes.PathFor(step));
 
     public static ShipperRequestNavigationContext Parse(string? uri)

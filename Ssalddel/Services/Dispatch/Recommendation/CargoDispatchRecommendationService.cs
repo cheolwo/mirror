@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Ssalddel.Application.Common.Transport;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Hubs;
 using 살뜰.도메인.공통;
@@ -10,6 +11,8 @@ using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Queue;
 using Microsoft.Extensions.Options;
+using Ssalddel.Services.Dispatch.Compliance;
+using 살뜰.Services.Dispatch.Coordination;
 
 namespace 살뜰.Services.Dispatch.Recommendation
 {
@@ -23,6 +26,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
         private readonly I운영배차공통UseCase? _운영배차;
         private readonly I화물후속픽업기준Service _후속픽업;
         private readonly 배차큐정책Options _queueOptions;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
+        private readonly I기사실차적재근거조회Service _실차적재조회;
+        private readonly I국내화물추천재검증Service? _추천재검증;
 
         public 화물배차추천Service(
             SsalddelContext db,
@@ -45,7 +51,10 @@ namespace 살뜰.Services.Dispatch.Recommendation
             I소형배송기사제안요금Service? smallGoodsPricing = null,
             I운영배차공통UseCase? 운영배차 = null,
             I화물후속픽업기준Service? 후속픽업 = null,
-            IOptions<배차큐정책Options>? queueOptions = null)
+            IOptions<배차큐정책Options>? queueOptions = null,
+            I신규화물업무자격Guard? 신규업무자격 = null,
+            I기사실차적재근거조회Service? 실차적재조회 = null,
+            I국내화물추천재검증Service? 추천재검증 = null)
             : base(
                 db,
                 driverLocationStore,
@@ -68,6 +77,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
             _운영배차 = 운영배차;
             _후속픽업 = 후속픽업 ?? new 화물후속픽업기준Service(db, 기사운송일정구성Service, 운송일정삽입평가Service);
             _queueOptions = queueOptions?.Value ?? new 배차큐정책Options();
+            _신규업무자격 = 신규업무자격;
+            _실차적재조회 = 실차적재조회 ?? new 기사실차적재근거조회Service(db);
+            _추천재검증 = 추천재검증;
         }
 
         protected override async Task<bool> IsDrivingAsync(string driverId)
@@ -88,8 +100,10 @@ namespace 살뜰.Services.Dispatch.Recommendation
 
         private async Task<IReadOnlyList<DispatchRecommendationDto>> GetRecommendationsCoreAsync(string driverId, 배차추천검색조건? criteria, bool isDriving)
         {
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId)).CanReceiveNewWork) return [];
             if (!await 운영배차신규수신Guard.허용Async(_운영배차, driverId, CancellationToken.None)) return [];
             await 추천만료정리Async(driverId);
+            if (_추천재검증 is not null) await _추천재검증.갱신Async(driverId);
 
             var driver = await _db.용달기사.AsNoTracking().FirstOrDefaultAsync(x => x.기사Id == driverId);
             _driverLocationStore.TryGetLatest(driverId, out DriverLocationSnapshot? currentLocation);
@@ -160,8 +174,11 @@ namespace 살뜰.Services.Dispatch.Recommendation
             var requestIds = items.Select(q => q.의뢰Id).Distinct().ToList();
             var directPickingIds = await 기사제안표시근거Service.직접피킹의뢰Async(_db, requestIds);
             var requestMap = await LoadRequestMapAsync(requestIds);
+            items.RemoveAll(x => !requestMap.TryGetValue(x.의뢰Id, out var cargoRequest)
+                || !신규화물업무자격검사.화물정보완료(_신규업무자격, cargoRequest));
+            var driverFareMap = await LoadDriverFareMapAsync(requestMap.Values);
             var cargoMap = await LoadCargoMapAsync(requestIds);
-            var vehicleSpec = await LoadVehicleSpecAsync(driver?.차량);
+            var vehicleSpec = await LoadVehicleSpecAsync(driverId);
 
             var hasSearchCriteria = criteria is not null && criteria.RadiusKm > 0;
             var searchLatitude = hasSearchCriteria ? criteria!.Latitude : originLocation?.Latitude ?? currentLocation?.Latitude;
@@ -260,7 +277,9 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 var tollFare = SumMoney(routeFromOriginToPickup?.TollFare, routeFromPickupToDropoff?.TollFare);
                 var estimatedFuelCost = EstimateFuelCost(totalDistanceKm, fuelEfficiencyKmPerLiter, fuelPricePerLiter);
                 var offerPricing = 소형배송기사제안요금Service.TryReadPricing(x.Item);
-                var estimatedRevenue = offerPricing?.TotalPayoutKrw ?? ResolveEstimatedRevenue(request);
+                driverFareMap.TryGetValue(request?.운임구성Id ?? 0, out var driverFare);
+                var payout = 기사제안표시근거Service.화물보수(x.Item, request, driverFare, offerPricing);
+                var estimatedRevenue = payout.Amount;
                 var estimatedTotalCost = SumMoney(tollFare, estimatedFuelCost);
                 var estimatedExtraProfit = estimatedRevenue.HasValue && estimatedTotalCost.HasValue
                     ? estimatedRevenue.Value - estimatedTotalCost.Value
@@ -301,6 +320,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     WorkKind = SharedDriverWorkAdmissionService.ResolveWorkKind(x.Item),
                     AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(x.Item.의뢰Id)),
                     Pricing = offerPricing,
+                    기사지급예정운임 = payout.Amount,
+                    기사지급예정운임근거 = payout.Source,
                     의뢰Id = x.Item.의뢰Id,
                     화물종류 = request?.화물종류 ?? x.Item.픽업_도로명주소,
                     픽업지 = x.Item.픽업_도로명주소,
@@ -367,6 +388,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     배차상태 = 상태값.배차상태.대기
                 };
 
+                화물운송조건Projector.투영(recommendation, request);
                 DispatchRecommendationRequestTypeClassifier.ApplyTo(
                     recommendation,
                     x.Item.원본의뢰유형,
@@ -378,7 +400,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 result.Add(recommendation);
             }
 
-            if (!await 운영배차신규수신Guard.허용Async(_운영배차, driverId, CancellationToken.None)
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId)).CanReceiveNewWork
+                || !await 운영배차신규수신Guard.허용Async(_운영배차, driverId, CancellationToken.None)
                 || (pickupBasis is not null && !await _후속픽업.현재근거확인Async(driverId, pickupBasis))) return [];
             return returnArea.활성여부
                 ? result.OrderByDescending(x => x.추천점수 ?? decimal.MinValue)

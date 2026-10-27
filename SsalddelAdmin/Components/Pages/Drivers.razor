@@ -7,6 +7,7 @@
     <MudStack Spacing="0">
         <MudText Typo="Typo.h4">09. 기사 관리</MudText>
         <MudText Typo="Typo.body2" Color="Color.Secondary">기사 상태, 차량, 활동지역, 최근 배차 내역을 확인합니다.</MudText>
+        <MudButton Variant="Variant.Text" Href="/drivers/platform-registration-readiness" StartIcon="@Icons.Material.Outlined.AssignmentTurnedIn">플랫폼 등록 준비</MudButton>
     </MudStack>
 
     <MudPaper Elevation="1" Class="pa-4">
@@ -67,6 +68,8 @@
                                     <MudTd DataLabel="배차건수">@context.배차건수</MudTd>
                                     <MudTd>
                                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => SelectDriverAsync(context.기사Id))">상세</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Href="@($"/drivers/{Uri.EscapeDataString(context.기사Id)}/qualification")">운송 자격 검토</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Href="@($"/admin/freight-delivery/vehicles?driverId={Uri.EscapeDataString(context.기사Id)}")">실차 적재 확인</MudButton>
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>

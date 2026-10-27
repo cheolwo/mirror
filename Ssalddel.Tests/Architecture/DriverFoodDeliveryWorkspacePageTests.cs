@@ -31,7 +31,8 @@ public sealed class DriverFoodDeliveryWorkspacePageTests
         Assert.Contains("FoodDeliveries = \"/driver/food-deliveries\"", routes);
         Assert.Contains("IDriverFoodDeliveryApiService, DriverFoodDeliveryApiService", registrations);
         Assert.Contains("@page \"/\"", rootRedirect);
-        Assert.Contains("NavigateTo(DriverRoutes.HomeSummary", rootRedirect);
+        Assert.Contains("await Session.RestoreAsync()", rootRedirect);
+        Assert.Contains("Session.IsAuthenticated ? DriverRoutes.HomeSummary : DriverRoutes.PublicCargo", rootRedirect);
         Assert.Contains("@page \"/driver/food-deliveries\"", page);
         Assert.Contains("PickupActionLabel(delivery.ExecutionProfile)", page);
         Assert.Contains("CompletionActionLabel(delivery.ExecutionProfile)", page);
@@ -55,7 +56,8 @@ public sealed class DriverFoodDeliveryWorkspacePageTests
             root,
             "RestaurantDeskApp",
             "Services",
-            "음식점주문DeskService.cs"));
+            "음식점주문DeskService.cs")) + File.ReadAllText(Path.Combine(
+            root, "RestaurantDeskApp", "Services", "음식점주문InboxProjection.cs"));
 
         Assert.Contains("DispatchStatusLabel(order.배차상태)", page);
         Assert.Contains("FormatOptionalDate(order.배차요청시각Utc)", page);

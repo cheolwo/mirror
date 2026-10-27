@@ -61,8 +61,8 @@ public sealed partial class 분산이행PageViewModel
                 var type = BodyTypes.SingleOrDefault(type => type.Name == command.BodyType) ?? throw new InvalidDataException("이전 요청의 업무 종류를 확인하지 못했습니다.");
                 var body = (DistributedCommandRequest?)JsonSerializer.Deserialize(command.BodyJson, type) ?? throw new InvalidDataException("이전 요청 원문을 확인하지 못했습니다.");
                 if (body.RequestId != record.RequestId) throw new InvalidDataException("이전 요청 번호가 다릅니다.");
-                pending = new(command.Action, command.Suffix, body, command.AggregateId, command.Quantity, command.ReservationId)
-                    { Sent = command.Sent, Acknowledgement = command.Acknowledgement };
+                pending = 분산명령영수증Session.Restore(command.Action, command.Suffix, body, command.AggregateId,
+                    command.Quantity, command.ReservationId, command.Sent, command.Acknowledgement);
             }
             if (saved.Photo is { } photo)
             {
@@ -74,7 +74,7 @@ public sealed partial class 분산이행PageViewModel
             {
                 if (pending is not null)
                 {
-                    pending.Acknowledgement = new(receipt.RequestId, receipt.AggregateId, receipt.Revision, "Recorded", true);
+                    pending.RecoverAcknowledgement(receipt);
                     await SendPendingAsync(ct); // 영수증이 있으므로 외부 POST를 보내지 않습니다.
                 }
                 else await FinishRecoveredReceiptAsync(receipt, ct);
@@ -102,18 +102,17 @@ public sealed partial class 분산이행PageViewModel
     }
     private async Task FinishRecoveredReceiptAsync(DistributedReceiptDto receipt, CancellationToken ct)
     {
+        string? confirmedPhotoAction = null;
         if (Photo.Work is { } work && photoOperation is { } operation)
         {
-            var action = operation.Action is "import-lot" or "handover-stock-release" ? operation.Action : operation.Action + "-batch";
-            if (receipt.RequestId != Photo.CompletionRequestId || receipt.AggregateId != work.AggregateId
-                || receipt.Kind != ReceiptKind(action) || receipt.Revision <= 분산사진업무Session.Body(work)!.ExpectedRevision
-                || operation.Quantity is { } quantity && receipt.Quantity != quantity)
-                throw new InvalidDataException("이전 사진 완료의 업무·대상·수량을 확인하지 못했습니다.");
+            분산명령영수증Session.ValidateRecoveredPhoto(receipt, work, operation.Action, operation.Quantity);
+            confirmedPhotoAction = 분산명령영수증Session.PhotoCompletionAction(operation.Action);
         }
         await RefreshAsync(ct); RequireCurrent(ct);
         if (FindRevision(receipt.AggregateId) is not { } revision || revision < receipt.Revision)
             throw new InvalidDataException("이전 요청의 최신 원장을 확인하지 못했습니다.");
         await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, receipt.RequestId, ct); RequireCurrent(ct);
+        if (confirmedPhotoAction is not null) RecordCompletion(confirmedPhotoAction, receipt);
         pending = null; Photo.Clear(); photoOperation = null; expiredRecoveryId = null; recoveryCreatedAtUtc = null;
         Message = "이전에 저장된 처리 결과와 최신 업무 상태를 확인했습니다.";
     }

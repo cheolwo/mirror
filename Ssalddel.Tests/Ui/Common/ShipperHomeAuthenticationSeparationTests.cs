@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
@@ -148,6 +149,63 @@ public sealed class ShipperHomeAuthenticationSeparationTests
         Assert.Contains("shipper-home__workflows", html);
         Assert.Contains("공개 커뮤니티", html);
         Assert.DoesNotContain("data-display-mode=\"authentication\"", html);
+    }
+
+    [Theory]
+    [InlineData("배차확정", "기사 배정 완료")]
+    [InlineData("배차대기", "기사 배차 대기")]
+    [InlineData("배송완료", "운송 완료")]
+    public async Task 최근의뢰는_원장진행안내와_미수납결제배지를_따로표시한다(
+        string dispatchStatus,
+        string nextActionTitle)
+    {
+        await using var fixture = new RenderFixture(Snapshot(true) with
+        {
+            LatestRequest = new("REQ-POSTPAID", "접수", "결제대기", dispatchStatus,
+                DateTime.UnixEpoch, nextActionTitle)
+        });
+        fixture.State.SessionAuthenticated = true;
+
+        var html = await fixture.RenderAsync();
+
+        Assert.Contains($"다음 확인: {nextActionTitle}", html);
+        AssertLatestStatuses(html, "접수", "결제대기", dispatchStatus);
+        Assert.DoesNotContain("다음 확인: 결제 조건 확인", html);
+        Assert.Contains("REQ-POSTPAID", html);
+    }
+
+    [Theory]
+    [InlineData("배차확정", "기사 배정 완료")]
+    [InlineData("배송완료", "운송 완료")]
+    [InlineData("미확인단계", "진행 상태 확인 필요")]
+    public async Task 기존다섯인자요약도_상세정책으로안내하며_없는지급조건을추정하지않는다(
+        string dispatchStatus,
+        string expectedNextAction)
+    {
+        await using var fixture = new RenderFixture(Snapshot(true) with
+        {
+            LatestRequest = new("REQ-LEGACY", "접수", "결제대기", dispatchStatus, DateTime.UnixEpoch)
+        });
+        fixture.State.SessionAuthenticated = true;
+
+        var html = await fixture.RenderAsync();
+
+        Assert.Contains($"다음 확인: {expectedNextAction}", html);
+        AssertLatestStatuses(html, "접수", "결제대기", dispatchStatus);
+        Assert.DoesNotContain("다음 확인: 결제 조건 확인", html);
+    }
+
+    private static void AssertLatestStatuses(string html, params string[] expected)
+    {
+        // CSS isolation 속성과 무관하게 최근 의뢰 안의 세 원장 상태를 확인합니다.
+        var statuses = Regex.Match(html,
+            "<div\\b[^>]*class=\"shipper-home__latest-statuses\"[^>]*>(.*?)</div>",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        Assert.True(statuses.Success, "최근 의뢰의 상태 배지 영역이 표시돼야 합니다.");
+        var texts = Regex.Matches(statuses.Groups[1].Value, "<span\\b[^>]*>(.*?)</span>",
+                RegexOptions.Singleline | RegexOptions.CultureInvariant)
+            .Select(match => match.Groups[1].Value.Trim()).ToArray();
+        Assert.Equal(expected, texts);
     }
 
     private static void AssertAuthenticationOnly(string html)

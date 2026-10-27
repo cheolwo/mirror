@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -350,6 +350,13 @@ public static class 운송원장Mongo동기화Builder
                     ("화물높이Mm", Format(의뢰?.화물높이Mm)),
                     ("화물중량Kg", Format(의뢰?.화물중량Kg)),
                     ("화물부피Cbm", Format(의뢰?.화물부피Cbm)),
+                    ("화물적재근거포함", 의뢰 is not null && (의뢰.화물부피근거Code is not null || 의뢰.화물적재계산판본 is not null
+                        || 의뢰.화물입력부피Cbm.HasValue || 의뢰.화물바닥회전가능여부.HasValue || 의뢰.화물적층가능여부.HasValue) ? "v1" : null),
+                    ("화물입력부피Cbm", Format(의뢰?.화물입력부피Cbm)),
+                    ("화물부피근거Code", 의뢰?.화물부피근거Code),
+                    ("화물적재계산판본", 의뢰?.화물적재계산판본),
+                    ("화물바닥회전가능여부", Format(의뢰?.화물바닥회전가능여부)),
+                    ("화물적층가능여부", Format(의뢰?.화물적층가능여부)),
                     ("팔레트개수", Format(의뢰?.화물팔레트개수)),
                     ("화물파손주의여부", Format(의뢰?.화물파손주의여부)),
                     ("화물온도조건", 의뢰?.화물온도조건),
@@ -383,6 +390,8 @@ public static class 운송원장Mongo동기화Builder
                     ("연락처전화번호", 의뢰?.픽업_연락처_전화번호),
                     ("시간창시작", Format(의뢰?.픽업_시간창_시작일시)),
                     ("시간창종료", Format(의뢰?.픽업_시간창_종료일시)),
+                    ("작업시간분", Format(의뢰?.픽업_작업시간분)),
+                    ("작업시간입력포함", 의뢰 is null ? null : "v1"),
                     ("상태변경Api", "POST api/v1/driver/transports/{id}/arrive-pickup, POST api/v1/driver/transports/{id}/pickup-complete"))
             },
             new()
@@ -401,6 +410,8 @@ public static class 운송원장Mongo동기화Builder
                     ("연락처전화번호", 의뢰?.하차_연락처_전화번호),
                     ("시간창시작", Format(의뢰?.하차_시간창_시작일시)),
                     ("시간창종료", Format(의뢰?.하차_시간창_종료일시)),
+                    ("작업시간분", Format(의뢰?.하차_작업시간분)),
+                    ("작업시간입력포함", 의뢰 is null ? null : "v1"),
                     ("상태변경Api", "POST api/v1/driver/transports/{id}/dropoff-arrived, POST api/v1/driver/transports/{id}/complete"))
             },
             new()
@@ -630,6 +641,10 @@ public static class 운송원장Mongo동기화Builder
 
     private static string ResolveLedgerState(화주운송의뢰? 의뢰, 운송원장? 운송실행투영)
     {
+        // 영속된 취소 운송을 재투영할 때도 진행중 원장으로 남기지 않는다.
+        if (string.Equals(운송실행투영?.상태, 상태값.배차상태.취소, StringComparison.OrdinalIgnoreCase))
+            return 커뮤니티원장상태.닫힘;
+
         if (string.Equals(운송실행투영?.상태, "인수완료", StringComparison.OrdinalIgnoreCase)
             || string.Equals(의뢰?.배차상태, 상태값.배차상태.인수완료, StringComparison.OrdinalIgnoreCase))
         {

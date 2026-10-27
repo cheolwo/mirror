@@ -20,7 +20,8 @@
         {
             <MudGrid>
                 <MudItem xs="12" sm="5">
-                    <MudSelect T="string" Label="@IssueTypeLabel" Value="@IssueType" ValueChanged="SetIssueTypeAsync" Variant="Variant.Outlined">
+                    <MudSelect T="string" Label="@IssueTypeLabel" Value="@IssueType" ValueChanged="SetIssueTypeAsync" Variant="Variant.Outlined"
+                               Disabled="@(IsReporting || ResultUncertain)">
                         @foreach (var issueType in IssueTypes)
                         {
                             <MudSelectItem T="string" Value="@issueType">@issueType</MudSelectItem>
@@ -34,13 +35,20 @@
                                   Label="@MemoLabel"
                                   Variant="Variant.Outlined"
                                   MaxLength="@MemoMaxLength"
+                                  Disabled="@(IsReporting || ResultUncertain)"
                                   Immediate="true" />
                 </MudItem>
             </MudGrid>
+            @if (ResultUncertain)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">
+                    신고 결과 확인이 필요합니다. 중복 신고하지 말고 운영자에게 확인해 주세요.
+                </MudAlert>
+            }
             <MudButton Variant="Variant.Filled"
                        Color="Color.Warning"
                        StartIcon="@Icons.Material.Filled.Save"
-                       Disabled="@IsReporting"
+                       Disabled="@(IsReporting || !CanSubmit)"
                        OnClick="SubmitAsync">
                 @(IsReporting ? ReportingText : SubmitText)
             </MudButton>
@@ -81,6 +89,12 @@
 
     [Parameter]
     public bool IsReporting { get; set; }
+
+    [Parameter]
+    public bool CanSubmit { get; set; } = true;
+
+    [Parameter]
+    public bool ResultUncertain { get; set; }
 
     [Parameter]
     public EventCallback OnSubmit { get; set; }

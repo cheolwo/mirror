@@ -18,6 +18,7 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
     private readonly I운송원장Mongo동기화Service _원장동기화Service;
     private readonly IOperatingMarketFreightWorkflowPolicy _freightWorkflowPolicy;
     private readonly I화주운송의뢰화물운송인계Service _operatingSystemHandoffService;
+    private readonly 살뜰.Services.Options.ISsalddelExecutionModePolicy? _execution;
 
     public 의뢰생성CommandHandler(
         SsalddelContext db,
@@ -25,7 +26,8 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         ICurrentUserAccessor currentUserAccessor,
         I운송원장Mongo동기화Service 원장동기화Service,
         IOperatingMarketFreightWorkflowPolicy freightWorkflowPolicy,
-        I화주운송의뢰화물운송인계Service operatingSystemHandoffService)
+        I화주운송의뢰화물운송인계Service operatingSystemHandoffService,
+        살뜰.Services.Options.ISsalddelExecutionModePolicy? execution = null)
     {
         _db = db;
         _geocodingService = geocodingService;
@@ -33,6 +35,7 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         _원장동기화Service = 원장동기화Service;
         _freightWorkflowPolicy = freightWorkflowPolicy;
         _operatingSystemHandoffService = operatingSystemHandoffService;
+        _execution = execution;
     }
 
     public async Task<Result<화주운송의뢰응답>> Handle(의뢰생성Command request, CancellationToken cancellationToken)
@@ -54,43 +57,31 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
                 $"OperatingMarketFreightPolicy:{freightWorkflowDecision.DecisionCode}");
         }
 
-        if (string.IsNullOrWhiteSpace(request.화물종류))
+        if (화주운송의뢰생성입력Policy.입력오류(request) is { } inputError)
+            return Result.Fail<화주운송의뢰응답>(inputError);
+
+        // 이번 서비스의 내부 운영 물품 등록 기준입니다. 모든 운송수단의 동일 법정 의무라는 뜻은 아닙니다.
+        // 생성됨도 이미 서버에 접수되는 원장입니다. 로컬 작성 초안에는 이 검사를 적용하지 않습니다.
+        // Simulation은 실제 화물 등록이 아니며 기존 검증 자료의 누락값을 임의 보충하지 않습니다.
+        if (_execution?.IsSimulation != true)
         {
-            return Result.Fail<화주운송의뢰응답>("화물종류 is required");
+            var missing = FreightCargoRegistrationPolicy.MissingFields(new(
+                request.화물종류, request.화물중량Kg, request.화물길이Mm, request.화물폭Mm,
+                request.화물높이Mm, request.픽업도로명주소, request.하차도로명주소));
+            if (missing.Count > 0)
+                return Result.Fail<화주운송의뢰응답>(new Error("종류·포장/깔판 포함 중량·길이/너비/높이·출도착지를 확인해 주세요.")
+                    .WithMetadata("StatusCode", 400).WithMetadata("ErrorCode", "FreightCargoRequiredInformationMissing")
+                    .WithMetadata("MissingFields", string.Join(",", missing)));
         }
 
-        if (string.IsNullOrWhiteSpace(request.픽업도로명주소))
-        {
-            return Result.Fail<화주운송의뢰응답>("픽업 주소 도로명주소 is required");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.픽업연락처전화번호))
-        {
-            return Result.Fail<화주운송의뢰응답>("픽업 연락처 전화번호 is required");
-        }
-
-        if (request.픽업시간창시작일시 >= request.픽업시간창종료일시)
-        {
-            return Result.Fail<화주운송의뢰응답>("pickup.window.startAt must be before endAt");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.하차도로명주소))
-        {
-            return Result.Fail<화주운송의뢰응답>("하차 주소 도로명주소 is required");
-        }
-
-        if (request.하차시간창시작일시.HasValue
-            && request.하차시간창종료일시.HasValue
-            && request.하차시간창시작일시 >= request.하차시간창종료일시)
-        {
-            return Result.Fail<화주운송의뢰응답>("dropoff.window.startAt must be before endAt");
-        }
+        var loadingEvidence = 화주운송의뢰매퍼.CalculateLoadingEvidence(request);
+        if (!loadingEvidence.유효여부)
+            return Result.Fail<화주운송의뢰응답>(loadingEvidence.오류);
 
         var isServerAdmin = 주문자권한검사.IsServerAdmin(_currentUserAccessor);
         var shipperId = 주문자권한검사.ResolveShipperId(_currentUserAccessor, currentUserId, request.화주Id);
-        var clientRequestId = request.클라이언트요청Id?.Trim() ?? string.Empty;
-        var isMobileSubmission = clientRequestId.StartsWith("shipper-app-", StringComparison.Ordinal)
-            && Guid.TryParseExact(clientRequestId[12..], "N", out _);
+        var clientRequestId = 화주운송의뢰생성입력Policy.접수요청Id정규화(request.클라이언트요청Id);
+        var isMobileSubmission = 화주운송의뢰생성입력Policy.모바일접수(clientRequestId);
         if (!string.IsNullOrWhiteSpace(clientRequestId))
         {
             var duplicate = await _db.화주운송의뢰
@@ -108,86 +99,27 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             }
         }
 
-        var settlementCondition = request.정산조건;
-        var paymentStatus = string.IsNullOrWhiteSpace(request.결제상태) ? 상태값.결제상태.결제대기 : request.결제상태.Trim();
+        var paymentStatus = 화주운송의뢰생성입력Policy.결제상태정규화(request.결제상태);
         if (!AllowedPaymentStatuses.Contains(paymentStatus))
         {
             return Result.Fail<화주운송의뢰응답>($"결제상태 must be one of: {string.Join(", ", AllowedPaymentStatuses)}");
         }
 
-        var settlementTime = settlementCondition?.정산시점 ?? 정산시점.선결제;
-        var paymentMethod = settlementCondition?.결제수단.ToString() ?? request.결제수단 ?? "카드";
-        var evidenceMethod = settlementCondition?.증빙방식.ToString() ?? 증빙방식.없음.ToString();
-        var collector = settlementCondition?.수납주체.ToString() ?? 수납주체.플랫폼.ToString();
-        var settlementStatus = GetSettlementStatus(settlementTime, settlementCondition?.증빙방식);
-        var finalFare = request.최종운임 ?? request.결제예정금액;
-        var paymentAmount = request.결제예정금액 ?? (finalFare.HasValue ? decimal.ToInt32(finalFare.Value) : null);
+        var settlement = 화주운송의뢰생성Factory.정산입력(request);
 
         var (pickupLat, pickupLng) = await ResolveCoordinatesAsync(request.픽업도로명주소, request.픽업상세주소, cancellationToken);
         var (dropoffLat, dropoffLng) = await ResolveCoordinatesAsync(request.하차도로명주소, request.하차상세주소, cancellationToken);
 
-        var entity = new 화주운송의뢰
-        {
-            모의처리처수행 = request.SimulationFulfillment,
-            자동처리처수행 = request.SimulationFulfillment && request.SimulationAutomaticFulfillment,
-            모의처리희망완료Utc = request.SimulationFulfillment ? request.SimulationDesiredCompletionUtc : null,
-            // 새 모바일 접수는 첫 요청이 아직 저장 중이어도 같은 Mongo 원장/CAS와 RDB 키를 사용합니다.
-            // 기존 요청의 ID와 생활배송 키 의미는 변경하지 않습니다.
-            의뢰Id = (clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
-                    || isMobileSubmission)
-                ? new Guid(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(currentUserId + ":" + clientRequestId)).AsSpan(0, 16)).ToString()
-                : Guid.NewGuid().ToString(),
-            화주Id = shipperId,
-            주문자UserId = currentUserId,
-            화물종류 = request.화물종류,
-            화물설명 = request.화물설명 ?? string.Empty,
-            화물수량 = request.화물수량,
-            화물중량Kg = request.화물중량Kg,
-            화물부피Cbm = request.화물부피Cbm,
-            화물파손주의여부 = request.화물파손주의여부,
-            화물온도조건 = request.화물온도조건 ?? "상온",
-            운송방식 = request.운송방식 ?? "혼적",
-            차량종류 = request.차량종류 ?? string.Empty,
-            결제수단 = paymentMethod,
-            정산시점 = settlementTime.ToString(),
-            증빙방식 = evidenceMethod,
-            수납주체 = collector,
-            정산상태 = request.SimulationFulfillment ? "모의 수행·정산 제외" : settlementStatus,
-            정산메모 = settlementCondition?.정산메모 ?? string.Empty,
-            세금계산서필요 = settlementCondition?.세금계산서필요 ?? false,
-            현금영수증필요 = settlementCondition?.현금영수증필요 ?? false,
-            결제예정금액 = paymentAmount,
-            픽업_도로명주소 = request.픽업도로명주소,
-            픽업_상세주소 = request.픽업상세주소 ?? string.Empty,
-            픽업_위도 = pickupLat,
-            픽업_경도 = pickupLng,
-            픽업_연락처_이름 = request.픽업연락처이름,
-            픽업_연락처_전화번호 = request.픽업연락처전화번호,
-            픽업_시간창_시작일시 = request.픽업시간창시작일시,
-            픽업_시간창_종료일시 = request.픽업시간창종료일시,
-            하차_도로명주소 = request.하차도로명주소,
-            하차_상세주소 = request.하차상세주소 ?? string.Empty,
-            하차_위도 = dropoffLat,
-            하차_경도 = dropoffLng,
-            하차_연락처_이름 = request.하차연락처이름,
-            하차_연락처_전화번호 = request.하차연락처전화번호,
-            하차_시간창_시작일시 = request.하차시간창시작일시,
-            하차_시간창_종료일시 = request.하차시간창종료일시,
-            서비스레벨 = request.서비스레벨 ?? string.Empty,
-            요청사항 = request.요청사항 ?? string.Empty,
-            대기료 = request.대기료,
-            수작업비 = request.수작업비,
-            할증 = request.할증,
-            최종운임 = finalFare,
-            클라이언트요청Id = clientRequestId,
-            생활배송접수키 = clientRequestId.StartsWith(Ssalddel.Contracts.Common.Community.NeighborhoodDeliveryRoutes.ClientRequestPrefix, StringComparison.Ordinal)
-                ? Ssalddel.Services.Community.생활배송배차Policy.접수키(currentUserId, clientRequestId) : null,
-            상태 = 상태값.의뢰상태.생성됨,
-            결제상태 = paymentStatus,
-            배차상태 = 상태값.배차상태.미시작,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        // 새 모바일 접수와 생활배송의 동일 요청은 기존과 같은 안정 ID를 사용합니다.
+        var requestId = 화주운송의뢰생성입력Policy.고정의뢰Id(currentUserId, clientRequestId, isMobileSubmission)
+            ?? Guid.NewGuid().ToString();
+        var entity = 화주운송의뢰생성Factory.생성(
+            request, requestId, currentUserId, shipperId, clientRequestId, paymentStatus, settlement,
+            (pickupLat, pickupLng), (dropoffLat, dropoffLng));
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        화주운송의뢰매퍼.ApplyLoadingEvidence(entity, loadingEvidence);
 
         var ledger = isMobileSubmission
             ? await _원장동기화Service.화주운송의뢰신규접수Async(entity, currentUserId, cancellationToken)
@@ -212,26 +144,11 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
         await _db.SaveChangesAsync(cancellationToken);
 
         운임구성? fareComposition = null;
-        if (ShouldCreateFareComposition(request))
+        if (화주운송의뢰생성입력Policy.운임구성필요(request))
         {
-            fareComposition = new 운임구성
-            {
-                의뢰Id = entity.의뢰Id,
-                기본운임 = request.기본운임 ?? 0m,
-                거리운임 = request.거리운임 ?? 0m,
-                할증 = request.할증 ?? 0m,
-                대기료 = request.대기료 ?? 0m,
-                수작업비 = request.수작업비 ?? 0m,
-                최종운임 = entity.최종운임 ?? 0m,
-                기사지급예정운임 = request.기사지급예정운임,
-                예상거리Km = request.예상거리Km,
-                Km당단가 = request.Km당단가,
-                최소운임 = request.최소운임,
-                거리계산방식 = request.거리계산방식,
-                단가출처 = request.단가출처,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            fareComposition = 화주운송의뢰생성Factory.운임구성생성(request, entity);
+            fareComposition.CreatedAt = DateTime.UtcNow;
+            fareComposition.UpdatedAt = DateTime.UtcNow;
 
             // 모의 수행의 참고 비용을 실제 기사 지급 예정액으로 영속하지 않습니다.
             if (request.SimulationFulfillment) fareComposition.기사지급예정운임 = null;
@@ -249,27 +166,6 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
             entity,
             operatingSystemHandoff: handoff,
             fareComposition: fareComposition));
-    }
-
-    private static bool ShouldCreateFareComposition(의뢰생성Command request)
-        => request.최종운임.HasValue
-           || request.기본운임.HasValue
-           || request.거리운임.HasValue
-           || request.최소운임.HasValue
-           || request.Km당단가.HasValue
-           || request.예상거리Km.HasValue
-           || request.기사지급예정운임.HasValue;
-
-    private static string GetSettlementStatus(정산시점 settlementTime, 증빙방식? evidenceMethod)
-    {
-        return settlementTime switch
-        {
-            정산시점.현장지급 => 운임정산상태.현장수금예정.ToString(),
-            정산시점.운송완료후정산 when evidenceMethod == 증빙방식.인수증 => 운임정산상태.인수증대기.ToString(),
-            정산시점.운송완료후정산 => 운임정산상태.청구대기.ToString(),
-            정산시점.월말정산 => 운임정산상태.후불승인대기.ToString(),
-            _ => 운임정산상태.결제대기.ToString()
-        };
     }
 
     private async Task<(decimal? lat, decimal? lng)> ResolveCoordinatesAsync(string? roadAddress, string? detailAddress, CancellationToken cancellationToken)

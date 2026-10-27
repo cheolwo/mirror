@@ -139,7 +139,8 @@ namespace Ssalddel.Tests.Application.Food
             var transition = new 배차대기원장전환Service(database.Context, Options.Create(new 배차큐정책Options()),
                 new R72NoCandidateSelection(), notification, null!, new 음식배달배차흐름Resolver(), smallGoodsPricing: smallGoods,
                 운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
-                화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
+                화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+                신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
             var result = await transition.추천시작Async(id, "driver");
             Assert.False(result.전환여부); Assert.Equal(배차대기원장전환결과코드.배차구성오류, result.결과코드);
             Assert.Equal(0, notification.Calls);

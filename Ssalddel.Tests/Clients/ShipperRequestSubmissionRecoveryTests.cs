@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Contracts.Common.Privacy;
 using Microsoft.AspNetCore.Components;
 using Ssalddel.Client.Infrastructure.Security;
@@ -47,6 +48,24 @@ public sealed class ShipperRequestSubmissionRecoveryTests
     }
 
     [Fact]
+    public async Task 명시재시도도_직전조회가실패하면_보존한POST를재전송하지않는다()
+    {
+        var (operations, stub) = Operations();
+        stub.Add = _ => throw new IOException("lost response");
+        using var model = new ShipperRequestAuthoringPageViewModel(ShipperRequestContactWindowTests.CompleteState(), operations,
+            new Navigation(), recovery: new VolatileWorkflowRecoveryStore());
+        await model.InitializeAsync(); await ShipperConsentFixture.ConfirmAsync(model); await model.SubmitAsync();
+        Assert.True(model.CanRetryPendingRequest);
+        stub.FailGet = true;
+        await model.RetryPendingAsync();
+        Assert.Single(stub.Posts);
+        Assert.Equal(2, stub.Gets.Count);
+        Assert.True(model.HasPendingRequest);
+        Assert.False(model.CanRetryPendingRequest);
+        Assert.Contains("이전 접수 결과를 확인하지 못했습니다", model.StatusMessage);
+    }
+
+    [Fact]
     public async Task 앱재진입은_보호원문을복원하고_GET만하여_같은번호로명시재시도한다()
     {
         var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
@@ -55,6 +74,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var (operations, stub) = Operations(); stub.Add = _ => throw new IOException("lost response");
         var original = ShipperRequestContactWindowTests.CompleteState(); original.상차상세주소 = "상차장 2";
         original.화물수량 = 7; original.화물중량Kg = 12.5m; original.화물부피Cbm = .48m;
+        original.화물길이Mm = 450; original.화물폭Mm = 350; original.화물높이Mm = 250; original.팔레트개수 = 2;
         original.온도조건 = "냉장"; original.화물설명 = "원래 취급 조건";
         original.화물적재형태 = "일반 화물(박스/팔레트)";
         original.결제수단 = "계좌이체"; original.요청사항 = "상차 전 연락";
@@ -65,6 +85,7 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         var key = stub.Posts.Single().의뢰Id;
         var originalPayload = JsonSerializer.Serialize(stub.Posts.Single());
         original.화물수량 = 99; original.화물중량Kg = 99m; original.온도조건 = "냉동";
+        original.화물길이Mm = 999; original.팔레트개수 = 99;
         original.요청사항 = "바뀐 요청"; original.대기료 = 999m; original.결제수단 = "카드";
         var restored = new 운송의뢰작성ViewModel();
         using var second = new ShipperRequestAuthoringPageViewModel(restored, operations, new Navigation(), auth, store);
@@ -72,6 +93,8 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         Assert.Single(stub.Posts); Assert.True(second.HasPendingRequest); Assert.True(second.CanRetryPendingRequest);
         Assert.Equal("상차장 2", restored.상차상세주소); Assert.True(restored.서버등록가능);
         Assert.Equal(7, restored.화물수량); Assert.Equal(12.5m, restored.화물중량Kg);
+        Assert.Equal(450, restored.화물길이Mm); Assert.Equal(350, restored.화물폭Mm);
+        Assert.Equal(250, restored.화물높이Mm); Assert.Equal(2, restored.팔레트개수);
         Assert.Equal("냉장", restored.온도조건); Assert.Equal("계좌이체", restored.결제수단);
         stub.Add = _ => Task.FromResult(new ShipperRequestItem { 의뢰Id = "ledger-one" });
         await second.RetryPendingAsync();
@@ -81,14 +104,21 @@ public sealed class ShipperRequestSubmissionRecoveryTests
     }
 
     [Fact]
-    public async Task 차량준비실패는_입력을유지하고_같은페이지에서재조회할수있다()
+    public async Task 현재화물추천실패는_초기접수준비와분리하고_입력을유지해재조회한다()
     {
         var (operations, stub) = Operations(); stub.FailVehicles = true;
         var state = ShipperRequestContactWindowTests.CompleteState();
         using var model = new ShipperRequestAuthoringPageViewModel(state, operations, new Navigation());
-        await model.InitializeAsync(); Assert.False(model.RegistrationEnabled); Assert.True(state.서버등록가능);
-        stub.FailVehicles = false; await model.InitializeAsync();
-        Assert.True(model.RegistrationEnabled); Assert.Equal(2, stub.VehicleCalls); Assert.Single(model.VehicleTypes);
+        await model.InitializeAsync(); Assert.True(model.RegistrationEnabled); Assert.True(state.서버등록가능);
+        Assert.Equal(0, stub.VehicleCalls);
+        var before = JsonSerializer.Serialize(state.ToDraft());
+        await state.차량추천조회Async(model.RecommendVehiclesAsync);
+        Assert.NotNull(state.차량추천조회오류); Assert.Empty(state.추천차량종류목록);
+        Assert.Equal(before, JsonSerializer.Serialize(state.ToDraft()));
+        stub.FailVehicles = false;
+        await state.차량추천조회Async(model.RecommendVehiclesAsync);
+        Assert.True(model.RegistrationEnabled); Assert.True(state.차량추천현재유효);
+        Assert.Equal(2, stub.VehicleCalls); Assert.Single(state.추천차량종류목록);
     }
 
     [Fact]
@@ -165,6 +195,13 @@ public sealed class ShipperRequestSubmissionRecoveryTests
                 return Task.FromResult<신청개인정보동의증적Response?>(ShipperConsentFixture.Response((신청개인정보동의기록Request)args![0]!));
             if (method?.Name == nameof(IShipperOperationsService.GetVehicleTypesAsync))
             { VehicleCalls++; return FailVehicles ? Task.FromException<IReadOnlyList<string>>(new IOException("vehicles unavailable")) : Task.FromResult<IReadOnlyList<string>>(["1톤 카고"]); }
+            if (method?.Name == nameof(IShipperOperationsService.RecommendVehiclesAsync))
+            {
+                VehicleCalls++;
+                var input = (차량추천요청)args![0]!;
+                return FailVehicles ? Task.FromException<차량추천응답>(new IOException("vehicles unavailable"))
+                    : Task.FromResult(Ssalddel.Tests.UiCommon.ShipperVehicleRecommendationR74Tests.Response(input));
+            }
             if (method?.Name == nameof(IShipperOperationsService.AddRequestAsync))
             { var input = (ShipperRequestItem)args![0]!; Posts.Add(input); return Add(input); }
             if (method?.Name == nameof(IShipperOperationsService.GetRequestByClientRequestIdAsync))

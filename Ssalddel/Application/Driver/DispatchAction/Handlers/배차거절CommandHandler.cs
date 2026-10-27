@@ -65,10 +65,12 @@ public sealed class 배차거절CommandHandler : IRequestHandler<배차거절Com
             return FluentResults.Result.Fail<배차거절결과>("거절 가능한 추천 배차가 아닙니다.");
         }
 
+        var reasonCode = 배차거절사유Policy.분류(request.사유);
+
         try
         {
             await _rejectedRequestStore.RejectAsync(request.기사Id, request.RequestId, cancellationToken);
-            var 전환결과 = await _원장전환Service.추천거절처리Async(request.RequestId, request.기사Id, cancellationToken);
+            var 전환결과 = await _원장전환Service.추천거절처리Async(request.RequestId, request.기사Id, reasonCode, cancellationToken);
             if (!전환결과.전환여부)
             {
                 _logger.LogWarning(
@@ -92,7 +94,7 @@ public sealed class 배차거절CommandHandler : IRequestHandler<배차거절Com
                 new 배차거절됨Event(
                     request.기사Id,
                     request.RequestId,
-                    request.사유,
+                    reasonCode,
                     now,
                     System.Diagnostics.Activity.Current?.TraceId.ToString() ?? string.Empty),
                 cancellationToken);

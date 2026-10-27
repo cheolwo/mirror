@@ -39,6 +39,14 @@
     min-width: 0;
 }
 
+.shipper-request-screen ::deep .shipper-mobile-optional{padding:14px;border:1px solid var(--mud-palette-lines-default);border-radius:10px;background:var(--mud-palette-surface)}
+.shipper-request-screen ::deep .shipper-mobile-optional>summary{cursor:pointer;min-height:40px;display:flex;align-items:center;font-weight:600}
+.shipper-request-screen ::deep .shipper-mobile-optional[open]>summary{margin-bottom:12px}
+.shipper-request-screen ::deep .shipper-mobile-review-section{padding-bottom:12px;border-bottom:1px solid var(--mud-palette-lines-default)}
+.shipper-request-screen ::deep .shipper-mobile-review-section>div,.shipper-request-screen ::deep .shipper-mobile-review-check{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.shipper-request-screen ::deep .shipper-mobile-review-section p,.shipper-request-screen ::deep .shipper-mobile-review-check p{margin:4px 0;overflow-wrap:anywhere}
+.shipper-request-screen ::deep .shipper-mobile-review-section a,.shipper-request-screen ::deep .shipper-mobile-review-check a{display:flex;align-items:center;min-height:48px;flex-shrink:0;color:var(--mud-palette-primary)}
+
 @media (max-width: 720px) {
     .shipper-request-screen {
         gap: .75rem;

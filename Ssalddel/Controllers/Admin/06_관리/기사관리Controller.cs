@@ -5,6 +5,10 @@ using Ssalddel.Controllers;
 using Ssalddel.Application.Admin.Management;
 using Ssalddel.Contracts.Admin.Management;
 using Ssalddel.ApiMetadata;
+using System.Security.Claims;
+using Ssalddel.Application.Driver.Qualification;
+using Ssalddel.Contracts.Driver.Profile;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Master06;
 
@@ -52,4 +56,18 @@ public sealed class 기사관리Controller : ControllerBase
 
         return Ok(items);
     }
+
+    [HttpGet("{driverId}/transport-qualification")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    public async Task<IActionResult> 운송자격조회(string driverId, [FromServices] I운송자격UseCase qualification, CancellationToken cancellationToken)
+        => this.ToActionResult(await qualification.관리자조회Async(driverId, cancellationToken));
+
+    [HttpPost("{driverId}/transport-qualification/review")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
+    public async Task<IActionResult> 운송자격검토(string driverId, [FromServices] I운송자격UseCase qualification,
+        [FromBody] 운송자격검토요청 request, CancellationToken cancellationToken)
+        => this.ToActionResult(await qualification.검토Async(
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), driverId, request, cancellationToken));
 }

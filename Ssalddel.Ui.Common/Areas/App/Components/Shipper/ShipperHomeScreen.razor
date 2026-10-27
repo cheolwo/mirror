@@ -349,36 +349,18 @@
         };
 
     private static string NextCheck(ShipperHomeRequestSummary request)
-    {
-        if (Matches(request.PaymentStatus, "결제대기", "미결제", "대기"))
-        {
-            return "결제 조건 확인";
-        }
-
-        if (Matches(request.DispatchStatus, "매칭중", "배차대기", "대기"))
-        {
-            return "기사 매칭 상태";
-        }
-
-        if (Matches(request.DispatchStatus, "기사배정", "배차확정"))
-        {
-            return "상차 준비";
-        }
-
-        if (Matches(request.DispatchStatus, "운송중", "상차완료", "운송"))
-        {
-            return "하차 진행";
-        }
-
-        return "상세 원장 확인";
-    }
+        => !string.IsNullOrWhiteSpace(request.NextActionTitle)
+            ? request.NextActionTitle
+            : ShipperRequestDetailPresentation.ResolveNextAction(new()
+            {
+                RequestId = request.RequestId,
+                RequestStatus = request.RequestStatus,
+                PaymentStatus = request.PaymentStatus,
+                DispatchStatus = request.DispatchStatus
+            }).Title;
 
     private static string DisplayStatus(string? status, string fallback)
         => string.IsNullOrWhiteSpace(status) ? fallback : status.Trim();
-
-    private static bool Matches(string? value, params string[] keywords)
-        => !string.IsNullOrWhiteSpace(value)
-           && keywords.Any(keyword => value.Contains(keyword, StringComparison.OrdinalIgnoreCase));
 
     private sealed record ShipperHomeWorkflowArea(
         string Key,

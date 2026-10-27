@@ -3,6 +3,7 @@ using Ssalddel.Client.Infrastructure;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Common.Payments;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
+using Ssalddel.Ui.Common.Areas.App.Services;
 using SsalddelApp.Models.Shipper;
 using SsalddelApp.Services;
 
@@ -25,18 +26,24 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
     private long _loadRevision;
     private ShipperRequestItem? _source;
     private FakeShipperPaymentReceipt? _receipt;
+    private bool _paymentProtectionReady;
+    public bool PaymentNeedsResultCheck { get; private set; }
 
     public ShipperRequestDetailPageViewModel(
         IShipperOperationsService operations,
         ITransportRequestLedgerObserver ledgerObserver,
         FakeShipperPaymentService fakePayments,
         IOptions<ClientDataModeOptions> dataModeOptions,
-        IAuthSession authSession)
+        IAuthSession authSession,
+        IWorkflowRecoveryStore? recovery = null,
+        IWorkflowRecoveryContext? recoveryContext = null)
     {
         _operations = operations;
         _ledgerObserver = ledgerObserver;
         _fakePayments = fakePayments;
         _authSession = authSession;
+        _receiptRecovery = recovery;
+        _receiptContext = recoveryContext;
         _queryLifetime = new ShipperQueryLifetime(authSession);
         _queryLifetime.SessionInvalidated += OnSessionInvalidated;
         State.SourceBoundaryMessage = dataModeOptions.Value.CanUseSampleFallback
@@ -153,6 +160,7 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
         }
 
         State.IsBusy = true;
+        if (!_receiptMode) _paymentProtectionReady = false;
         if (showMessage)
         {
             SetStatus("운송 의뢰 원장을 조회하는 중입니다.", ShipperRequestDetailMessageTone.Info);
@@ -172,9 +180,9 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
                 // 인수증 화면은 로컬 FakePG 표시로 서버 금융 상태를 덮지 않습니다.
                 if (_receiptMode) _receipt = null;
                 else ApplyReceipt();
-                State.Request = _source is null ? null : Map(_source);
+                State.Request = _source is null ? null : PaymentSnapshot(_source);
                 var hadPendingReceipt = _receiptMode && ReceiptNeedsResultCheck;
-                if (_receiptMode) ApplyReceiptLookup();
+                if (_receiptMode && _receiptContext is null) ApplyReceiptLookup();
                 if (showMessage && !hadPendingReceipt)
                 {
                     SetStatus(
@@ -196,11 +204,15 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
             },
             () => { State.IsBusy = false; NotifyStateChanged(); },
             cancellationToken);
+        if (!_receiptMode && !_disposed && loadRevision == Interlocked.Read(ref _loadRevision)
+            && _source?.의뢰Id == normalized && _authSession.IsLoggedIn)
+            await RefreshPaymentProtectionAsync(normalized, loadRevision, cancellationToken);
     }
 
     public void OpenPaymentWindow()
     {
-        if (_disposed || !_authSession.IsLoggedIn || State.IsBusy || _source?.CanPay != true || PaymentAmount <= 0)
+        if (_disposed || !_authSession.IsLoggedIn || State.IsBusy || PaymentCompleting || _source?.CanPay != true || PaymentAmount <= 0
+            || !_paymentProtectionReady || PaymentNeedsResultCheck)
         {
             return;
         }
@@ -231,8 +243,17 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
 
     public async Task CompletePaymentAsync(PaymentRequestPlan plan, CancellationToken cancellationToken = default)
     {
-        if (_disposed || !_authSession.IsLoggedIn || _source is null || State.IsBusy || PaymentCompleting)
+        if (_disposed || !_authSession.IsLoggedIn || _source?.CanPay != true || State.IsBusy || PaymentCompleting
+            || !PaymentWindowOpen || !_paymentProtectionReady || PaymentNeedsResultCheck)
         {
+            return;
+        }
+
+        if (plan.Draft.TargetId != _source.의뢰Id || plan.Draft.Amount != PaymentAmount || plan.Draft.Currency != "KRW")
+        {
+            SetStatus("선택한 의뢰의 결제 조건이 달라졌습니다. 다시 조회하고 확인해 주세요.", ShipperRequestDetailMessageTone.Warning);
+            PaymentWindowOpen = false;
+            NotifyStateChanged();
             return;
         }
 
@@ -253,11 +274,18 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
                 ShipperRequestDetailMessageTone.Success);
             await LoadAsync(source.의뢰Id, showMessage: false, cancellationToken: paymentCts.Token);
         }
-        catch (OperationCanceledException) when (paymentCts.IsCancellationRequested) { }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (paymentCts.IsCancellationRequested)
         {
             if (IsCurrentPayment(source.의뢰Id, sessionRevision))
-                SetStatus($"테스트 결제 실패: {ex.Message}", ShipperRequestDetailMessageTone.Error);
+                HoldPaymentResult();
+        }
+        catch (Exception)
+        {
+            if (IsCurrentPayment(source.의뢰Id, sessionRevision))
+            {
+                HoldPaymentResult();
+                await LoadAsync(source.의뢰Id, showMessage: false, cancellationToken: paymentCts.Token);
+            }
         }
         finally
         {
@@ -274,10 +302,46 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
     private void ApplyReceipt()
     {
         _receipt = _source is null ? null : _fakePayments.GetReceipt(_source.의뢰Id);
-        if (_source is not null && _receipt is not null)
+        // 과거 테스트 영수증은 표시 근거일 뿐 서버에서 방금 읽은 금융 상태를 변경하지 않습니다.
+        if (_receipt is not null && (_source is null || _source.의뢰Id != _receipt.RequestId
+            || _source.결제상태 != _receipt.PaymentStatus || PaymentAmount != _receipt.Amount
+            || _source.결제수단 != _receipt.PaymentMethodText)) _receipt = null;
+    }
+
+    private ShipperRequestDetailSnapshot PaymentSnapshot(ShipperRequestItem source)
+        => Map(source) with { CanPay = _receiptMode ? source.CanPay
+            : source.CanPay && _paymentProtectionReady && !PaymentNeedsResultCheck };
+
+    private async Task RefreshPaymentProtectionAsync(string requestId, long loadRevision, CancellationToken ct)
+    {
+        _paymentProtectionReady = false;
+        var sessionRevision = _authSession.SessionRevision;
+        try
         {
-            _fakePayments.TryApplyReceipt(_source);
+            var pending = await _fakePayments.HasPendingAsync(requestId, ct);
+            if (!IsCurrentPayment(requestId, sessionRevision) || loadRevision != Interlocked.Read(ref _loadRevision)) return;
+            PaymentNeedsResultCheck = pending;
+            _paymentProtectionReady = true;
+            if (pending) HoldPaymentResult();
         }
+        catch (Exception)
+        {
+            if (!IsCurrentPayment(requestId, sessionRevision) || loadRevision != Interlocked.Read(ref _loadRevision)) return;
+            SetStatus("테스트 결제 요청의 보호 기록을 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.", ShipperRequestDetailMessageTone.Warning);
+        }
+        if (IsCurrentPayment(requestId, sessionRevision) && loadRevision == Interlocked.Read(ref _loadRevision))
+        {
+            if (_source is not null) State.Request = PaymentSnapshot(_source);
+            NotifyStateChanged();
+        }
+    }
+
+    private void HoldPaymentResult()
+    {
+        PaymentNeedsResultCheck = true;
+        PaymentWindowOpen = false;
+        if (_source is not null) State.Request = PaymentSnapshot(_source);
+        SetStatus("테스트 결제 결과가 미확인입니다. 같은 의뢰의 상태를 다시 조회하고 필요하면 운영자에게 확인해 주세요. 다시 전송하지 않습니다.", ShipperRequestDetailMessageTone.Warning);
     }
 
     private static ShipperRequestDetailSnapshot Map(ShipperRequestItem source)
@@ -426,6 +490,8 @@ public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
         State.IsBusy = false;
         PaymentWindowOpen = false;
         PaymentCompleting = false;
+        _paymentProtectionReady = false;
+        PaymentNeedsResultCheck = false;
         PaymentMemo = null;
         PaymentMethod = PaymentMethodCode.TossCard;
         SettlementMode = SettlementModeCode.Prepaid;

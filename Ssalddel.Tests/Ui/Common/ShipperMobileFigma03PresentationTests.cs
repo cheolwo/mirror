@@ -79,8 +79,8 @@ public sealed class ShipperMobileFigma03PresentationTests
 
     [Theory]
     [InlineData("ShipperRequestScreenFrame.razor", "STEP {(int)Step + 1} · TRANSPORT REQUEST")]
-    [InlineData("ShipperRequestDetailScreenFrame.razor", "TRANSPORT REQUEST · {Eyebrow}")]
-    public void 공용운송Screen은_기존소비자의기본Eyebrow를유지한다(
+    [InlineData("ShipperRequestDetailScreenFrame.razor", "<h1>@Title</h1>")]
+    public void 공용운송Screen은_화면코드계약과사용자제목을유지한다(
         string fileName,
         string defaultEyebrow)
     {

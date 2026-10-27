@@ -1,3 +1,4 @@
+using Ssalddel.Application.Common.Transport;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel;
 using Ssalddel.Hubs;
@@ -5,6 +6,7 @@ using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.도메인.공통;
 using Ssalddel.Application.Driver.Recommendation;
 using Ssalddel.Services.Dispatch.Participation;
+using Ssalddel.Services.Dispatch.Compliance;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -13,17 +15,21 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly SsalddelContext _db;
         private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
         private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
 
         public 공개배차Service(SsalddelContext db, ISharedDriverWorkAdmissionService? sharedAdmission = null,
-            I소형배송기사제안요금Service? smallGoodsPricing = null)
+            I소형배송기사제안요금Service? smallGoodsPricing = null,
+            I신규화물업무자격Guard? 신규업무자격 = null)
         {
             _db = db;
             _sharedAdmission = sharedAdmission;
             _smallGoodsPricing = smallGoodsPricing;
+            _신규업무자격 = 신규업무자격;
         }
 
         public async Task<IReadOnlyList<DispatchRecommendationDto>> GetPublicDispatchesAsync(string driverId, CancellationToken cancellationToken = default)
         {
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, cancellationToken)).CanReceiveNewWork) return [];
             var items = await _db.운송원장
                 .AsNoTracking()
                 .Where(q => q.배차업무유형 == 상태값.배차업무유형.용달운송
@@ -62,52 +68,43 @@ namespace 살뜰.Services.Dispatch.Queue
                 .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, cancellationToken);
 
+            items.RemoveAll(item => requestMap.TryGetValue(item.의뢰Id, out var request)
+                ? !신규화물업무자격검사.화물정보완료(_신규업무자격, request)
+                : _신규업무자격?.RequiresCargoEvidence != false);
+
             var cargoMap = await _db.화물요구조건
                 .AsNoTracking()
                 .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
                 .ToDictionaryAsync(x => x.의뢰Id, cancellationToken);
 
-            return items.Select(item =>
+            var result = items.Select(item =>
             {
                 requestMap.TryGetValue(item.의뢰Id, out var request);
                 cargoMap.TryGetValue(item.의뢰Id, out var cargo);
 
-                var recommendation = new DispatchRecommendationDto
-                {
-                    WorkKind = SharedDriverWorkAdmissionService.ResolveWorkKind(item),
-                    AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(item.의뢰Id)),
-                    Pricing = 소형배송기사제안요금Service.TryReadPricing(item),
-                    의뢰Id = item.의뢰Id,
-                    화물종류 = request?.화물종류 ?? cargo?.주의사항 ?? item.픽업_도로명주소,
-                    픽업지 = item.픽업_도로명주소,
-                    하차지 = item.하차_도로명주소,
-                    픽업_위도 = item.픽업_위도,
-                    픽업_경도 = item.픽업_경도,
-                    하차_위도 = item.하차_위도,
-                    하차_경도 = item.하차_경도,
-                    추천라운드 = item.추천라운드,
-                    추천유형 = "public",
-                    추천사유 = "공개배차",
-                    추천점수 = 0m,
-                    상태 = 상태값.배차큐단계.공개배차.ToString(),
-                    배차상태 = 상태값.배차노출상태.공개중.ToString(),
-                    배지 = ["공개배차"],
-                    경고 = Array.Empty<string>(),
-                    차량적합여부 = true,
-                    차량부적합사유 = Array.Empty<string>(),
-                    차량경고 = Array.Empty<string>()
-                };
+                var recommendation = 운송콜제안Projector.CreateCore(item,
+                    SharedDriverWorkAdmissionService.ResolveWorkKind(item),
+                    기사제안표시근거Service.운송작업(directPickingIds.Contains(item.의뢰Id)),
+                    소형배송기사제안요금Service.TryReadPricing(item),
+                    request?.화물종류 ?? cargo?.주의사항 ?? item.픽업_도로명주소);
+                화물운송조건Projector.투영(recommendation, request);
+                recommendation.추천라운드 = item.추천라운드;
+                recommendation.추천유형 = "public";
+                recommendation.추천사유 = "공개배차";
+                recommendation.추천점수 = 0m;
+                recommendation.상태 = 상태값.배차큐단계.공개배차.ToString();
+                recommendation.배차상태 = 상태값.배차노출상태.공개중.ToString();
+                recommendation.배지 = ["공개배차"];
+                recommendation.경고 = Array.Empty<string>();
+                recommendation.차량적합여부 = true;
+                recommendation.차량부적합사유 = Array.Empty<string>();
+                recommendation.차량경고 = Array.Empty<string>();
 
-                DispatchRecommendationRequestTypeClassifier.ApplyTo(
-                    recommendation,
-                    item.원본의뢰유형,
-                    item.공동구매도착지유형코드,
-                    item.공동구매기사세대배송여부,
-                    item.공동구매세대배송건수);
-                if (생활배송기사정보공개Policy.생활배송인가(request?.클라이언트요청Id))
-                    생활배송기사정보공개Policy.추천정보가림(recommendation);
+                운송콜제안Projector.ApplyClassificationAndPrivacy(recommendation, item, request?.클라이언트요청Id);
                 return recommendation;
             }).ToArray();
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, cancellationToken)).CanReceiveNewWork) return [];
+            return result;
         }
     }
 }

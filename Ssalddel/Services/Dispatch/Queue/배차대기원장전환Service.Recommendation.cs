@@ -2,6 +2,7 @@ using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
 using 살뜰.Services.Dispatch.Common;
 using Microsoft.EntityFrameworkCore;
+using Ssalddel.Services.Dispatch.Compliance;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -105,22 +106,18 @@ namespace 살뜰.Services.Dispatch.Queue
                     queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
             }
 
-            var beforePricing = _db.Entry(queue).CurrentValues.Clone();
+            var pricingPreparation = 추천요금준비생성(queue);
             try
             {
-                if (_smallGoodsPricing is not null)
+                var pricing = await pricingPreparation.준비Async(driverId, cancellationToken);
+                if (pricing.IsFailed)
                 {
-                    var pricing = await _smallGoodsPricing.준비Async(queue, cancellationToken);
-                    if (pricing.IsFailed)
-                    {
-                        _db.Entry(queue).CurrentValues.SetValues(beforePricing);
-                        var blocked = 전환안됨(queue, 배차대기원장전환결과코드.배차구성오류,
-                            pricing.Errors[0].Message, driverId);
-                        return selection is null ? blocked : await 감사기록후반환Async(
-                            queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
-                    }
+                    pricingPreparation.원복();
+                    var blocked = 전환안됨(queue, 배차대기원장전환결과코드.배차구성오류,
+                        pricing.Errors[0].Message, driverId);
+                    return selection is null ? blocked : await 감사기록후반환Async(
+                        queue, selection, 배차엔진후속전환.전환없음, blocked, cancellationToken);
                 }
-                await 음식배달제안요금동결Async(queue, driverId, cancellationToken);
             }
             catch (Exception ex) when (ex is ArgumentException or Ssalddel.Application.Pricing.AgreedRateTableException)
             {
@@ -136,7 +133,7 @@ namespace 살뜰.Services.Dispatch.Queue
                 var participation = await _sharedAdmission.CheckRecommendationAsync(driverId, queue, cancellationToken);
                 if (participation.IsFailed)
                 {
-                    _db.Entry(queue).CurrentValues.SetValues(beforePricing);
+                    pricingPreparation.원복();
                     var blocked = 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
                         participation.Errors[0].Message, driverId);
                     return selection is null ? blocked : await 감사기록후반환Async(
@@ -158,8 +155,16 @@ namespace 살뜰.Services.Dispatch.Queue
                         || !await _화물후속픽업.현재근거확인Async(driverId, basis, cancellationToken)))
                     || !await 운영배차신규수신Guard.허용Async(_운영배차, driverId, cancellationToken))
                 {
-                    _db.Entry(queue).CurrentValues.SetValues(beforePricing);
+                    pricingPreparation.원복();
                     return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨, "기사의 수신 상태 또는 기존 수행 근거가 변경되었습니다.", driverId);
+                }
+                var qualification = await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, cancellationToken);
+                var request = await _db.화주운송의뢰.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == queue.의뢰Id, cancellationToken);
+                if (!qualification.CanReceiveNewWork || request is null || !신규화물업무자격검사.화물정보완료(_신규업무자격, request))
+                {
+                    pricingPreparation.원복();
+                    return 전환안됨(queue, 배차대기원장전환결과코드.추천준비안됨,
+                        qualification.CanReceiveNewWork ? "화물 종류·포장 포함 중량·규격·출도착지를 확인해 주세요." : qualification.Message, driverId);
                 }
             }
             queue.배차큐단계 = 상태값.배차큐단계.배차추천;

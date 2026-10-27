@@ -1,0 +1,68 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using System.Globalization
+
+<MudTextField T="string" Value="@text" ValueChanged="InputChangedAsync"
+              Label="@Label" InputType="InputType.DateTimeLocal" Variant="Variant.Outlined"
+              Required="Required" Immediate="true" UserAttributes="InputAttributes"
+              RequiredError="날짜와 시간을 입력해 주세요." Error="@(conversionError || Error)" />
+@if (conversionError || Error)
+{
+    <p class="mud-input-helper-text mud-input-error" role="alert">@(conversionError ? InvalidInputMessage : ErrorText ?? InvalidInputMessage)</p>
+}
+
+@code {
+    [Parameter] public DateTime? Value { get; set; }
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public bool Required { get; set; }
+    [Parameter] public bool Error { get; set; }
+    [Parameter] public string? ErrorText { get; set; }
+
+    private const string InvalidInputMessage = "날짜와 시간을 확인해 주세요.";
+    private static readonly Dictionary<string, object> InputAttributes = new() { ["step"] = "any" };
+    private static readonly string[] AcceptedFormats = ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.f", "yyyy-MM-dd'T'HH:mm:ss.ff", "yyyy-MM-dd'T'HH:mm:ss.fff",
+        "yyyy-MM-dd'T'HH:mm:ss.ffff", "yyyy-MM-dd'T'HH:mm:ss.fffff", "yyyy-MM-dd'T'HH:mm:ss.ffffff",
+        "yyyy-MM-dd'T'HH:mm:ss.fffffff"];
+    private string text = string.Empty;
+    private DateTime? synchronizedValue;
+    private bool initialized;
+    private bool conversionError;
+
+    protected override void OnParametersSet()
+    {
+        if (initialized && synchronizedValue == Value) return;
+        text = FormatLocalInput(Value);
+        synchronizedValue = Value;
+        conversionError = false;
+        initialized = true;
+    }
+
+    private async Task InputChangedAsync(string? input)
+    {
+        text = input ?? string.Empty;
+        conversionError = !TryParseLocalInput(text, out var parsed);
+        synchronizedValue = parsed;
+        // datetime-local은 시차 없는 한국 현지 시각이다. UTC 변환은 기존 서버 경계에서 수행한다.
+        await ValueChanged.InvokeAsync(parsed);
+    }
+
+    public static bool TryParseLocalInput(string? input, out DateTime? value)
+    {
+        value = null;
+        if (string.IsNullOrEmpty(input)) return true;
+        if (!DateTime.TryParseExact(input, AcceptedFormats, CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var parsed)) return false;
+        value = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
+        return true;
+    }
+
+    public static string FormatLocalInput(DateTime? value)
+    {
+        if (value is not { } local) return string.Empty;
+        var format = local.Ticks % TimeSpan.TicksPerSecond != 0 ? "yyyy-MM-dd'T'HH:mm:ss.fffffff"
+            : local.Second != 0 ? "yyyy-MM-dd'T'HH:mm:ss" : "yyyy-MM-dd'T'HH:mm";
+        var formatted = local.ToString(format, CultureInfo.InvariantCulture);
+        return format.EndsWith("fffffff", StringComparison.Ordinal) ? formatted.TrimEnd('0') : formatted;
+    }
+}

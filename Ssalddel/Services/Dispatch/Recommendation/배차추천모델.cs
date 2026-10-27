@@ -56,13 +56,25 @@ namespace 살뜰.Services.Dispatch.Recommendation
         int 순서,
         long? 운송Id,
         bool 진행중운송여부,
-        bool 후보의뢰여부);
+        bool 후보의뢰여부)
+    {
+        /// <summary>null은 미확인이다. 구형 일정 계산의 0분 가정과 확인된 작업시간을 구분한다.</summary>
+        public decimal? 작업시간분 { get; init; }
+    }
+
+    public sealed record 화물상하차작업시간(decimal? 상차분, decimal? 하차분)
+    {
+        public bool 확인됨 => 상차분 is >= 0m && 하차분 is >= 0m;
+    }
 
     public sealed record 기사운송일정계획(
         string 기사Id,
         DateTime 기준시각,
         배차경로좌표? 시작좌표,
-        IReadOnlyList<기사운송일정항목> 항목목록);
+        IReadOnlyList<기사운송일정항목> 항목목록)
+    {
+        public IReadOnlyDictionary<string, 화물상하차작업시간>? 상하차작업시간 { get; init; }
+    }
 
     public sealed record 운송기존일정평가결과(bool 확인됨, 배차경로좌표? 종료좌표, DateTime? 완료예상시각Utc,
         string? RouteOption, string 사유Code);

@@ -117,7 +117,8 @@ public sealed partial class 배차수락CommandHandlerTests
         I화물배차수락적격성Service eligibility, I화물후속픽업기준Service? anchor = null)
         => new(db, new ThrowingPublisher(), new TestCurrentUserAccessor("driver-1", "기사"), new 참여자실행권한검사(),
             new WorkRelationshipSnapshotCollector(), eligibility, new StubContinuityUseCase(), NullLogger<배차수락CommandHandler>.Instance,
-            운영배차: availability, 후속픽업: anchor, 기사위치: new 화물현재위치시험Store());
+            운영배차: availability, 후속픽업: anchor, 기사위치: new 화물현재위치시험Store(),
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
     private sealed class R64Eligibility : I화물배차수락적격성Service
     {

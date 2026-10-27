@@ -95,7 +95,8 @@ public sealed class CargoWorkStartRecommendationFailureR74Tests
         public 운행시작CommandHandler Start(SsalddelContext db) => new(db, Recommendations, Queue,
             new 국내화물운송기사상태Service(StateStore), new InMemory음식배달권실행공간Store(),
             new InMemory국내화물배달권실행공간Store(), new Actor(), new 참여자실행권한검사(),
-            new CommunityDriverAvailabilityService(new SystemCommunityDriverAvailabilityClock()), Log);
+            new CommunityDriverAvailabilityService(new SystemCommunityDriverAvailabilityClock()), Log,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         public static async Task<Fixture> CreateAsync()
         {
             var fixture = new Fixture();

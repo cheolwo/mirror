@@ -6,6 +6,7 @@ using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Driver.Transport;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -14,7 +15,7 @@ public sealed class CargoTransportPickupCompletionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task 완료응답유실도_같은운송조회가상차완료이면_다음업무로이동한다(bool lost)
+    public async Task 완료응답유실도_같은운송조회가상차완료이면_알림을보인뒤_명시적으로다음업무로이동한다(bool lost)
     {
         using var f = new Fixture(); await f.Prepare();
         f.Completion.Send = _ => { f.Api.State = "상차완료"; return lost
@@ -24,6 +25,14 @@ public sealed class CargoTransportPickupCompletionTests
         Assert.Equal([11L, 11L], f.Api.DetailIds); Assert.Equal(1, f.Completion.Calls);
         Assert.True(f.Page.상차완료확인); Assert.False(f.Page.완료가능);
         Assert.False(f.Page.사진.사진있음); Assert.False(f.Page.완료결과확인필요);
+        var notice = Assert.Single(f.Page.CompletionFeedback.History);
+        Assert.Equal("상차가 완료되었습니다", notice.Title); Assert.False(notice.IsFinal);
+        Assert.Same(notice, f.Page.CompletionFeedback.Current);
+        Assert.Equal("http://localhost/", f.Navigation.Uri);
+        Assert.Equal(DriverRoutes.TransportDropoff(11), f.Page.CompletionReturnHref);
+        f.Page.CompletionFeedback.Dismiss();
+        Assert.Null(f.Page.CompletionFeedback.Current); Assert.Equal(1, f.Completion.Calls);
+        f.Navigation.NavigateTo(f.Page.CompletionReturnHref!);
         Assert.EndsWith(DriverRoutes.TransportDropoff(11), f.Navigation.Uri);
         await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
     }
@@ -36,11 +45,17 @@ public sealed class CargoTransportPickupCompletionTests
         await f.Page.완료Async();
         Assert.True(f.Page.완료결과확인필요); Assert.False(f.Page.완료가능);
         Assert.True(f.Page.사진.사진있음); Assert.True(f.Page.현장.완료); Assert.True(f.Page.인수증.문서사진확인);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
         await f.Page.완료Async(); Assert.Equal(1, f.Completion.Calls);
         f.Api.FailRead = false; f.Api.State = "상차완료";
         await f.Page.InitializeAsync(11);
         Assert.True(f.Page.상차완료확인); Assert.False(f.Page.완료결과확인필요);
         Assert.False(f.Page.사진.사진있음);
+        Assert.Single(f.Page.CompletionFeedback.History);
+        f.Page.CompletionFeedback.Dismiss();
+        await f.Page.InitializeAsync(11);
+        Assert.Single(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionFeedback.Current);
+        Assert.Equal(1, f.Completion.Calls);
     }
 
     [Fact]
@@ -75,6 +90,7 @@ public sealed class CargoTransportPickupCompletionTests
         Assert.False(f.Page.상차완료확인); Assert.True(f.Page.완료가능);
         Assert.True(f.Page.현장.완료); Assert.True(f.Page.인수증.문서사진확인);
         Assert.Equal("http://localhost/", f.Navigation.Uri);
+        Assert.Empty(f.Page.CompletionFeedback.History);
         f.Completion.Send = photo => { Assert.Equal("private/proof-one", photo.ExistingObjectName);
             Assert.True(photo.ReceiptEvidence?.Signed); f.Api.State = "상차완료";
             return Task.FromResult(new DriverTransportCompletionPhotoResult(true, true, "recorded")); };
@@ -99,6 +115,7 @@ public sealed class CargoTransportPickupCompletionTests
         Assert.Equal(transition == "transport" ? new long[] {11, 22} : [11L], f.Api.DetailIds);
         Assert.False(f.Page.완료가능); Assert.Null(f.Page.상차완료.결과);
         Assert.Equal("http://localhost/", f.Navigation.Uri); Assert.False(f.Page.사진.사진있음);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
     }
 
     [Theory]
@@ -110,7 +127,45 @@ public sealed class CargoTransportPickupCompletionTests
         f.Completion.Send = _ => { f.Api.State = state; throw new IOException("lost"); };
         await f.Page.완료Async();
         Assert.True(f.Page.상차완료확인); Assert.False(f.Page.완료가능);
-        Assert.EndsWith(state == "인수완료" ? DriverRoutes.CurrentTransport : DriverRoutes.TransportDropoff(11), f.Navigation.Uri);
+        Assert.Equal("http://localhost/", f.Navigation.Uri);
+        Assert.Equal(state == "인수완료" ? DriverRoutes.CurrentTransport : DriverRoutes.TransportDropoff(11), f.Page.CompletionReturnHref);
+        Assert.Single(f.Page.CompletionFeedback.History);
+    }
+
+    [Fact]
+    public async Task 이미완료된과거운송의단순조회는_새완료알림을만들지않는다()
+    {
+        using var f = new Fixture(); f.Api.State = "상차완료";
+        await f.Page.InitializeAsync(11);
+        Assert.True(f.Page.상차완료확인);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 완료안내를열어둔중_로그아웃이나페이지이탈은_이력과복귀대상을지운다(bool dispose)
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Completion.Send = _ => { f.Api.State = "상차완료"; return Task.FromResult(new DriverTransportCompletionPhotoResult(true, true, "recorded")); };
+        await f.Page.완료Async(); Assert.NotNull(f.Page.CompletionFeedback.Current);
+        if (dispose) f.Page.Dispose(); else await f.Auth.ClearAsync();
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionFeedback.Current);
+        Assert.Null(f.Page.CompletionReturnHref); Assert.Equal(1, f.Completion.Calls);
+    }
+
+    [Fact]
+    public async Task 최종단계만선택하면_상차이력과이동경로를보존하며_알림창만생략한다()
+    {
+        using var f = new Fixture(); await f.Prepare();
+        f.Page.CompletionFeedback.Mode = WorkflowCompletionDisplayMode.FinalOnly;
+        f.Completion.Send = _ => { f.Api.State = "상차완료"; return Task.FromResult(new DriverTransportCompletionPhotoResult(true, true, "recorded")); };
+        await f.Page.완료Async();
+        Assert.Single(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionFeedback.Current);
+        Assert.Equal(DriverRoutes.TransportDropoff(11), f.Page.CompletionReturnHref);
+        await f.Page.InitializeAsync(22);
+        Assert.Empty(f.Page.CompletionFeedback.History); Assert.Null(f.Page.CompletionReturnHref);
+        Assert.Equal(WorkflowCompletionDisplayMode.FinalOnly, f.Page.CompletionFeedback.Mode);
     }
 
     [Theory]

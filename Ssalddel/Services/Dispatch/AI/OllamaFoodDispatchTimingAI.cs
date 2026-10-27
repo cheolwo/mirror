@@ -17,7 +17,6 @@ namespace 살뜰.Services.Dispatch.AI;
 public sealed class OllamaFoodDispatchTimingAI(HttpClient httpClient,
     IOptions<FoodDispatchTimingOllamaOptions> options, TimeProvider clock) : IFoodDispatchTimingAI
 {
-    private const int MaxResponseBytes = 64 * 1024;
     private const string Instructions = "Choose whether to briefly collect more food-delivery orders or dispatch now. "
         + "The server has already enforced the immutable original queue age, collection limit, maximum wait, freshness and driver capacity gates. "
         + "Collect only while it can improve compatible combinations within the supplied remaining window. "
@@ -87,33 +86,10 @@ public sealed class OllamaFoodDispatchTimingAI(HttpClient httpClient,
             using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(settings.BaseUrl), "api/chat"))
                 { Content = JsonContent.Create(body) };
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
-            if (!response.IsSuccessStatusCode) return Fallback("HttpFailure");
-            if (response.Content.Headers.ContentLength > MaxResponseBytes) return Fallback("ResponseTooLarge");
-            await using var stream = await response.Content.ReadAsStreamAsync(deadline.Token);
-            using var buffer = new MemoryStream();
-            var chunk = new byte[8192];
-            while (buffer.Length <= MaxResponseBytes)
-            {
-                var read = await stream.ReadAsync(chunk.AsMemory(0,
-                    Math.Min(chunk.Length, MaxResponseBytes + 1 - (int)buffer.Length)), deadline.Token);
-                if (read == 0) break;
-                buffer.Write(chunk, 0, read);
-            }
-            if (buffer.Length > MaxResponseBytes) return Fallback("ResponseTooLarge");
-            using var envelope = JsonDocument.Parse(buffer.ToArray(), new JsonDocumentOptions { MaxDepth = 16 });
-            RejectDuplicateProperties(envelope.RootElement);
-            var root = envelope.RootElement;
-            if (root.ValueKind != JsonValueKind.Object
-                || !root.TryGetProperty("model", out var model) || model.ValueKind != JsonValueKind.String || model.GetString() != settings.Model
-                || !root.TryGetProperty("done", out var done) || done.ValueKind != JsonValueKind.True
-                || !root.TryGetProperty("message", out var message) || message.ValueKind != JsonValueKind.Object
-                || !message.TryGetProperty("role", out var role) || role.ValueKind != JsonValueKind.String || role.GetString() != "assistant"
-                || !message.TryGetProperty("content", out var content) || content.ValueKind != JsonValueKind.String
-                || message.TryGetProperty("tool_calls", out var calls) && calls.ValueKind != JsonValueKind.Null
-                    && (calls.ValueKind != JsonValueKind.Array || calls.GetArrayLength() != 0))
-                return Fallback("InvalidResponse");
-            using var selection = JsonDocument.Parse(content.GetString()!, new JsonDocumentOptions { MaxDepth = 4 });
-            RejectDuplicateProperties(selection.RootElement);
+            var chat = await OllamaChatResponseReader.ReadAsync(response, settings.Model, deadline.Token);
+            if (chat.ErrorCode is { } errorCode) return Fallback(errorCode);
+            using var selection = JsonDocument.Parse(chat.Content!, new JsonDocumentOptions { MaxDepth = 4 });
+            OllamaChatResponseReader.RejectDuplicateProperties(selection.RootElement);
             if (selection.RootElement.ValueKind != JsonValueKind.Object) return Fallback("InvalidResponse");
             var properties = selection.RootElement.EnumerateObject().ToArray();
             if (properties.Length != 1 || properties[0].Name != "actionCode" || properties[0].Value.ValueKind != JsonValueKind.String)
@@ -129,18 +105,4 @@ public sealed class OllamaFoodDispatchTimingAI(HttpClient httpClient,
         catch (JsonException) { return Fallback("InvalidResponse"); }
     }
 
-    private static void RejectDuplicateProperties(JsonElement value)
-    {
-        if (value.ValueKind == JsonValueKind.Object)
-        {
-            var names = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var property in value.EnumerateObject())
-            {
-                if (!names.Add(property.Name)) throw new JsonException("Duplicate JSON property.");
-                RejectDuplicateProperties(property.Value);
-            }
-        }
-        else if (value.ValueKind == JsonValueKind.Array)
-            foreach (var item in value.EnumerateArray()) RejectDuplicateProperties(item);
-    }
 }

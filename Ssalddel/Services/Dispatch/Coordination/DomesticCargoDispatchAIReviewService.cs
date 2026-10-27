@@ -35,7 +35,7 @@ public sealed class DomesticCargoDispatchAIReviewService : IDomesticCargoDispatc
             {
                 최대운송의뢰수 = 12,
                 최대기사수 = 30,
-                기사당최대추천건수 = 2
+                기사당최대추천건수 = 1
             },
             cancellationToken);
 

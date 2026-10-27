@@ -59,12 +59,52 @@ public sealed class ShipperRequestAuthoringViewModelTests
         Assert.True(draft.재알선의심);
     }
 
+    [Fact]
+    public void 수량만있는기존초안은_그대로복구하고_등록전중량과치수를안내한다()
+    {
+        var source = new 운송의뢰작성ViewModel { 화물종류 = "상자", 화물수량 = 3 };
+        var draft = source.ToDraft();
+        var restored = new 운송의뢰작성ViewModel(); restored.ApplyDraft(draft);
+        Assert.Equal(3, restored.화물수량);
+        Assert.Null(restored.화물중량Kg); Assert.Null(restored.화물길이Mm);
+        Assert.Null(restored.화물폭Mm); Assert.Null(restored.화물높이Mm);
+        Assert.False(restored.화물정보입력됨); Assert.False(restored.서버등록가능);
+        Assert.Equal(4, restored.화물필수보완목록.Count);
+        Assert.Contains(restored.화물필수보완목록, x => x.Contains("포장·깔판"));
+        Assert.All(restored.필수입력오류목록.Where(x => x.구분 == "화물 정보"),
+            x => Assert.Equal(ShipperRequestAuthoringStep.Cargo, x.단계));
+    }
+
+    [Fact]
+    public void 포장치수와팔레트는_Draft왕복에서보존하고_명시초기화로만비운다()
+    {
+        var source = CreateCompleteState(); source.팔레트개수 = 2;
+        var restored = new 운송의뢰작성ViewModel(); restored.ApplyDraft(source.ToDraft());
+        Assert.Equal(1000, restored.화물길이Mm); Assert.Equal(800, restored.화물폭Mm);
+        Assert.Equal(600, restored.화물높이Mm); Assert.Equal(2, restored.팔레트개수);
+        Assert.True(restored.서버등록가능);
+        restored.Reset();
+        Assert.Null(restored.화물길이Mm); Assert.Null(restored.화물폭Mm);
+        Assert.Null(restored.화물높이Mm); Assert.Null(restored.팔레트개수);
+    }
+
+    [Fact]
+    public void 영이하중량과치수는_수량이나부피가있어도_등록가능으로보지않는다()
+    {
+        var state = CreateCompleteState();
+        state.화물중량Kg = 0m; state.화물길이Mm = 0;
+        state.화물폭Mm = -1; state.화물높이Mm = null; state.화물부피Cbm = 1m;
+        Assert.False(state.서버등록가능);
+        Assert.Equal(4, state.화물필수보완목록.Count);
+    }
+
     private static 운송의뢰작성ViewModel CreateCompleteState()
         => new()
         {
             화물종류 = "공동구매 식재료",
             화물수량 = 24,
             화물중량Kg = 180m,
+            화물길이Mm = 1000, 화물폭Mm = 800, 화물높이Mm = 600,
             상차도로명주소 = "서울시 공개 상차지",
             하차도로명주소 = "서울시 공개 하차지",
             상차시간창시작일시 = new DateTime(2026, 10, 3, 9, 0, 0),

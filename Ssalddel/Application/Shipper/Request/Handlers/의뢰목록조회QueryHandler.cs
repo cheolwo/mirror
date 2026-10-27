@@ -91,7 +91,8 @@ public sealed class 의뢰목록조회QueryHandler : IRequestHandler<의뢰목�
                 execution?.운송완료화주인계,
                 execution?.비정상운송사건목록,
                 item.운임구성Id.HasValue && fares.TryGetValue(item.운임구성Id.Value, out var fare)
-                    && fare.의뢰Id == item.의뢰Id ? fare : null);
+                    && fare.의뢰Id == item.의뢰Id ? fare : null,
+                execution?.기사위치상태Code);
         }).ToList();
     }
 }

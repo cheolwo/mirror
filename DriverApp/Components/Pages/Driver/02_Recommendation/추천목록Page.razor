@@ -116,6 +116,7 @@
                 {
                     <MudPaper Class="driver-recommendation-card pa-3" Elevation="0">
                         <MudStack Spacing="2">
+                            <DriverCargoConditions Request="@item.의뢰" Compact="true" />
                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap" Class="driver-recommendation-card__head">
                                 <MudStack Spacing="0">
                                     <MudText Typo="Typo.subtitle1">@item.의뢰.화물종류</MudText>
@@ -133,20 +134,34 @@
                                                          RequiresSpecialDropoff="@warningState.RequiresSpecialDropoff"
                                                          ShowReceipt="@warningState.ShowReceipt" />
 
-                            <DriverRoutePaymentSummary PickupTitle="@item.의뢰.픽업지"
-                                                       PickupSubtitle="@상차지거리문구(item)"
-                                                       PickupMeta="@(new[] { item.의뢰.운송조건표시, item.의뢰.차량조건표시 })"
-                                                       DropoffTitle="@item.의뢰.하차지"
-                                                       DropoffSubtitle="@운송거리문구(item)"
-                                                       DropoffMeta="@(new[] { item.의뢰.시간조건표시, item.의뢰.인수증표시 })"
-                                                       PaymentItems="@(new[] { item.의뢰.결제방식, item.의뢰.인수증표시 })" />
+                            <details class="driver-recommendation-card__details">
+                                <summary>전체 조건 · 거리 · 결제</summary>
+                                <div class="driver-recommendation-card__details-body">
+                                    <DriverCargoConditions Request="@item.의뢰" />
+                                    <DriverRoutePaymentSummary PickupTitle="@item.의뢰.픽업지"
+                                                               PickupSubtitle="@상차지거리문구(item)"
+                                                               DropoffTitle="@item.의뢰.하차지"
+                                                               DropoffSubtitle="@운송거리문구(item)"
+                                                               DropoffMeta="@(new[] { item.의뢰.인수증표시 })"
+                                                               PaymentItems="@(new[] { item.의뢰.결제방식, item.의뢰.인수증표시 })" />
+                                </div>
+                            </details>
 
                             @응답제한표시(item.의뢰)
 
-                            <MudStack Row="true" Spacing="2">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Href="@DriverRoutes.RecommendationDetail(item.의뢰.의뢰Id)">상세</MudButton>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" Href="@DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id)">수락/거절</MudButton>
-                            </MudStack>
+                            <div class="driver-recommendation-card__actions">
+                                <a class="driver-recommendation-card__action driver-recommendation-card__action--reject"
+                                   href="@(DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id) + "?intent=reject")"
+                                   aria-label="추천 거절 사유 입력">
+                                    <strong>거절</strong><span>사유 입력</span>
+                                </a>
+                                <a class="driver-recommendation-card__action driver-recommendation-card__action--accept"
+                                   href="@(DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id) + "?intent=accept")"
+                                   aria-label="@($"{item.의뢰.수락버튼표시} · 추천 수락 확인")">
+                                    <strong>@item.의뢰.수락버튼표시</strong><span>추천 수락 확인</span>
+                                </a>
+                            </div>
+                            <a class="driver-recommendation-card__detail-link" href="@DriverRoutes.RecommendationDetail(item.의뢰.의뢰Id)">추천 상세 보기</a>
                         </MudStack>
                     </MudPaper>
                 }
@@ -160,6 +175,7 @@
                     <MudItem xs="12" md="6">
                         <MudPaper Class="driver-recommendation-card pa-4 h-100" Elevation="0">
                             <MudStack Spacing="2">
+                                <DriverCargoConditions Request="@item.의뢰" Compact="true" />
                                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Wrap="Wrap.Wrap" Class="driver-recommendation-card__head">
                                     <MudStack Spacing="0">
                                         <MudText Typo="Typo.h6">@item.의뢰.화물종류</MudText>
@@ -177,20 +193,34 @@
                                                              RequiresSpecialDropoff="@warningState.RequiresSpecialDropoff"
                                                              ShowReceipt="@warningState.ShowReceipt" />
 
-                                <DriverRoutePaymentSummary PickupTitle="@item.의뢰.픽업지"
-                                                           PickupSubtitle="@상차지거리문구(item)"
-                                                           PickupMeta="@(new[] { item.의뢰.운송조건표시, item.의뢰.차량조건표시, item.의뢰.상차시간표시 })"
-                                                           DropoffTitle="@item.의뢰.하차지"
-                                                           DropoffSubtitle="@운송거리문구(item)"
-                                                           DropoffMeta="@(new[] { item.의뢰.하차시간표시, item.의뢰.인수증표시 })"
-                                                           PaymentItems="@(new[] { item.의뢰.결제방식, item.의뢰.인수증표시 })" />
+                                <details class="driver-recommendation-card__details" open="@(CardPreferenceService.GetSettings().표시모드 == 추천카드표시모드.자세히)">
+                                    <summary>전체 조건 · 거리 · 결제</summary>
+                                    <div class="driver-recommendation-card__details-body">
+                                        <DriverCargoConditions Request="@item.의뢰" />
+                                        <DriverRoutePaymentSummary PickupTitle="@item.의뢰.픽업지"
+                                                                   PickupSubtitle="@상차지거리문구(item)"
+                                                                   DropoffTitle="@item.의뢰.하차지"
+                                                                   DropoffSubtitle="@운송거리문구(item)"
+                                                                   DropoffMeta="@(new[] { item.의뢰.인수증표시 })"
+                                                                   PaymentItems="@(new[] { item.의뢰.결제방식, item.의뢰.인수증표시 })" />
+                                    </div>
+                                </details>
 
                                 @응답제한표시(item.의뢰)
 
-                                <MudStack Row="true" Spacing="2">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.RecommendationDetail(item.의뢰.의뢰Id)">상세</MudButton>
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Href="@DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id)">수락/거절</MudButton>
-                                </MudStack>
+                                <div class="driver-recommendation-card__actions">
+                                    <a class="driver-recommendation-card__action driver-recommendation-card__action--reject"
+                                       href="@(DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id) + "?intent=reject")"
+                                       aria-label="추천 거절 사유 입력">
+                                        <strong>거절</strong><span>사유 입력</span>
+                                    </a>
+                                    <a class="driver-recommendation-card__action driver-recommendation-card__action--accept"
+                                       href="@(DriverRoutes.RecommendationDecision(item.의뢰.의뢰Id) + "?intent=accept")"
+                                       aria-label="@($"{item.의뢰.수락버튼표시} · 추천 수락 확인")">
+                                        <strong>@item.의뢰.수락버튼표시</strong><span>추천 수락 확인</span>
+                                    </a>
+                                </div>
+                                <a class="driver-recommendation-card__detail-link" href="@DriverRoutes.RecommendationDetail(item.의뢰.의뢰Id)">추천 상세 보기</a>
                             </MudStack>
                         </MudPaper>
                     </MudItem>

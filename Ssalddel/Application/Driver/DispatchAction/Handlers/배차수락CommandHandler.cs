@@ -4,6 +4,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Text.Json;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Hr;
@@ -17,6 +18,8 @@ using 살뜰.Services.Dispatch.Continuity;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Queue;
 using Ssalddel.Application.Driver.Transport;
+using Ssalddel.Services.Dispatch.Compliance;
+using 살뜰.Services.Dispatch.Coordination;
 
 namespace Ssalddel.Application.Driver.DispatchAction;
 
@@ -39,6 +42,10 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private readonly I화물후속픽업기준Service? _후속픽업;
     private readonly IDriverLocationStore? _기사위치;
     private readonly 배차큐정책Options _queueOptions;
+    private readonly ICargoAcceptanceRecoveryService _acceptanceRecovery;
+    private readonly I신규화물업무자격Guard? _신규업무자격;
+    private readonly I화물배차상태SnapshotService? _상태근거;
+    private readonly I국내화물추천재검증Service? _추천재검증;
 
     public 배차수락CommandHandler(
         SsalddelContext db,
@@ -55,7 +62,11 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         I운영배차공통UseCase? 운영배차 = null,
         I화물후속픽업기준Service? 후속픽업 = null,
         IDriverLocationStore? 기사위치 = null,
-        Microsoft.Extensions.Options.IOptions<배차큐정책Options>? queueOptions = null)
+        Microsoft.Extensions.Options.IOptions<배차큐정책Options>? queueOptions = null,
+        ICargoAcceptanceRecoveryService? acceptanceRecovery = null,
+        I신규화물업무자격Guard? 신규업무자격 = null,
+        I화물배차상태SnapshotService? 상태근거 = null,
+        I국내화물추천재검증Service? 추천재검증 = null)
     {
         _db = db;
         _publisher = publisher;
@@ -72,6 +83,13 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         _후속픽업 = 후속픽업;
         _기사위치 = 기사위치;
         _queueOptions = queueOptions?.Value ?? new 배차큐정책Options();
+        _신규업무자격 = 신규업무자격;
+        _상태근거 = 상태근거;
+        _추천재검증 = 추천재검증;
+        _acceptanceRecovery = acceptanceRecovery ?? new CargoAcceptanceRecoveryService(db, 연속배차UseCase,
+            Microsoft.Extensions.Options.Options.Create(new CargoAcceptanceRecoveryOptions()), TimeProvider.System,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<CargoAcceptanceRecoveryService>.Instance,
+            recommendationRefresh: 추천재검증);
     }
 
     public async Task<Result<배차수락결과>> Handle(배차수락Command request, CancellationToken cancellationToken)
@@ -91,10 +109,12 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
                 "플랫폼의 후보 정보만으로 배차를 확정할 수 없습니다. 참여 기사 본인의 수락이 필요합니다.");
         }
 
+        if (_추천재검증 is not null) await _추천재검증.갱신Async(request.기사Id, cancellationToken);
         using var sharedLease = _sharedAdmission is null ? null
             : await _sharedAdmission.EnterAsync(request.기사Id, cancellationToken);
         var driverGate = 기사별수락Gate.GetOrAdd(request.기사Id, static _ => new SemaphoreSlim(1, 1));
         await driverGate.WaitAsync(cancellationToken);
+        var driverGateHeld = true;
         try
         {
             AcceptPersistenceResult persisted;
@@ -125,15 +145,25 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
 
             if (persisted.Queue is null || persisted.DispatchRequest is null)
             {
+                if (persisted.Result.IsSuccess)
+                {
+                    driverGate.Release();
+                    driverGateHeld = false;
+                    sharedLease?.Dispose(); // 수락 transaction 뒤의 후속 갱신이 같은 기사 잠금을 다시 획득한다.
+                    await ResumeAcceptanceAsync(request, cancellationToken);
+                }
                 return persisted.Result;
             }
 
+            driverGate.Release();
+            driverGateHeld = false;
+            sharedLease?.Dispose();
             await PublishAfterCommitAsync(request, persisted, cancellationToken);
             return persisted.Result;
         }
         finally
         {
-            driverGate.Release();
+            if (driverGateHeld) driverGate.Release();
         }
     }
 
@@ -164,11 +194,18 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         if (기존수락본인업무인가(queue, request.기사Id))
             return new(Result.Ok(new 배차수락결과(request.RequestId, "이미 수락된 운송입니다.")));
 
+        var qualification = await 신규화물업무자격검사.평가Async(_신규업무자격, request.기사Id, cancellationToken);
+        if (!qualification.CanReceiveNewWork)
+            return new(Conflict(qualification.ReasonCode, qualification.Message));
+
         var dispatchRequest = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (dispatchRequest is null)
         {
             return new(Result.Fail<배차수락결과>("운송의뢰 데이터를 찾을 수 없습니다."));
         }
+
+        if (!신규화물업무자격검사.화물정보완료(_신규업무자격, dispatchRequest))
+            return new(Conflict("FreightCargo.RequiredInformationMissing", "화물 종류·포장 포함 중량·가로·세로·높이와 출발·도착지를 먼저 확인해 주세요."));
 
         var settlementReadiness = 화주운송배차진입정책.판정(dispatchRequest);
         if (!settlementReadiness.가능)
@@ -207,6 +244,23 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             return new(Conflict(
                 화물배차수락오류코드.추천판본불일치,
                 "추천 판본이 변경되었습니다. 최신 추천을 다시 확인해 주세요."));
+        }
+
+        국내화물배차판정근거? decisionEvidence = null;
+        if (!string.IsNullOrWhiteSpace(queue.추천판정근거Json))
+        {
+            국내화물추천저장근거? savedEvidence;
+            try { savedEvidence = JsonSerializer.Deserialize<국내화물추천저장근거>(queue.추천판정근거Json); }
+            catch (JsonException) { return new(Conflict(화물배차수락오류코드.추천판본불일치, "추천 근거를 읽을 수 없습니다. 최신 추천을 다시 확인해 주세요.")); }
+            decisionEvidence = savedEvidence?.판정근거;
+            if (savedEvidence?.수행계획 is not { 확인됨: true, 가능여부: true } savedPlan
+                || string.IsNullOrWhiteSpace(savedEvidence.조율입력지문) || savedPlan.입력지문 != savedEvidence.조율입력지문
+                || savedPlan.기사Id != request.기사Id || !savedPlan.의뢰Ids.Contains(request.RequestId, StringComparer.Ordinal)
+                || decisionEvidence is null || _상태근거 is null || request.ExpectedRecommendationRound is null
+                || !decisionEvidence.기사근거.ContainsKey(request.기사Id)
+                || !decisionEvidence.의뢰근거.ContainsKey(request.RequestId)
+                || !await _상태근거.현재근거확인Async(decisionEvidence, cancellationToken))
+                return new(Conflict(화물배차수락오류코드.추천판본불일치, "추천 이후 화물·기사·보수 근거가 변경되었습니다. 최신 추천을 확인해 주세요."));
         }
 
         var reservationValidation = await _연속배차UseCase.수락예약검증Async(
@@ -261,7 +315,13 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         if (queue.기사지급예정액.HasValue && queue.기사지급예정액 != driverFare.기사지급예정운임)
             return new(Conflict("FreightDriverPayoutAgreementChanged", "제시한 기사 보수와 현재 합의가 다릅니다. 최신 제안을 확인해 주세요."));
         var currentActive = await 현재업무판본Async(request.기사Id, cancellationToken);
+        var finalQualification = await 신규화물업무자격검사.평가Async(_신규업무자격, request.기사Id, cancellationToken);
+        if (!finalQualification.CanReceiveNewWork)
+            return new(Conflict(finalQualification.ReasonCode, finalQualification.Message));
+        if (qualification.Revision != finalQualification.Revision)
+            return new(Conflict("Qualification.RevisionChanged", "자격 검토 상태가 변경되었습니다. 최신 상태를 확인한 뒤 다시 수락해 주세요."));
         if (!Enumerable.SequenceEqual(beforeActive, currentActive)
+            || (decisionEvidence is not null && !await _상태근거!.현재근거확인Async(decisionEvidence, cancellationToken))
             || (activeBasis is not null && !await _후속픽업!.현재근거확인Async(request.기사Id, activeBasis, cancellationToken))
             || !await 운영배차신규수신Guard.허용Async(_운영배차, request.기사Id, cancellationToken)
             || !(배차응답가능정책.추천수락가능(queue, request.기사Id, DateTime.UtcNow) || 배차응답가능정책.공개배차수락가능(queue)))
@@ -299,6 +359,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         // 생활 배송 지도는 후처리 알림/Mongo 로그 대신 같은 SQL 저장의 현재 배정 근거를 사용합니다.
         var assignmentEvent = Ssalddel.Services.Community.NeighborhoodDeliveryLocationPolicy.CreateAssignmentEvent(dispatchRequest, queue, now);
         if (assignmentEvent is not null) _db.운송이벤트.Add(assignmentEvent);
+        // 배정과 같은 transaction에 후속 의도를 남겨 commit 직후 프로세스가 끝나도 재개합니다.
+        if (_db.Database.IsRelational()) _db.운송이벤트.Add(CargoAcceptanceRecoveryMarker.Create(queue, now));
         await _db.SaveChangesAsync(cancellationToken);
         await _연속배차UseCase.수락완료Async(request.기사Id, request.RequestId, cancellationToken);
         if (tx is not null)
@@ -317,13 +379,22 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         var queue = persisted.Queue!;
         var dispatchRequest = persisted.DispatchRequest!;
 
-        try
+        if (_db.Database.IsRelational())
+            await ResumeAcceptanceAsync(request, cancellationToken);
+        else try
         {
             await _연속배차UseCase.시간약속잠금Async(request.기사Id, dispatchRequest, cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogWarning(ex, "배차 수락 뒤 화물 시간 약속 잠금에 실패했습니다. RequestId={RequestId}", request.RequestId);
+        }
+
+        if (!_db.Database.IsRelational() && _추천재검증 is not null)
+        {
+            try { await _추천재검증.갱신Async(request.기사Id, cancellationToken); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            { _logger.LogWarning(ex, "배차 수락 뒤 본인 추천 재검증이 대기 중입니다. RequestId={RequestId}", request.RequestId); }
         }
 
         _relationshipSnapshotCollector.Add(new WorkRelationshipSnapshotRecordRequest
@@ -360,6 +431,17 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             _logger.LogWarning(ex, "배차수락 사후처리 이벤트 발행 중 예외가 발생했습니다. RequestId={RequestId}", request.RequestId);
         }
 
+    }
+
+    private async Task ResumeAcceptanceAsync(배차수락Command request, CancellationToken cancellationToken)
+    {
+        try { await _acceptanceRecovery.ProcessRequestAsync(request.RequestId, request.기사Id, cancellationToken); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception)
+        {
+            // 수락 성공을 후속 실패로 바꾸지 않습니다. 같은 수락의 영속 의도는 재조회/worker가 재개합니다.
+            _logger.LogWarning("배차 수락 후속이 대기 중입니다. RequestId={RequestId}", request.RequestId);
+        }
     }
 
     private sealed record AcceptPersistenceResult(

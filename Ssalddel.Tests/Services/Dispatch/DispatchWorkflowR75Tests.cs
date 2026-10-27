@@ -41,6 +41,7 @@ using 살뜰.도메인.설정;
 using 살뜰.도메인.차량;
 using 살뜰.도메인.창고;
 using 살뜰.도메인.화주;
+using Ssalddel.Contracts.Shipper.Request;
 
 namespace Ssalddel.Tests.Services.Dispatch
 {
@@ -50,6 +51,23 @@ namespace Ssalddel.Tests.Services.Dispatch
     /// </summary>
     public sealed class DispatchWorkflowR75Tests
     {
+        [Fact]
+        public async Task R77_생활배송_포장과작업시간을_제품입력으로등록하면_SQL보강없이_추천과수락까지이어진다()
+        {
+            using var modelHttp = new HttpClient(new FDriverWorkflowModelHandler());
+            await using var fixture = await FoodDispatchWorkflowScenarioFixture.CreateAsync("same-region", modelHttp);
+            var result = JsonSerializer.SerializeToElement(await fixture.r75화물엔진추천Async(smallGoods: true, nativeLoadingInput: true));
+            Assert.True(result.GetProperty("cargoAccepted").GetBoolean());
+            Assert.Equal(JsonValueKind.Null, result.GetProperty("physicalInputRecovery").ValueKind);
+            var native = result.GetProperty("nativeLoadingEvidence");
+            Assert.True(native.GetProperty("productPhysicalInputCollected").GetBoolean());
+            Assert.False(native.GetProperty("explicitSyntheticSqlSupplement").GetBoolean());
+            Assert.Equal(.012m, native.GetProperty("volumeCbm").GetDecimal());
+            Assert.Equal(2.5m, native.GetProperty("pickupHandlingMinutes").GetDecimal());
+            Assert.Equal(1m, native.GetProperty("dropoffHandlingMinutes").GetDecimal());
+            Assert.Equal(0, fixture.ModelRequests); // 합성 경로·현재 정책 검증이며 실제 AI 추론이나 휴대폰 검증이 아닙니다.
+        }
+
         public static readonly string[] ScenarioIds =
         [
             "food-normal-same-region", "food-normal-adjacent-region", "food-demand-capacity",
@@ -139,11 +157,13 @@ namespace Ssalddel.Tests.Services.Dispatch
                 var smallGoods = scenarioId == "small-goods-normal-accept";
                 var result = await fixture.r75화물엔진추천Async(smallGoods);
                 Assert.Equal(0, fixture.ModelRequests); // 현재 화물 정책은 Ollama 후보 어댑터를 호출하지 않는다.
-                return Evidence(scenarioId, smallGoods ? "SmallGoodsRegistrationToEngineAndActualAcceptCommand" : "CargoSeededSourceToQuotePostpayEngineAndActualAcceptCommand", 0, result,
+                return Evidence(scenarioId, smallGoods ? "SmallGoodsRegistrationBlockedThenExplicitCargoEvidenceAndActualAcceptCommand" : "CargoSeededSourceToQuotePostpayEngineAndActualAcceptCommand", 0, result,
                     [.. FoodPorts.Where(x => !x.StartsWith("Straight-line-r72-pricing:", StringComparison.Ordinal)),
                         smallGoods ? "Straight-line-r72-pricing:production-policy-enabled-explicit-synthetic-policy-input" : "Straight-line-r72-pricing:not-applicable-to-general-cargo",
                         "Cargo-route:explicit-synthetic-8km-10minute-zero-toll-provider-not-road-observation",
                         smallGoods ? "Cargo-source:production-neighborhood-registration-and-create-commands-no-HTTP" : "Cargo-source:synthetic-SQL-seed-not-shipper-HTTP",
+                        smallGoods ? "Cargo-physical-input:production-neighborhood-port-missing-dimensions-and-pallets-blocked-then-explicit-synthetic-SQL-supplement-before-recommendation"
+                            : "Cargo-physical-input:explicit-synthetic-SQL-dimensions-and-zero-pallets",
                         "Cargo-Mongo:recording-ack-SQL-bridge-no-actual-Mongo",
                         "Cargo-actor:explicit-synthetic-current-user-not-production-JWT",
                         "Cargo-market-policy:fixture-allow-not-real-provider-qualification",
@@ -295,7 +315,7 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                 await Transition(db).추천대기처리Async(queue.의뢰Id);
         }
 
-        internal async Task<object> r75화물엔진추천Async(bool smallGoods)
+        internal async Task<object> r75화물엔진추천Async(bool smallGoods, bool nativeLoadingInput = false)
         {
             var requestId = "r75-synthetic-cargo-source";
             var now = DateTime.UtcNow;
@@ -323,11 +343,12 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                 {
                 의뢰Id = requestId, 화주Id = "r75-synthetic-shipper", 주문자UserId = "r75-synthetic-shipper",
                 화물종류 = "합성 상자", 화물수량 = 1, 화물중량Kg = 50m,
-                화물길이Mm = 300, 화물폭Mm = 300, 화물높이Mm = 300, 운송방식 = "혼적",
+                화물길이Mm = 300, 화물폭Mm = 300, 화물높이Mm = 300, 화물팔레트개수 = 0, 운송방식 = "혼적",
                 차량종류 = "1톤", 정산시점 = "운송완료후정산", 정산상태 = "후불승인대기",
                 픽업_도로명주소 = "합성 상차 도로", 픽업_위도 = PickupLatitude, 픽업_경도 = PickupLongitude,
                 하차_도로명주소 = "합성 하차 도로", 하차_위도 = DropoffLatitude, 하차_경도 = DropoffLongitude,
-                픽업_시간창_시작일시 = now.AddMinutes(-5), 픽업_시간창_종료일시 = now.AddHours(1)
+                픽업_시간창_시작일시 = now.AddMinutes(-5), 픽업_시간창_종료일시 = now.AddHours(1),
+                하차_시간창_시작일시 = now, 하차_시간창_종료일시 = now.AddHours(2)
                 });
                 await db.SaveChangesAsync();
                 var quoted = await fareService.견적Async(new() { 차량종류 = "1톤", 예상거리Km = 8m });
@@ -346,7 +367,7 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             }
             else
             {
-                var registration = await r75생활소형등록Async(db, shipper, operators, fareService, routes, sync, queueFactory, smallPricing, now);
+                var registration = await r75생활소형등록Async(db, shipper, operators, fareService, routes, sync, queueFactory, smallPricing, now, nativeLoadingInput);
                 requestId = registration.RequestId;
                 quoteEvidence = registration;
             }
@@ -379,6 +400,33 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                 });
             }
             await db.SaveChangesAsync();
+            object? physicalInputRecovery = null;
+            object? nativeLoadingEvidence = null;
+            if (smallGoods && nativeLoadingInput)
+            {
+                var original = await db.화주운송의뢰.SingleAsync(x => x.의뢰Id == requestId);
+                Assert.Equal(300, original.화물길이Mm); Assert.Equal(200, original.화물폭Mm); Assert.Equal(200, original.화물높이Mm);
+                Assert.Equal(.012m, original.화물부피Cbm); Assert.Null(original.화물입력부피Cbm);
+                Assert.Equal(0, original.화물팔레트개수); Assert.True(original.화물바닥회전가능여부); Assert.True(original.화물적층가능여부);
+                Assert.Equal(2.5m, original.픽업_작업시간분); Assert.Equal(1m, original.하차_작업시간분);
+                nativeLoadingEvidence = new { productPhysicalInputCollected = true, explicitSyntheticSqlSupplement = false,
+                    volumeCbm = original.화물부피Cbm, pickupHandlingMinutes = original.픽업_작업시간분,
+                    dropoffHandlingMinutes = original.하차_작업시간분, dimensionsAreSyntheticTestInputs = true };
+            }
+            if (smallGoods && !nativeLoadingInput)
+            {
+                var original = await db.화주운송의뢰.SingleAsync(x => x.의뢰Id == requestId);
+                Assert.Null(original.화물부피Cbm);
+                Assert.Null(original.화물팔레트개수);
+                var incomplete = await new 화물배차수락적격성Service(db, _locations,
+                    new 차량화물적합성Service(new 차량적재추천Engine()), new 기사운송일정구성Service(db),
+                    new 운송일정삽입평가Service(routes)).평가Async("r75-cargo-older", original,
+                        [화물배차수락경고코드.차량주의사항], CancellationToken.None);
+                Assert.False(incomplete.수락가능);
+                Assert.Equal(화물배차수락오류코드.차량적합실패, incomplete.오류코드);
+                Assert.Null((await db.운송원장.SingleAsync(x => x.의뢰Id == requestId)).현재추천대상기사Id);
+                physicalInputRecovery = await r75명시합성적재근거보강Async(db, original, incomplete.오류코드);
+            }
             var queue = await db.운송원장.SingleAsync(x => x.의뢰Id == requestId);
             Assert.Null(queue.현재추천대상기사Id);
             var availability = Availability(db);
@@ -386,7 +434,8 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             var anchor = new 화물후속픽업기준Service(db, new 기사운송일정구성Service(db), scheduleEvaluation);
             var policy = new 용달운송배차업무정책(db, _locations, _states, Options.Create(_queueOptions), routes,
                 new 차량화물적합성Service(new 차량적재추천Engine()), new 배차추천판정Service(),
-                new 배차추천평가Service(), _rejected, 운영배차: availability, 후속픽업: anchor, 일정평가: scheduleEvaluation);
+                new 배차추천평가Service(), _rejected, 운영배차: availability, 후속픽업: anchor, 일정평가: scheduleEvaluation,
+                신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
             var engine = new 화물용달배차엔진([policy], new 운송의뢰배차원천분류Service(),
                 new 화물용달배차흐름Resolver(), NullLogger<화물용달배차엔진>.Instance);
             var selection = new 배차추천후보선정Service(db, new 운영체제배차EngineCatalog([engine]));
@@ -400,7 +449,8 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             Assert.Equal("r75-cargo-older", noCandidate.후보?.DriverId);
             var transition = new 배차대기원장전환Service(db, Options.Create(_queueOptions), selection, Notifications(db),
                 new 국내화물운송기사상태Service(_states), new 음식배달배차흐름Resolver(), smallGoodsPricing: smallPricing,
-                운영배차: availability, 화물후속픽업: anchor, 화물대상후보: policy);
+                운영배차: availability, 화물후속픽업: anchor, 화물대상후보: policy,
+                신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
             var changed = await transition.계획배차에서추천으로전환Async(requestId);
             Assert.True(changed.전환여부);
             await db.Entry(queue).ReloadAsync();
@@ -426,7 +476,8 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             var accept = new 배차수락CommandHandler(db, _publisher, new TestCurrentUserAccessor(driver, "기사"),
                 new 참여자실행권한검사(), new WorkRelationshipSnapshotCollector(), eligibility, continuity,
                 NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: smallPricing,
-                운영배차: availability, 후속픽업: anchor, 기사위치: _locations, queueOptions: Options.Create(_queueOptions));
+                운영배차: availability, 후속픽업: anchor, 기사위치: _locations, queueOptions: Options.Create(_queueOptions),
+                신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
             var acceptCommand = new 배차수락Command(driver, requestId, queue.추천라운드,
                 [화물배차수락경고코드.차량주의사항]);
             var accepted = await accept.Handle(acceptCommand, CancellationToken.None);
@@ -465,7 +516,7 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
             var projection = 기사제안표시근거Service.요금근거(acceptedQueue);
             if (smallGoods) Assert.Equal(offeredPayout, projection?.TotalPayoutKrw);
             return new { requestId, sourceBoundary = smallGoods ? "Production registration/commands with explicit synthetic ports" : "Synthetic SQL seed then production quote/update/postpay commands",
-                quoteEvidence, candidateId = candidate.후보!.DriverId,
+                quoteEvidence, physicalInputRecovery, nativeLoadingEvidence, candidateId = candidate.후보!.DriverId,
                 candidate.후보.추천점수, candidate.후보.추천사유, candidate.감사Context!.EngineImplementationId,
                 acceptedQueue.확정기사Id, acceptedQueue.추천라운드, offeredPayout, confirmedPayout = acceptedQueue.기사지급예정액,
                 customerFare = source.최종운임, storedDriverPayout = fare.기사지급예정운임, pricing = projection,
@@ -477,14 +528,40 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                 realPaymentReceived = false, notificationTransportDelivered = false };
         }
 
+        private static async Task<object> r75명시합성적재근거보강Async(SsalddelContext db, 화주운송의뢰 source, string? originalError)
+        {
+            // r76의 입력 누락→명시 SQL 보강 시나리오를 보존합니다. 신규 입력 경로 시험은 별도로 검증하며,
+            // 이 과거 입력의 등록 성공을 포장 근거 수집으로 승격하지 않습니다.
+            source.화물길이Mm = 300; source.화물폭Mm = 200; source.화물높이Mm = 200;
+            source.화물팔레트개수 = 0;
+            var loading = 화물적재입력Policy.계산(new 화물적재입력
+            {
+                화물종류 = source.화물종류, 설명 = source.화물설명, 수량 = source.화물수량,
+                길이Mm = source.화물길이Mm, 폭Mm = source.화물폭Mm, 높이Mm = source.화물높이Mm,
+                총중량Kg = source.화물중량Kg, 입력부피Cbm = .012m, 팔레트개수 = 0,
+                바닥회전가능여부 = true, 적층가능여부 = true, 온도조건 = source.화물온도조건,
+                파손주의여부 = source.화물파손주의여부, 운송방식 = source.운송방식,
+                서비스레벨 = source.서비스레벨, 요청사항 = source.요청사항
+            });
+            Assert.True(loading.유효여부);
+            화주운송의뢰매퍼.ApplyLoadingEvidence(source, loading);
+            await db.SaveChangesAsync();
+            return new { initialEligibilityBlocked = true, initialErrorCode = originalError,
+                productPhysicalInputCollected = false, explicitSyntheticSqlSupplement = true,
+                supplementBeforeRecommendation = true, dimensionsMm = new[] { 300, 200, 200 }, pallets = 0,
+                volumeCbm = loading.유효부피Cbm, loading.계산판본, loading.입력지문 };
+        }
+
         private async Task<r75생활소형등록근거> r75생활소형등록Async(SsalddelContext db, ICurrentUserAccessor actor,
             I화주운송업무담당자UseCase operators, I화주운송기준운임Service fareService,
             I배차추천경로Service routes, r75기록형운송동기화 sync, I운송의뢰배차대기Service queueFactory,
-            I소형배송기사제안요금Service pricing, DateTime now)
+            I소형배송기사제안요금Service pricing, DateTime now, bool nativeLoadingInput = false)
         {
             var geo = new r75합성주소Service(PickupLatitude, PickupLongitude, DropoffLatitude, DropoffLongitude);
             var sender = new r75생활배송Sender(
-                new 의뢰생성CommandHandler(db, geo, actor, sync, new r75모의시장Policy(), new r75기록형인계()),
+                new 의뢰생성CommandHandler(db, geo, actor, sync, new r75모의시장Policy(), new r75기록형인계(),
+                    execution: new 살뜰.Services.Options.SsalddelExecutionModePolicy(Options.Create(
+                        new 살뜰.Services.Options.SsalddelExecutionOptions { Mode = 살뜰.Services.Options.SsalddelExecutionMode.Simulation }))),
                 new 화주운송의뢰현장지급처리CommandHandler(db, actor, queueFactory, sync, operators),
                 new 의뢰단건조회QueryHandler(db, operators));
             var transport = new 화주운송의뢰UseCase(sender, null!, null!, fareService,
@@ -501,8 +578,16 @@ namespace Ssalddel.Tests.Services.Dispatch.AI
                     연락처 = new() { 이름 = "합성 상차 담당", 전화번호 = "010-0000-0000" },
                     시간창 = new() { 시작일시 = now.AddMinutes(5), 종료일시 = now.AddHours(1) } },
                 Dropoff = new() { 주소 = new() { 도로명주소 = "합성 하차 도로" },
-                    연락처 = new() { 이름 = "합성 하차 담당", 전화번호 = "010-0000-0001" } }
+                    연락처 = new() { 이름 = "합성 하차 담당", 전화번호 = "010-0000-0001" },
+                    시간창 = new() { 시작일시 = now, 종료일시 = now.AddHours(2) } }
             };
+            if (nativeLoadingInput)
+            {
+                // 제품 요청의 실제 필드를 통과시키는 명시 합성 입력입니다. 원장에 사후 보강하지 않습니다.
+                input.PackageLengthMm = 300; input.PackageWidthMm = 200; input.PackageHeightMm = 200;
+                input.PalletCount = 0; input.FloorRotationAllowed = true; input.StackingAllowed = true;
+                input.Pickup.작업시간분 = 2.5m; input.Dropoff.작업시간분 = 1m;
+            }
             var quote = await useCase.견적Async(input);
             Assert.True(quote.IsSuccess, string.Join(";", quote.Errors));
             Assert.True(quote.Value.Fare.최종운임 > 0m);

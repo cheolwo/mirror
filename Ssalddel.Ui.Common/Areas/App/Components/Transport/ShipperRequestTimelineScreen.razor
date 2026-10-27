@@ -14,6 +14,7 @@
     <ChildContent>
         @if (State.Request is { } item)
         {
+            <ShipperRequestNextActionPanel Item="@item" Context="@Context" CurrentScreen="ShipperRequestDetailScreenKind.Timeline" />
             <div class="shipper-timeline">
                 @foreach (var step in ShipperRequestDetailPresentation.BuildTimeline(item))
                 {
@@ -29,8 +30,14 @@
                                 </MudChip>
                             </div>
                             <MudText Typo="Typo.subtitle2">@step.Status</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@step.Description</MudText>
-                            <MudText Typo="Typo.caption">@step.Detail</MudText>
+                            @if (!string.IsNullOrWhiteSpace(step.Description))
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@step.Description</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(step.Detail))
+                            {
+                                <MudText Typo="Typo.caption">@step.Detail</MudText>
+                            }
                         </div>
                     </MudPaper>
                 }
@@ -43,8 +50,8 @@
     [Parameter, EditorRequired] public ShipperRequestDetailPageState State { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestDetailNavigationContext Context { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
-    [Parameter] public string Title { get; set; } = "운송 진행 이력";
-    [Parameter] public string Description { get; set; } = "결제, 배차, 수락, 상차, 하차와 정산 상태를 원장 순서로 확인합니다.";
+    [Parameter] public string Title { get; set; } = "진행 이력";
+    [Parameter] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string NewRequestHref { get; set; } = string.Empty;
     [Parameter] public string LoginHref { get; set; } = "/login";

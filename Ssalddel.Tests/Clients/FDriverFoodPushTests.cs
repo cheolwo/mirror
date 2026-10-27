@@ -6,6 +6,7 @@ using FDriverApp.PageModels;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Notifications;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -113,6 +114,34 @@ public sealed class FDriverFoodPushTests
     }
 
     [Theory]
+    [InlineData(DriverWorkKinds.FoodDelivery)]
+    [InlineData(DriverWorkKinds.QuickDelivery)]
+    public async Task Receiver_PreservesExplicitFoodOrMartQuickKindForLocalSettingsAndArtwork(string workKind)
+    {
+        var notifications = new Notifications(); var data = Data(); data["workKind"] = workKind;
+        Assert.True(await new FDriverFoodPushReceiver(new FDriverTestSession(), RegisteredStore(), notifications).ReceiveAsync(data));
+        Assert.Equal(workKind, Assert.Single(notifications.PublishedKinds));
+        Assert.Single(notifications.Published);
+    }
+
+    [Theory]
+    [InlineData(DriverWorkKinds.CargoTransport)] [InlineData("unknown")] [InlineData("")]
+    public async Task Receiver_RejectsUnrecognizedOrGeneralCargoKindInsteadOfTreatingItAsFood(string workKind)
+    {
+        var notifications = new Notifications(); var data = Data(); data["workKind"] = workKind;
+        Assert.False(await new FDriverFoodPushReceiver(new FDriverTestSession(), RegisteredStore(), notifications).ReceiveAsync(data));
+        Assert.Empty(notifications.Published); Assert.Empty(notifications.PublishedKinds);
+    }
+
+    [Fact]
+    public async Task LegacyFoodHint_PassesFoodKindToExistingNotificationImplementations()
+    {
+        var notifications = new Notifications();
+        Assert.True(await new FDriverFoodPushReceiver(new FDriverTestSession(), RegisteredStore(), notifications).ReceiveAsync(Data()));
+        Assert.Equal(DriverWorkKinds.FoodDelivery, Assert.Single(notifications.PublishedKinds));
+    }
+
+    [Theory]
     [InlineData("type", "DriverDispatchRecommendation")]
     [InlineData("appKey", "CargoYongdalDriverApp")]
     [InlineData("userId", "driver-b")]
@@ -145,6 +174,32 @@ public sealed class FDriverFoodPushTests
         await session.ApplyAsync(Token("test-driver"));
         store.BeforeLoad = () => session.ApplyAsync(Token("driver-b"));
         Assert.False(await receiver.ReceiveAsync(Data())); Assert.Empty(notifications.Published);
+    }
+
+    [Fact]
+    public async Task Receiver_RejectsSameOwnerNewLoginRevisionDuringLocalStoreRead()
+    {
+        var session = new RevisionSession(); var store = RegisteredStore(); var notifications = new Notifications();
+        store.BeforeLoad = () => session.ApplyAsync(Token("test-driver"));
+
+        Assert.False(await new FDriverFoodPushReceiver(session, store, notifications).ReceiveAsync(Data()));
+        Assert.Empty(notifications.Published);
+    }
+
+    [Theory]
+    [InlineData("cancel")] [InlineData("same-owner-login")] [InlineData("other-owner")]
+    public async Task Receiver_CheckedPublicationRechecksCallbackCancellationAndOwnerRevisionAfterWaiting(string change)
+    {
+        var session = new RevisionSession(); var notifications = new Notifications();
+        using var cancellation = new CancellationTokenSource();
+        notifications.BeforeCheckedPublication = () =>
+        {
+            if (change == "cancel") cancellation.Cancel();
+            else session.ApplyAsync(Token(change == "same-owner-login" ? "test-driver" : "driver-b")).GetAwaiter().GetResult();
+        };
+
+        Assert.False(await new FDriverFoodPushReceiver(session, RegisteredStore(), notifications).ReceiveAsync(Data(), cancellation.Token));
+        Assert.Empty(notifications.Published); Assert.Empty(notifications.PublishedKinds);
     }
 
     [Fact]
@@ -239,8 +294,19 @@ public sealed class FDriverFoodPushTests
     private sealed class Notifications : IFDriverFoodNotificationService
     {
         public readonly List<(string User, string Offer)> Published = [];
+        public readonly List<string?> PublishedKinds = [];
         public FDriverFoodNotificationTarget? Target;
+        public Action? BeforeCheckedPublication;
         public bool Publish(string userId, string offerId, DateTime expiresAtUtc) { Published.Add((userId, offerId)); return true; }
+        public bool PublishForWorkKind(string userId, string offerId, DateTime expiresAtUtc, string? workKind)
+        { PublishedKinds.Add(workKind); return Publish(userId, offerId, expiresAtUtc); }
+        public bool PublishChecked(string userId, string offerId, DateTime expiry, string? workKind,
+            CancellationToken token, Func<bool> isCurrent)
+        {
+            BeforeCheckedPublication?.Invoke();
+            return FDriverNotificationPublicationGate.CanContinuePublication(token, isCurrent)
+                && PublishForWorkKind(userId, offerId, expiry, workKind);
+        }
         public FDriverFoodNotificationReceipt? ReadReceipt() => null;
         public void WriteReceipt(FDriverFoodNotificationReceipt receipt) { }
         public FDriverFoodNotificationTarget? ReadOpenTarget() => Target;
@@ -248,5 +314,26 @@ public sealed class FDriverFoodPushTests
         public void ClearOpenTarget() => Target = null;
         public void Cancel() { }
         public void ClearAccount() { }
+    }
+
+    private sealed class RevisionSession : IFDriverAuthSession
+    {
+        private readonly FDriverTestSession _inner = new();
+        public event EventHandler? SessionChanged { add => _inner.SessionChanged += value; remove => _inner.SessionChanged -= value; }
+        public long SessionRevision { get; private set; }
+        public string? AccessToken => _inner.AccessToken;
+        public DateTime AccessTokenExpiresAtUtc => _inner.AccessTokenExpiresAtUtc;
+        public string? RefreshToken => _inner.RefreshToken;
+        public DateTime RefreshTokenExpiresAtUtc => _inner.RefreshTokenExpiresAtUtc;
+        public string? UserId => _inner.UserId;
+        public string? UserName => _inner.UserName;
+        public IReadOnlyList<string> Roles => _inner.Roles;
+        public bool IsAuthenticated => _inner.IsAuthenticated;
+        public ClientAuthSessionRestoreState CurrentState => _inner.CurrentState;
+        public Task<ClientAuthSessionRestoreState> RestoreAsync(CancellationToken token = default) => _inner.RestoreAsync(token);
+        public Task ApplyAsync(ClientAuthTokenSnapshot snapshot, CancellationToken token = default)
+        { SessionRevision++; return _inner.ApplyAsync(snapshot, token); }
+        public Task ClearAsync(CancellationToken token = default)
+        { SessionRevision++; return _inner.ClearAsync(token); }
     }
 }

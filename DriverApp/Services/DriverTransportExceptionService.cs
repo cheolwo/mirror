@@ -13,7 +13,8 @@ public sealed record DriverTransportExceptionReport(
 public sealed record DriverTransportExceptionReportResult(
     bool Reported,
     string Message,
-    기사운송요약응답? Transport = null);
+    기사운송요약응답? Transport = null,
+    bool OutcomeUnknown = false);
 
 public interface IDriverTransportExceptionService
 {
@@ -50,22 +51,24 @@ public sealed class HttpDriverTransportExceptionService : IDriverTransportExcept
                 },
                 cancellationToken);
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
-            return new DriverTransportExceptionReportResult(false, $"서버 연결 실패로 문제 신고가 저장되지 않았습니다. 네트워크 확인 후 다시 시도해 주세요. {ex.Message}");
+            return Unknown();
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return new DriverTransportExceptionReportResult(false, "서버 응답 지연으로 문제 신고가 저장되지 않았습니다. 잠시 후 다시 시도해 주세요.");
+            return Unknown();
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            return new DriverTransportExceptionReportResult(false, ex.Message);
+            return Unknown();
         }
 
-        if (transport is null)
+        if (transport is null || transport.Id != report.TransportId || transport.개인정보제공보류
+            || !transport.예외신고됨 || transport.최근예외단계 != report.Stage
+            || transport.최근예외메시지 != report.Reason.Trim())
         {
-            return new DriverTransportExceptionReportResult(false, "운송 예외 신고 응답을 받지 못했습니다.");
+            return Unknown();
         }
 
         return new DriverTransportExceptionReportResult(
@@ -75,4 +78,8 @@ public sealed class HttpDriverTransportExceptionService : IDriverTransportExcept
                 : "현장 문제가 서버에 신고되었습니다.",
             transport);
     }
+
+    private static DriverTransportExceptionReportResult Unknown()
+        => new(false, "신고 처리 결과를 확인하지 못했습니다. 중복 신고하지 말고 운영자에게 확인해 주세요.",
+            OutcomeUnknown: true);
 }

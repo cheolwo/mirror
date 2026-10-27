@@ -5,6 +5,7 @@ using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Admin.DispatchTraining;
 using Ssalddel.Contracts.Common;
 using SsalddelAdminApp.Services;
+using SecureStorage = SsalddelAdminApp.Services.SecureStorage;
 
 namespace Ssalddel.Tests.Clients;
 

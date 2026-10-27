@@ -339,7 +339,8 @@ public sealed class DriverWorkStartReliabilityTests
             FoodScopes, CargoScopes, NullLogger<기사운행시작후속Service>.Instance, Clock, StateStore);
         public 운행시작CommandHandler Start(SsalddelContext db) => new(db, Recommendations, Queue,
             new 국내화물운송기사상태Service(StateStore), FoodScopes, CargoScopes, new User(), new 참여자실행권한검사(),
-            Community, NullLogger<운행시작CommandHandler>.Instance, Followup(db));
+            Community, NullLogger<운행시작CommandHandler>.Instance, Followup(db),
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         public 운행종료CommandHandler Stop(SsalddelContext db) => new(db, Queue,
             new 국내화물운송기사상태Service(StateStore), FoodScopes, CargoScopes, new User(), new 참여자실행권한검사(),
             Community, NullLogger<운행종료CommandHandler>.Instance);

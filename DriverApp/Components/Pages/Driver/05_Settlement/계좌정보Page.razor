@@ -1,7 +1,4 @@
 @page "/driver/account/bank"
-@using DriverApp.ViewModels.Driver.Settlement
-@inherits DriverApp.Components.MvvmComponentBase<기사계좌정보PageViewModel>
-
 <PageTitle>계좌 정보</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
@@ -9,30 +6,20 @@
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">계좌 정보</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">정산금을 받을 계좌와 이번 달 정산 상태를 확인합니다.</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">정산금을 받을 본인 계좌의 확인 상태를 안내합니다.</MudText>
             </MudStack>
         </MudPaper>
 
-        <SsalddelBankAccountPanel Account="@Account"
-                                 PanelClass="driver-recommendation-card pa-4"
-                                 IdentityVerified="@_identityVerified"
-                                 IdentityVerifiedChanged="@(value => _identityVerified = value)">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.CurrentMonthSettlement">정산 정보</MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.Menu">사용자 메뉴로</MudButton>
-        </SsalddelBankAccountPanel>
+        <MudPaper Class="driver-recommendation-card pa-4" Elevation="0">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">계좌 정보 미확인</MudText>
+                <MudAlert Severity="Severity.Info">현재 이 화면에서는 본인 계좌를 조회하거나 변경할 수 없습니다.</MudAlert>
+                <MudText Typo="Typo.body2">이 안내는 계좌 등록이나 본인 확인 완료를 뜻하지 않습니다. 지급 예정 금액과 지급 준비 상태는 운송대금 목록에서 확인해 주세요.</MudText>
+                <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.Payouts">운송대금 목록 보기</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.Menu">전체 메뉴로</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
     </MudStack>
 </MudContainer>
-
-@code {
-    private bool _identityVerified;
-
-    private SsalddelBankAccountSummary Account => new(
-        "국민은행",
-        "홍길동 기사님",
-        "123-45-678901",
-        "확인 완료",
-        ViewModel.정산.DispatchCount,
-        ViewModel.정산.UsageFee);
-
-    protected override Task OnInitializedAsync() => ViewModel.초기화Async();
-}

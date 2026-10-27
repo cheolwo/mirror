@@ -450,8 +450,7 @@ public sealed class FDriverAutomaticWorkTests
             await model.InitializeAsync();
             await model.ResumeFoodMapAsync();
             api.LocationUpdate = (_, _) => throw new FDriverApiException("location offline", HttpStatusCode.ServiceUnavailable);
-            typeof(MainPageModel).GetField("_lastLocationSentAtUtc", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-                .SetValue(model, null);
+            FDriverLifecycleTestSupport.LastLocationSentAtUtc(model, null);
             api.Workspace = _ => Task.FromResult(FDriverTestWorkspaceApi.Data("new-automatic"));
             await FDriverLifecycleTestSupport.RefreshBackground(model);
             Assert.Equal("new-automatic", model.SelectedTicket?.TicketId);

@@ -7,7 +7,7 @@
 
 <PageTitle>운송 의뢰 작성</PageTitle>
 
-@if (RequiresMapPrivacyConsent && !_privacyConsentAccepted)
+@if (RequiresMapPrivacyConsent && (!_privacyConsentAccepted || !PageModel.ApplicationPrivacyConsentEvidenceId.HasValue) && !PageModel.HasSubmission)
 {
     <ApplicationPrivacyConsentPanel ApplicationKind="@신청개인정보업무Codes.운송대행"
                                     ReturnHref="@RouteContext.ReturnPath"
@@ -15,12 +15,16 @@
 }
 else
 {
+<WebShipperSubmissionRecoveryPanel PageModel="PageModel" NewRequestStarted="ResetSubmissionContext" />
+@if (!PageModel.HasSubmission && !PageModel.IsBusy)
+{
 <ShipperRequestAuthoringScreen ViewModel="PageModel.State"
                                NavigationContext="RouteContext"
                                VehicleTypes="PageModel.VehicleTypes"
+                               RecommendationRequested="PageModel.RecommendVehiclesAsync"
                                RegistrationEnabled="PageModel.RegistrationEnabled"
                                RegistrationBoundaryMessage="@PageModel.RegistrationBoundaryMessage"
-                               StatusMessage="@PageModel.StatusMessage"
+                               StatusMessage="@(PageModel.HasSubmission ? null : PageModel.StatusMessage)"
                                StatusSeverity="PageModel.StatusSeverity"
                                AutoSaveMessage="@PageModel.AutoSaveMessage"
                                IsBusy="PageModel.IsBusy"
@@ -58,11 +62,19 @@ else
     </BeforeContent>
 </ShipperRequestAuthoringScreen>
 }
+}
 
 @code {
     private bool _privacyConsentAccepted;
     private 지도신청가원장Response? _provisionalLedger;
     private string? _ledgerError;
+
+    private void ResetSubmissionContext()
+    {
+        _privacyConsentAccepted = false;
+        _provisionalLedger = null;
+        _ledgerError = null;
+    }
 
     private ShipperRequestNavigationContext RouteContext
         => ShipperRequestNavigationContext.Parse(Navigation.Uri);

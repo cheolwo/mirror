@@ -1,42 +1,52 @@
 @page "/vehicle-management"
 @page "/admin/freight-delivery/vehicles"
+@implements IDisposable
+@inject 차량관리Service VehicleService
+@inject 관리자인증세션Service Session
 
-<PageTitle>차량 관리</PageTitle>
-
+<PageTitle>실차 적재 확인 · 차량 관리</PageTitle>
 <MudStack Spacing="3">
-    <MudStack Spacing="0">
-        <MudText Typo="Typo.h4">차량 관리</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">차량 단가, 추천 기준, 운송 조건 시뮬레이션을 연결할 운영 화면입니다.</MudText>
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.h4">실차 적재 확인</MudText>
+        <MudText Typo="Typo.body2">기사님이 선택한 차량의 실측값과 장비 근거를 보관합니다.</MudText>
+        <MudButton Variant="Variant.Text" Href="/drivers" StartIcon="@Icons.Material.Outlined.ArrowBack">기사 목록</MudButton>
     </MudStack>
-
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-        빌드 복구를 위해 차량 관리 화면을 기본 운영 화면으로 정리했습니다.
-    </MudAlert>
-
-    <MudGrid Spacing="3">
-        <MudItem xs="12" lg="4">
-            <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">차량 단가</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">차량별 기본 단가와 요율을 관리할 영역입니다.</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" lg="4">
-            <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">추천 기준</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">적재량, 거리, 조건에 따른 차량 추천 기준을 조정할 영역입니다.</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" lg="4">
-            <MudPaper Elevation="1" Class="pa-4" Style="height: 100%;">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.h6">시뮬레이션</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">운송 조건을 입력해 추천 차량을 검토할 영역입니다.</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+    @if (!Session.로그인됨 || !Session.서버관리자인가)
+    {
+        <MudAlert Severity="Severity.Warning">서버 관리자 로그인이 필요합니다.</MudAlert>
+    }
+    else if (string.IsNullOrWhiteSpace(DriverId))
+    {
+        <MudPaper Outlined="true" Class="pa-4">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">확인할 기사님을 선택해 주세요</MudText>
+                <MudText>기사 목록에서 ‘실차 적재 확인’을 누르면 현재 차량과 저장된 기록을 확인할 수 있습니다.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/drivers">기사 선택</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else if (model is not null)
+    {
+        <ActualVehicleLoadingPanel Model="model" />
+    }
 </MudStack>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "driverId")] public string? DriverId { get; set; }
+    private 기사실차적재확인ViewModel? model;
+    private string? owner;
+    private string SessionKey() => Session.UserId + "|" + Session.AccessToken;
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = SessionKey();
+        if (!Session.로그인됨 || !Session.서버관리자인가 || string.IsNullOrWhiteSpace(DriverId))
+        { model?.Dispose(); model = null; owner = null; return; }
+        if (model is not null && model.DriverId == DriverId && owner == key) return;
+        model?.Dispose(); owner = key;
+        var next = new 기사실차적재확인ViewModel(VehicleService, DriverId, SessionKey,
+            () => Session.로그인됨 && Session.서버관리자인가);
+        model = next;
+        await next.LoadAsync();
+    }
+    public void Dispose() { model?.Dispose(); model = null; }
+}

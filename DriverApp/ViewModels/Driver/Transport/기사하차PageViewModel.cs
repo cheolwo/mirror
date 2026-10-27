@@ -8,6 +8,7 @@ using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Common.Versioning;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace DriverApp.ViewModels.Driver.Transport;
 
@@ -26,13 +27,15 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     private bool _명시적완료미확정;
     private readonly DriverCargoCompletionRecoverySession _완료복구;
     private bool _완료명령미전송확인;
+    private bool _completionFeedbackRequested;
 
     public 기사하차PageViewModel(
         기사운송상세조회Service detail,
         기사하차완료ViewModel 하차완료,
         IDriverTransportExceptionService exceptionService,
         IDriverCargoPhotoRecoveryStore? recoveryStore = null,
-        IDriverCargoCompletionRecovery? completionRecovery = null)
+        IDriverCargoCompletionRecovery? completionRecovery = null,
+        IDriverCargoExceptionRecovery? exceptionRecovery = null)
     {
         _detail = detail;
         _완료복구 = new(completionRecovery, DriverTransportCompletionPhotoKind.Dropoff);
@@ -48,7 +51,9 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
             "하차",
             ["수량 부족", "다른 화물", "바코드 훼손", "수령자 부재", "파손 의심"],
             "수량 부족",
-            ToExceptionCode));
+            ToExceptionCode,
+            () => !_disposed && _detail.로그인됨 && 운송?.Id == 운송Id,
+            exceptionRecovery));
         this.하차완료 = 하위ViewModel등록(하차완료);
     }
 
@@ -64,6 +69,9 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
     public 기사운송사진ViewModel 사진 { get; }
     public 기사운송예외신고ViewModel 예외 { get; }
     public 기사하차완료ViewModel 하차완료 { get; }
+    public WorkflowCompletionFeedback CompletionFeedback { get; } = new();
+    public string? CompletionReturnHref => 하차완료확인 && CompletionFeedback.History.Count > 0
+        ? DriverRoutes.CurrentTransport : null;
     public bool 완료처리중 => _completionCancellation is not null || 하차완료.처리중;
     public bool 완료결과확인필요 => _completionOutcomePending;
     [ObservableProperty]
@@ -131,6 +139,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         }
 
         _initializedTransportId = transportId;
+        CompletionFeedback.Clear();
+        _completionFeedbackRequested = false;
         운송Id = transportId;
         _완료복구.Reset(transportId);
         _완료명령미전송확인 = false;
@@ -180,6 +190,10 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
                     ? "하차지 도착을 기록하고 같은 운송을 다시 확인했습니다."
                     : $"하차지 도착 기록 후 운송을 다시 확인하지 못했습니다. 다시 불러와 주세요. {오류메시지}",
                 arrived ? Severity.Success : Severity.Warning);
+            if (arrived)
+                CompletionFeedback.Record(new($"cargo:{transportId}:dropoff-arrival", "하차지 도착을 확인했습니다",
+                    "같은 운송의 도착 기록을 다시 확인했습니다.", "다음 단계: 하차와 인계 내용을 확인해 주세요.",
+                    false, WorkflowCompletionVisuals.CargoIconPath, "#DC2626"));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
         catch (Exception ex)
@@ -241,6 +255,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
                 await _완료복구.BeginAsync(cancellation.Token);
                 if (!현재완료작업(transportId, sessionRevision, cancellation)) return;
                 commandStarted = true;
+                _completionFeedbackRequested = true;
                 await 하차완료.처리Command.ExecuteAsync(request);
                 if (!현재완료작업(transportId, sessionRevision, cancellation)) return;
                 if (하차완료.결과 is { } result)
@@ -368,9 +383,11 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         var transportId = 운송Id;
         await _detail.인증복원Async(cancellationToken);
         if (_disposed || transportId != 운송Id) return;
+        var sessionRevision = _detail.SessionRevision;
         var recoverySnapshot = _완료복구.StartQuery();
         if (_완료복구.ScopeChanged)
         {
+            CompletionFeedback.Clear(); _completionFeedbackRequested = false;
             완료실패 = null; _완료실패상태메시지 = null; _명시적완료미확정 = false;
             _완료명령미전송확인 = false; _completionOutcomePending = false; _pendingConfirmationTransport = null;
             사진.초기화();
@@ -415,6 +432,18 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
             if (하차완료확인 && _완료복구.Checked) await 사진.완료확인정리Async(cancellationToken);
             else await 사진.복원Async(cancellationToken);
         }
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || transportId != 운송Id || !_detail.로그인됨 || sessionRevision != _detail.SessionRevision) return;
+        if (detail is not null) await 예외.복원Async(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || transportId != 운송Id || !_detail.로그인됨 || sessionRevision != _detail.SessionRevision) return;
+        if (_completionFeedbackRequested && 하차완료확인)
+        {
+            _completionFeedbackRequested = false;
+            CompletionFeedback.Record(new($"cargo:{transportId}:dropoff", "하차와 인계가 완료되었습니다",
+                "같은 운송의 하차·인계 완료 기록을 다시 확인했습니다. 정산과 실제 지급은 별도로 확인해 주세요.",
+                "현재 운송 화면에서 다음 업무를 확인해 주세요.", true, WorkflowCompletionVisuals.CargoIconPath, "#DC2626"));
+        }
         OnPropertyChanged(string.Empty);
     }
 
@@ -429,6 +458,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
                 취소();
             }
             운송 = null;
+            CompletionFeedback.Clear();
+            _completionFeedbackRequested = false;
             _완료복구.Reset(운송Id);
             _완료명령미전송확인 = false;
             _completionOutcomePending = false;
@@ -452,6 +483,8 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
         if (disposing)
         {
             _disposed = true;
+            CompletionFeedback.Clear();
+            _completionFeedbackRequested = false;
             _완료복구.Reset(0);
             완료실패 = null;
             _완료실패상태메시지 = null;
@@ -459,6 +492,7 @@ public sealed partial class 기사하차PageViewModel : 기사PageViewModelBase
             도착작업취소();
             완료작업취소();
             사진.초기화();
+            예외.Dispose();
             _detail.인증변경 -= OnAuthenticationChanged;
         }
         base.Dispose(disposing);

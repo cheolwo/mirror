@@ -25,8 +25,13 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 return new(false, null, null, null, "ActiveScheduleEvidenceMissing");
             var baseline = await 시뮬레이션Async(계획.시작좌표, 계획.항목목록, 계획.기준시각, cancellationToken);
             var last = baseline.도착예상목록.OrderBy(x => x.순서).LastOrDefault();
+            var lastNode = 계획.항목목록.OrderBy(x => x.순서).LastOrDefault();
+            var departure = last?.예상도착시각;
+            if (departure.HasValue && lastNode?.작업시간분 is >= 0m
+                && lastNode.작업시간분 <= (decimal)(DateTime.MaxValue - departure.Value).TotalMinutes)
+                departure = departure.Value.AddMinutes((double)lastNode.작업시간분.Value);
             return baseline.전체완수가능여부 && baseline.전체실제경로확인됨 && baseline.종료좌표 is not null
-                   && last?.예상도착시각 is { } eta && eta >= 계획.기준시각 && !string.IsNullOrWhiteSpace(baseline.경로옵션)
+                   && departure is { } eta && eta >= 계획.기준시각 && !string.IsNullOrWhiteSpace(baseline.경로옵션)
                 ? new(true, baseline.종료좌표, eta, baseline.경로옵션, "VerifiedActiveScheduleEnd")
                 : new(false, null, null, null, "ActiveScheduleRouteUnverified");
         }
@@ -36,7 +41,13 @@ namespace 살뜰.Services.Dispatch.Recommendation
             cancellationToken.ThrowIfCancellationRequested();
 
             var baseline = await 시뮬레이션Async(계획.시작좌표, 계획.항목목록, 계획.기준시각, cancellationToken);
-            var candidateItems = CreateCandidateItems(계획.항목목록.Count, 후보의뢰);
+            var candidateItems = CreateCandidateItems(계획.항목목록.Count, 후보의뢰)
+                .Select(x => x with
+                {
+                    작업시간분 = 계획.상하차작업시간?.GetValueOrDefault(x.의뢰Id) is { } times
+                        ? x.단계유형 == "pickup" ? times.상차분 : times.하차분
+                        : null
+                }).ToArray();
             var attempts = new List<운송삽입시도결과>();
             운송삽입시도결과? simpleAppendAttempt = null;
 
@@ -104,60 +115,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
                 cancellationToken);
             attempts.AddRange(splitAttempts);
 
-            var beneficialRouteChange = attempts
-                .Where(x => x.전체완수가능여부
-                            && x.경로변경시도여부
-                            && x.단순이어가기대비절감분.HasValue
-                            && x.단순이어가기대비절감분.Value > 0m)
-                .OrderByDescending(x => x.단순이어가기대비절감분 ?? 0m)
-                .ThenBy(x => x.총소요시간분 ?? decimal.MaxValue)
-                .FirstOrDefault();
-
-            var feasible = attempts
-                .Where(x => x.전체완수가능여부)
-                .Where(x => !x.경로변경시도여부)
-                .OrderBy(x => x.총추가지연분 ?? decimal.MaxValue)
-                .ThenByDescending(x => x.총거리Km ?? 0m)
-                .FirstOrDefault();
-
-            var fallback = attempts
-                .OrderBy(x => x.최대시간위반분 ?? decimal.MaxValue)
-                .ThenBy(x => x.총추가지연분 ?? decimal.MaxValue)
-                .FirstOrDefault();
-
-            var selected = beneficialRouteChange ?? feasible ?? fallback;
-            if (selected is null)
-            {
-                return new 운송삽입평가결과(false, false, null, false, null, null, null, null, null, ["삽입 시뮬레이션 결과가 없습니다."], [], [], attempts)
-                {
-                    기존일정종료좌표 = baseline.종료좌표,
-                    기존일정실제경로확인됨 = baseline.전체실제경로확인됨
-                };
-            }
-
-            return new 운송삽입평가결과(
-                beneficialRouteChange is not null || feasible is not null,
-                selected.전체완수가능여부,
-                selected.삽입인덱스,
-                beneficialRouteChange is not null,
-                beneficialRouteChange?.단순이어가기대비절감분,
-                selected.총소요시간분,
-                selected.총거리Km,
-                selected.총추가지연분,
-                selected.최대시간위반분,
-                selected.위반사유,
-                selected.경로순서,
-                selected.도착예상목록,
-                attempts)
-            {
-                기존일정종료좌표 = baseline.종료좌표,
-                후보포함종료좌표 = selected.종료좌표,
-                기존일정실제경로확인됨 = baseline.전체실제경로확인됨,
-                후보포함실제경로확인됨 = selected.전체실제경로확인됨
-                    && (baseline.경로옵션 is null || selected.경로옵션 is null
-                        || string.Equals(baseline.경로옵션, selected.경로옵션, StringComparison.Ordinal)),
-                복귀비교경로옵션 = selected.경로옵션 ?? baseline.경로옵션
-            };
+            return 운송삽입시도Selector.Select(attempts,
+                (baseline.종료좌표, baseline.전체실제경로확인됨, baseline.경로옵션));
         }
 
     }

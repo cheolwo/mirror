@@ -15,6 +15,15 @@ public sealed class 기사추천수신항목
     public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
+    public string? 운송방식 { get; set; }
+    public string? 차량종류 { get; set; }
+    public decimal? 화물중량Kg { get; set; }
+    public int? 화물수량 { get; set; }
+    // 원장 시각은 UTC이며, 기존 원장에 값이 없는 시간창은 null입니다.
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";
     public string 운송의뢰유형표시 { get; set; } = "일반 화물";
     public bool 공동주문운송여부 { get; set; }

@@ -3,6 +3,7 @@
 <ShipperRequestScreenFrame ViewModel="ViewModel"
                            NavigationContext="NavigationContext"
                            Step="ShipperRequestAuthoringStep.Transport"
+                           MobileStep="MobileStep"
                            ScreenCode="@ScreenCode"
                            Title="@Title"
                            Description="@Description"
@@ -10,12 +11,18 @@
                            RootBackHref="@RootBackHref"
                            RootBackLabel="@RootBackLabel"
                            Changed="Changed">
-    <Ssalddel운송정보입력정책Panel 화물적재형태="@ViewModel.화물적재형태" />
+    @if (MobileStep is null)
+    { <Ssalddel운송정보입력정책Panel 화물적재형태="@ViewModel.화물적재형태" /> }
 
+    @if (MobileStep is null or ShipperRequestMobileStep.Pickup or ShipperRequestMobileStep.Dropoff)
+    {
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
         상세 주소와 연락처는 실제 운송 준비에 필요한 개인정보입니다. 공개 커뮤니티 초안에는 포함하지 않습니다.
     </MudAlert>
+    }
 
+    @if (MobileStep is null or ShipperRequestMobileStep.Pickup)
+    {
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Spacing="0">
@@ -33,23 +40,25 @@
                     <MudTextField @bind-Value="ViewModel.상차연락처이름" Label="상차 담당자" Variant="Variant.Outlined" Immediate="true" />
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="ViewModel.상차연락처전화번호" Label="상차 담당자 연락처" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="ViewModel.상차연락처전화번호" Label="상차 담당자 연락처" InputType="InputType.Telephone" Variant="Variant.Outlined" Immediate="true" />
+                </MudItem>
+                @if (MobileStep is null)
+                {
+                <MudItem xs="12" md="6">
+                    <ShipperLocalDateTimeField @bind-Value="ViewModel.상차시간창시작일시" Label="상차 시작 (한국시간)" Required="true" />
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudTextField T="DateTime?" @bind-Value="ViewModel.상차시간창시작일시" Label="상차 시작 (한국시간)"
-                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
-                                  Variant="Variant.Outlined" Required="true" Immediate="true" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField T="DateTime?" @bind-Value="ViewModel.상차시간창종료일시" Label="상차 종료 (한국시간)"
-                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
-                                  Variant="Variant.Outlined" Required="true" Immediate="true"
+                    <ShipperLocalDateTimeField @bind-Value="ViewModel.상차시간창종료일시" Label="상차 종료 (한국시간)" Required="true"
                                   Error="@(ViewModel.상차시간창오류 is not null)" ErrorText="@ViewModel.상차시간창오류" />
                 </MudItem>
+                }
             </MudGrid>
         </MudStack>
     </MudPaper>
+    }
 
+    @if (MobileStep is null or ShipperRequestMobileStep.Dropoff)
+    {
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudStack Spacing="2">
             <MudStack Spacing="0">
@@ -67,25 +76,57 @@
                     <MudTextField @bind-Value="ViewModel.하차연락처이름" Label="하차 담당자" Variant="Variant.Outlined" Immediate="true" />
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="ViewModel.하차연락처전화번호" Label="하차 담당자 연락처" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="ViewModel.하차연락처전화번호" Label="하차 담당자 연락처" InputType="InputType.Telephone" Variant="Variant.Outlined" Immediate="true" />
+                </MudItem>
+                @if (MobileStep is null)
+                {
+                <MudItem xs="12" md="6">
+                    <ShipperLocalDateTimeField @bind-Value="ViewModel.하차시간창시작일시" Label="하차 시작 (한국시간 · 선택)" />
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudTextField T="DateTime?" @bind-Value="ViewModel.하차시간창시작일시" Label="하차 시작 (한국시간 · 선택)"
-                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
-                                  Variant="Variant.Outlined" Immediate="true" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField T="DateTime?" @bind-Value="ViewModel.하차시간창종료일시" Label="하차 종료 (한국시간 · 선택)"
-                                  InputType="InputType.DateTimeLocal" Format="yyyy-MM-ddTHH:mm" Culture="@System.Globalization.CultureInfo.InvariantCulture"
-                                  Variant="Variant.Outlined" Immediate="true"
+                    <ShipperLocalDateTimeField @bind-Value="ViewModel.하차시간창종료일시" Label="하차 종료 (한국시간 · 선택)"
                                   Error="@(ViewModel.하차시간창오류 is not null)" ErrorText="@ViewModel.하차시간창오류" />
                 </MudItem>
+                }
             </MudGrid>
         </MudStack>
     </MudPaper>
+    }
 
+    @if (MobileStep == ShipperRequestMobileStep.Schedule)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4"><MudGrid>
+            <MudItem xs="12"><MudText Typo="Typo.subtitle1">상차 시간</MudText></MudItem>
+            <MudItem xs="12" md="6"><ShipperLocalDateTimeField @bind-Value="ViewModel.상차시간창시작일시" Label="상차 시작 (한국시간)" Required="true" /></MudItem>
+            <MudItem xs="12" md="6"><ShipperLocalDateTimeField @bind-Value="ViewModel.상차시간창종료일시" Label="상차 종료 (한국시간)" Required="true" Error="@(ViewModel.상차시간창오류 is not null)" ErrorText="@ViewModel.상차시간창오류" /></MudItem>
+        </MudGrid></MudPaper>
+        <details class="shipper-mobile-optional"><summary>하차 시간 지정 (선택)</summary><MudGrid>
+            <MudItem xs="12" md="6"><ShipperLocalDateTimeField @bind-Value="ViewModel.하차시간창시작일시" Label="하차 시작 (한국시간 · 선택)" /></MudItem>
+            <MudItem xs="12" md="6"><ShipperLocalDateTimeField @bind-Value="ViewModel.하차시간창종료일시" Label="하차 종료 (한국시간 · 선택)" Error="@(ViewModel.하차시간창오류 is not null)" ErrorText="@ViewModel.하차시간창오류" /></MudItem>
+        </MudGrid></details>
+    }
+
+    @if (MobileStep is null or ShipperRequestMobileStep.Schedule)
+    {
+    <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.subtitle1">상하차 작업시간</MudText>
+            <MudText Typo="Typo.body2">약속시간에 맞춰 함께 운송할 수 있는지 확인하는 데 사용합니다. 모르면 비워 두고, 바로 인계할 수 있어 작업시간이 없으면 0분을 입력해 주세요.</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6"><MudNumericField T="decimal?" @bind-Value="ViewModel.상차작업시간분" Label="상차 예상 작업시간 (분)" Variant="Variant.Outlined" Immediate="true" InputMode="@(InputMode.@decimal)" Error="@(ViewModel.상차작업시간분 is < 0m)" ErrorText="0분 이상 입력해 주세요." /></MudItem>
+                <MudItem xs="12" md="6"><MudNumericField T="decimal?" @bind-Value="ViewModel.하차작업시간분" Label="하차 예상 작업시간 (분)" Variant="Variant.Outlined" Immediate="true" InputMode="@(InputMode.@decimal)" Error="@(ViewModel.하차작업시간분 is < 0m)" ErrorText="0분 이상 입력해 주세요." /></MudItem>
+            </MudGrid>
+            @if (ViewModel.작업시간오류 is { } handlingError)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" role="alert">@handlingError</MudAlert>
+            }
+            else if (!ViewModel.작업시간확인됨) { <MudText Typo="Typo.caption" role="status">미입력 시간은 0분으로 계산하지 않습니다. 확인 전에는 조합 배차가 보류될 수 있습니다.</MudText> }
+        </MudStack>
+    </MudPaper>
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudGrid>
+            @if (MobileStep is null)
+            {
             <MudItem xs="12" md="6">
                 <MudSelect @bind-Value="ViewModel.운송방식" Label="운송 방식" Variant="Variant.Outlined">
                     <MudSelectItem Value="@("혼적")">혼적</MudSelectItem>
@@ -100,6 +141,7 @@
                     <MudSelectItem Value="@("예약")">예약</MudSelectItem>
                 </MudSelect>
             </MudItem>
+            }
             <MudItem xs="12">
                 <MudTextField @bind-Value="ViewModel.요청사항"
                               Label="요청 사항"
@@ -120,12 +162,14 @@
             }
         </MudAlert>
     }
+    }
 </ShipperRequestScreenFrame>
 
 @code {
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
+    [Parameter] public ShipperRequestMobileStep? MobileStep { get; set; }
     [Parameter] public string Title { get; set; } = "운송 정보";
     [Parameter] public string Description { get; set; } = "상차·하차 장소와 담당자, 현장 요청 조건만 입력합니다.";
     [Parameter] public bool ShowNavigation { get; set; } = true;

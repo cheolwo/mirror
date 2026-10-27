@@ -131,6 +131,12 @@ public sealed class OllamaFoodDispatchCandidateAITests
         Assert.DoesNotContain("PRIVATE-AREA", handler.Body!);
         Assert.DoesNotContain("PRIVATE-SOURCE-REASON", handler.Body!);
         using var request = JsonDocument.Parse(handler.Body!);
+        Assert.Equal(new[] { "model", "stream", "think", "keep_alive", "format", "options", "messages" },
+            request.RootElement.EnumerateObject().Select(x => x.Name));
+        Assert.Equal(new[] { "temperature", "seed", "num_ctx", "num_predict" },
+            request.RootElement.GetProperty("options").EnumerateObject().Select(x => x.Name));
+        Assert.Equal(48, request.RootElement.GetProperty("options").GetProperty("seed").GetInt32());
+        Assert.Equal(10, new FoodDispatchOllamaOptions().TimeoutSeconds);
         Assert.Equal("qwen3:1.7b", request.RootElement.GetProperty("model").GetString());
         Assert.False(request.RootElement.GetProperty("stream").GetBoolean());
         Assert.False(request.RootElement.GetProperty("think").GetBoolean());
@@ -138,6 +144,8 @@ public sealed class OllamaFoodDispatchCandidateAITests
         Assert.Equal(64, request.RootElement.GetProperty("options").GetProperty("num_predict").GetInt32());
         Assert.False(request.RootElement.GetProperty("format").GetProperty("additionalProperties").GetBoolean());
         using var context = JsonDocument.Parse(request.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+        Assert.Equal(new[] { "baselineToken", "currentDemand", "demandFallback", "pickupFallback", "candidates" },
+            context.RootElement.EnumerateObject().Select(x => x.Name));
         Assert.Equal("C1", context.RootElement.GetProperty("baselineToken").GetString());
         Assert.Equal(new[] { "C1", "C2" }, context.RootElement.GetProperty("candidates").EnumerateArray()
             .Select(x => x.GetProperty("candidateToken").GetString()));

@@ -23,22 +23,20 @@ public sealed class 차량추천Service : I차량추천Service
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var warnings = new List<string>();
+        var normalized = 화물적재입력Policy.계산(화물적재입력Policy.입력생성(request));
+        var warnings = normalized.경고.Concat(normalized.오류).ToList();
         var reasons = new List<string>();
-        var estimatedCbm = ResolveCargoCbm(request, warnings);
-        var loadingRequirement = BuildLoadingRequirement(request, estimatedCbm);
-        var analysis = await _loadingRecommendation.추천Async(loadingRequirement, cancellationToken);
-
+        var estimatedCbm = normalized.유효부피Cbm;
         AddCalculationReasons(request, estimatedCbm, reasons);
-        if (request.화물파손주의여부)
-        {
-            warnings.Add("파손주의 화물이므로 추천 차량 선택 후 포장 고정과 적층 조건을 추가로 확인해 주세요.");
-        }
+        if (!normalized.유효여부) return EmptyResponse(normalized, reasons, warnings);
+
+        var loadingRequirement = BuildLoadingRequirement(normalized);
+        var analysis = await _loadingRecommendation.추천Async(loadingRequirement, cancellationToken);
 
         if (analysis.전체평가.Count == 0)
         {
             warnings.Add("추천에 사용할 차량 제원 기준이 비어 있습니다.");
-            return EmptyResponse(estimatedCbm, reasons, warnings);
+            return EmptyResponse(normalized, reasons, warnings);
         }
 
         var matches = analysis.추천후보
@@ -60,7 +58,7 @@ public sealed class 차량추천Service : I차량추천Service
                     $"{nearestSplit.차량.차량명} 기준 약 {nearestSplit.권장운행횟수}회 분할 운송이 필요합니다.");
             }
 
-            return EmptyResponse(estimatedCbm, reasons, warnings);
+            return EmptyResponse(normalized, reasons, warnings);
         }
 
         foreach (var warning in matches.SelectMany(x => x.검증경고).Distinct(StringComparer.Ordinal))
@@ -74,6 +72,7 @@ public sealed class 차량추천Service : I차량추천Service
 
         return new 차량추천응답
         {
+            적재조건 = normalized,
             추천차량종류 = candidates[0].차량종류,
             추정화물부피Cbm = estimatedCbm,
             추천사유 = reasons,
@@ -82,73 +81,39 @@ public sealed class 차량추천Service : I차량추천Service
         };
     }
 
-    private static 차량적재추천요구사항 BuildLoadingRequirement(
-        차량추천요청 request,
-        decimal? estimatedCbm)
+    private static 차량적재추천요구사항 BuildLoadingRequirement(화물적재입력결과 normalized)
     {
+        var input = normalized.입력;
         var packages = new List<차량적재포장요구사항>();
-        if (request.화물길이Mm.HasValue || request.화물폭Mm.HasValue || request.화물높이Mm.HasValue)
+        if (input.길이Mm.HasValue || input.폭Mm.HasValue || input.높이Mm.HasValue)
         {
             packages.Add(new 차량적재포장요구사항
             {
                 항목키 = "shipper-cargo",
-                항목명 = string.IsNullOrWhiteSpace(request.화물종류) ? "화물" : request.화물종류.Trim(),
-                포장개수 = Math.Max(1, request.화물수량.GetValueOrDefault(1)),
-                포장길이Mm = request.화물길이Mm.GetValueOrDefault(),
-                포장폭Mm = request.화물폭Mm.GetValueOrDefault(),
-                포장높이Mm = request.화물높이Mm.GetValueOrDefault(),
-                바닥회전가능여부 = request.화물바닥회전가능여부,
-                적층가능여부 = request.화물적층가능여부
+                항목명 = string.IsNullOrWhiteSpace(input.화물종류) ? "화물" : input.화물종류.Trim(),
+                포장개수 = normalized.적용수량,
+                포장길이Mm = input.길이Mm.GetValueOrDefault(),
+                포장폭Mm = input.폭Mm.GetValueOrDefault(),
+                포장높이Mm = input.높이Mm.GetValueOrDefault(),
+                바닥회전가능여부 = normalized.바닥회전가능여부,
+                적층가능여부 = normalized.적층가능여부
             });
-        }
-
-        decimal? nonStackableFloorArea = null;
-        if (!request.화물적층가능여부
-            && request.화물길이Mm is > 0
-            && request.화물폭Mm is > 0)
-        {
-            nonStackableFloorArea = decimal.Round(
-                (request.화물길이Mm.Value / 1000m)
-                * (request.화물폭Mm.Value / 1000m)
-                * Math.Max(1, request.화물수량.GetValueOrDefault(1)),
-                3,
-                MidpointRounding.AwayFromZero);
         }
 
         return new 차량적재추천요구사항
         {
-            총중량Kg = request.화물중량Kg,
-            총부피Cbm = estimatedCbm,
-            적층불가바닥면적M2 = nonStackableFloorArea,
-            총팔레트개수 = request.팔레트개수,
-            온도조건 = request.화물온도조건,
+            총중량Kg = input.총중량Kg,
+            총부피Cbm = normalized.유효부피Cbm,
+            적층불가바닥면적M2 = normalized.비적층바닥면적M2,
+            총팔레트개수 = input.팔레트개수,
+            온도조건 = input.온도조건,
+            비눈보호필요 = 화물적재입력Policy.요청문구포함(input, "비") || 화물적재입력Policy.요청문구포함(input, "방수"),
+            리프트필요 = 화물적재입력Policy.요청문구포함(input, "리프트"),
+            측면상하차필요 = 화물적재입력Policy.요청문구포함(input, "측면"),
+            장재물 = 화물적재입력Policy.요청문구포함(input, "장재물"),
             분할운송허용 = false,
             포장목록 = packages
         };
-    }
-
-    private static decimal? ResolveCargoCbm(차량추천요청 request, ICollection<string> warnings)
-    {
-        if (request.화물부피Cbm is > 0)
-        {
-            return decimal.Round(request.화물부피Cbm.Value, 3, MidpointRounding.AwayFromZero);
-        }
-
-        if (request.화물길이Mm is not > 0
-            || request.화물폭Mm is not > 0
-            || request.화물높이Mm is not > 0)
-        {
-            return null;
-        }
-
-        var quantity = Math.Max(1, request.화물수량.GetValueOrDefault(1));
-        var cbm = (request.화물길이Mm.Value / 1000m)
-                  * (request.화물폭Mm.Value / 1000m)
-                  * (request.화물높이Mm.Value / 1000m)
-                  * quantity;
-
-        warnings.Add("화물 부피(CBM)가 없어 외포장 치수와 수량 기준으로 추정했습니다.");
-        return decimal.Round(cbm, 3, MidpointRounding.AwayFromZero);
     }
 
     private static void AddCalculationReasons(
@@ -237,13 +202,14 @@ public sealed class 차량추천Service : I차량추천Service
     }
 
     private static 차량추천응답 EmptyResponse(
-        decimal? estimatedCbm,
+        화물적재입력결과 normalized,
         IReadOnlyList<string> reasons,
         IReadOnlyList<string> warnings)
         => new()
         {
+            적재조건 = normalized,
             추천차량종류 = string.Empty,
-            추정화물부피Cbm = estimatedCbm,
+            추정화물부피Cbm = normalized.유효부피Cbm,
             추천사유 = reasons,
             경고목록 = warnings,
             후보목록 = []

@@ -27,6 +27,7 @@ public sealed class FoodDriverCodeMapSourceBindingTests
             "native.current-work",
             "native.automatic-start",
             "native.pending-recovery",
+            "native.location-transmission",
             "native.work-screen",
             "native.profile-settlement",
             "native.foreground-notification",
@@ -38,6 +39,16 @@ public sealed class FoodDriverCodeMapSourceBindingTests
             Assert.NotEmpty(binding.Sources);
             Assert.All(binding.Sources, source => Assert.True(source.Line > 0));
         });
+        Assert.All(new[]
+        {
+            "FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs",
+            "FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs",
+            "FDriverApp/PageModels/FDriverLocationTransmissionSession.cs",
+            "Ssalddel/Services/Community/음식주문원장동기화PayloadHandler.cs",
+            "Ssalddel/Services/Community/창고출고원장동기화PayloadHandler.cs",
+            "Ssalddel/Services/Community/음식합의취소투영PayloadHandler.cs",
+            "Ssalddel/Services/Community/음식기사후속PayloadHandler.cs"
+        }, path => Assert.Contains(result.Bindings.SelectMany(binding => binding.Sources), source => source.Path == path));
     }
 
     [Fact]

@@ -47,7 +47,11 @@ namespace Ssalddel.Tests.Clients
         {
             Auth = new(Store, new ClientSessionGuard());
             var options = Options.Create(new ClientDataModeOptions());
-            Model = new(Operations, Observer, new FakeShipperPaymentService(_httpClient, Auth, options), options, Auth);
+            var recovery = new Ssalddel.Ui.Common.Areas.App.Services.VolatileWorkflowRecoveryStore();
+            var context = new Ssalddel.Ui.Common.Areas.App.Services.WorkflowRecoveryContext(
+                () => new Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceIdentity(Auth.UserId, Auth.SessionRevision, Auth.IsLoggedIn),
+                () => _httpClient.BaseAddress);
+            Model = new(Operations, Observer, new FakeShipperPaymentService(_httpClient, Auth, options, recovery, context), options, Auth);
         }
 
         public static ClientAuthTokenSnapshot Snapshot(string user = "shipper-a", string token = "access-a")

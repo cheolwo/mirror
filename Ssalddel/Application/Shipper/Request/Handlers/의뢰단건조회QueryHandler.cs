@@ -52,6 +52,7 @@ public sealed class 의뢰단건조회QueryHandler : IRequestHandler<의뢰단�
             execution?.운영체제인계,
             execution?.운송완료화주인계,
             execution?.비정상운송사건목록,
-            fare);
+            fare,
+            execution?.기사위치상태Code);
     }
 }

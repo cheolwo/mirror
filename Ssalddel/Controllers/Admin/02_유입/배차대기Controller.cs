@@ -5,6 +5,7 @@ using Ssalddel.Application.Admin.Inbound;
 using Ssalddel.Contracts.Admin.Inbound;
 using Ssalddel.ApiMetadata;
 using Microsoft.AspNetCore.Authorization;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Inflow02
 {
@@ -22,6 +23,7 @@ namespace Ssalddel.Controllers.Admin.Inflow02
         }
 
         [HttpGet]
+        [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
         public async Task<IActionResult> 목록조회()
         {
             return Ok(await _sender.Send(new 배차대기목록조회Query()));

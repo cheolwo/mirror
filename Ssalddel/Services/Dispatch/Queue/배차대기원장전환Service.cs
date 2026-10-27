@@ -13,6 +13,7 @@ using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Dispatch.AI;
 using Ssalddel.Services.Dispatch.Participation;
+using Ssalddel.Services.Dispatch.Compliance;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -36,6 +37,7 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I운영배차공통UseCase? _운영배차;
         private readonly I화물후속픽업기준Service? _화물후속픽업;
         private readonly I용달운송대상후보Service? _화물대상후보;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -55,7 +57,8 @@ namespace 살뜰.Services.Dispatch.Queue
             I소형배송기사제안요금Service? smallGoodsPricing = null,
             I운영배차공통UseCase? 운영배차 = null,
             I화물후속픽업기준Service? 화물후속픽업 = null,
-            I용달운송대상후보Service? 화물대상후보 = null)
+            I용달운송대상후보Service? 화물대상후보 = null,
+            I신규화물업무자격Guard? 신규업무자격 = null)
         {
             _db = db;
             _options = options.Value;
@@ -75,6 +78,7 @@ namespace 살뜰.Services.Dispatch.Queue
             _운영배차 = 운영배차;
             _화물후속픽업 = 화물후속픽업;
             _화물대상후보 = 화물대상후보;
+            _신규업무자격 = 신규업무자격;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)
@@ -313,44 +317,6 @@ namespace 살뜰.Services.Dispatch.Queue
                 배차대기원장전환결과코드.확정됨,
                 "참여자의 실행 결정을 배차 원장에 동기화했습니다.",
                 driverId);
-        }
-
-        public async Task<배차대기원장전환결과> 배차수락취소처리Async(string requestId, string driverId, string? reason = null, CancellationToken cancellationToken = default)
-        {
-            var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
-            if (queue is null)
-            {
-                return 대상없음(requestId, driverId);
-            }
-
-            var assignedToDriver = string.Equals(queue.확정기사Id, driverId, StringComparison.Ordinal)
-                                   || string.Equals(queue.현재추천대상기사Id, driverId, StringComparison.Ordinal);
-            if ((queue.확정기사Id is not null || queue.현재추천대상기사Id is not null) && !assignedToDriver)
-            {
-                return 전환안됨(
-                    queue,
-                    배차대기원장전환결과코드.현재추천기사불일치,
-                    "확정 또는 추천 대상 기사가 아니라 수락 취소하지 않았습니다.",
-                    driverId);
-            }
-
-            var dispatchRequest = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == requestId, cancellationToken);
-            if (dispatchRequest is not null)
-            {
-                dispatchRequest.배차상태 = 상태값.배차상태.매칭중;
-                dispatchRequest.UpdatedAt = DateTime.UtcNow;
-            }
-
-            배차재추천상태Policy.적용(queue, driverId, DateTime.UtcNow);
-            if (queue.생활배송배차방식 is not null)
-            {
-                queue.생활배송선택판본++;
-                Ssalddel.Services.Community.생활배송배차Policy.대기적용(queue);
-            }
-            await _db.SaveChangesAsync(cancellationToken);
-            if (queue.생활배송배차방식 == Ssalddel.Contracts.Common.Community.NeighborhoodDispatchModes.PublicCall)
-                return 전환됨(queue, 배차대기원장전환결과코드.공개배차전환됨, "기사 수락 취소 뒤 공개 콜 선택으로 다시 대기합니다.", driverId);
-            return await 추천거절후다음후보로진행Async(queue, driverId, cancellationToken);
         }
 
         private 배차대기원장전환결과? 창고선행작업대기이면전환안됨(운송원장 queue, string? driverId = null)

@@ -60,7 +60,7 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
             return Result.Fail<ShipRequest.화주운송의뢰응답>("RequestId is required");
         }
 
-        await _db.운송원장.AsNoTracking()
+        var transport = await _db.운송원장.AsNoTracking()
             .FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId || x.운송번호 == request.RequestId, cancellationToken);
         var entity = await _db.화주운송의뢰.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (entity == null)
@@ -96,6 +96,13 @@ public sealed class 화주운송의뢰후불승인CommandHandler : IRequestHandl
         {
             return Result.Fail<ShipRequest.화주운송의뢰응답>("후불 승인은 운송완료후정산 또는 월말정산 의뢰만 가능합니다.");
         }
+
+        var currentFare = entity.운임구성Id.HasValue
+            ? await _db.운임구성.AsNoTracking().SingleOrDefaultAsync(x => x.Id == entity.운임구성Id.Value && x.의뢰Id == entity.의뢰Id, cancellationToken)
+            : null;
+        if (창고출고운송승인준비Policy.확인(entity, transport, currentFare) is { } preparationError)
+            return Result.Fail<ShipRequest.화주운송의뢰응답>(new Error(preparationError.Message)
+                .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", preparationError.Code));
 
         entity.정산상태 = ShipRequest.운임정산상태.후불승인완료.ToString();
         entity.정산메모 = MergeMemo(entity.정산메모, request.승인메모);

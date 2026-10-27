@@ -146,7 +146,10 @@ public sealed partial class 국내화물배차조율Service : I국내화물배�
                     candidate.예상운임,
                     candidate.예상순이익,
                     candidate.추천사유,
-                    candidate.배지);
+                    candidate.배지)
+                {
+                    판정근거 = candidate.판정근거
+                };
             })
             .ToArray();
         var assignedRequests = proposals.Select(x => x.의뢰Id).ToHashSet(StringComparer.Ordinal);
@@ -174,7 +177,10 @@ public sealed partial class 국내화물배차조율Service : I국내화물배�
             Sum(proposals.Select(x => x.예상운임)),
             Sum(proposals.Select(x => x.예상순이익)),
             strategy.이름,
-            strategy.가용기사운송의뢰비율);
+            strategy.가용기사운송의뢰비율)
+        {
+            판정근거 = input.판정근거
+        };
     }
 
     private static decimal? Sum(IEnumerable<decimal?> values)

@@ -27,6 +27,24 @@ public sealed partial class 국내화물배차조율입력Factory
         CancellationToken cancellationToken)
     {
         var excluded = new List<string>();
+        var evidence = _상태근거 is null ? null
+            : await _상태근거.조회Async(queue.의뢰Id, driver.기사Id, now, cancellationToken);
+        if (evidence is not null)
+            evidence = evidence with { 대기순위기준시각Utc = state.Aging기준시각Utc, 대기순위점수 = state.Aging점수,
+                순위관측지문 = 화물배차상태SnapshotService.순위지문(state) };
+        if (evidence is not null)
+        {
+            excluded.AddRange(evidence.차단사유);
+            var fare = request.운임구성Id is { } fareId ? await _db.운임구성.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.Id == fareId && x.의뢰Id == request.의뢰Id, cancellationToken) : null;
+            if (!evidence.의뢰근거.TryGetValue(queue.의뢰Id, out var sourceHash)
+                || sourceHash != 화물배차상태SnapshotService.원장지문(queue, request, fare, cargoRequirement)
+                || evidence.기사기본지문 != 화물배차상태SnapshotService.기사원본지문(driver)
+                || evidence.실차제원지문 != 화물배차상태SnapshotService.지문(vehicleSpec)
+                || 화물배차상태SnapshotService.위치지문(state) != 화물배차상태SnapshotService.위치지문(
+                    await _기사상태Store.GetAsync(state.DriverId, cancellationToken)))
+                excluded.Add("DispatchEvidence.LoadedSourcesChanged");
+        }
         excluded.AddRange(국내화물배차후보금지정책.조합후보금지사유(driver.기사Id, rejectedDriverIds));
         excluded.AddRange(국내화물배차후보금지정책.기사후보금지사유(
             state,
@@ -125,6 +143,10 @@ public sealed partial class 국내화물배차조율입력Factory
         }
 
         var additionalDelayMinutes = scheduleEvaluation?.총추가지연분;
+        if (scheduleEvaluation is not null && (!scheduleEvaluation.삽입가능여부 || !scheduleEvaluation.전체완수가능여부))
+            excluded.Add("FreightScheduleInfeasible");
+        if (pickupWindowSlackMinutes < 0m || request.픽업_시간창_종료일시 <= now)
+            excluded.Add("FreightPickupWindowExpired");
         var decision = _판정Service.판정(request, additionalDelayMinutes, pickupWindowSlackMinutes, pickupDistanceKm, fit, scheduleEvaluation);
         var requestDeliveryScope = 국내화물배달권정책.판정(pickupPoint, queue.픽업_도로명주소);
         var driverDeliveryScope = 국내화물배달권정책.판정(driverPoint, driver.주_활동지역);
@@ -168,63 +190,18 @@ public sealed partial class 국내화물배차조율입력Factory
             false,
             null);
 
-        var score = (evaluation.추천점수 ?? 0m) + state.Aging점수 + (returnEvaluation?.가점 ?? 0m);
-        if (estimatedCost.HasValue)
-        {
-            score -= Math.Clamp(estimatedCost.Value / 5000m, 0m, 20m);
-        }
+        var score = 국내화물조합평가Composer.점수계산(
+            evaluation, state.Aging점수, returnEvaluation, estimatedCost, estimatedProfit, returnBurden);
 
-        if (estimatedProfit.HasValue)
-        {
-            score += Math.Clamp(estimatedProfit.Value / 3000m, -20m, 30m);
-        }
+        if (evidence is not null && !await _상태근거!.현재근거확인Async(evidence, cancellationToken))
+            excluded.Add("DispatchEvidence.ChangedDuringEvaluation");
 
-        if (returnBurden.부담점수 > 0m)
-        {
-            score -= returnBurden.부담점수;
-        }
-
-        if (returnBurden.보너스점수 > 0m)
-        {
-            score += returnBurden.보너스점수;
-        }
-
-        if (excluded.Count > 0)
-        {
-            score = Math.Min(score, 0m);
-        }
-
-        var reason = state.Aging점수 > 0m
-            ? $"{evaluation.추천사유} · 기사대기보정 +{state.Aging점수:0}"
-            : evaluation.추천사유;
-        if (!string.IsNullOrWhiteSpace(returnBurden.사유))
-        {
-            reason = $"{reason} · {returnBurden.사유}";
-        }
-        if (returnEvaluation is not null)
-            reason = $"{reason} · {returnEvaluation.사유}";
-
-        var badges = evaluation.배지.ToList();
-        if (returnEvaluation is { 가점: > 0m }) badges.Add("권역 복귀 방향");
-        if (returnBurden.퇴근시간대부담여부)
-        {
-            badges.Add("퇴근복귀부담");
-        }
-
-        if (returnBurden.복귀콜선호 == 기사복귀선호코드.복귀우선 && returnBurden.보너스점수 > 0m)
-        {
-            badges.Add("복귀콜선호");
-        }
-        else if (returnBurden.복귀콜선호 == 기사복귀선호코드.수익우선 && returnBurden.부담점수 > 0m)
-        {
-            badges.Add("수익우선");
-        }
-
-        return new 운송의뢰기사조합평가(
+        return 국내화물조합평가Composer.조립(new(
             queue.의뢰Id,
             driver.기사Id,
-            excluded.Count == 0,
-            pickupDistanceKm.HasValue ? Math.Round(pickupDistanceKm.Value, 2) : null,
+            state.Aging점수,
+            acceptedTransportCount,
+            pickupDistanceKm,
             pickupMinutes,
             cargoMinutes,
             totalMinutes,
@@ -233,22 +210,22 @@ public sealed partial class 국내화물배차조율입력Factory
             estimatedRevenue,
             estimatedCost,
             estimatedProfit,
-            scheduleEvaluation?.삽입가능여부 ?? acceptedTransportCount == 0,
-            scheduleEvaluation?.전체완수가능여부 ?? true,
-            scheduleEvaluation?.최적삽입인덱스,
-            scheduleEvaluation?.경로변경이점여부 ?? false,
-            scheduleEvaluation?.경로변경절감분,
-            scheduleEvaluation?.총추가지연분,
+            scheduleEvaluation,
             sameDeliveryScope,
             adjacentDeliveryScope,
-            returnDistanceKm.HasValue ? Math.Round(returnDistanceKm.Value, 2) : null,
-            Math.Round(returnBurden.부담점수, 2),
-            returnBurden.퇴근시간대부담여부,
-            Math.Round(score, 2),
-            reason,
-            badges.Distinct(StringComparer.Ordinal).ToArray(),
-            fit.경고.Concat(evaluation.경고).Distinct(StringComparer.Ordinal).ToArray(),
-            excluded.Distinct(StringComparer.Ordinal).ToArray());
+            returnDistanceKm,
+            returnBurden,
+            returnEvaluation,
+            evaluation,
+            fit), score, excluded) with
+        {
+            판정근거 = evidence ?? new()
+            {
+                기준시각Utc = now, 조회시작시각Utc = now, 조회완료시각Utc = _clock.GetUtcNow().UtcDateTime,
+                조회범위 = "Legacy factory dependencies; unbound state evidence", 원자적조회여부 = false,
+                미확인사유 = ["DispatchEvidence.LegacyInputUnknown"]
+            }
+        };
     }
 
     private bool 상차접근허용(국내화물운송기사상태Snapshot state, decimal distanceKm, 화주운송의뢰 request, DateTime now)

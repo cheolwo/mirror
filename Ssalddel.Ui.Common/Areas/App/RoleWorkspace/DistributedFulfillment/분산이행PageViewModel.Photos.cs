@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 using Ssalddel.Ui.Common.Areas.App.Services;
@@ -34,42 +33,7 @@ public sealed partial class 분산이행PageViewModel
         });
     }
     private bool ValidPhotoWork(DistributedEvidenceWorkRequest work, string action)
-    {
-        if (분산사진업무Session.Body(work) is not { } body || body.RequestId != Guid.Empty) return false;
-        if (work.Kind == "StockRelease" && action == "handover-stock-release" && work.StockRelease is { } released)
-            return Workspace?.StockReleases.SingleOrDefault(x => x.ReleaseId == released.ReleaseId && x.SiteId == work.AggregateId) is { } release
-                && release.SiteRevision == body.ExpectedRevision && release.AssignedUserId == CurrentUserId
-                && release.AllowedActions.Contains(action) && !string.IsNullOrWhiteSpace(released.LocationBarcode)
-                && released.LocationBarcode == release.LocationBarcode && released.Quantity > 0
-                && released.Quantity <= release.AgreedQuantity - release.ReleasedQuantity;
-        if (work.Kind == "Receive" && action == "receive" && work.Receive is { } receive && SelectedInbound is { } inbound && work.AggregateId == inbound.PlanId && body.ExpectedRevision == inbound.Revision)
-        {
-            var rows = receive.Lines.Select(line => (Input: line, Row: inbound.Lines.SingleOrDefault(row => row.LineKey == line.LineKey))).ToArray();
-            return rows.Length > 0 && rows.Select(item => item.Input.LineKey).Distinct().Count() == rows.Length && rows.All(item => item.Row is { } row && item.Input.Sku == row.Sku && item.Input.Quantity > 0 && item.Input.Quantity <= row.ExpectedQuantity - row.ReceivedQuantity)
-                && rows.Select(item => (item.Row!.LocationId, item.Row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].Row!.LocationId) == receive.LocationBarcode;
-        }
-        if (work.Kind == "Pick" && action == "pick" && RoleKey == "cargo-driver" && work.Pick is { } pick && SelectedWave is { } wave && work.AggregateId == wave.WaveId && body.ExpectedRevision == wave.Revision && pick.StopId == CurrentStop?.StopId)
-        {
-            var rows = pick.Lines.Select(line => (Input: line, Row: CurrentPickLines.SingleOrDefault(row => row.ReservationId == line.ReservationId))).ToArray();
-            return rows.Length > 0 && rows.Select(item => item.Input.ReservationId).Distinct().Count() == rows.Length && rows.All(item => item.Row is { } row && CanPick(row) && item.Input.OwnerUserId == row.OwnerUserId && item.Input.Sku == row.Sku && item.Input.Quantity > 0 && item.Input.Quantity <= row.Quantity - row.PickedQuantity - row.ReleasedQuantity)
-                && rows.Select(item => (item.Row!.LocationId, item.Row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].Row!.LocationId) == pick.LocationBarcode;
-        }
-        if (work.Kind == "Deliver" && action == "deliver" && RoleKey == "cargo-driver" && work.Deliver is { } delivery && SelectedWave is { } deliveryWave && work.AggregateId == deliveryWave.WaveId && body.ExpectedRevision == deliveryWave.Revision && delivery.StopId == CurrentStop?.StopId)
-            return ValidReservationLines(delivery.Lines, deliveryWave, line => CurrentDeliveryOrders.Any(order => order.OrderId == line.OrderId && CanDeliver(order)) && line.AllowedActions.Contains("deliver"));
-        if (work.Kind == "Return" && action == "return" && work.Return is { } returned && SelectedWave is { } returnWave && work.AggregateId == returnWave.WaveId && body.ExpectedRevision == returnWave.Revision)
-        {
-            if (!ValidReservationLines(returned.Lines, returnWave, line => line.AllowedActions.Contains("return"))) return false;
-            var rows = returned.Lines.Select(line => returnWave.Reservations.Single(row => row.ReservationId == line.ReservationId)).ToArray();
-            return rows.Select(row => (row.LocationId, row.OwnerUserId)).Distinct().Count() == 1 && LocationBarcode(rows[0].LocationId) == returned.LocationBarcode;
-        }
-        if (work.Kind == "ImportLot" && action == "import-lot" && work.ImportLot is { } import && Workspace?.Sites.SingleOrDefault(site => site.SiteId == work.AggregateId) is { } importSite && body.ExpectedRevision == importSite.Revision)
-            return import.ActualLocationConfirmed && !string.IsNullOrWhiteSpace(import.LotCode) && importSite.Locations.Any(location => location.LocationId == import.LocationId && location.Barcode == import.LocationBarcode)
-                && Workspace.ExistingStockCandidates.Any(stock => stock.InboundItemId == import.InboundItemId && stock.SiteId == importSite.SiteId && (RoleKey != "shipper" || stock.SellerUserId == CurrentUserId));
-        return false;
-    }
-    private static bool ValidReservationLines(IReadOnlyList<DistributedDeliveryLineRequest> lines, DistributedWaveDto wave, Func<DistributedReservationDto, bool> allowed)
-        => lines.Count > 0 && lines.Select(line => line.ReservationId).Distinct().Count() == lines.Count && lines.All(line => wave.Reservations.SingleOrDefault(row => row.ReservationId == line.ReservationId) is { } row && allowed(row) && line.Quantity > 0 && line.Quantity <= row.PickedQuantity - row.DeliveredQuantity - row.ReturnedQuantity);
-    private string? LocationBarcode(string id) => Workspace?.Sites.SelectMany(site => site.Locations).SingleOrDefault(location => location.LocationId == id)?.Barcode;
+        => new 분산사진준비Policy(Commands, CurrentUserId, SelectedInbound).IsValid(work, action);
     public Task CompletePhotoAsync(bool confirmed)
     {
         if (!confirmed || !CanEdit || photoOperation is null || Photo.Work is null) return Task.CompletedTask;
@@ -111,8 +75,7 @@ public sealed partial class 분산이행PageViewModel
         var operation = photoOperation ?? throw new InvalidOperationException("확인할 사진 업무가 없습니다.");
         await Photo.UploadAsync(client, ct, () => RequireCurrent(ct), () => PersistRecoveryAsync(ct)); RequireCurrent(ct);
         var body = Photo.CompletionBody();
-        var snapshot = (DistributedCommandRequest)JsonSerializer.Deserialize(JsonSerializer.Serialize(body, body.GetType()), body.GetType())!;
-        pending = new(operation.Action is "import-lot" or "handover-stock-release" ? operation.Action : operation.Action + "-batch", operation.Suffix, snapshot,
+        pending = 분산명령영수증Session.Freeze(분산명령영수증Session.PhotoCompletionAction(operation.Action), operation.Suffix, body,
             Photo.Work!.AggregateId, operation.Quantity, null);
         await SendPendingAsync(ct);
     }

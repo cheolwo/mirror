@@ -1,0 +1,18 @@
+@page "/driver/notifications/settings"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverNotifications
+@inject IDriverRecommendationSettingsClient Client
+@implements IDisposable
+
+<PageTitle>추천 알림 설정</PageTitle>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <DriverRecommendationSettingsForm Model="Model" />
+    <MudButton Href="/driver/current-work" Variant="Variant.Text" Class="mt-4">내가 하는 일로</MudButton>
+</MudContainer>
+
+@code {
+    private DriverRecommendationSettingsViewModel Model = default!;
+    protected override void OnInitialized() => Model = new(Client);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    { if (firstRender) { await Model.LoadAsync(); StateHasChanged(); } }
+    public void Dispose() => Model.Dispose();
+}

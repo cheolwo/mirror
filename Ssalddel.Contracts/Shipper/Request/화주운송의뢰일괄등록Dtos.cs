@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Privacy;
+
 namespace Ssalddel.Contracts.Shipper.Request;
 
 public sealed class 화주운송의뢰일괄등록행입력
@@ -12,13 +14,27 @@ public sealed class 화주운송의뢰일괄등록행입력
     public int? 화물높이Mm { get; set; }
     public decimal? 화물중량Kg { get; set; }
     public decimal? 화물부피Cbm { get; set; }
+    public bool? 화물바닥회전가능여부 { get; set; }
+    public bool? 화물적층가능여부 { get; set; }
     public int? 팔레트개수 { get; set; }
     public bool 화물파손주의여부 { get; set; }
     public string? 화물온도조건 { get; set; }
     public string? 픽업도로명주소 { get; set; }
     public string? 픽업상세주소 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.DisplayName, "일괄 의뢰 상차 담당자 식별", ProtectionNote = "운송 진행에 필요한 역할에만 노출")]
+    public string? 픽업연락처이름 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber, "일괄 의뢰 상차 담당자 연락", ProtectionNote = "업무 단계와 역할에 따른 마스킹/해제")]
+    public string? 픽업연락처전화번호 { get; set; }
+    public DateTime? 픽업시간창시작일시 { get; set; }
+    public DateTime? 픽업시간창종료일시 { get; set; }
     public string? 하차도로명주소 { get; set; }
     public string? 하차상세주소 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.DisplayName, "일괄 의뢰 하차 담당자 식별", ProtectionNote = "운송 진행에 필요한 역할에만 노출")]
+    public string? 하차연락처이름 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber, "일괄 의뢰 하차 담당자 연락", ProtectionNote = "업무 단계와 역할에 따른 마스킹/해제")]
+    public string? 하차연락처전화번호 { get; set; }
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string? 운송방식 { get; set; }
     public string? 차량종류 { get; set; }
     public string? 서비스레벨 { get; set; }
@@ -40,6 +56,7 @@ public sealed class 화주운송의뢰추천결과
     public string? 수납주체 { get; set; }
     public string? 추천사유 { get; set; }
     public decimal? 추정화물부피Cbm { get; set; }
+    public 화물적재입력결과? 적재조건 { get; set; }
     public IReadOnlyList<string> 추천사유목록 { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> 경고목록 { get; set; } = Array.Empty<string>();
     public IReadOnlyList<차량추천후보응답> 후보차량목록 { get; set; } = Array.Empty<차량추천후보응답>();
@@ -124,6 +141,16 @@ public static class 화주운송의뢰일괄등록템플릿
         "정산시점",
         "증빙방식",
         "수납주체",
-        "클라이언트행Id"
+        "클라이언트행Id",
+        "화물바닥회전가능여부",
+        "화물적층가능여부",
+        "픽업연락처이름",
+        "픽업연락처전화번호",
+        "픽업시간창시작일시",
+        "픽업시간창종료일시",
+        "하차연락처이름",
+        "하차연락처전화번호",
+        "하차시간창시작일시",
+        "하차시간창종료일시"
     ];
 }

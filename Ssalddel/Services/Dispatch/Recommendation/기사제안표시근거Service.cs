@@ -4,6 +4,7 @@ using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Metadata;
 using 살뜰.Data;
 using 살뜰.도메인.운송;
+using 살뜰.도메인.화주;
 using 살뜰.도메인.창고;
 
 namespace 살뜰.Services.Dispatch.Recommendation;
@@ -21,6 +22,26 @@ public static class 기사제안표시근거Service
     public static IReadOnlyList<string> 운송작업(bool 직접피킹)
         => 직접피킹 ? [DriverOfferActivityCodes.Pick, DriverOfferActivityCodes.Deliver]
             : [DriverOfferActivityCodes.Pickup, DriverOfferActivityCodes.Deliver];
+
+    /// <summary>원의뢰에 결속된 약정 또는 기존 소형 제안만 읽으며 고객 청구액은 사용하지 않습니다.</summary>
+    public static (decimal? Amount, string? Source) 화물보수(
+        운송원장 queue, 화주운송의뢰? request, 운임구성? fare, DriverOfferPricingDto? pricing)
+    {
+        if (request is null || request.의뢰Id != queue.의뢰Id) return (null, null);
+        if (pricing is not null)
+            return 유효한보수(pricing.TotalPayoutKrw) && queue.기사지급예정액 == pricing.TotalPayoutKrw
+                ? (pricing.TotalPayoutKrw, "운송원장.기사제안요금계산근거Json") : (null, null);
+        // 별도 동결 제안이 있는데 읽을 수 없으면 다른 약정으로 대신 표시하지 않습니다.
+        if (!string.IsNullOrWhiteSpace(queue.기사제안요금계산근거Json)
+            || !string.IsNullOrWhiteSpace(queue.기사제안요금정책판본)) return (null, null);
+        return fare is not null && fare.Id == request.운임구성Id && fare.의뢰Id == request.의뢰Id
+            && 유효한보수(fare.기사지급예정운임)
+            && (!queue.기사지급예정액.HasValue || queue.기사지급예정액 == fare.기사지급예정운임)
+                ? (fare.기사지급예정운임, "운임구성.기사지급예정운임") : (null, null);
+    }
+
+    private static bool 유효한보수(decimal? value)
+        => value is > 0m && decimal.Truncate(value.Value) == value.Value;
 
     public static async Task<IReadOnlySet<string>> 직접피킹의뢰Async(SsalddelContext db, IReadOnlyList<string> requestIds,
         CancellationToken ct = default)

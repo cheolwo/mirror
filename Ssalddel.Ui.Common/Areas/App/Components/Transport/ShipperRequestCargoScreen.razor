@@ -3,6 +3,7 @@
 <ShipperRequestScreenFrame ViewModel="ViewModel"
                            NavigationContext="NavigationContext"
                            Step="ShipperRequestAuthoringStep.Cargo"
+                           MobileStep="MobileStep"
                            ScreenCode="@ScreenCode"
                            Title="@Title"
                            Description="@Description"
@@ -17,6 +18,8 @@
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-4">
         <MudGrid>
+            @if (MobileStep is null or ShipperRequestMobileStep.Cargo)
+            {
             <MudItem xs="12" md="6">
                 <MudTextField @bind-Value="ViewModel.화물종류"
                               Label="화물 종류"
@@ -55,17 +58,25 @@
             <MudItem xs="12" md="4">
                 <MudNumericField T="int?"
                                  @bind-Value="ViewModel.화물수량"
-                                 Label="수량"
+                                 InputMode="InputMode.numeric"
+                                 Label="같은 포장의 개수"
                                  Variant="Variant.Outlined"
                                  Immediate="true" />
             </MudItem>
+            }
+            @if (MobileStep is null or ShipperRequestMobileStep.Package)
+            {
             <MudItem xs="12" md="4">
                 <MudNumericField T="decimal?"
                                  @bind-Value="ViewModel.화물중량Kg"
-                                 Label="중량 kg"
+                                 InputMode="@(InputMode.@decimal)"
+                                 Label="전체 중량 kg (포장·깔판 포함)"
                                  Variant="Variant.Outlined"
+                                 Required="true"
                                  Immediate="true" />
             </MudItem>
+            @if (MobileStep is null)
+            {
             <MudItem xs="12" md="4">
                 <MudNumericField T="decimal?"
                                  @bind-Value="ViewModel.화물부피Cbm"
@@ -73,15 +84,85 @@
                                  Variant="Variant.Outlined"
                                  Immediate="true" />
             </MudItem>
+            }
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int?" @bind-Value="ViewModel.화물길이Mm"
+                                 InputMode="InputMode.numeric"
+                                 Label="포장 1개 길이 mm" Variant="Variant.Outlined" Required="true" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int?" @bind-Value="ViewModel.화물폭Mm"
+                                 InputMode="InputMode.numeric"
+                                 Label="포장 1개 너비 mm" Variant="Variant.Outlined" Required="true" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int?" @bind-Value="ViewModel.화물높이Mm"
+                                 InputMode="InputMode.numeric"
+                                 Label="포장 1개 높이 mm" Variant="Variant.Outlined" Required="true" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="bool?" @bind-Value="ViewModel.화물바닥회전가능여부" Label="바닥에서 방향 바꾸기" Variant="Variant.Outlined">
+                    <MudSelectItem T="bool?" Value="@((bool?)true)">가능</MudSelectItem>
+                    <MudSelectItem T="bool?" Value="@((bool?)false)">불가</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="bool?" @bind-Value="ViewModel.화물적층가능여부" Label="위에 다른 화물 쌓기" Variant="Variant.Outlined">
+                    <MudSelectItem T="bool?" Value="@((bool?)true)">가능</MudSelectItem>
+                    <MudSelectItem T="bool?" Value="@((bool?)false)">불가</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12"><MudCheckBox T="bool" @bind-Value="ViewModel.화물파손주의여부" Label="파손주의 화물입니다" /></MudItem>
+            @if (MobileStep is null)
+            {
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int?" @bind-Value="ViewModel.팔레트개수"
+                                 Label="팔레트 수 (사용하는 경우)" Variant="Variant.Outlined" Immediate="true" />
+            </MudItem>
+            }
+            }
         </MudGrid>
     </MudPaper>
 
-    <MudAlert Severity="@(ViewModel.화물정보입력됨 ? Severity.Success : Severity.Info)"
+    @if (MobileStep == ShipperRequestMobileStep.Package)
+    {
+        <details class="shipper-mobile-optional"><summary>부피·팔레트 (선택)</summary><MudGrid>
+            <MudItem xs="12" md="6"><MudNumericField T="decimal?" @bind-Value="ViewModel.화물부피Cbm" Label="부피 cbm" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" md="6"><MudNumericField T="int?" @bind-Value="ViewModel.팔레트개수" Label="팔레트 수 (사용하는 경우)" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+        </MudGrid></details>
+    }
+
+    @if (MobileStep is null or ShipperRequestMobileStep.Package)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-3" data-testid="cargo-loading-summary">
+            <MudText Typo="Typo.subtitle2">전체 적재 크기 확인</MudText>
+            <MudText Typo="Typo.body2">같은 포장 @(ViewModel.화물수량?.ToString() ?? "미입력")개 · 전체 중량 @(ViewModel.화물중량Kg?.ToString("0.###") ?? "미입력")kg</MudText>
+            <MudText Typo="Typo.body2">치수와 수량으로 추정한 부피: @(ViewModel.적재입력.치수추정부피Cbm?.ToString("0.######") ?? "미확인")㎥</MudText>
+            <MudText Typo="Typo.body2">입력 부피: @(ViewModel.화물부피Cbm?.ToString("0.######") ?? "없음")㎥ · 판정에 사용할 부피: @(ViewModel.적재입력.유효부피Cbm?.ToString("0.######") ?? "미확인")㎥</MudText>
+            @if (ViewModel.적재입력.비적층바닥면적M2 is { } floor)
+            { <MudText Typo="Typo.body2">쌓지 않을 때 필요한 바닥면적: @floor.ToString("0.######")㎡</MudText> }
+            @foreach (var warning in ViewModel.적재입력.경고)
+            { <MudText Typo="Typo.body2" Color="Color.Warning">@warning</MudText> }
+            @foreach (var error in ViewModel.적재입력.오류)
+            { <MudText Typo="Typo.body2" Color="Color.Error">@error</MudText> }
+        </MudPaper>
+    }
+
+    <MudAlert Severity="@(CurrentErrors.Count == 0 ? Severity.Success : Severity.Info)"
               Variant="Variant.Outlined"
               Dense="true">
-        @(ViewModel.화물정보입력됨
-            ? "화물 기본 조건이 입력되었습니다. 다음 단계에서 실제 상하차 구간을 확인하세요."
-            : "화물 종류와 수량·중량·부피 중 하나를 입력하면 다음 단계의 차량 후보를 판단할 수 있습니다.")
+        @if (CurrentErrors.Count == 0)
+        {
+            <span>@(MobileStep == ShipperRequestMobileStep.Cargo ? "물품 정보를 입력했습니다. 다음으로 포장 크기와 중량을 확인해 주세요." : "화물 종류·전체 중량·포장 크기를 입력했습니다. 다음 단계에서 상하차 구간을 확인해 주세요.")</span>
+        }
+        else
+        {
+            <div>초안은 그대로 유지할 수 있습니다. 운송 의뢰를 등록하기 전에 다음 항목을 보완해 주세요.</div>
+            <ul>
+                @foreach (var missing in CurrentErrors) { <li>@missing</li> }
+            </ul>
+        }
+        @if (MobileStep is null or ShipperRequestMobileStep.Package) { <div>크기는 같은 포장 1개의 바깥 길이·너비·높이이며, 수량은 그 포장의 개수입니다. 중량은 포장·깔판을 포함한 전량의 합계입니다. 1cm는 10mm입니다.</div> }
     </MudAlert>
 
     @if (!string.IsNullOrWhiteSpace(BulkHref))
@@ -102,6 +183,7 @@
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
+    [Parameter] public ShipperRequestMobileStep? MobileStep { get; set; }
     [Parameter] public string Title { get; set; } = "화물 정보";
     [Parameter] public string Description { get; set; } = "차량과 상하차 난이도를 판단할 물품 조건만 입력합니다.";
     [Parameter] public bool ShowNavigation { get; set; } = true;
@@ -110,4 +192,5 @@
     [Parameter] public string? BulkHref { get; set; }
     [Parameter] public RenderFragment? BeforeContent { get; set; }
     [Parameter] public EventCallback Changed { get; set; }
+    private IReadOnlyList<string> CurrentErrors => MobileStep is { } step ? ViewModel.GetMobileStepErrors(step) : ViewModel.화물필수보완목록;
 }

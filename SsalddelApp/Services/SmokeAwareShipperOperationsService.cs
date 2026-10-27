@@ -83,11 +83,19 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
             token => _sample.GetVehicleTypesAsync(token),
             cancellationToken);
 
+    // 실제 화물 조건의 추천 실패를 샘플 차량으로 대체하지 않습니다.
+    public Task<차량추천응답> RecommendVehiclesAsync(차량추천요청 request, CancellationToken cancellationToken = default)
+        => _server.RecommendVehiclesAsync(request, cancellationToken);
+
     public Task<decimal> EstimateFareAsync(string vehicleType, decimal distanceKm, CancellationToken cancellationToken = default)
         => WithSampleFallbackAsync(
             token => _server.EstimateFareAsync(vehicleType, distanceKm, token),
             token => _sample.EstimateFareAsync(vehicleType, distanceKm, token),
             cancellationToken);
+
+    // 위치·추가비가 포함된 실제 작성 견적은 샘플 운임으로 대체하지 않습니다.
+    public Task<decimal> EstimateFareAsync(화주운송기준운임견적요청 request, CancellationToken cancellationToken = default)
+        => _server.EstimateFareAsync(request, cancellationToken);
 
     public Task<ShipperRequestItem> AddRequestAsync(ShipperRequestItem request, CancellationToken cancellationToken = default)
         => request.의뢰Id.StartsWith("shipper-app-", StringComparison.Ordinal)

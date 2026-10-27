@@ -1,3 +1,5 @@
+using Ssalddel.Contracts.Common.Transport;
+
 namespace DriverApp.Models.Driver;
 
 public sealed class DriverRequestItem
@@ -11,7 +13,14 @@ public sealed class DriverRequestItem
         => Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers.DriverOfferPresentation.Pricing(Pricing);
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
-    public string 운송방식 { get; set; } = "혼적";
+    public string 운송방식 { get; set; } = string.Empty;
+    public string? 차량종류 { get; set; }
+    public decimal? 화물중량Kg { get; set; }
+    public int? 화물수량 { get; set; }
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";
     public string 운송의뢰유형표시 { get; set; } = "일반 화물";
     public bool 당일상차필수 { get; set; }
@@ -94,7 +103,10 @@ public sealed class DriverRequestItem
         }
     }
 
-    public string 운송조건표시 => string.IsNullOrWhiteSpace(운송방식) ? "운송방식 미정" : 운송방식;
+    public string 운송조건표시 => 화물운송조건표시.운송방식(운송방식);
+    public string 수락버튼표시 => 화물운송조건표시.수락버튼(운송방식);
+    public string 화물중량표시 => 화물운송조건표시.중량(화물중량Kg);
+    public string 화물수량표시 => 화물운송조건표시.수량(화물수량);
     public string 시간조건표시 => (당일상차필수, 당일하차필수) switch
     {
         (true, true) => "당상·당착",
@@ -102,9 +114,9 @@ public sealed class DriverRequestItem
         (false, true) => "당착",
         _ => "일반"
     };
-    public string 차량조건표시 => string.IsNullOrWhiteSpace(차량톤수) && string.IsNullOrWhiteSpace(차량형태)
-        ? "차량조건 미정"
-        : $"{차량톤수}/{차량형태}".Trim('/');
+    public string 차량조건표시 => 화물운송조건표시.차량종류(!string.IsNullOrWhiteSpace(차량종류)
+        ? 차량종류
+        : $"{차량톤수}/{차량형태}".Trim('/'));
     public string 운임표시 => 예상수익 is { } fare ? $"{fare:N0}원" : "운임 미확인";
 
     public string 픽업거리표시 => 거리값표시(픽업거리Km);
@@ -130,9 +142,22 @@ public sealed class DriverRequestItem
 
     public string 인수증표시 => 인수증필요 ? "인수증 필요" : "인수증 없음";
 
-    public string 상차시간표시 => 당일상차필수 ? "당일 상차" : "상차 시간 협의";
+    public string 상차시간표시 => 화물운송조건표시.시간창(상차시간창시작일시, 상차시간창종료일시);
 
-    public string 하차시간표시 => 당일하차필수 ? "당일 하차" : "하차 시간 협의";
+    public string 하차시간표시 => 화물운송조건표시.시간창(하차시간창시작일시, 하차시간창종료일시);
+
+    public string 간략상차시간표시 => 화물운송조건표시.간략시간창(상차시간창시작일시, 상차시간창종료일시);
+
+    public string 간략하차시간표시 => 화물운송조건표시.간략시간창(하차시간창시작일시, 하차시간창종료일시);
+
+    public DriverCargoConditionSnapshot CaptureCargoConditions()
+        => new(운송방식, 차량종류, 화물중량Kg, 화물수량,
+            NormalizeConditionTime(상차시간창시작일시), NormalizeConditionTime(상차시간창종료일시),
+            NormalizeConditionTime(하차시간창시작일시), NormalizeConditionTime(하차시간창종료일시),
+            당일상차필수, 당일하차필수);
+
+    private static DateTime? NormalizeConditionTime(DateTime? value)
+        => value.HasValue ? DriverRecommendationSelectionState.NormalizeServerUtc(value.Value) : null;
 
     public string 하차정산표시 => $"{결제방식} · {인수증표시}";
 
@@ -164,3 +189,8 @@ public sealed class DriverRequestItem
         set => 하차_경도 = (decimal)value;
     }
 }
+
+/// <summary>수락 전 재조회로 조건이 바뀌었는지 대조하는 한 화면의 불변 값입니다.</summary>
+public sealed record DriverCargoConditionSnapshot(string Mode, string? VehicleKind, decimal? WeightKg, int? Quantity,
+    DateTime? PickupStartUtc, DateTime? PickupEndUtc, DateTime? DropoffStartUtc, DateTime? DropoffEndUtc,
+    bool SameDayPickupRequired, bool SameDayDropoffRequired);

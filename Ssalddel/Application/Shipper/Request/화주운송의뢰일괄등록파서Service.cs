@@ -54,13 +54,23 @@ public sealed class 화주운송의뢰일괄등록파서Service : I화주운송�
                 화물높이Mm = TryGetInt(values, headerMap, "화물높이Mm", rowNumber, rowErrors),
                 화물중량Kg = TryGetDecimal(values, headerMap, "화물중량Kg", rowNumber, rowErrors),
                 화물부피Cbm = TryGetDecimal(values, headerMap, "화물부피Cbm", rowNumber, rowErrors),
+                화물바닥회전가능여부 = TryGetOptionalLoadingBool(values, headerMap, "화물바닥회전가능여부", rowNumber, rowErrors),
+                화물적층가능여부 = TryGetOptionalLoadingBool(values, headerMap, "화물적층가능여부", rowNumber, rowErrors),
                 팔레트개수 = TryGetInt(values, headerMap, "팔레트개수", rowNumber, rowErrors),
                 화물파손주의여부 = TryGetBool(values, headerMap, "화물파손주의여부") ?? false,
                 화물온도조건 = GetValue(values, headerMap, "화물온도조건"),
                 픽업도로명주소 = GetValue(values, headerMap, "픽업도로명주소"),
                 픽업상세주소 = GetValue(values, headerMap, "픽업상세주소"),
+                픽업연락처이름 = GetValue(values, headerMap, "픽업연락처이름"),
+                픽업연락처전화번호 = GetValue(values, headerMap, "픽업연락처전화번호"),
+                픽업시간창시작일시 = TryGetUtcTime(values, headerMap, "픽업시간창시작일시", rowNumber, rowErrors),
+                픽업시간창종료일시 = TryGetUtcTime(values, headerMap, "픽업시간창종료일시", rowNumber, rowErrors),
                 하차도로명주소 = GetValue(values, headerMap, "하차도로명주소"),
                 하차상세주소 = GetValue(values, headerMap, "하차상세주소"),
+                하차연락처이름 = GetValue(values, headerMap, "하차연락처이름"),
+                하차연락처전화번호 = GetValue(values, headerMap, "하차연락처전화번호"),
+                하차시간창시작일시 = TryGetUtcTime(values, headerMap, "하차시간창시작일시", rowNumber, rowErrors),
+                하차시간창종료일시 = TryGetUtcTime(values, headerMap, "하차시간창종료일시", rowNumber, rowErrors),
                 운송방식 = GetValue(values, headerMap, "운송방식"),
                 차량종류 = GetValue(values, headerMap, "차량종류"),
                 서비스레벨 = GetValue(values, headerMap, "서비스레벨"),
@@ -86,6 +96,19 @@ public sealed class 화주운송의뢰일괄등록파서Service : I화주운송�
         }
 
         return new 화주운송의뢰일괄등록파싱결과(rows, errors);
+    }
+
+    private static DateTime? TryGetUtcTime(IReadOnlyList<string> values, IReadOnlyDictionary<string, int> headerMap,
+        string header, int rowNumber, List<string> errors)
+    {
+        var raw = GetValue(values, headerMap, header);
+        if (raw is null) return null;
+        // PC 시간대에 따라 같은 CSV의 약속 시각이 달라지지 않도록 UTC 또는 명시 offset만 받습니다.
+        if (System.Text.RegularExpressions.Regex.IsMatch(raw, @"(?:[zZ]|[+-]\d{2}:\d{2})$")
+            && DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
+            return value.UtcDateTime;
+        errors.Add($"{rowNumber}행: {header}은(는) 시간대가 있는 날짜로 입력해 주세요. 예: 2026-10-20T09:00:00+09:00");
+        return null;
     }
 
     private static Dictionary<string, int> BuildHeaderMap(IReadOnlyList<string> headers)
@@ -146,6 +169,16 @@ public sealed class 화주운송의뢰일괄등록파서Service : I화주운송�
 
         errors?.Add($"{rowNumber}행: {header} 값 '{raw}'을(를) 숫자로 읽을 수 없습니다.");
         return null;
+    }
+
+    private static bool? TryGetOptionalLoadingBool(IReadOnlyList<string> values, IReadOnlyDictionary<string, int> headerMap,
+        string header, int rowNumber, ICollection<string> errors)
+    {
+        var raw = GetValue(values, headerMap, header);
+        var value = TryGetBool(values, headerMap, header);
+        if (!string.IsNullOrWhiteSpace(raw) && !value.HasValue)
+            errors.Add($"{rowNumber}행: {header} 값은 true/false 또는 예/아니오로 입력해 주세요.");
+        return value;
     }
 
     private static bool? TryGetBool(IReadOnlyList<string> values, IReadOnlyDictionary<string, int> headerMap, string header)

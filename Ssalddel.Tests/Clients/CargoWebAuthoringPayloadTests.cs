@@ -35,6 +35,19 @@ public sealed class CargoWebAuthoringPayloadTests
         Assert.Empty(payload.하차.연락처.전화번호);
         Assert.Null(payload.픽업!.시간창);
         Assert.Empty(payload.픽업.연락처.이름);
+        Assert.Null(payload.화물.길이Mm); Assert.Null(payload.화물.폭Mm);
+        Assert.Null(payload.화물.높이Mm); Assert.Null(payload.화물.팔레트개수);
+    }
+
+    [Fact]
+    public void 웹등록은_입력한포장치수와팔레트를_원문계약에보존한다()
+    {
+        var state = new 운송의뢰작성ViewModel { 화물종류 = "상자", 화물중량Kg = 12.5m,
+            화물길이Mm = 400, 화물폭Mm = 300, 화물높이Mm = 200, 팔레트개수 = 2 };
+        var payload = Payload(state);
+        Assert.Equal(12.5m, payload.화물.중량Kg);
+        Assert.Equal(400, payload.화물.길이Mm); Assert.Equal(300, payload.화물.폭Mm);
+        Assert.Equal(200, payload.화물.높이Mm); Assert.Equal(2, payload.화물.팔레트개수);
     }
 
     private static 화주운송의뢰생성요청 Payload(운송의뢰작성ViewModel source)

@@ -1,4 +1,6 @@
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Contracts.Common.Transport
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
 
 <ShipperRequestDetailScreenFrame State="@State"
                                  Context="@Context"
@@ -13,11 +15,10 @@
                                  RefreshRequested="RefreshRequested">
     <EmptyContent>
         <MudIcon Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Size="Size.Large" />
-        <MudText Typo="Typo.h6">의뢰 ID로 조회</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">등록 결과에 표시된 운송 의뢰 ID를 입력해 주세요.</MudText>
+        <MudText Typo="Typo.h6">의뢰 조회</MudText>
         <div class="shipper-summary__lookup">
             <MudTextField @bind-Value="State.LookupRequestId"
-                          Label="운송 의뢰 ID"
+                          Label="의뢰 번호"
                           Placeholder="예: HD-WEB-001"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
@@ -37,16 +38,22 @@
             <div class="shipper-summary">
                 <MudPaper Elevation="0" Outlined="true" Class="pa-4 shipper-summary__hero">
                     <div>
-                        <MudText Typo="Typo.overline" Color="Color.Secondary">REQUEST ID</MudText>
-                        <MudText Typo="Typo.h5">@item.RequestId</MudText>
+                        <MudText Typo="Typo.h6">@ShipperRequestDetailPresentation.Display(item.CargoType)</MudText>
                         <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            @ShipperRequestDetailPresentation.Display(item.CargoType) · @ShipperRequestDetailPresentation.Display(item.TransportMethod) · @ShipperRequestDetailPresentation.Display(item.VehicleType)
+                            @화물운송조건표시.운송방식(item.TransportMethod) · @화물운송조건표시.차량종류(item.VehicleType)
                         </MudText>
+                        <details>
+                            <summary>의뢰 번호</summary>
+                            <MudText Typo="Typo.caption" Style="overflow-wrap:anywhere">@item.RequestId</MudText>
+                        </details>
                     </div>
-                    <MudChip T="string" Color="@ResolveStateColor(ShipperRequestDetailPresentation.ResolveOverallState(item))" Variant="Variant.Filled">
-                        @ShipperRequestDetailPresentation.ResolveOverallLabel(item)
-                    </MudChip>
                 </MudPaper>
+
+                <ShipperRequestNextActionPanel Item="@item" Context="@Context" />
+
+                <화물운송조건Panel Fields="@CargoWorkspacePresentation.조건목록(item.TransportMethod, item.VehicleType,
+                    item.화물중량Kg, item.화물수량, item.상차시간창시작일시, item.상차시간창종료일시,
+                    item.하차시간창시작일시, item.하차시간창종료일시)" />
 
                 <div class="shipper-summary__grid">
                     <MudPaper Elevation="0" Outlined="true" Class="pa-4 shipper-summary__card">
@@ -61,27 +68,20 @@
                     </MudPaper>
 
                     <MudPaper Elevation="0" Outlined="true" Class="pa-4 shipper-summary__card">
-                        <MudText Typo="Typo.h6">배정 기사·현재 위치</MudText>
+                        <MudText Typo="Typo.h6">담당 기사</MudText>
                         <dl>
                             <div><dt>기사</dt><dd>@AssignedDriver(item)</dd></div>
                             <div><dt>차량</dt><dd>@ShipperRequestDetailPresentation.Display(item.AssignedDriverVehicle)</dd></div>
-                            <div><dt>최근 위치</dt><dd>@DriverLocation(item)</dd></div>
                             <div><dt>위치 시각</dt><dd>@DisplayDateTime(item.DriverLocationRecordedAtUtc)</dd></div>
                             <div><dt>위치 상태</dt><dd>@ShipperRequestDetailPresentation.ResolveDriverLocationFreshness(item)</dd></div>
                             <div><dt>예상 도착</dt><dd>@ShipperRequestDetailPresentation.ResolveEtaStatus(item)</dd></div>
                         </dl>
-                        @if (string.IsNullOrWhiteSpace(item.AssignedDriverId))
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">기사가 수락하면 배정 정보가 표시됩니다.</MudText>
-                        }
-                        else if (!item.DriverLocationRecordedAtUtc.HasValue)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">위치가 아직 수신되지 않았거나 운송 종료 정책에 따라 비공개 상태입니다.</MudText>
-                        }
-                        else if (ShipperRequestDetailPresentation.IsDriverLocationStale(item))
+                        @if (!string.IsNullOrWhiteSpace(item.AssignedDriverId)
+                             && item.DriverLocationRecordedAtUtc.HasValue
+                             && ShipperRequestDetailPresentation.IsDriverLocationStale(item))
                         {
                             <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined">
-                                최근 위치가 10분 이상 갱신되지 않았습니다. 기사 위치를 현재 위치로 단정하지 마세요.
+                                기사 위치를 다시 확인해 주세요.
                             </MudAlert>
                         }
                     </MudPaper>
@@ -125,8 +125,8 @@
     [Parameter, EditorRequired] public ShipperRequestDetailPageState State { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestDetailNavigationContext Context { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
-    [Parameter] public string Title { get; set; } = "운송 의뢰 요약";
-    [Parameter] public string Description { get; set; } = "화물, 경로, 비용과 현재 상태를 한 번에 확인합니다.";
+    [Parameter] public string Title { get; set; } = "의뢰 내역";
+    [Parameter] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string HomeHref { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string NewRequestHref { get; set; } = string.Empty;
     [Parameter] public string LoginHref { get; set; } = "/login";
@@ -138,15 +138,6 @@
             ? LookupRequested.InvokeAsync(State.LookupRequestId)
             : Task.CompletedTask;
 
-    private static Color ResolveStateColor(ShipperRequestProgressState state)
-        => state switch
-        {
-            ShipperRequestProgressState.Completed => Color.Success,
-            ShipperRequestProgressState.Active => Color.Primary,
-            ShipperRequestProgressState.Attention => Color.Error,
-            _ => Color.Default
-        };
-
     private static string DisplayDateTime(DateTime value)
         => value == default ? "-" : value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
 
@@ -155,11 +146,6 @@
 
     private static string AssignedDriver(ShipperRequestDetailSnapshot item)
         => string.IsNullOrWhiteSpace(item.AssignedDriverName)
-            ? ShipperRequestDetailPresentation.Display(item.AssignedDriverId)
+            ? string.IsNullOrWhiteSpace(item.AssignedDriverId) ? "배정 전" : "배정됨"
             : item.AssignedDriverName;
-
-    private static string DriverLocation(ShipperRequestDetailSnapshot item)
-        => item.DriverLatitude.HasValue && item.DriverLongitude.HasValue
-            ? $"{item.DriverLatitude.Value:F5}, {item.DriverLongitude.Value:F5}"
-            : "-";
 }

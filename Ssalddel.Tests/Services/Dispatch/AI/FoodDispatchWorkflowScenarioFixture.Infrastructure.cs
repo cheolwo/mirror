@@ -82,7 +82,7 @@ public sealed partial class FoodDispatchWorkflowScenarioFixture
     {
         private readonly ConcurrentDictionary<string, DriverNotificationSettings> _settings = new(StringComparer.Ordinal);
         public Task<DriverNotificationSettings> GetAsync(string id, CancellationToken ct = default)
-            => Task.FromResult(_settings.GetValueOrDefault(id) ?? new(true, true, true, true, false, false));
+            => Task.FromResult(_settings.GetValueOrDefault(id) ?? new(true, true, true, true, false, false, true, true));
         public Task SetAsync(string id, DriverNotificationSettings value, CancellationToken ct = default)
         { _settings[id] = value; return Task.CompletedTask; }
     }

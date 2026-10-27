@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Ssalddel.Application.Common.Transport;
+using Microsoft.EntityFrameworkCore;
 using Ssalddel.Hubs;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.배차;
@@ -6,6 +7,7 @@ using 살뜰.도메인.화주;
 using 살뜰.Services.Dispatch.Recommendation;
 using 살뜰.Services.Storage.Local;
 using Ssalddel.Application.Driver.Recommendation;
+using Ssalddel.Services.Dispatch.Compliance;
 
 namespace 살뜰.Services.Dispatch.Request
 {
@@ -14,17 +16,21 @@ namespace 살뜰.Services.Dispatch.Request
         private readonly SsalddelContext _db;
         private readonly IDriverRejectedRequestStore _rejectedRequestStore;
         private readonly I소형배송기사제안요금Service? _smallGoodsPricing;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
 
         public NationalDispatchRequestService(SsalddelContext db, IDriverRejectedRequestStore rejectedRequestStore,
-            I소형배송기사제안요금Service? smallGoodsPricing = null)
+            I소형배송기사제안요금Service? smallGoodsPricing = null,
+            I신규화물업무자격Guard? 신규업무자격 = null)
         {
             _db = db;
             _rejectedRequestStore = rejectedRequestStore;
             _smallGoodsPricing = smallGoodsPricing;
+            _신규업무자격 = 신규업무자격;
         }
 
         public async Task<IReadOnlyList<DispatchRecommendationDto>> GetNationwideRequestsAsync(string driverId, CancellationToken cancellationToken = default)
         {
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, cancellationToken)).CanReceiveNewWork) return [];
             var rejectedRequestIds = await _rejectedRequestStore.GetRejectedRequestIdsAsync(driverId, cancellationToken);
             var rejectedRequestIdSet = rejectedRequestIds.Count > 0
                 ? new HashSet<string>(rejectedRequestIds, StringComparer.Ordinal)
@@ -32,7 +38,7 @@ namespace 살뜰.Services.Dispatch.Request
 
             var items = await _db.운송원장
                 .AsNoTracking()
-                .Where(q => q.상태 == 상태값.배차대기상태.대기)
+                .Where(q => q.배차업무유형 == 상태값.배차업무유형.용달운송 && q.상태 == 상태값.배차대기상태.대기)
                 .OrderByDescending(q => q.CreatedAt)
                 .Take(100)
                 .ToListAsync(cancellationToken);
@@ -49,40 +55,31 @@ namespace 살뜰.Services.Dispatch.Request
                     .Where(r => requestIds.Contains(r.의뢰Id))
                     .ToDictionaryAsync(r => r.의뢰Id, StringComparer.Ordinal, cancellationToken);
 
-            return items
+            items.RemoveAll(item => requestMap.TryGetValue(item.의뢰Id, out var request)
+                ? !신규화물업무자격검사.화물정보완료(_신규업무자격, request)
+                : _신규업무자격?.RequiresCargoEvidence != false);
+
+            var result = items
                 .Where(q => rejectedRequestIdSet == null || !rejectedRequestIdSet.Contains(q.의뢰Id))
                 .Select(q =>
                 {
-                    var recommendation = new DispatchRecommendationDto
-                    {
-                        WorkKind = Ssalddel.Services.Dispatch.Participation.SharedDriverWorkAdmissionService.ResolveWorkKind(q),
-                        AssignedActivities = 기사제안표시근거Service.운송작업(directPickingIds.Contains(q.의뢰Id)),
-                        Pricing = 기사제안표시근거Service.요금근거(q),
-                        의뢰Id = q.의뢰Id,
-                        화물종류 = requestMap.TryGetValue(q.의뢰Id, out var request) ? request.화물종류 : q.픽업_도로명주소,
-                        픽업지 = q.픽업_도로명주소,
-                        하차지 = q.하차_도로명주소,
-                        픽업_위도 = q.픽업_위도,
-                        픽업_경도 = q.픽업_경도,
-                        하차_위도 = q.하차_위도,
-                        하차_경도 = q.하차_경도,
-                        직선거리Km = null,
-                        주행거리Km = null,
-                        상태 = q.상태,
-                        배차상태 = 상태값.배차상태.대기
-                    };
+                    var recommendation = 운송콜제안Projector.CreateCore(q,
+                        Ssalddel.Services.Dispatch.Participation.SharedDriverWorkAdmissionService.ResolveWorkKind(q),
+                        기사제안표시근거Service.운송작업(directPickingIds.Contains(q.의뢰Id)),
+                        기사제안표시근거Service.요금근거(q),
+                        requestMap.TryGetValue(q.의뢰Id, out var request) ? request.화물종류 : q.픽업_도로명주소);
+                    화물운송조건Projector.투영(recommendation, request);
+                    recommendation.직선거리Km = null;
+                    recommendation.주행거리Km = null;
+                    recommendation.상태 = q.상태;
+                    recommendation.배차상태 = 상태값.배차상태.대기;
 
-                    DispatchRecommendationRequestTypeClassifier.ApplyTo(
-                        recommendation,
-                        q.원본의뢰유형,
-                        q.공동구매도착지유형코드,
-                        q.공동구매기사세대배송여부,
-                        q.공동구매세대배송건수);
-                    if (생활배송기사정보공개Policy.생활배송인가(request?.클라이언트요청Id))
-                        생활배송기사정보공개Policy.추천정보가림(recommendation);
+                    운송콜제안Projector.ApplyClassificationAndPrivacy(recommendation, q, request?.클라이언트요청Id);
                     return recommendation;
                 })
                 .ToList();
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, cancellationToken)).CanReceiveNewWork) return [];
+            return result;
         }
     }
 }

@@ -1,7 +1,7 @@
-using Ssalddel.Contracts.Common.Inbound;
-using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Shipper;
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -18,7 +18,8 @@ public sealed record ShipperHomeRequestSummary(
     string RequestStatus,
     string PaymentStatus,
     string DispatchStatus,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    string? NextActionTitle = null);
 
 public sealed record ShipperHomeDashboardSnapshot(
     bool IsAuthenticated,
@@ -64,8 +65,7 @@ public sealed class ShipperHomeDashboardClient(
     : IShipperHomeDashboardClient
 {
     private const string FeatureMetadataPath = "api/v1/version-feature-flags";
-    private const string InboundsPath = "api/v1/warehouse-operations/inbounds";
-    private const string InventoryPath = "api/v1/warehouse-operations/inventory";
+    private const string WarehouseSummaryPath = "api/v1/shipper/warehouse-summary";
 
     public async Task<ShipperHomeDashboardSnapshot> LoadAsync(
         CancellationToken cancellationToken = default)
@@ -113,7 +113,7 @@ public sealed class ShipperHomeDashboardClient(
         }
 
         var requests = await LoadRequestsAsync(user.UserId, flags, warnings, cancellationToken);
-        var (inbounds, inventory) = await LoadWarehouseAsync(flags, warnings, cancellationToken);
+        var warehouse = await LoadWarehouseAsync(flags, warnings, cancellationToken);
         var latestRequest = requests
             .OrderByDescending(item => item.생성일시)
             .Select(ToSummary)
@@ -126,8 +126,8 @@ public sealed class ShipperHomeDashboardClient(
             flags,
             latestRequest,
             requests.Count(IsActiveRequest),
-            inbounds.Count(item => string.Equals(item.상태, "입고예정", StringComparison.OrdinalIgnoreCase)),
-            inventory.Count(item => item.가용수량 > 0),
+            warehouse.PendingInboundCount,
+            warehouse.ActionableInventoryCount,
             warnings);
     }
 
@@ -158,35 +158,31 @@ public sealed class ShipperHomeDashboardClient(
         }
     }
 
-    private async Task<(IReadOnlyList<입고요청항목응답> Inbounds, IReadOnlyList<재고항목응답> Inventory)> LoadWarehouseAsync(
+    private async Task<ShipperWarehouseSummaryResponse> LoadWarehouseAsync(
         IReadOnlyDictionary<string, bool> flags,
         ICollection<string> warnings,
         CancellationToken cancellationToken)
     {
         if (!IsEnabled(flags, ShipperHomeFeatureKeys.WarehouseFulfillment))
         {
-            return ([], []);
+            return new();
         }
 
         try
         {
-            var inboundsTask = apiClient.GetAsync<입고요청목록응답>(
-                InboundsPath,
-                "화주 허브 입고 요약 조회",
+            var summary = await apiClient.GetAsync<ShipperWarehouseSummaryResponse>(
+                WarehouseSummaryPath,
+                "화주 본인 입고·재고 요약 조회",
                 allowNotFound: false,
                 cancellationToken);
-            var inventoryTask = apiClient.GetAsync<재고목록응답>(
-                InventoryPath,
-                "화주 허브 재고 요약 조회",
-                allowNotFound: false,
-                cancellationToken);
-            await Task.WhenAll(inboundsTask, inventoryTask);
-            return ((await inboundsTask)?.Items ?? [], (await inventoryTask)?.Items ?? []);
+            if (summary is null || summary.PendingInboundCount < 0 || summary.ActionableInventoryCount < 0)
+                throw new InvalidOperationException("화주 입고·재고 요약 응답을 확인하지 못했습니다.");
+            return summary;
         }
         catch (Exception exception) when (exception is InvalidOperationException or HttpRequestException)
         {
-            warnings.Add("입고·재고 요약을 불러오지 못했습니다. 창고 업무 화면에서 다시 시도해 주세요.");
-            return ([], []);
+            warnings.Add("입고·재고 요약을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.");
+            return new();
         }
     }
 
@@ -216,7 +212,9 @@ public sealed class ShipperHomeDashboardClient(
             item.의뢰상태,
             item.결제상태,
             item.배차상태,
-            item.생성일시);
+            item.생성일시,
+            ShipperRequestDetailPresentation.ResolveNextAction(
+                ShipperRequestDetailSnapshot.FromContract(item)).Title);
 
     private static bool Matches(string? value, params string[] keywords)
         => !string.IsNullOrWhiteSpace(value)

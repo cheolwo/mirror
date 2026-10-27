@@ -6,11 +6,13 @@
 <PageTitle>절차·결제 조건</PageTitle>
 
 <ShipperRequestProcedureScreen ViewModel="PageModel.State"
+                               MobileStep="ShipperRequestMobileStep.Payment"
                                NavigationContext="RouteContext"
                                ScreenCode="03.05"
-                               Title="절차·결제 조건"
-                               Description="진행 절차와 결제·정산 조건을 검토용 초안으로 정리합니다."
+                               Title="비용은 어떻게 정하나요?"
+                               Description="운임과 지급 조건을 확인해 주세요."
                                VehicleTypes="PageModel.VehicleTypes"
+                               RecommendationRequested="PageModel.RecommendVehiclesAsync"
                                FareEstimateRequested="PageModel.EstimateFareAsync"
                                IsBusy="PageModel.IsBusy"
                                RootBackHref="@ShipperRoutes.ShipperHome"

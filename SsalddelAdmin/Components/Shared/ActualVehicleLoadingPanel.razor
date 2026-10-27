@@ -1,0 +1,150 @@
+@using Ssalddel.Contracts.Admin.Management
+@implements IDisposable
+
+<section data-testid="actual-vehicle-loading" style="min-width:0;max-width:100%;">
+    <MudStack Spacing="3">
+        @if (!Model.SessionCurrent)
+        {
+            <MudAlert Severity="Severity.Warning">관리자 계정이 바뀌었습니다. 다시 로그인한 뒤 기사 목록에서 확인해 주세요.</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">실측 기록은 차량 선택·운송 자격과 별개입니다. 기록을 저장해도 운송 자격이나 배차 가능 상태가 승인되지는 않습니다.</MudAlert>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Style="flex-wrap:wrap;">
+                <MudText Typo="Typo.h6">현재 차량과 저장 기록</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="Model.LoadAsync" Disabled="Model.Busy" StartIcon="@Icons.Material.Outlined.Refresh">최신 기록 확인</MudButton>
+            </MudStack>
+            @if (Model.Busy)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true">서버 기록을 확인하고 있습니다.</MudAlert>
+            }
+            @if (Model.Error is { } error)
+            {
+                <MudAlert Severity="Severity.Warning" role="alert">@error</MudAlert>
+            }
+            @if (Model.Message is { } message)
+            {
+                <MudAlert Severity="Severity.Success" Dense="true">@message</MudAlert>
+            }
+            @if (Model.NeedsResultCheck)
+            {
+                <MudAlert Severity="Severity.Warning">작성값을 보존했습니다. 최신 기록 확인 전에는 다시 저장할 수 없습니다.</MudAlert>
+            }
+            @if (Model.Current is { } current)
+            {
+                <MudPaper Outlined="true" Class="pa-4" Style="min-width:0;overflow-wrap:anywhere;">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6"><AdminInfoField Label="기사 ID" Value="@Model.DriverId" /></MudItem>
+                        <MudItem xs="12" sm="6"><AdminInfoField Label="기록 상태" Value="@Model.StoredState" /></MudItem>
+                        <MudItem xs="12" sm="6"><AdminInfoField Label="기사 본인 선택 차종" Value="@(current.현재차량종류 ?? "미선택")" /></MudItem>
+                        <MudItem xs="12" sm="6"><AdminInfoField Label="현재 실차 참조" Value="@(current.현재실차참조 ?? "미선택")" /></MudItem>
+                    </MudGrid>
+                    @if (current.제원 is { } stored)
+                    {
+                        <MudDivider Class="my-3" />
+                        <MudText Typo="Typo.subtitle2">현재 저장된 실측값</MudText>
+                        <MudText Typo="Typo.body2">적재함 @Measure(stored.적재함길이Mm) × @Measure(stored.적재함폭Mm) × @Measure(stored.적재함높이Mm) mm · 최대 @Measure(stored.최대적재중량Kg) kg</MudText>
+                        <MudText Typo="Typo.body2">부피 @Measure(stored.최대부피Cbm) m³ · 팔레트 @Measure(stored.팔레트적재개수)개</MudText>
+                        <MudText Typo="Typo.body2">확인 @LocalTime(stored.ConfirmedAtUtc) · 종료 @LocalTime(stored.ValidUntilUtc) (한국 시각)</MudText>
+                        <MudText Typo="Typo.caption">자료 참조 @stored.PrivateEvidenceReference · 저장 판본 @(current.판본?.ToString() ?? "없음")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-3">실측 기록이 없습니다. 확인하지 않은 값은 비워 두세요.</MudText>
+                    }
+                </MudPaper>
+                @if (!Model.CurrentVehicleSelected)
+                {
+                    <MudAlert Severity="Severity.Warning">기사 본인이 현재 사용할 차량을 먼저 선택해야 실측 자료를 저장할 수 있습니다.</MudAlert>
+                }
+                else
+                {
+                    <fieldset disabled="@(!Model.CanEdit)" style="border:0;padding:0;margin:0;min-width:0;">
+                        <MudStack Spacing="3">
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">확인 근거와 기간</MudText>
+                                    <MudText Typo="Typo.body2">실제 확인한 자료의 비공개 참조코드를 입력해 주세요. 시각은 한국 시각이며, 유효기간을 자동으로 정하지 않습니다.</MudText>
+                                    <MudGrid Spacing="2">
+                                        <MudItem xs="12" sm="6"><label style="@LabelStyle">실측 자료 참조코드<input style="@FieldStyle" @bind="Model.Draft.EvidenceReference" autocomplete="off" /></label></MudItem>
+                                        <MudItem xs="12" sm="6"><label style="@LabelStyle">장비 자료 참조코드<textarea style="@FieldStyle" rows="2" @bind="Model.Draft.EquipmentReferences" placeholder="여러 장비는 한 줄에 하나씩" autocomplete="off"></textarea></label></MudItem>
+                                        <MudItem xs="12" sm="6"><label style="@LabelStyle">확인 시각 (한국 시각)<input type="datetime-local" step="1" style="@FieldStyle" value="@Model.Draft.ConfirmedLocal" @onchange="e => Model.Draft.ConfirmedLocal = e.Value?.ToString() ?? string.Empty" /></label></MudItem>
+                                        <MudItem xs="12" sm="6"><label style="@LabelStyle">유효 종료 시각 (한국 시각)<input type="datetime-local" step="1" style="@FieldStyle" value="@Model.Draft.ValidUntilLocal" @onchange="e => Model.Draft.ValidUntilLocal = e.Value?.ToString() ?? string.Empty" /></label></MudItem>
+                                    </MudGrid>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">실측 적재 한도</MudText>
+                                    <MudText Typo="Typo.body2">차량과 장비를 함께 확인한 값만 입력합니다. 빈칸은 미확인이며, 팔레트 0개는 적재 불가를 뜻합니다.</MudText>
+                                    <MudGrid Spacing="2">
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">적재함 길이 (mm)<input type="number" min="1" step="1" style="@FieldStyle" @bind="Model.Draft.LengthMm" /></label></MudItem>
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">적재함 폭 (mm)<input type="number" min="1" step="1" style="@FieldStyle" @bind="Model.Draft.WidthMm" /></label></MudItem>
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">적재함 높이 (mm)<input type="number" min="1" step="1" style="@FieldStyle" @bind="Model.Draft.HeightMm" /></label></MudItem>
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">최대 적재 중량 (kg)<input type="number" min="1" step="1" style="@FieldStyle" @bind="Model.Draft.MaxKg" /></label></MudItem>
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">최대 부피 (m³)<input type="number" min="0" step="any" style="@FieldStyle" @bind="Model.Draft.MaxCbm" /></label></MudItem>
+                                        <MudItem xs="12" sm="4"><label style="@LabelStyle">팔레트 적재 개수<input type="number" min="0" step="1" style="@FieldStyle" @bind="Model.Draft.Pallets" /></label></MudItem>
+                                    </MudGrid>
+                                </MudStack>
+                            </MudPaper>
+                            <MudPaper Outlined="true" Class="pa-4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.h6">적재 구조와 장비</MudText>
+                                    <MudText Typo="Typo.body2">‘불가’와 ‘미확인’을 구분해 주세요. 냉장·냉동·리프트 가능은 장비 자료 참조도 필요합니다.</MudText>
+                                    <MudGrid Spacing="2">
+                                        <MudItem xs="12" sm="6">
+                                            <label style="@LabelStyle">적재함 구조<select style="@FieldStyle" @bind="Model.Draft.EntranceKind"><option value="Unknown">미확인</option><option value="Open">개방형</option><option value="Enclosed">밀폐형</option></select></label>
+                                        </MudItem>
+                                        @foreach (var item in Capabilities())
+                                        {
+                                            <MudItem xs="12" sm="6"><label style="@LabelStyle">@item.Label<select style="@FieldStyle" @onchange="e => item.Write(ParseFlag(e.Value?.ToString()))"><option value="" selected="@(item.Read() is null)">미확인</option><option value="yes" selected="@(item.Read() == true)">가능</option><option value="no" selected="@(item.Read() == false)">불가</option></select></label></MudItem>
+                                        }
+                                    </MudGrid>
+                                    <label><input type="checkbox" @bind="Model.Draft.Withdrawn" /> 이 실측 기록 철회</label>
+                                </MudStack>
+                            </MudPaper>
+                        </MudStack>
+                    </fieldset>
+                    @if (!Model.NeedsResultCheck && Model.ValidationError is { } validation)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@validation</MudText>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Model.SaveAsync" Disabled="@(!Model.CanSave)" StartIcon="@Icons.Material.Outlined.Save">실측 기록 저장</MudButton>
+                }
+            }
+            else if (!Model.Busy && Model.Error is null)
+            {
+                <MudAlert Severity="Severity.Info">최신 기록을 확인하면 입력을 시작할 수 있습니다.</MudAlert>
+            }
+        }
+    </MudStack>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 기사실차적재확인ViewModel Model { get; set; } = default!;
+    private 기사실차적재확인ViewModel? subscribed;
+    private const string LabelStyle = "display:flex;flex-direction:column;gap:6px;font-size:14px;min-width:0;";
+    private const string FieldStyle = "box-sizing:border-box;width:100%;min-width:0;min-height:44px;border:1px solid var(--mud-palette-lines-inputs,#bbb);border-radius:4px;padding:9px;font:inherit;color:inherit;background:transparent;";
+    private sealed record Capability(string Label, Func<bool?> Read, Action<bool?> Write);
+    private IEnumerable<Capability> Capabilities() =>
+    [
+        new("비·눈 보호", () => Model.Draft.RainProtected, v => Model.Draft.RainProtected = v),
+        new("냉장", () => Model.Draft.Refrigerated, v => Model.Draft.Refrigerated = v),
+        new("냉동", () => Model.Draft.Frozen, v => Model.Draft.Frozen = v),
+        new("측면 상하차", () => Model.Draft.SideLoading, v => Model.Draft.SideLoading = v),
+        new("리프트", () => Model.Draft.Lift, v => Model.Draft.Lift = v),
+        new("장재물 적재", () => Model.Draft.LongCargo, v => Model.Draft.LongCargo = v)
+    ];
+    private static bool? ParseFlag(string? value) => value == "yes" ? true : value == "no" ? false : null;
+    private static string Measure<T>(T? value) where T : struct => value?.ToString() ?? "미확인";
+    private static string LocalTime(DateTime value) => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc))
+        .ToOffset(TimeSpan.FromHours(9)).ToString("yyyy-MM-dd HH:mm");
+    protected override void OnParametersSet()
+    {
+        if (subscribed == Model) return;
+        if (subscribed is not null) subscribed.Changed -= OnChanged;
+        subscribed = Model; subscribed.Changed += OnChanged;
+    }
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { if (subscribed is not null) subscribed.Changed -= OnChanged; subscribed = null; }
+}

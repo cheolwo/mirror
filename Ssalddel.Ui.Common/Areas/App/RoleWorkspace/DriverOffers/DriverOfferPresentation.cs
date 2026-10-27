@@ -9,6 +9,7 @@ namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverOffers;
 public sealed record DriverOfferVisual(string Label, string ActivityText, string PrimaryColor, string? SecondaryColor = null)
 {
     public bool IsCombined => SecondaryColor is not null;
+    public string IconPath { get; init; } = DriverOfferPresentation.WorkIconPath;
 }
 
 public sealed record DriverOfferPricingVisual(bool HasEvidence, string DistanceText, string DistanceFeeText,
@@ -27,6 +28,9 @@ public static class DriverOfferPresentation
     public const string CargoColor = "#DC2626";
     public const string WarehouseColor = "#64748B";
     public const string WorkIconPath = "M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22";
+    public const string FoodIconPath = Ssalddel.Contracts.Common.Notifications.DriverRecommendationAlertPresentation.FoodIconPath;
+    public const string CargoIconPath = Ssalddel.Contracts.Common.Notifications.DriverRecommendationAlertPresentation.CargoIconPath;
+    public const string PickingIconPath = "M3 3 V21 M21 3 V21 M3 10 H21 M3 18 H21 M6 4 H11 V10 H6 Z M13 12 H18 V18 H13 Z";
     private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR");
     private static readonly (string Code, string Label)[] Activities =
     [
@@ -46,7 +50,7 @@ public static class DriverOfferPresentation
             || assigned.Contains(DriverOfferActivityCodes.OutboundHandover);
         var delivery = assigned.Contains(DriverOfferActivityCodes.Deliver);
         if (warehouse && !delivery && !assigned.Contains(DriverOfferActivityCodes.Pickup) && !unknown)
-            return new("창고 작업", activityText, WarehouseColor);
+            return new("창고 작업", activityText, WarehouseColor) { IconPath = PickingIconPath };
         var (label, color) = workKind switch
         {
             DriverWorkKinds.FoodDelivery or 운송실행상세유형코드.음식점음식배달 => ("음식 배달", FoodColor),
@@ -55,9 +59,11 @@ public static class DriverOfferPresentation
                 or 운송실행상세유형코드.같이주문국내배송 or 운송실행상세유형코드.같이수입국내인계 => ("화물 운송", CargoColor),
             _ => ("업무 유형 확인 필요", WarehouseColor)
         };
+        var icon = color == WarehouseColor ? WorkIconPath
+            : color == FoodColor ? FoodIconPath : CargoIconPath;
         return color != WarehouseColor && warehouse && delivery && !unknown
-            ? new(label + " · 복합 작업", activityText, FoodColor, CargoColor)
-            : new(label, activityText, color);
+            ? new(label + " · 복합 작업", activityText, FoodColor, CargoColor) { IconPath = CargoIconPath }
+            : new(label, activityText, color) { IconPath = icon };
     }
 
     public static DriverOfferVisual Resolve(DriverWorkOfferDto offer) => Resolve(offer.WorkType, offer.AssignedActivities);

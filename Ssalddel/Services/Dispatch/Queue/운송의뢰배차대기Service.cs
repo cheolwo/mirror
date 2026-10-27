@@ -1,3 +1,4 @@
+using static 살뜰.Services.Dispatch.Queue.운송의뢰배차메타데이터Updater;
 using Ssalddel.Contracts.Common.Warehouse;
 using Microsoft.EntityFrameworkCore;
 using 살뜰.도메인.공통;
@@ -49,9 +50,8 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
 {
     private readonly SsalddelContext _db;
     private readonly I운송의뢰배차원천분류Service _sourceClassifier;
-    private readonly I운송원장배달권연결Service _운송원장배달권연결Service;
-    private readonly I음식배달권실행공간Store _음식배달권실행공간Store;
-    private readonly I국내화물배달권실행공간Store _국내화물배달권실행공간Store;
+    private readonly 운송의뢰배차메타데이터Updater _metadataUpdater;
+    private readonly 배차대기실행공간Projector _executionProjector;
 
     public 운송의뢰배차대기Service(
         SsalddelContext db,
@@ -62,9 +62,8 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
     {
         _db = db;
         _sourceClassifier = sourceClassifier;
-        _운송원장배달권연결Service = 운송원장배달권연결Service;
-        _음식배달권실행공간Store = 음식배달권실행공간Store;
-        _국내화물배달권실행공간Store = 국내화물배달권실행공간Store;
+        _metadataUpdater = new(sourceClassifier);
+        _executionProjector = new(운송원장배달권연결Service, 음식배달권실행공간Store, 국내화물배달권실행공간Store);
     }
 
     public async Task<운송원장> 생성또는조회Async(
@@ -80,8 +79,8 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
         마트원천결속검증(existing, requestId, sourceType, sourceId ?? requestId, shipperId, options?.배차업무유형);
         if (existing is not null)
         {
-            ApplyExistingMetadata(existing, target, options, requestId, sourceType, sourceId, shipperId);
-            await Upsert배달권실행공간Async(existing, cancellationToken);
+            _metadataUpdater.ApplyExistingMetadata(existing, target, options, requestId, sourceType, sourceId, shipperId);
+            await _executionProjector.UpsertAsync(existing, cancellationToken);
             return existing;
         }
 
@@ -121,7 +120,7 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
         entity.배차업무유형 = options?.배차업무유형 ?? source.배차업무유형;
 
         _db.운송원장.Add(entity);
-        await Upsert배달권실행공간Async(entity, cancellationToken);
+        await _executionProjector.UpsertAsync(entity, cancellationToken);
         return entity;
     }
 
@@ -150,168 +149,4 @@ public sealed class 운송의뢰배차대기Service : I운송의뢰배차대기S
             throw new InvalidOperationException("마트 배차 원천 결속이 일치하지 않아 기존 업무를 변경하지 않았습니다.");
     }
 
-    private void ApplyExistingMetadata(
-        운송원장 existing,
-        출고예정운송대상 target,
-        운송의뢰배차대기생성옵션? options,
-        string requestId,
-        string sourceType,
-        string? sourceId,
-        string? shipperId)
-    {
-        var changed = false;
-
-        changed |= SetIfEmptyOrDifferent(existing.운송번호, requestId, value => existing.운송번호 = value);
-        changed |= SetIfEmptyOrDifferent(existing.의뢰Id, requestId, value => existing.의뢰Id = value);
-        changed |= SetIfEmptyOrDifferent(existing.원본의뢰유형, sourceType, value => existing.원본의뢰유형 = value);
-        changed |= SetIfEmptyOrDifferent(existing.원본의뢰Id, sourceId, value => existing.원본의뢰Id = value);
-        changed |= SetIfEmptyOrDifferent(existing.화주Id, shipperId, value => existing.화주Id = value);
-
-        changed |= SetIfEmpty(existing.픽업_도로명주소, target.상차주소, value => existing.픽업_도로명주소 = value);
-        changed |= SetIfEmpty(existing.픽업_상세주소, options?.픽업상세주소, value => existing.픽업_상세주소 = value);
-        changed |= SetIfNull(existing.픽업_위도, target.상차위도, value => existing.픽업_위도 = value);
-        changed |= SetIfNull(existing.픽업_경도, target.상차경도, value => existing.픽업_경도 = value);
-        changed |= SetIfEmpty(existing.하차_도로명주소, target.하차주소, value => existing.하차_도로명주소 = value);
-        changed |= SetIfEmpty(existing.하차_상세주소, options?.하차상세주소, value => existing.하차_상세주소 = value);
-        changed |= SetIfNull(existing.하차_위도, target.하차위도, value => existing.하차_위도 = value);
-        changed |= SetIfNull(existing.하차_경도, target.하차경도, value => existing.하차_경도 = value);
-
-        if (options?.배차업무유형 is int dispatchWorkType && existing.배차업무유형 != dispatchWorkType)
-        {
-            existing.배차업무유형 = dispatchWorkType;
-            changed = true;
-        }
-        else if (existing.배차업무유형 <= 0)
-        {
-            var source = _sourceClassifier.분류(existing);
-            existing.배차업무유형 = source.배차업무유형;
-            changed = true;
-        }
-
-        if (changed)
-        {
-            existing.UpdatedAt = DateTime.UtcNow;
-        }
-    }
-
-    private async Task Upsert배달권실행공간Async(운송원장 배차대기, CancellationToken cancellationToken)
-    {
-        var 배달권연결 = await _운송원장배달권연결Service.투영추적Async(
-            배차대기,
-            cancellationToken);
-
-        if (배차대기.상태 != 상태값.배차대기상태.대기
-            || 배차대기.배차큐단계 is 상태값.배차큐단계.확정 or 상태값.배차큐단계.종료)
-        {
-            await Remove모든실행공간Async(배차대기.의뢰Id, cancellationToken);
-            return;
-        }
-
-        var 음식배달 = 배차대기.배차업무유형 == 상태값.배차업무유형.음식배달;
-        var 실행배달권 = 음식배달
-            ? 음식배달권정책.판정(
-                CreatePoint(배차대기.픽업_위도, 배차대기.픽업_경도),
-                배차대기.픽업_도로명주소)
-            : 배달권연결.픽업배달권;
-        if (string.Equals(실행배달권.배달권키, "unknown", StringComparison.Ordinal))
-        {
-            await Remove모든실행공간Async(배차대기.의뢰Id, cancellationToken);
-            return;
-        }
-
-        if (음식배달)
-        {
-            await _국내화물배달권실행공간Store.Remove운송의뢰Async(
-                배차대기.의뢰Id,
-                cancellationToken);
-            await _음식배달권실행공간Store.Upsert운송의뢰Async(
-                실행배달권.배달권키,
-                배차대기.의뢰Id,
-                음식배달권정책.인접배달권키조회(실행배달권.배달권키),
-                cancellationToken);
-        }
-        else
-        {
-            await _음식배달권실행공간Store.Remove운송의뢰Async(
-                배차대기.의뢰Id,
-                cancellationToken);
-            await _국내화물배달권실행공간Store.Upsert운송의뢰Async(
-                실행배달권.배달권키,
-                배차대기.의뢰Id,
-                국내행정구역배달권Catalog.인접배달권키조회(실행배달권.배달권키),
-                cancellationToken);
-        }
-    }
-
-    private async Task Remove모든실행공간Async(string 의뢰Id, CancellationToken cancellationToken)
-    {
-        await _음식배달권실행공간Store.Remove운송의뢰Async(의뢰Id, cancellationToken);
-        await _국내화물배달권실행공간Store.Remove운송의뢰Async(의뢰Id, cancellationToken);
-    }
-
-    private static 배차경로좌표? CreatePoint(decimal? latitude, decimal? longitude)
-        => latitude.HasValue && longitude.HasValue
-            ? new 배차경로좌표(latitude.Value, longitude.Value)
-            : null;
-
-    private static string To배차원천유형(string? sourceType)
-    {
-        return sourceType switch
-        {
-            출고예정운송대상원천유형.화주운송의뢰 => 운송의뢰배차원천유형.화주운송의뢰,
-            출고예정운송대상원천유형.창고출고예정 => 운송의뢰배차원천유형.창고출고연계운송,
-            출고예정운송대상원천유형.판매채널주문 => 운송의뢰배차원천유형.판매채널출고,
-            출고예정운송대상원천유형.공동주문수입 => 운송의뢰배차원천유형.공동주문국내운송,
-            _ when string.IsNullOrWhiteSpace(sourceType) => 운송의뢰배차원천유형.화주운송의뢰,
-            _ => sourceType.Trim()
-        };
-    }
-
-    private static string ResolveSourceType(운송의뢰배차대기생성옵션? options, 출고예정운송대상 target)
-        => NormalizeOptional(options?.원본의뢰유형)
-           ?? To배차원천유형(target.원천유형);
-
-    private static bool SetIfEmptyOrDifferent(string? current, string? value, Action<string> update)
-    {
-        var normalized = NormalizeOptional(value);
-        if (normalized is null || string.Equals(current, normalized, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        update(normalized);
-        return true;
-    }
-
-    private static bool SetIfEmpty(string? current, string? value, Action<string> update)
-    {
-        var normalized = NormalizeOptional(value);
-        if (normalized is null || !string.IsNullOrWhiteSpace(current))
-        {
-            return false;
-        }
-
-        update(normalized);
-        return true;
-    }
-
-    private static bool SetIfNull(decimal? current, decimal? value, Action<decimal> update)
-    {
-        if (current.HasValue || !value.HasValue)
-        {
-            return false;
-        }
-
-        update(value.Value);
-        return true;
-    }
-
-    private static string NormalizeRequired(string? primary, string? secondary, string? fallback, string errorMessage)
-    {
-        var value = NormalizeOptional(primary) ?? NormalizeOptional(secondary) ?? NormalizeOptional(fallback);
-        return value ?? throw new InvalidOperationException(errorMessage);
-    }
-
-    private static string? NormalizeOptional(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

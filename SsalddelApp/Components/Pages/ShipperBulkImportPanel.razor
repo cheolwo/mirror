@@ -8,9 +8,16 @@
     <MudCard Elevation="2">
         <MudCardContent>
             <MudStack Spacing="2">
-                <InputFile OnChange="OnFileSelected" />
+                <label for="shipper-bulk-csv-file">운송 의뢰 파일</label>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" id="shipper-bulk-csv-help">
+                    CSV(.csv) 파일만 사용할 수 있습니다. Excel이나 Google Sheets에서 CSV로 저장한 뒤 선택해 주세요.
+                </MudText>
+                <InputFile id="shipper-bulk-csv-file"
+                           accept=".csv,text/csv"
+                           aria-describedby="shipper-bulk-csv-help"
+                           OnChange="OnFileSelected" />
                 <MudStack Row="true" Spacing="2">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(selectedFile is null || isBusy)" OnClick="PreviewAsync">미리보기</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(selectedFile is null || isBusy)" OnClick="PreviewAsync">미리보기</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="@(previewResult is null || isBusy || !previewResult.행목록.Any(x => x.등록대상여부 && x.유효함))" OnClick="ConfirmAsync">검토결과로 등록</MudButton>
                 </MudStack>
                 <MudText Typo="Typo.body2">선택 파일: @selectedFileName</MudText>

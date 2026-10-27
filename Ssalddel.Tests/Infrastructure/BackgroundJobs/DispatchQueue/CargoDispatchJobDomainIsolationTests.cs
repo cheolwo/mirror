@@ -233,10 +233,13 @@ public sealed partial class CargoDispatchJobDomainIsolationTests
         var food = await db.배차추천알림Outbox.SingleAsync(x => x.배차대기Id == 20 && x.의뢰Id == "food");
         cargo.기사Id = food.기사Id = "same-driver";
         (await db.운송원장.SingleAsync(x => x.Id == 20)).현재추천대상기사Id = "same-driver";
+        (await db.운송원장.SingleAsync(x => x.Id == 10)).현재추천대상기사Id = "same-driver";
         await db.SaveChangesAsync();
         var tokenStore = new LegacyCargoTokenStore();
         var push = new RecordingPush();
-        var service = new 배차추천알림Service(db, tokenStore, push, NullLogger<배차추천알림Service>.Instance);
+        var service = new 배차추천알림Service(db, tokenStore, push, NullLogger<배차추천알림Service>.Instance,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance,
+            notificationSettings: new Ssalddel.Tests.Support.ExplicitOptInNotificationSettingsStore());
 
         Assert.Equal(1, await service.업무유형별대기알림발송Async(상태값.배차업무유형.음식배달));
 
@@ -304,8 +307,13 @@ public sealed partial class CargoDispatchJobDomainIsolationTests
         foodQueue.추천라운드 = 1;
         foodQueue.현재추천대상기사Id = "driver-5";
         foodQueue.추천만료시각 = now.AddHours(1);
+        var cargoQueue = Queue(10, "cargo", 상태값.배차업무유형.용달운송, now,
+            상태값.배차큐단계.배차추천, 상태값.배차노출상태.추천중);
+        cargoQueue.추천라운드 = 1;
+        cargoQueue.현재추천대상기사Id = "driver-6";
+        cargoQueue.추천만료시각 = now.AddHours(1);
         db.운송원장.AddRange(
-            Queue(10, "cargo", 상태값.배차업무유형.용달운송, now),
+            cargoQueue,
             foodQueue,
             Queue(30, "unknown", 99, now));
         // Older opposite-domain, orphan, and mismatched identifiers must not consume this domain's batch.
@@ -332,7 +340,9 @@ public sealed partial class CargoDispatchJobDomainIsolationTests
         };
 
     private static 배차추천알림Service Notifications(SsalddelContext db, RecordingPush push)
-        => new(db, new AvailablePushTokenStore(), push, NullLogger<배차추천알림Service>.Instance);
+        => new(db, new AvailablePushTokenStore(), push, NullLogger<배차추천알림Service>.Instance,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance,
+            notificationSettings: new Ssalddel.Tests.Support.ExplicitOptInNotificationSettingsStore());
 
     private sealed class RecordingActivation(bool enabled) : ISsalddelBackgroundJobActivationPolicy
     {
@@ -418,17 +428,14 @@ public sealed partial class CargoDispatchJobDomainIsolationTests
         {
             Assert.True(message.DataOnly);
             Assert.True(message.HighPriority);
-            RequestIds.Add(message.Data["offerId"]);
+            var requestId = message.Data.GetValueOrDefault("offerId") ?? message.Data["requestId"];
+            RequestIds.Add(requestId);
             Types.Add(message.Data["type"]);
-            return Task.FromResult(message.Data["offerId"] != FailRequestId);
+            return Task.FromResult(requestId != FailRequestId);
         }
         public Task<bool> SendToTokenAsync(string token, string title, string body,
             IReadOnlyDictionary<string, string> data, CancellationToken cancellationToken = default)
-        {
-            RequestIds.Add(data["requestId"]);
-            Types.Add(data["type"]);
-            return Task.FromResult(data["requestId"] != FailRequestId);
-        }
+            => throw new InvalidOperationException("Recommendation sends must use data-only SendAsync.");
     }
 
     private sealed class TestDatabase(SqliteConnection connection, SsalddelContext context) : IAsyncDisposable

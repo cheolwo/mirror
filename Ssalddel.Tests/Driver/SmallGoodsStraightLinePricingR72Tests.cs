@@ -143,7 +143,7 @@ public sealed partial class 배차수락CommandHandlerTests
         queue.생활배송배차방식 = NeighborhoodDispatchModes.PublicCall; queue.추천라운드 = 4; queue.공개전환시각 = DateTime.UtcNow;
         await db.SaveChangesAsync();
         policy.SmallGoodsBaseFeeKrw = 9000m; policy.SmallGoodsPolicyRevision = "changed-current-policy";
-        var offers = await new 공개배차Service(db, smallGoodsPricing: service).GetPublicDispatchesAsync("driver-1");
+        var offers = await new 공개배차Service(db, smallGoodsPricing: service, 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetPublicDispatchesAsync("driver-1");
         Assert.Equal(expected, Assert.Single(offers).Pricing!.TotalPayoutKrw);
         Assert.Equal(beforeJson, queue.기사제안요금계산근거Json);
         var handler = QuickHandler(db, service);
@@ -163,7 +163,7 @@ public sealed partial class 배차수락CommandHandlerTests
         queue.배차큐단계 = 상태값.배차큐단계.공개배차; queue.배차노출상태 = 상태값.배차노출상태.공개중;
         queue.생활배송배차방식 = NeighborhoodDispatchModes.PublicCall; queue.추천라운드 = 1;
         request.하차_경도 = 128m; await db.SaveChangesAsync();
-        Assert.Empty(await new 공개배차Service(db, smallGoodsPricing: service).GetPublicDispatchesAsync("driver-1"));
+        Assert.Empty(await new 공개배차Service(db, smallGoodsPricing: service, 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetPublicDispatchesAsync("driver-1"));
         var result = await QuickHandler(db, service).Handle(new 배차수락Command("driver-1", request.의뢰Id, 1), default);
         Assert.Equal("SmallGoodsDriverPricingEvidenceInvalid", Assert.Single(result.Errors).Metadata["ErrorCode"]);
         Assert.Null(queue.확정기사Id); Assert.Equal(7777m, fare.기사지급예정운임);
@@ -211,7 +211,8 @@ public sealed partial class 배차수락CommandHandlerTests
         new ThrowingPublisher(), new TestCurrentUserAccessor("driver-1", "기사"), new 참여자실행권한검사(),
         new WorkRelationshipSnapshotCollector(), new StubEligibilityService(), new StubContinuityUseCase(),
         NullLogger<배차수락CommandHandler>.Instance, smallGoodsPricing: service,
-        운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
+        운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+        신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
     private static async Task<(운송원장 Queue, 화주운송의뢰 Work, 운임구성 Fare)> SeedQuickPricing(SsalddelContext db)
     {
         var fare = new 운임구성 { 의뢰Id = "quick-r72", 최종운임 = 34000m, 기사지급예정운임 = 7777m, 예상거리Km = 15m, Km당단가 = 500m };

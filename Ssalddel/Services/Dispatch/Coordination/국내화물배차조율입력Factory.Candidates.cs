@@ -71,7 +71,7 @@ public sealed partial class 국내화물배차조율입력Factory
                     continue;
                 }
 
-                vehicleSpecMap.TryGetValue(driver.차량, out var vehicleSpec);
+                vehicleSpecMap.TryGetValue(driver.기사Id, out var vehicleSpec);
                 evaluations.Add(await EvaluateAsync(
                     queue,
                     transportRequest,

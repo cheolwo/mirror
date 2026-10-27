@@ -3,12 +3,12 @@
 <main class="shipper-request-authoring">
     <header class="shipper-request-authoring__header">
         <div>
-            <span>SHIPPER · TRANSPORT REQUEST</span>
+            <span>화주 · 운송 의뢰</span>
             <h1>운송 의뢰 작성</h1>
-            <p>desktop에서는 네 책임을 한 문맥에서 조립하고, 작은 화면에서는 같은 초안을 단계 route로 나눠 작성합니다.</p>
+            <p>보낼 물품과 운송 조건을 입력한 뒤 최종 내용을 확인하고 접수합니다.</p>
         </div>
         <nav aria-label="운송 의뢰 작성 방식">
-            <MudButton Href="@NavigationContext.PathFor(ShipperRequestAuthoringStep.Cargo)"
+            <MudButton Href="@NavigationContext.PathFor(ShipperRequestMobileStep.Cargo).TrimStart('/')"
                        Variant="Variant.Outlined"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.ViewWeek">
@@ -31,6 +31,13 @@
         <MudText Typo="Typo.caption" Color="Color.Secondary">@AutoSaveMessage</MudText>
     }
 
+    <section class="shipper-request-authoring__mobile-entry" aria-label="단계별 운송 의뢰 작성">
+        <h2>한 번에 하나씩 입력해 주세요</h2>
+        <p>물품 → 포장 크기 → 보내는 곳 → 받는 곳 → 시간 → 차량 → 비용 → 최종 확인</p>
+        <p>이 앱을 사용하는 동안 같은 초안으로 이어서 작성합니다. 마지막 확인 전에는 접수하지 않습니다.</p>
+        <MudButton Href="@NavigationContext.PathFor(ShipperRequestMobileStep.Cargo).TrimStart('/')" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.ArrowForward">단계별 입력 시작</MudButton>
+    </section>
+
     <div class="shipper-request-authoring__layout">
         <div class="shipper-request-authoring__forms">
             <ShipperRequestCargoScreen ViewModel="ViewModel"
@@ -50,6 +57,7 @@
             <ShipperRequestProcedureScreen ViewModel="ViewModel"
                                            NavigationContext="NavigationContext"
                                            VehicleTypes="VehicleTypes"
+                                           RecommendationRequested="RecommendationRequested"
                                            FareEstimateRequested="FareEstimateRequested"
                                            IsBusy="IsBusy"
                                            ShowNavigation="false"
@@ -78,9 +86,9 @@
             <운송의뢰작성요약Panel ViewModel="ViewModel" />
             <MudPaper Elevation="0" Outlined="true" Class="pa-4">
                 <MudStack Spacing="1">
-                    <MudText Typo="Typo.subtitle2">책임 분리</MudText>
+                    <MudText Typo="Typo.subtitle2">작성 순서</MudText>
                     <MudText Typo="Typo.body2">화물 → 운송 → 절차·결제 → 최종 확인</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">모든 화면은 같은 draft와 validation을 사용합니다.</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">단계별 입력으로 이동해도 같은 초안을 이어서 작성합니다.</MudText>
                 </MudStack>
             </MudPaper>
         </aside>
@@ -91,6 +99,7 @@
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public IReadOnlyList<string> VehicleTypes { get; set; } = [];
+    [Parameter] public Func<Ssalddel.Contracts.Shipper.Request.차량추천요청, CancellationToken, Task<Ssalddel.Contracts.Shipper.Request.차량추천응답>>? RecommendationRequested { get; set; }
     [Parameter] public Func<string, decimal, Task<decimal?>>? FareEstimateRequested { get; set; }
     [Parameter] public bool? RegistrationEnabled { get; set; }
     [Parameter] public string RegistrationBoundaryMessage { get; set; } = "현재 환경의 등록 가능 여부를 확인하고 있습니다.";

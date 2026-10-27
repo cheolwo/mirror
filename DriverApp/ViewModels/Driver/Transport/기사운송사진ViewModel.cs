@@ -4,6 +4,7 @@ using DriverApp.Services;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Media;
 using MudBlazor;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace DriverApp.ViewModels.Driver.Transport;
 
@@ -49,6 +50,7 @@ public sealed partial class 기사운송사진ViewModel(
             상태.설정("현재 운송과 로그인 정보를 확인한 뒤 사진을 촬영해 주세요.", Severity.Warning);
             return;
         }
+        if (!현재문맥확인(generation, context)) return;
         if (!MediaPicker.Default.IsCaptureSupported)
         {
             상태.설정("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
@@ -65,7 +67,7 @@ public sealed partial class 기사운송사진ViewModel(
                 Title = 촬영제목
             });
 
-            if (generation != _captureGeneration)
+            if (!현재문맥확인(generation, context))
             {
                 return;
             }
@@ -77,7 +79,7 @@ public sealed partial class 기사운송사진ViewModel(
             }
 
             await using var imageStream = await photo.OpenReadAsync();
-            if (generation != _captureGeneration)
+            if (!현재문맥확인(generation, context))
             {
                 return;
             }
@@ -86,11 +88,12 @@ public sealed partial class 기사운송사진ViewModel(
             int read;
             while ((read = await imageStream.ReadAsync(buffer)) > 0)
             {
+                if (!현재문맥확인(generation, context)) return;
                 if (memoryStream.Length + read > DriverTransportCompletionPhotoLimits.MaximumUploadBytes)
                     throw new ArgumentOutOfRangeException(nameof(photo), "사진은 5MB 이하로 다시 촬영해 주세요.");
                 await memoryStream.WriteAsync(buffer.AsMemory(0, read));
             }
-            if (generation != _captureGeneration)
+            if (!현재문맥확인(generation, context))
             {
                 return;
             }
@@ -106,30 +109,33 @@ public sealed partial class 기사운송사진ViewModel(
             OnPropertyChanged(nameof(사진있음));
             if (recoveryStore is not null && context is not null)
             {
-                await recoveryStore.SaveAsync(context.Owner, new(context.Kind, context.TransportId, photo.FileName, contentType, bytes));
-                if (generation != _captureGeneration || context != _context) return;
+                var captured = new DriverTransportCompletionPhoto(context.Kind, context.TransportId, photo.FileName, contentType, bytes);
+                if (recoveryStore is IDriverCargoPhotoRecoveryScope scoped)
+                    await scoped.SaveAsync(context.ServerIdentity!, captured);
+                else await recoveryStore.SaveAsync(context.Owner, captured);
+                if (!현재문맥확인(generation, context)) return;
             }
             복구자료폐기가능 = false;
             상태.설정($"{단계명} 완료 사진이 첨부되었습니다. 사진을 확인한 뒤 {단계명} 완료를 눌러 주세요.", Severity.Success);
         }
         catch (FeatureNotSupportedException)
         {
-            if (generation == _captureGeneration)
+            if (현재문맥확인(generation, context))
                 상태.설정("이 기기에서는 카메라 촬영을 지원하지 않습니다.", Severity.Warning);
         }
         catch (PermissionException)
         {
-            if (generation == _captureGeneration)
+            if (현재문맥확인(generation, context))
                 상태.설정("카메라 권한이 필요합니다. 앱 권한 설정에서 카메라 접근을 허용해 주세요.", Severity.Error);
         }
         catch (ArgumentOutOfRangeException)
         {
-            if (generation == _captureGeneration)
+            if (현재문맥확인(generation, context))
                 상태.설정("사진은 5MB 이하로 다시 촬영해 주세요.", Severity.Warning);
         }
         catch (Exception)
         {
-            if (generation == _captureGeneration)
+            if (현재문맥확인(generation, context))
             {
                 복구자료폐기가능 = recoveryStore is not null && context is not null;
                 상태.설정("사진 촬영 또는 보호 보관을 완료하지 못했습니다. 복구 사진을 폐기하거나 다시 시도해 주세요.", Severity.Error);
@@ -147,7 +153,8 @@ public sealed partial class 기사운송사진ViewModel(
         long transportId,
         DriverTransportPickupReceiptEvidence? receiptEvidence = null)
     {
-        if (recoveryStore is not null && (_context is null || _context.Kind != kind || _context.TransportId != transportId))
+        if (recoveryStore is not null && (_context is null || _context.Kind != kind || _context.TransportId != transportId
+            || !현재문맥확인(_captureGeneration, _context)))
             throw new InvalidOperationException("현재 계정과 운송의 사진을 다시 확인해 주세요.");
         if (_bytes is not { Length: > 0 })
         {
@@ -187,8 +194,13 @@ public sealed partial class 기사운송사진ViewModel(
         try
         {
             if (recoveryStore is not null && context is not null)
-                await recoveryStore.RemoveAsync(context.Owner, context.Kind, context.TransportId);
-            if (generation != _captureGeneration || context != _context) return;
+            {
+                if (!현재문맥확인(generation, context)) return;
+                if (recoveryStore is IDriverCargoPhotoRecoveryScope scoped)
+                    await scoped.RemoveAsync(context.ServerIdentity!, context.Kind, context.TransportId);
+                else await recoveryStore.RemoveAsync(context.Owner, context.Kind, context.TransportId);
+            }
+            if (!현재문맥확인(generation, context)) return;
             초기화();
             _context = context;
             상태.설정($"첨부된 {단계명} 사진을 제거했습니다.", Severity.Info);
@@ -202,7 +214,9 @@ public sealed partial class 기사운송사진ViewModel(
 
     public void 복구설정(string? owner, DriverTransportCompletionPhotoKind kind, long transportId, long sessionRevision)
     {
-        var next = string.IsNullOrWhiteSpace(owner) || transportId <= 0 ? null : new RecoveryContext(owner, kind, transportId, sessionRevision);
+        var identity = !string.IsNullOrWhiteSpace(owner) && transportId > 0 && recoveryStore is IDriverCargoPhotoRecoveryScope scoped
+            ? scoped.Capture(owner) : null;
+        var next = string.IsNullOrWhiteSpace(owner) || transportId <= 0 ? null : new RecoveryContext(owner, kind, transportId, sessionRevision, identity);
         if (_context == next) return;
         초기화();
         _context = next;
@@ -215,9 +229,12 @@ public sealed partial class 기사운송사진ViewModel(
         if (recoveryStore is null || context is null || 사진있음) return;
         try
         {
-            var recovered = await recoveryStore.LoadAsync(context.Owner, context.Kind, context.TransportId, cancellationToken);
+            if (!현재문맥확인(generation, context)) return;
+            var recovered = recoveryStore is IDriverCargoPhotoRecoveryScope scoped
+                ? await scoped.LoadAsync(context.ServerIdentity!, context.Kind, context.TransportId, cancellationToken)
+                : await recoveryStore.LoadAsync(context.Owner, context.Kind, context.TransportId, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (generation != _captureGeneration || context != _context || recovered is null) return;
+            if (!현재문맥확인(generation, context) || recovered is null) return;
             _bytes = recovered.Bytes;
             _contentType = recovered.ContentType;
             파일명 = recovered.FileName;
@@ -231,7 +248,7 @@ public sealed partial class 기사운송사진ViewModel(
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception)
         {
-            if (generation == _captureGeneration && context == _context)
+            if (현재문맥확인(generation, context))
             {
                 복구자료폐기가능 = true;
                 상태.설정("복구 사진을 확인하지 못했습니다. 해당 복구 사진을 폐기한 뒤 다시 촬영하거나 보호 저장소를 확인해 주세요.", Severity.Warning);
@@ -246,7 +263,12 @@ public sealed partial class 기사운송사진ViewModel(
         try
         {
             if (recoveryStore is not null && context is not null)
-                await recoveryStore.RemoveAsync(context.Owner, context.Kind, context.TransportId, cancellationToken);
+            {
+                if (!현재문맥확인(generation, context)) return;
+                if (recoveryStore is IDriverCargoPhotoRecoveryScope scoped)
+                    await scoped.RemoveAsync(context.ServerIdentity!, context.Kind, context.TransportId, cancellationToken);
+                else await recoveryStore.RemoveAsync(context.Owner, context.Kind, context.TransportId, cancellationToken);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception)
@@ -275,5 +297,16 @@ public sealed partial class 기사운송사진ViewModel(
         _uploadedUrl = null;
     }
 
-    private sealed record RecoveryContext(string Owner, DriverTransportCompletionPhotoKind Kind, long TransportId, long SessionRevision);
+    private bool 현재문맥확인(int generation, RecoveryContext? context)
+    {
+        if (generation != _captureGeneration || context != _context) return false;
+        if (recoveryStore is not IDriverCargoPhotoRecoveryScope scoped
+            || context?.ServerIdentity is { } identity && scoped.IsCurrent(identity)) return true;
+        초기화();
+        상태.설정("계정이나 서버가 변경되어 이전 사진을 적용하지 않았습니다. 현재 운송을 다시 확인해 주세요.", Severity.Warning);
+        return false;
+    }
+
+    private sealed record RecoveryContext(string Owner, DriverTransportCompletionPhotoKind Kind, long TransportId, long SessionRevision,
+        WorkflowRecoverySnapshot? ServerIdentity);
 }

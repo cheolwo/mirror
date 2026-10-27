@@ -8,6 +8,8 @@ using 살뜰.Services.Storage.Local;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Recommendation;
 using Ssalddel.Services.Dispatch.Participation;
+using Ssalddel.Services.Dispatch.Compliance;
+using 살뜰.Services.Dispatch.AI;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -27,6 +29,9 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I화물후속픽업기준Service _후속픽업;
         private readonly I운송일정삽입평가Service _일정평가;
         private readonly ISharedDriverWorkAdmissionService? _sharedAdmission;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
+        private readonly I기사실차적재근거조회Service _실차조회;
+        private readonly ICargoDispatchCandidateAI? _candidateAI;
 
         public 용달운송배차업무정책(
             SsalddelContext db,
@@ -42,7 +47,10 @@ namespace 살뜰.Services.Dispatch.Queue
             I운영배차공통UseCase? 운영배차 = null,
             I화물후속픽업기준Service? 후속픽업 = null,
             I운송일정삽입평가Service? 일정평가 = null,
-            ISharedDriverWorkAdmissionService? sharedAdmission = null)
+            ISharedDriverWorkAdmissionService? sharedAdmission = null,
+            I신규화물업무자격Guard? 신규업무자격 = null,
+            I기사실차적재근거조회Service? 실차조회 = null,
+            ICargoDispatchCandidateAI? candidateAI = null)
         {
             _db = db;
             _driverLocationStore = driverLocationStore;
@@ -58,6 +66,9 @@ namespace 살뜰.Services.Dispatch.Queue
             _일정평가 = 일정평가 ?? new 운송일정삽입평가Service(routeService);
             _후속픽업 = 후속픽업 ?? new 화물후속픽업기준Service(db, new 기사운송일정구성Service(db), _일정평가);
             _sharedAdmission = sharedAdmission;
+            _신규업무자격 = 신규업무자격;
+            _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
+            _candidateAI = candidateAI;
         }
 
         public int 배차업무유형 => 살뜰.도메인.공통.상태값.배차업무유형.용달운송;
@@ -73,11 +84,19 @@ namespace 살뜰.Services.Dispatch.Queue
 
         public async Task<배차추천후보?> 다음후보선정Async(살뜰.도메인.운송.운송원장 queue, string? 제외기사Id = null, CancellationToken cancellationToken = default)
         {
+            var source = _candidateAI?.Enabled == true ? await AI입력판본Async(queue, cancellationToken) : null;
             var review = await 후보검토Async(queue, 제외기사Id, cancellationToken);
             // 선택과 같은 계산을 관찰한다. 로컬 관찰 실패가 실제 추천 결과를 바꾸지 않는다.
             try { _observer?.OnReviewed(queue.의뢰Id, review); }
             catch (Exception) { /* 관찰자는 업무 실행의 선행 조건이 아니다. */ }
-            return review.선정후보;
+            if (_candidateAI?.Enabled != true || review.선정후보 is null) return review.선정후보;
+            if (source is null) return null;
+            return await CargoDispatchCandidateSelection.SelectAsync(review, _candidateAI, async ct =>
+            {
+                var current = await 후보검토Async(queue, 제외기사Id, ct);
+                // 저장소 오류는 전파한다. 미확인·변경된 의뢰로 과거 AI 선택을 적용하지 않는다.
+                return source == await AI입력판본Async(queue, ct) ? current : null;
+            }, cancellationToken);
         }
 
         /// <summary>기존 후보 순회와 점수 계산을 한 번 실행한다. 배정·원장·기사 상태는 변경하지 않는다.</summary>
@@ -95,6 +114,9 @@ namespace 살뜰.Services.Dispatch.Queue
             {
                 return Result(stopCode: "RequestNotFound");
             }
+
+            if (!신규화물업무자격검사.화물정보완료(_신규업무자격, request))
+                return Result(stopCode: "FreightCargo.RequiredInformationMissing");
 
             var cargoRequirement = await _db.화물요구조건.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == queue.의뢰Id, cancellationToken);
             var pickupPoint = queue.픽업_위도.HasValue && queue.픽업_경도.HasValue
@@ -146,6 +168,13 @@ namespace 살뜰.Services.Dispatch.Queue
                 if (!vehicles.TryGetValue(osState.DriverId, out var driver))
                 {
                     Exclude(osState, "ActiveVehicleMissing");
+                    continue;
+                }
+
+                var qualification = await 신규화물업무자격검사.평가Async(_신규업무자격, driver.기사Id, cancellationToken);
+                if (!qualification.CanReceiveNewWork)
+                {
+                    Exclude(osState, qualification.ReasonCode);
                     continue;
                 }
 
@@ -232,6 +261,16 @@ namespace 살뜰.Services.Dispatch.Queue
                         || !schedule.시도목록.Any(x => x.시도유형 == "하차후이어가기" && x.전체완수가능여부 && x.전체실제경로확인됨))
                     { Exclude(osState, "ActiveScheduleCandidateInfeasible"); continue; }
                 }
+                else
+                {
+                    var idle = await 대기기사약속검토Async(driver.기사Id, origin, pickupPoint, request, now, cancellationToken);
+                    if (idle.제외Code is not null) { Exclude(osState, idle.제외Code, idle.거리Km); continue; }
+                    distanceKm = idle.거리Km;
+                    pickupArrival = idle.픽업도착시각Utc;
+                    travelMinutes = idle.픽업소요분;
+                    pickupSlack = idle.픽업여유분;
+                    schedule = idle.일정;
+                }
                 if (basis is not null && !await _후속픽업.현재근거확인Async(driver.기사Id, basis, cancellationToken))
                 { Exclude(osState, "ActiveScheduleChanged"); continue; }
                 if (!distanceKm.HasValue)
@@ -246,7 +285,7 @@ namespace 살뜰.Services.Dispatch.Queue
                     continue;
                 }
 
-                var vehicleSpec = await _db.차량제원.AsNoTracking().FirstOrDefaultAsync(x => x.차량코드 == driver.차량 || x.차량명 == driver.차량, cancellationToken);
+                var vehicleSpec = (await _실차조회.조회Async(driver.기사Id, cancellationToken)).유효제원;
                 var fit = _적합성Service.판정(vehicleSpec, request, cargoRequirement);
                 if (!fit.적합여부)
                 {

@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 using Ssalddel.Ui.Common.Areas.App.Services;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
 
@@ -13,7 +13,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     private RoleWorkspaceIdentity? owner;
     private long generation;
     private bool disposed;
-    private PendingCommand? pending;
+    private 분산명령영수증Session? pending;
     public 분산이행PageViewModel(분산이행Client client, string screen, I업무사진촬영Adapter? capture = null, IWorkflowRecoveryStore? recoveryStore = null)
     {
         if (!분산이행Navigation.AllowsScreen(client.RoleKey, screen))
@@ -22,6 +22,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         Photo = new(capture ?? new 미지원업무사진촬영Adapter()); client.Transport.Changed += AuthenticationChanged;
     }
     public event Action? Changed;
+    public WorkflowCompletionFeedback CompletionFeedback { get; } = new();
     public string RoleKey => client.RoleKey;
     public string Screen { get; }
     public bool IsBusy { get; private set; }
@@ -40,24 +41,15 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     public Guid? RequestId => pending?.Body.RequestId ?? expiredRecoveryId;
     public bool CanEdit => IsLoaded && !IsBusy && !RequiresLogin && !HasPendingCommand && !RecoveryExpired && !Photo.HasUnresolvedUpload && !Photo.Restored && Error is null;
     public string? CurrentUserId => owner?.OwnerId;
-    public DistributedStopDto? CurrentStop => SelectedWave?.Stops.SingleOrDefault(value => value.StopId == SelectedWave.CurrentStopId);
-    public IReadOnlyList<DistributedReservationDto> CurrentPickLines => SelectedWave is { } wave && CurrentStop is { Kind: DistributedFulfillmentCodes.Pickup } stop
-        ? wave.Reservations.Where(value => value.SiteId == stop.SiteId && stop.OrderIds.Contains(value.OrderId)).ToArray() : [];
-    public IReadOnlyList<DistributedOrderDto> CurrentDeliveryOrders => SelectedWave is { } wave && CurrentStop is { Kind: DistributedFulfillmentCodes.Delivery } stop
-        ? wave.Orders.Where(value => stop.OrderIds.Contains(value.OrderId)).ToArray() : [];
+    private 분산역할명령Coordinator Commands => new(RoleKey, CanEdit, IsLoaded, Workspace, SelectedWave);
+    public DistributedStopDto? CurrentStop => Commands.CurrentStop;
+    public IReadOnlyList<DistributedReservationDto> CurrentPickLines => Commands.CurrentPickLines;
+    public IReadOnlyList<DistributedOrderDto> CurrentDeliveryOrders => Commands.CurrentDeliveryOrders;
     public bool Allows(string action, IReadOnlyList<string>? actions = null)
-        => CanEdit && (actions ?? Workspace?.AllowedActions ?? []).Contains(action, StringComparer.Ordinal);
-    public bool CanPick(DistributedReservationDto line)
-        => RoleKey == "cargo-driver" && Allows("pick", line.AllowedActions) && SelectedWave is { } wave
-           && Allows("pick", wave.AllowedActions) && CurrentPickLines.Any(value => value.ReservationId == line.ReservationId);
-    public bool CanDeliver(DistributedOrderDto order)
-        => RoleKey == "cargo-driver" && SelectedWave is { } wave && Allows("deliver", wave.AllowedActions)
-           && wave.Reservations.Any(line => line.OrderId == order.OrderId)
-           && wave.Reservations.Where(line => line.OrderId == order.OrderId).All(line => line.PickedQuantity == line.Quantity && line.ReturnedQuantity == 0 && line.ReleasedQuantity == 0)
-           && CurrentDeliveryOrders.Any(value => value.OrderId == order.OrderId);
-    public bool CanManageWaves => (RoleKey is "warehouse" or "operator") && IsLoaded
-        && ((Workspace?.AllowedActions.Contains("create-wave") ?? false)
-            || (Workspace?.Waves.Any(wave => wave.AllowedActions.Any(action => action is "close" or "plan")) ?? false));
+        => Commands.Allows(action, actions);
+    public bool CanPick(DistributedReservationDto line) => Commands.CanPick(line);
+    public bool CanDeliver(DistributedOrderDto order) => Commands.CanDeliver(order);
+    public bool CanManageWaves => Commands.CanManageWaves;
 
     public Task AcceptAsync(IReadOnlyCollection<string> acknowledgedCodes, bool confirmed)
     {
@@ -76,6 +68,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     {
         if (HasPendingCommand || HasPendingPhoto || IsBusy) return Task.CompletedTask;
         if (!ValidSelection(selectedId ?? SelectedId)) return Task.CompletedTask;
+        if (selectedId is not null && selectedId != SelectedId) CompletionFeedback.Dismiss();
         SelectedId = CleanId(selectedId ?? SelectedId); Message = null;
         return RunAsync(async ct => { await RestoreRecoveryAsync(ct); RequireCurrent(ct); await RefreshAsync(ct); });
     }
@@ -83,6 +76,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     {
         if (HasPendingCommand || HasPendingPhoto || IsBusy) return Task.CompletedTask;
         if (!ValidSelection(id)) return Task.CompletedTask;
+        CompletionFeedback.Dismiss();
         ClearPhotos(); ClearRootOrderCandidates(); SelectedId = CleanId(id); SelectedWave = null; Message = null;
         return RunAsync(RefreshAsync);
     }
@@ -144,13 +138,9 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         if (!confirmed || !Allows(action, allowedActions)) return Task.CompletedTask;
         if (action is "receive" or "pick" or "deliver" or "return" or "import-lot" or "handover-stock-release")
             return InvalidInputAsync("완료 사진을 촬영하고 사진 보내기 절차로 완료해 주세요.");
-        if ((action is "create-wave" or "close" or "plan") && !CanManageWaves) return Task.CompletedTask;
-        if ((action is "pick" or "deliver" or "accept") && RoleKey != "cargo-driver") return Task.CompletedTask;
-        if (action == "acknowledge" && RoleKey != "orderer") return Task.CompletedTask;
+        if (!Commands.CanExecute(action)) return Task.CompletedTask;
         if (body.RequestId == Guid.Empty) body.RequestId = Guid.NewGuid();
-        var snapshot = (DistributedCommandRequest?)JsonSerializer.Deserialize(JsonSerializer.Serialize(body, body.GetType()), body.GetType())
-            ?? throw new InvalidOperationException("입력 내용을 확인하지 못했습니다.");
-        pending = new(action, suffix, snapshot, aggregateId, quantity, reservationId);
+        pending = 분산명령영수증Session.Freeze(action, suffix, body, aggregateId, quantity, reservationId);
         Message = ValidationError = null;
         return RunAsync(SendPendingAsync);
     }
@@ -183,38 +173,27 @@ public sealed partial class 분산이행PageViewModel : IDisposable
     private async Task SendPendingAsync(CancellationToken ct)
     {
         var command = pending ?? throw new InvalidOperationException("확인할 요청이 없습니다.");
+        CompletionFeedback.Dismiss();
         if (command.Acknowledgement is null && command.Sent)
         {
             try
             {
                 var saved = await client.ReceiptAsync(command.Body.RequestId, ct); RequireCurrent(ct);
-                command.Acknowledgement = new(saved.RequestId, saved.AggregateId, saved.Revision, "Recorded", true);
+                command.RecoverAcknowledgement(saved);
             }
             catch (RoleWorkspaceAccessException ex) when (ex.StatusCode == 404) { }
             catch (SsalddelApiException ex) when (ex.StatusCode == 404) { }
         }
         if (command.Acknowledgement is null)
         {
-            command.Sent = true;
+            command.MarkSent();
             await PersistRecoveryAsync(ct); RequireCurrent(ct);
             var acknowledgement = await client.SendAsync(command.Suffix, command.Body, ct); RequireCurrent(ct);
-            if (acknowledgement is null || acknowledgement.RequestId != command.Body.RequestId
-                || string.IsNullOrWhiteSpace(acknowledgement.AggregateId) || string.IsNullOrWhiteSpace(acknowledgement.StatusCode)
-                || command.AggregateId is { } expected && acknowledgement.AggregateId != expected
-                || acknowledgement.Revision <= command.Body.ExpectedRevision)
-                throw new InvalidOperationException("저장 응답의 요청·대상·판본을 확인하지 못했습니다. 같은 요청을 다시 확인해 주세요.");
-            command.Acknowledgement = acknowledgement;
+            command.AcceptAcknowledgement(acknowledgement);
             await PersistRecoveryAsync(ct); RequireCurrent(ct);
         }
         var receipt = await client.ReceiptAsync(command.Body.RequestId, ct); RequireCurrent(ct);
-        var acknowledgementResult = command.Acknowledgement;
-        if (receipt.RequestId != command.Body.RequestId || receipt.AggregateId != acknowledgementResult.AggregateId
-            || command.AggregateId is { } expectedAggregate && receipt.AggregateId != expectedAggregate
-            || receipt.Revision <= command.Body.ExpectedRevision
-            || receipt.Revision != acknowledgementResult.Revision || receipt.Kind != ReceiptKind(command.Action)
-            || command.Quantity is { } quantity && receipt.Quantity != quantity
-            || command.ReservationId is { } reservation && receipt.ReservationId != reservation)
-            throw new InvalidOperationException("같은 요청의 저장 근거를 확인하지 못했습니다.");
+        command.ValidateReceipt(receipt);
         await RefreshAsync(ct); RequireCurrent(ct);
         var revision = FindRevision(receipt.AggregateId);
         if (revision is null || revision < receipt.Revision)
@@ -222,6 +201,7 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         await recoveryStore.RemoveAsync(owner!.OwnerId!, RecoveryScope, command.Body.RequestId, ct); RequireCurrent(ct);
         pending = null; recoveryCreatedAtUtc = null;
         if (Photo.CompletionRequestId == command.Body.RequestId) { Photo.Clear(); photoOperation = null; }
+        RecordCompletion(command.Action, receipt);
         Message = command.Action == "retry-order-ledger"
             ? SelectedWave?.Orders.FirstOrDefault(x => command.Suffix.EndsWith($"/orders/{분산이행Client.Segment(x.OrderId)}/ledger", StringComparison.Ordinal))?.OrderLedgerConnectionStatusCode switch
             {
@@ -230,6 +210,18 @@ public sealed partial class 분산이행PageViewModel : IDisposable
                 _ => "배송 업무는 저장되어 있습니다. 원주문 연결은 아직 확인 중입니다."
             }
             : "저장 근거와 최신 업무 상태를 다시 확인했습니다.";
+    }
+    private void RecordCompletion(string action, DistributedReceiptDto receipt)
+    {
+        // 정확한 요청 영수증과 같은 업무의 정본 판본을 확인한 뒤에만 표시합니다.
+        if (RoleKey != "cargo-driver" || action is not ("pick" or "pick-batch" or "deliver" or "deliver-batch")) return;
+        var delivered = action is "deliver" or "deliver-batch";
+        CompletionFeedback.Record(new($"distributed:{receipt.RequestId:N}:{receipt.Revision}",
+            delivered ? "전달을 완료했습니다" : "피킹을 완료했습니다",
+            delivered ? "연습 환경의 이번 전달 기록을 확인했습니다." : "연습 환경에서 선택한 물품과 수량의 피킹 기록을 확인했습니다.",
+            delivered ? "남은 업무를 확인해 주세요. 수령 확인·정산·입금은 별도입니다." : "남은 피킹과 다음 방문지를 확인해 주세요.",
+            delivered, delivered ? WorkflowCompletionVisuals.CargoIconPath : WorkflowCompletionVisuals.PickingIconPath,
+            delivered ? "#DC2626" : "#0F766E"));
     }
     public Task RecoverReceiptAsync(Guid requestId)
     {
@@ -251,18 +243,6 @@ public sealed partial class 분산이행PageViewModel : IDisposable
            ?? Workspace?.InboundPlans.FirstOrDefault(value => value.PlanId == id)?.Revision
            ?? Workspace?.Waves.FirstOrDefault(value => value.WaveId == id)?.Revision
            ?? Workspace?.StorageAgreements.FirstOrDefault(value => value.AgreementId == id)?.Revision;
-    private static string ReceiptKind(string action) => action switch
-    { "create-site" => "CreateSite", "consent-owner" or "consent-manager" or "revoke-owner" or "revoke-manager" => "Consent",
-      "create-location" => "CreateLocation", "import-lot" => "ImportLot", "plan-inbound" => "PlanInbound", "receive" => "Receive",
-      "create-wave" => "CreateWave", "add-order" => "AddOrder", "close" => "Close", "plan" => "Plan", "accept" => "Accept",
-      "retry-order-ledger" => "LinkOrderLedger",
-      "propose-stock-release" => "StockReleaseProposal", "consent-stock-release" or "cancel-stock-release" => "StockReleaseConsent",
-      "handover-stock-release" => "StockReleaseHandover", "close-site" => "CloseSite",
-      "pick" => "Pick", "deliver" => "Deliver", "cancel" => "Cancel", "return" => "Return", "acknowledge" => "Acknowledge",
-      "receive-batch" => "ReceiveBatch", "pick-batch" => "PickBatch", "deliver-batch" => "DeliverBatch", "return-batch" => "ReturnBatch",
-      "create-agreement" => "CreateAgreement", "change-terms" => "AgreementTerms", "consent" or "revoke" or "consent-pending-terms" => "AgreementConsent",
-      "set-acceptance-policy" => "SiteAcceptancePolicy", "propose-inbound" => "InboundProposal", "consent-inbound" => "InboundConsent",
-      "reject-inbound" or "cancel-inbound" => "InboundDecision", "note-inbound" => "InboundNote", _ => "" };
     private async Task RunAsync(Func<CancellationToken, Task> operation)
     {
         if (disposed || IsBusy) return;
@@ -322,13 +302,10 @@ public sealed partial class 분산이행PageViewModel : IDisposable
         Clear(); owner = null; RequiresLogin = !client.Transport.Identity(RoleKey).IsAuthenticated; IsBusy = false; Changed?.Invoke();
     }
     private void Clear()
-    { ClearRootOrderCandidates(); Workspace = null; SelectedWave = null; SelectedId = null; pending = null; Photo.Clear(); photoOperation = null; IsLoaded = false; Error = Message = ValidationError = null;
+    { CompletionFeedback.Clear(); ClearRootOrderCandidates(); Workspace = null; SelectedWave = null; SelectedId = null; pending = null; Photo.Clear(); photoOperation = null; IsLoaded = false; Error = Message = ValidationError = null;
       recoveryLoaded = false; recoveryCreatedAtUtc = null; expiredRecoveryId = null; }
     private static string? CleanId(string? id) => id is null ? null : RoleWorkspaceNavigation.StableId(id)
         ?? throw new InvalidOperationException("업무 대상의 번호를 확인해 주세요.");
     public void Dispose()
     { if (disposed) return; disposed = true; ++generation; lifetime.Cancel(); lifetime.Dispose(); client.Transport.Changed -= AuthenticationChanged; Clear(); }
-    private sealed record PendingCommand(string Action, string Suffix, DistributedCommandRequest Body,
-        string? AggregateId, int? Quantity, string? ReservationId)
-    { public DistributedCommandResponse? Acknowledgement { get; set; } public bool Sent { get; set; } }
 }

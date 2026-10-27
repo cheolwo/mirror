@@ -5,6 +5,7 @@ using Ssalddel.Contracts.Common.Operations;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Services.Community;
 using 살뜰.도메인.운송;
+using static Ssalddel.Application.Shipper.Request.화주운송의뢰수정Policy;
 
 namespace Ssalddel.Application.Shipper.Request;
 
@@ -43,13 +44,13 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             if (saved.IsSuccess && tx is not null) await tx.CommitAsync(cancellationToken);
             return saved;
         });
-        if (result.IsSuccess && result.Value.요금옵션 is not null && _ledgerSync is not null)
+        if (result.IsSuccess && _ledgerSync is not null)
         {
             // 승인/수락이 먼저 진행되었을 수 있으므로 저장 전의 tracked 객체를 발행하지 않습니다.
             var current = await _db.화주운송의뢰.AsNoTracking()
                 .SingleAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
             if (await _ledgerSync.화주운송의뢰동기화Async(current, _currentUserAccessor?.UserId ?? "system", cancellationToken) is null)
-                return Result.Fail<화주운송의뢰응답>("견적은 저장됐지만 운송 원장 동기화를 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.");
+                return Result.Fail<화주운송의뢰응답>("의뢰 변경은 저장됐지만 운송 원장 동기화를 확인하지 못했습니다. 같은 의뢰를 다시 조회해 주세요.");
         }
         return result;
     }
@@ -66,6 +67,11 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
         }
 
         var cargoChanged = HasChanges(request.화물정보);
+        if (request.픽업지.작업시간분 is < 0m || request.하차지.작업시간분 is < 0m)
+            return Result.Fail<화주운송의뢰응답>("상차·하차 작업시간은 0분 이상이어야 합니다. 모르면 비워 두세요.");
+        if (request.픽업지 is { 작업시간입력초기화: true, 작업시간분: not null }
+            || request.하차지 is { 작업시간입력초기화: true, 작업시간분: not null })
+            return Result.Fail<화주운송의뢰응답>("작업시간 지우기와 시간 값은 함께 지정할 수 없습니다.");
         var pickupChanged = HasChanges(request.픽업지);
         var dropoffChanged = HasChanges(request.하차지);
         var transportChanged = HasChanges(request.운송조건) || request.요청조건.요청사항 is not null;
@@ -101,6 +107,13 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
         // 견적 변경은 아래의 기존 FreightPricingLocked 관문을 그대로 사용합니다.
         if (!pricingChanged && HasCoreConditionChanges(request, entity) && !CanChangeCoreConditions(entity, transport))
             return Conflict("FreightCoreConditionsLocked", "승인·결제·배차 후 핵심 운송 조건은 직접 변경할 수 없습니다. 변경 조건은 새 의뢰로 등록하고 다시 합의해 주세요.");
+
+        if (request.화물정보.부피입력초기화 && request.화물정보.화물부피Cbm.HasValue)
+            return Result.Fail<화주운송의뢰응답>("입력 부피 지우기와 부피 값은 함께 지정할 수 없습니다.");
+        var loadingEvidence = HasCargoConditionChanges(request.화물정보, entity)
+            ? 화주운송의뢰매퍼.CalculateUpdatedLoadingEvidence(entity, request) : null;
+        if (loadingEvidence is { 유효여부: false })
+            return Result.Fail<화주운송의뢰응답>(loadingEvidence.오류);
 
         화주운송기준운임견적응답? estimate = null;
         if (pricingChanged)
@@ -161,10 +174,14 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             if (request.화물정보.화물종류 != null) entity.화물종류 = request.화물정보.화물종류;
             if (request.화물정보.화물설명 != null) entity.화물설명 = request.화물정보.화물설명;
             if (request.화물정보.화물수량.HasValue) entity.화물수량 = request.화물정보.화물수량;
+            if (request.화물정보.화물길이Mm.HasValue) entity.화물길이Mm = request.화물정보.화물길이Mm;
+            if (request.화물정보.화물폭Mm.HasValue) entity.화물폭Mm = request.화물정보.화물폭Mm;
+            if (request.화물정보.화물높이Mm.HasValue) entity.화물높이Mm = request.화물정보.화물높이Mm;
+            if (request.화물정보.팔레트개수.HasValue) entity.화물팔레트개수 = request.화물정보.팔레트개수;
             if (request.화물정보.화물중량Kg.HasValue) entity.화물중량Kg = request.화물정보.화물중량Kg;
-            if (request.화물정보.화물부피Cbm.HasValue) entity.화물부피Cbm = request.화물정보.화물부피Cbm;
             if (request.화물정보.화물파손주의여부.HasValue) entity.화물파손주의여부 = request.화물정보.화물파손주의여부.Value;
             if (request.화물정보.화물온도조건 != null) entity.화물온도조건 = request.화물정보.화물온도조건;
+            if (loadingEvidence is not null) 화주운송의뢰매퍼.ApplyLoadingEvidence(entity, loadingEvidence);
             updated = true;
         }
 
@@ -177,6 +194,8 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             if (request.픽업지.경도.HasValue) entity.픽업_경도 = request.픽업지.경도;
             if (request.픽업지.연락처이름 != null) entity.픽업_연락처_이름 = request.픽업지.연락처이름;
             if (request.픽업지.연락처전화번호 != null) entity.픽업_연락처_전화번호 = request.픽업지.연락처전화번호;
+            if (request.픽업지.작업시간분.HasValue) entity.픽업_작업시간분 = request.픽업지.작업시간분;
+            if (request.픽업지.작업시간입력초기화) entity.픽업_작업시간분 = null;
             if (request.픽업지.시간창시작일시.HasValue && request.픽업지.시간창종료일시.HasValue)
             {
                 if (request.픽업지.시간창시작일시 >= request.픽업지.시간창종료일시)
@@ -200,6 +219,8 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
             if (request.하차지.경도.HasValue) entity.하차_경도 = request.하차지.경도;
             if (request.하차지.연락처이름 != null) entity.하차_연락처_이름 = request.하차지.연락처이름;
             if (request.하차지.연락처전화번호 != null) entity.하차_연락처_전화번호 = request.하차지.연락처전화번호;
+            if (request.하차지.작업시간분.HasValue) entity.하차_작업시간분 = request.하차지.작업시간분;
+            if (request.하차지.작업시간입력초기화) entity.하차_작업시간분 = null;
             if (request.하차지.시간창시작일시.HasValue && request.하차지.시간창종료일시.HasValue)
             {
                 if (request.하차지.시간창시작일시 >= request.하차지.시간창종료일시)
@@ -252,7 +273,7 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
                 entity.정산메모 = settlementInput.정산조건.정산메모 ?? string.Empty;
                 entity.세금계산서필요 = settlementInput.정산조건.세금계산서필요;
                 entity.현금영수증필요 = settlementInput.정산조건.현금영수증필요;
-                entity.정산상태 = GetSettlementStatus(settlementInput.정산조건.정산시점, settlementInput.정산조건.증빙방식);
+                entity.정산상태 = 화주운송정산상태Policy.판정(settlementInput.정산조건.정산시점, settlementInput.정산조건.증빙방식);
             }
 
             updated = true;
@@ -310,95 +331,7 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
         return Result.Ok(화주운송의뢰매퍼.To응답(entity, fareComposition: fareComposition));
     }
 
-    private static bool HasNumericPricingChanges(PricingDTO? p, 화주운송의뢰 e, 운임구성? f)
-        => p is not null && (Diff(p.예상거리Km, f?.예상거리Km) || Diff(p.기본운임, f?.기본운임)
-            || Diff(p.Km당단가, f?.Km당단가) || Diff(p.거리운임, f?.거리운임) || Diff(p.최소운임, f?.최소운임)
-            || Diff(p.대기료, e.대기료 ?? 0m) || Diff(p.수작업비, e.수작업비 ?? 0m) || Diff(p.할증, e.할증 ?? 0m)
-            || Diff(p.최종운임, e.최종운임) || Diff(p.기사지급예정운임, f?.기사지급예정운임 ?? e.최종운임)
-            || p.플랫폼수수료 is not null and not 0m
-            || p.알선정책 is { } policy && (policy.알선단계 > 1 || !policy.재알선금지));
-
-    private static bool Diff(decimal? input, decimal? current) => input.HasValue && input != current;
-
-    private static bool HasSettlementChanges(정산조건입력값? input, 화주운송의뢰 e)
-        => input is not null && (!string.IsNullOrWhiteSpace(input.결제수단) && input.결제수단 != e.결제수단
-            || input.정산조건 is { } s && (s.정산시점.ToString() != e.정산시점 || s.증빙방식.ToString() != e.증빙방식
-                || s.수납주체.ToString() != e.수납주체 || (s.정산메모 ?? string.Empty) != e.정산메모
-                || s.세금계산서필요 != e.세금계산서필요 || s.현금영수증필요 != e.현금영수증필요));
-
-    private static bool CanChangeCoreConditions(화주운송의뢰 entity, 운송원장? transport)
-        => entity.상태 == 상태값.의뢰상태.생성됨
-            && entity.결제상태 == 상태값.결제상태.결제대기
-            && entity.배차상태 == 상태값.배차상태.미시작
-            && (entity.정산상태 is "결제대기" or "청구대기" or "후불승인대기" or "인수증대기" or "현장수금예정")
-            && (transport is null || transport.상태 == "대기"
-                && string.IsNullOrWhiteSpace(transport.확정기사Id) && string.IsNullOrWhiteSpace(transport.기사_운송자));
-
-    private static bool HasCoreConditionChanges(의뢰수정Command r, 화주운송의뢰 e)
-        => HasRouteChanges(r, e)
-            || r.운송조건.운송방식 is not null && r.운송조건.운송방식 != e.운송방식
-            || r.운송조건.서비스레벨 is not null && r.운송조건.서비스레벨 != e.서비스레벨
-            || r.요청조건.요청사항 is not null && r.요청조건.요청사항 != e.요청사항
-            || r.화물정보.화물종류 is not null && r.화물정보.화물종류 != e.화물종류
-            || r.화물정보.화물설명 is not null && r.화물정보.화물설명 != e.화물설명
-            || r.화물정보.화물수량.HasValue && r.화물정보.화물수량 != e.화물수량
-            || r.화물정보.화물중량Kg.HasValue && r.화물정보.화물중량Kg != e.화물중량Kg
-            || r.화물정보.화물부피Cbm.HasValue && r.화물정보.화물부피Cbm != e.화물부피Cbm
-            || r.화물정보.화물파손주의여부.HasValue && r.화물정보.화물파손주의여부 != e.화물파손주의여부
-            || r.화물정보.화물온도조건 is not null && r.화물정보.화물온도조건 != e.화물온도조건
-            || r.픽업지.상세주소 is not null && r.픽업지.상세주소 != e.픽업_상세주소
-            || r.하차지.상세주소 is not null && r.하차지.상세주소 != e.하차_상세주소
-            || r.픽업지.시간창시작일시.HasValue && r.픽업지.시간창시작일시 != e.픽업_시간창_시작일시
-            || r.픽업지.시간창종료일시.HasValue && r.픽업지.시간창종료일시 != e.픽업_시간창_종료일시
-            || r.하차지.시간창시작일시.HasValue && r.하차지.시간창시작일시 != e.하차_시간창_시작일시
-            || r.하차지.시간창종료일시.HasValue && r.하차지.시간창종료일시 != e.하차_시간창_종료일시
-            || HasSettlementChanges(r.정산조건, e);
-
-    private static bool HasRouteChanges(의뢰수정Command r, 화주운송의뢰 e)
-        => r.운송조건.차량종류 is not null && r.운송조건.차량종류 != e.차량종류
-            || r.픽업지.도로명주소 is not null && r.픽업지.도로명주소 != e.픽업_도로명주소
-            || r.하차지.도로명주소 is not null && r.하차지.도로명주소 != e.하차_도로명주소
-            || r.픽업지.위도.HasValue && r.픽업지.위도 != e.픽업_위도
-            || r.픽업지.경도.HasValue && r.픽업지.경도 != e.픽업_경도
-            || r.하차지.위도.HasValue && r.하차지.위도 != e.하차_위도
-            || r.하차지.경도.HasValue && r.하차지.경도 != e.하차_경도;
-
     private static Result<화주운송의뢰응답> Conflict(string code, string message)
         => Result.Fail<화주운송의뢰응답>(new Error(message).WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", code));
 
-    private static string GetSettlementStatus(정산시점 settlementTime, 증빙방식 evidenceMethod)
-    {
-        return settlementTime switch
-        {
-            정산시점.현장지급 => 운임정산상태.현장수금예정.ToString(),
-            정산시점.운송완료후정산 when evidenceMethod == 증빙방식.인수증 => 운임정산상태.인수증대기.ToString(),
-            정산시점.운송완료후정산 => 운임정산상태.청구대기.ToString(),
-            정산시점.월말정산 => 운임정산상태.후불승인대기.ToString(),
-            _ => 운임정산상태.결제대기.ToString()
-        };
-    }
-
-    private static bool HasChanges(화물정보입력값 value)
-        => value.화물종류 is not null
-           || value.화물설명 is not null
-           || value.화물수량.HasValue
-           || value.화물중량Kg.HasValue
-           || value.화물부피Cbm.HasValue
-           || value.화물파손주의여부.HasValue
-           || value.화물온도조건 is not null;
-
-    private static bool HasChanges(위치정보입력값 value)
-        => value.도로명주소 is not null
-           || value.상세주소 is not null
-           || value.위도.HasValue
-           || value.경도.HasValue
-           || value.연락처이름 is not null
-           || value.연락처전화번호 is not null
-           || value.시간창시작일시.HasValue
-           || value.시간창종료일시.HasValue;
-
-    private static bool HasChanges(운송조건입력값 value)
-        => value.운송방식 is not null
-           || value.차량종류 is not null
-           || value.서비스레벨 is not null;
 }

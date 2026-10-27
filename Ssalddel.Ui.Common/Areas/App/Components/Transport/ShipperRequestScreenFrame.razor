@@ -1,15 +1,20 @@
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
 
 <section class="shipper-request-screen"
-         data-step="@Step.ToString().ToLowerInvariant()"
+         data-step="@Step.ToString().ToLowerInvariant()" data-mobile-step="@MobileStep?.ToString().ToLowerInvariant()"
+         @oninput="InputChanged" @onchange="InputChanged"
          @onfocusout="@(_ => NotifyChangedAsync())">
     <header class="shipper-request-screen__header">
-        <span>@EffectiveEyebrow</span>
-        <h2>@Title</h2>
-        <p>@Description</p>
+        @if (MobileStep is null) { <span>@EffectiveEyebrow</span> }
+        <h2 @ref="mobileHeading" tabindex="@(MobileStep is not null ? "-1" : null)">@(MobileStep is { } mobile ? ShipperRequestMobileStepCatalog.Get(mobile).Title : Title)</h2>
+        <p>@(MobileStep is { } mobileDescription ? ShipperRequestMobileStepCatalog.Get(mobileDescription).Description : Description)</p>
     </header>
 
-    @if (ShowNavigation)
+    @if (ShowNavigation && MobileStep is { } progressStep)
+    {
+        <ShipperRequestMobileNavigation ViewModel="ViewModel" NavigationContext="NavigationContext" CurrentStep="progressStep" ShowFooter="false" />
+    }
+    else if (ShowNavigation)
     {
         <ShipperRequestStepNavigation ViewModel="ViewModel"
                                       NavigationContext="NavigationContext"
@@ -24,7 +29,11 @@
         @ChildContent
     </div>
 
-    @if (ShowNavigation)
+    @if (ShowNavigation && MobileStep is { } footerStep)
+    {
+        <ShipperRequestMobileNavigation ViewModel="ViewModel" NavigationContext="NavigationContext" CurrentStep="footerStep" ShowProgress="false" RootBackHref="@RootBackHref" RootBackLabel="@RootBackLabel" BeforeNavigate="Changed" />
+    }
+    else if (ShowNavigation)
     {
         <ShipperRequestStepNavigation ViewModel="ViewModel"
                                       NavigationContext="NavigationContext"
@@ -40,6 +49,7 @@
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter, EditorRequired] public ShipperRequestNavigationContext NavigationContext { get; set; } = new();
     [Parameter] public ShipperRequestAuthoringStep Step { get; set; }
+    [Parameter] public ShipperRequestMobileStep? MobileStep { get; set; }
     [Parameter] public string? ScreenCode { get; set; }
     [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
@@ -48,6 +58,23 @@
     [Parameter] public string RootBackHref { get; set; } = ShipperRequestPageRoutes.Root;
     [Parameter] public string RootBackLabel { get; set; } = "한 화면 입력";
     [Parameter] public EventCallback Changed { get; set; }
+    private ElementReference mobileHeading;
+    private ShipperRequestMobileStep? focusedMobileStep;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (MobileStep is not { } currentStep)
+        {
+            focusedMobileStep = null;
+            return;
+        }
+        if (focusedMobileStep == currentStep) return;
+        // 단계가 바뀔 때만 새 제목으로 이동한다. 같은 단계의 입력·검증 렌더는 현재 포커스를 유지한다.
+        focusedMobileStep = currentStep;
+        try { await mobileHeading.FocusAsync(preventScroll: false); }
+        catch (Microsoft.JSInterop.JSDisconnectedException) { }
+        catch (TaskCanceledException) { }
+    }
 
     private string EffectiveEyebrow
         => !string.IsNullOrWhiteSpace(ScreenCode)
@@ -56,4 +83,5 @@
 
     private Task NotifyChangedAsync()
         => Changed.HasDelegate ? Changed.InvokeAsync() : Task.CompletedTask;
+    private void InputChanged() { /* 현재 입력 이벤트로 부모와 다음 버튼의 단계 검증을 다시 렌더합니다. 저장·접수는 실행하지 않습니다. */ }
 }

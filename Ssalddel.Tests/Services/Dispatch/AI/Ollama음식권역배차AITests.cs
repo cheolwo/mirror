@@ -15,6 +15,7 @@ public sealed class Ollama음식권역배차AITests
         Assert.False(new 음식권역배차OllamaOptions().Enabled);
         Assert.True(new 음식권역배차OllamaOptions().Validate());
         Assert.Equal("FoodRegionalDispatchOllama", 음식권역배차OllamaOptions.SectionName);
+        Assert.Equal(10, new 음식권역배차OllamaOptions().TimeoutSeconds);
     }
 
     [Theory]
@@ -51,12 +52,20 @@ public sealed class Ollama음식권역배차AITests
         Assert.DoesNotContain("37.59", handler.Body!);
         Assert.DoesNotContain("127.08", handler.Body!);
         using var body = JsonDocument.Parse(handler.Body!);
+        Assert.Equal(new[] { "model", "stream", "think", "keep_alive", "format", "options", "messages" },
+            body.RootElement.EnumerateObject().Select(x => x.Name));
+        Assert.Equal(new[] { "temperature", "seed", "num_ctx", "num_predict" },
+            body.RootElement.GetProperty("options").EnumerateObject().Select(x => x.Name));
+        Assert.Equal(50, body.RootElement.GetProperty("options").GetProperty("seed").GetInt32());
         Assert.False(body.RootElement.GetProperty("stream").GetBoolean());
         Assert.False(body.RootElement.GetProperty("think").GetBoolean());
         Assert.False(body.RootElement.TryGetProperty("tools", out _));
         Assert.Equal(64, body.RootElement.GetProperty("options").GetProperty("num_predict").GetInt32());
         Assert.False(body.RootElement.GetProperty("format").GetProperty("additionalProperties").GetBoolean());
         using var context = JsonDocument.Parse(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+        Assert.Equal(new[] { "baselineToken", "demandAction", "expectedWorkCount", "existingCapacityCount",
+            "protectedDriverCount", "additionalParticipantCount", "allowedDriverCount", "plans" },
+            context.RootElement.EnumerateObject().Select(x => x.Name));
         Assert.Equal("AdditionalParticipationNeeded", context.RootElement.GetProperty("demandAction").GetString());
         Assert.Equal(12, context.RootElement.GetProperty("expectedWorkCount").GetDecimal());
         Assert.Equal(new[] { "P1", "P2" }, context.RootElement.GetProperty("plans").EnumerateArray().Select(x => x.GetProperty("planToken").GetString()));

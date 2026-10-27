@@ -365,6 +365,7 @@ public sealed class 화주운송의뢰응답
         ProtectionNote = "운송 종료 전 화주 본인 또는 관리자 조회에서만 노출")]
     public decimal? 기사최근경도 { get; set; }
     public DateTime? 기사최근위치시각Utc { get; set; }
+    public string 기사위치상태Code { get; set; } = string.Empty;
     public string 운송방식 { get; set; } = string.Empty;
     public string 차량종류 { get; set; } = string.Empty;
     public string 결제수단 { get; set; } = string.Empty;

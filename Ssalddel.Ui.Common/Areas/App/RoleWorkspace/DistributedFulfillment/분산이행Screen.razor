@@ -11,6 +11,8 @@
     { <p role="alert">로그인한 뒤 본인에게 허용된 업무를 확인해 주세요.</p><a class="primary" href="@SafeLogin">로그인</a> }
     else
     {
+        @if (RoleKey == "cargo-driver")
+        { <Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion.WorkflowCompletionPanel State="Model.CompletionFeedback" ReturnHref="@SafeReturn" /> }
         @if (Model.IsBusy) { <p role="status">현재 업무와 처리 결과를 확인하고 있습니다.</p> }
         @if (Model.Error is { } error) { <p class="error" role="alert">@error</p> }
         @if (Model.ValidationError is { } invalid) { <p class="error" role="alert">@invalid</p> }
@@ -52,7 +54,7 @@
                     case "stock-release": <분산잔여재고반출Screen Model="Model" /> break;
                     case "inbound": <분산입고Screen Model="Model" /> break;
                     case "orders": <분산주문Screen Model="Model" /> break;
-                    case "round": <분산순회Screen Model="Model" /> break;
+                    case "round": <분산순회Screen Model="Model" ReturnHref="@RecoveryHref" /> break;
                     case "waves": <분산출고묶음Screen Model="Model" /> break;
                 }
             </div>

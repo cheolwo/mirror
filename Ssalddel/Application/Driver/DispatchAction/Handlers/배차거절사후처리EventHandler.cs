@@ -18,9 +18,10 @@ public sealed class 배차거절사후처리EventHandler : INotificationHandler<
 
     public async Task Handle(배차거절됨Event notification, CancellationToken cancellationToken)
     {
+        var reasonCode = 배차거절사유Policy.분류(notification.사유);
         try
         {
-            var 전환결과 = await _원장전환Service.추천거절처리Async(notification.의뢰Id, notification.기사Id, cancellationToken);
+            var 전환결과 = await _원장전환Service.추천거절처리Async(notification.의뢰Id, notification.기사Id, reasonCode, cancellationToken);
             if (!전환결과.전환여부)
             {
                 _logger.LogDebug(
@@ -37,12 +38,12 @@ public sealed class 배차거절사후처리EventHandler : INotificationHandler<
         }
 
         _logger.LogDebug(
-            "Action={Action} DriverId={DriverId} RequestId={RequestId} Result={Result} Reason={Reason} TraceId={TraceId} OccurredAt={OccurredAt}",
+            "Action={Action} DriverId={DriverId} RequestId={RequestId} Result={Result} ReasonCode={ReasonCode} TraceId={TraceId} OccurredAt={OccurredAt}",
             "DispatchRejected",
             notification.기사Id,
             notification.의뢰Id,
             "Success",
-            string.IsNullOrWhiteSpace(notification.사유) ? "Driver rejected recommendation" : notification.사유,
+            reasonCode,
             notification.TraceId,
             notification.발생시각Utc);
     }

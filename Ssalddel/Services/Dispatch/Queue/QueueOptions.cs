@@ -2,6 +2,9 @@ namespace 살뜰.Services.Dispatch.Queue
 {
     public sealed class 배차큐정책Options
     {
+        // 운행 중 기사 앱에 안내할 주기입니다. 실제 위치 권한·앱 수명과 수집 성공은 별도로 확인합니다.
+        public int 기사위치전송간격초 { get; set; } = 30;
+
         // 추천 유지 기본 시간(초)
         public int 추천유지시간초 { get; set; } = 60;
 

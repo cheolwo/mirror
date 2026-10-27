@@ -14,6 +14,17 @@ public sealed class 기사배차추천항목응답
     public string? 기사지급예정운임근거 { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
+    /// <summary>원의뢰에 입력된 운송 방식입니다. 표시를 위한 독차 명칭과 별개로 원문을 보존합니다.</summary>
+    public string? 운송방식 { get; set; }
+    public string? 차량종류 { get; set; }
+    public decimal? 화물중량Kg { get; set; }
+    public int? 화물수량 { get; set; }
+    /// <summary>원의뢰의 UTC 상차 시간창입니다. null은 시간 미확인입니다.</summary>
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
+    /// <summary>원의뢰의 UTC 하차 시간창입니다. null은 시간 미확인입니다.</summary>
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";
     public string 운송의뢰유형표시 { get; set; } = "일반 화물";
     public bool 공동주문운송여부 { get; set; }
@@ -67,8 +78,19 @@ public sealed class 기사배차추천항목응답
     public bool 차량적합여부 { get; set; } = true;
     public string[] 차량부적합사유 { get; set; } = [];
     public string[] 차량경고 { get; set; } = [];
-    public DateTime? 추천시작시각 { get; set; }
-    public DateTime? 추천만료시각 { get; set; }
+    private DateTime? _추천시작시각;
+    private DateTime? _추천만료시각;
+    /// <summary>시간대가 생략된 구버전 서버 응답도 추천 원장의 UTC로 읽습니다.</summary>
+    public DateTime? 추천시작시각
+    {
+        get => _추천시작시각;
+        set => _추천시작시각 = 기사추천시각Policy.Utc로정규화(value);
+    }
+    public DateTime? 추천만료시각
+    {
+        get => _추천만료시각;
+        set => _추천만료시각 = 기사추천시각Policy.Utc로정규화(value);
+    }
     public int 추천라운드 { get; set; }
     public string 상태 { get; set; } = string.Empty;
     public string 배차상태 { get; set; } = string.Empty;

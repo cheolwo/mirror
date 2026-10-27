@@ -7,6 +7,17 @@ public sealed class 기사운송의뢰상세응답
     public string 의뢰Id { get; set; } = string.Empty;
     public string 화주Id { get; set; } = string.Empty;
     public string 화물종류 { get; set; } = string.Empty;
+    /// <summary>원의뢰에 입력된 운송 방식입니다. 표시를 위한 독차 명칭과 별개로 원문을 보존합니다.</summary>
+    public string? 운송방식 { get; set; }
+    public string? 차량종류 { get; set; }
+    public decimal? 화물중량Kg { get; set; }
+    public int? 화물수량 { get; set; }
+    /// <summary>원의뢰의 UTC 상차 시간창입니다. null은 시간 미확인입니다.</summary>
+    public DateTime? 상차시간창시작일시 { get; set; }
+    public DateTime? 상차시간창종료일시 { get; set; }
+    /// <summary>원의뢰의 UTC 하차 시간창입니다. null은 시간 미확인입니다.</summary>
+    public DateTime? 하차시간창시작일시 { get; set; }
+    public DateTime? 하차시간창종료일시 { get; set; }
     public string 화물설명 { get; set; } = string.Empty;
     public string 픽업지 { get; set; } = string.Empty;
     public string 픽업상세지 { get; set; } = string.Empty;

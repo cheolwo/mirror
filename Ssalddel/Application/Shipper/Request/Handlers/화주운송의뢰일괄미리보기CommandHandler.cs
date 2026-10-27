@@ -35,8 +35,10 @@ public sealed class 화주운송의뢰일괄미리보기CommandHandler : IReques
             errors.AddRange(화주운송의뢰일괄등록지원.ValidateRow(row));
 
             var baseRecommendation = _recommendationService.추천(row);
-            var vehicleRecommendation = await _vehicleRecommendationService.추천Async(화주운송의뢰일괄등록지원.To차량추천요청(row), cancellationToken);
+            var vehicleInput = 화주운송의뢰일괄등록지원.To차량추천요청(row, baseRecommendation.운송방식);
+            var vehicleRecommendation = await _vehicleRecommendationService.추천Async(vehicleInput, cancellationToken);
             var mergedRecommendation = 화주운송의뢰일괄등록지원.To통합추천결과(baseRecommendation, vehicleRecommendation, row.차량종류);
+            errors.AddRange(화주운송의뢰일괄등록지원.ValidateVehicleRecommendation(row.행번호, vehicleRecommendation, mergedRecommendation.차량종류, vehicleInput));
 
             if (string.IsNullOrWhiteSpace(mergedRecommendation.차량종류))
             {
@@ -49,7 +51,7 @@ public sealed class 화주운송의뢰일괄미리보기CommandHandler : IReques
                 warnings.Add("차량종류가 비어 있어 추천 차량을 기본 선택값으로 사용합니다.");
             }
 
-            warnings.Add("연락처와 시간창은 CSV에 없으므로 일괄등록 시 기본값으로 등록되며 추후 보완이 필요합니다.");
+            warnings.Add("입력한 연락처와 시간창을 확인한 뒤 등록해 주세요. 시간은 CSV에 명시된 시간대를 기준으로 보존합니다.");
 
             rows.Add(new 화주운송의뢰일괄미리보기행응답
             {

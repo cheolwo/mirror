@@ -1,0 +1,86 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
+@implements IDisposable
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject Microsoft.Extensions.Logging.ILogger<WorkflowCompletionPanel> Logger
+
+<section class="completion-feedback" aria-label="완료 안내">
+    @if (State.History.LastOrDefault() is { } last)
+    {
+        <div class="completion-feedback-result" role="status" aria-live="polite">
+            <span>최근 확인: @last.Title</span>
+            <MudButton Variant="Variant.Text" OnClick="ReopenAsync">완료 안내 보기</MudButton>
+            @if (CanReturn) { <MudButton Href="@ReturnHref" Variant="Variant.Outlined">@ReturnLabel</MudButton> }
+        </div>
+    }
+    <details><summary>완료 알림 방식</summary>
+        <label>이 화면의 완료 알림
+            <select value="@State.Mode" @onchange="ChangeMode">
+                <option value="@WorkflowCompletionDisplayMode.EveryStep">단계마다 알림창</option>
+                <option value="@WorkflowCompletionDisplayMode.Brief">짧은 안내만</option>
+                <option value="@WorkflowCompletionDisplayMode.FinalOnly">최종 전달만 알림창</option>
+            </select>
+        </label>
+        <p>현재 화면에 적용됩니다. 추천·휴대폰 알림 설정은 바뀌지 않습니다.</p>
+        @if (State.History.Count > 1)
+        { <ul>@foreach (var notice in State.History.Reverse()) { <li>@notice.Title</li> }</ul> }
+    </details>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public WorkflowCompletionFeedback State { get; set; } = default!;
+    [Parameter] public string? ReturnHref { get; set; }
+    [Parameter] public string ReturnLabel { get; set; } = "업무 화면으로";
+    private WorkflowCompletionFeedback? subscribed;
+    private IDialogReference? dialog;
+    private long? openedRevision;
+    private bool opening, disposed;
+    private bool CanReturn => ReturnHref?.StartsWith('/') == true && !ReturnHref.StartsWith("//", StringComparison.Ordinal);
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(State, subscribed)) return;
+        if (subscribed is not null) subscribed.Changed -= Refresh;
+        CloseDialog(); subscribed = State; openedRevision = null; subscribed.Changed += Refresh;
+    }
+    private void Refresh() => _ = InvokeAsync(() => { CloseDialog(); StateHasChanged(); });
+    private void ChangeMode(ChangeEventArgs args)
+    { if (Enum.TryParse<WorkflowCompletionDisplayMode>(args.Value?.ToString(), out var mode) && Enum.IsDefined(mode)) State.Mode = mode; }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!disposed && State.Mode != WorkflowCompletionDisplayMode.Brief && State.Current is { } current && State.Revision != openedRevision)
+            _ = OpenAsync(current);
+        return Task.CompletedTask;
+    }
+    private Task ReopenAsync() => State.History.LastOrDefault() is { } last ? OpenAsync(last) : Task.CompletedTask;
+    private async Task OpenAsync(WorkflowCompletionNotice notice)
+    {
+        if (disposed || opening || dialog is not null) return;
+        opening = true;
+        var state = State; var revision = State.Revision;
+        var returnHref = CanReturn ? ReturnHref : null;
+        try
+        {
+            var next = await DialogService.ShowAsync<WorkflowCompletionDialog>(notice.Title, new DialogParameters
+            {
+                [nameof(WorkflowCompletionDialog.Notice)] = notice,
+                [nameof(WorkflowCompletionDialog.CanReturn)] = returnHref is not null,
+                [nameof(WorkflowCompletionDialog.ReturnLabel)] = ReturnLabel
+            }, new DialogOptions { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true, BackdropClick = false });
+            if (disposed || !ReferenceEquals(state, State) || revision != State.Revision) { next.Close(); return; }
+            dialog = next; openedRevision = revision; opening = false;
+            var result = await next.Result;
+            if (ReferenceEquals(dialog, next)) dialog = null;
+            if (disposed || !ReferenceEquals(state, State) || revision != State.Revision) return;
+            State.Dismiss();
+            if (result?.Canceled == false && result.Data is "return" && returnHref is not null) Navigation.NavigateTo(returnHref);
+        }
+        catch (Exception exception)
+        {
+            openedRevision = revision;
+            Microsoft.Extensions.Logging.LoggerExtensions.LogWarning(Logger, exception, "완료 안내창을 표시하지 못했습니다. 확인한 결과는 화면에 남깁니다.");
+        }
+        finally { opening = false; if (!disposed) await InvokeAsync(StateHasChanged); }
+    }
+    private void CloseDialog() { dialog?.Close(); dialog = null; }
+    public void Dispose() { disposed = true; if (subscribed is not null) subscribed.Changed -= Refresh; CloseDialog(); }
+}

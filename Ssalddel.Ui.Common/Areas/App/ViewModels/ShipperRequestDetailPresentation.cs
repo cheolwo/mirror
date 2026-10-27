@@ -1,4 +1,5 @@
 using Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Contracts.Common.Transport;
 
 namespace Ssalddel.Ui.Common.Areas.App.ViewModels;
 
@@ -50,8 +51,15 @@ public sealed record ShipperRequestDetailSnapshot
     public decimal? DriverLatitude { get; init; }
     public decimal? DriverLongitude { get; init; }
     public DateTime? DriverLocationRecordedAtUtc { get; init; }
+    public string DriverLocationStateCode { get; init; } = string.Empty;
     public string TransportMethod { get; init; } = string.Empty;
     public string VehicleType { get; init; } = string.Empty;
+    public decimal? 화물중량Kg { get; init; }
+    public int? 화물수량 { get; init; }
+    public DateTime? 상차시간창시작일시 { get; init; }
+    public DateTime? 상차시간창종료일시 { get; init; }
+    public DateTime? 하차시간창시작일시 { get; init; }
+    public DateTime? 하차시간창종료일시 { get; init; }
     public string PaymentMethod { get; init; } = string.Empty;
     public int? ExpectedPaymentAmount { get; init; }
     /// <summary>화주에게 청구하는 고객 총운임입니다. 기사 보수와 다릅니다.</summary>
@@ -98,8 +106,15 @@ public sealed record ShipperRequestDetailSnapshot
             DriverLatitude = source.기사최근위도,
             DriverLongitude = source.기사최근경도,
             DriverLocationRecordedAtUtc = source.기사최근위치시각Utc,
+            DriverLocationStateCode = source.기사위치상태Code,
             TransportMethod = source.운송방식,
             VehicleType = source.차량종류,
+            화물중량Kg = source.화물?.중량Kg,
+            화물수량 = source.화물?.수량,
+            상차시간창시작일시 = source.픽업?.시간창?.시작일시,
+            상차시간창종료일시 = source.픽업?.시간창?.종료일시,
+            하차시간창시작일시 = source.하차?.시간창?.시작일시,
+            하차시간창종료일시 = source.하차?.시간창?.종료일시,
             PaymentMethod = source.결제수단,
             ExpectedPaymentAmount = source.결제예정금액,
             FinalFare = source.최종운임,
@@ -220,10 +235,16 @@ public static class ShipperRequestDetailPresentation
         ShipperRequestDetailSnapshot item,
         DateTime? nowUtc = null)
     {
+        if (item.DriverLocationStateCode == 기사위치상태Codes.Closed
+            || IsLocationClosed(item.TransportStatus) || IsLocationClosed(item.RequestStatus)) return "운송 종료 후 비공개";
         if (string.IsNullOrWhiteSpace(item.AssignedDriverId))
         {
             return "배차 전";
         }
+
+        if (item.DriverLocationStateCode == 기사위치상태Codes.Delayed) return "위치 갱신 지연 · 현재 위치 확인 필요";
+        if (!string.IsNullOrWhiteSpace(item.DriverLocationStateCode) && item.DriverLocationStateCode != 기사위치상태Codes.Available)
+            return "위치 미수신";
 
         if (!item.DriverLocationRecordedAtUtc.HasValue)
         {
@@ -249,6 +270,7 @@ public static class ShipperRequestDetailPresentation
         ShipperRequestDetailSnapshot item,
         DateTime? nowUtc = null)
     {
+        if (item.DriverLocationStateCode == 기사위치상태Codes.Delayed) return true;
         if (!item.DriverLocationRecordedAtUtc.HasValue)
         {
             return false;
@@ -257,6 +279,9 @@ public static class ShipperRequestDetailPresentation
         var age = NormalizeUtc(nowUtc ?? DateTime.UtcNow) - NormalizeUtc(item.DriverLocationRecordedAtUtc.Value);
         return age < TimeSpan.Zero || age >= DriverLocationFreshnessWindow;
     }
+
+    private static bool IsLocationClosed(string status)
+        => status is "완료" or "운송완료" or "인수완료" or "하차완료" or "배송완료" or "취소" or "운송취소" or "의뢰취소";
 
     // 서버의 *Utc 필드는 EF 왕복 뒤 Kind가 없어도 UTC다. 로컬 시간으로 다시 해석하지 않는다.
     public static DateTime NormalizeUtc(DateTime value) => value.Kind == DateTimeKind.Unspecified

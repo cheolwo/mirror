@@ -1,0 +1,6 @@
+.completion-heading{display:flex;align-items:center;gap:12px;overflow-wrap:anywhere;word-break:keep-all}
+.completion-heading svg{width:40px;height:40px;fill:var(--completion-color,#0f766e);flex-shrink:0}
+.completion-body{font-size:16px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+.completion-body p{margin:0 0 16px}.completion-next{color:#586b78}
+.completion-actions{display:flex;gap:8px;flex-wrap:wrap;width:100%;padding:0 8px 8px}
+.completion-actions ::deep button{flex:1;min-height:48px;min-width:100px}

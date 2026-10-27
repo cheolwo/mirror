@@ -36,8 +36,7 @@ public sealed class FDriverWorkspaceLifetimeTests
             gps.Emit(37.5005m, 127.0005m);
             model.IsOnDuty = true;
             // The server heartbeat interval belongs to the work lifetime, not a page.
-            typeof(MainPageModel).GetField("_lastLocationSentAtUtc", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                .SetValue(model, null);
+            FDriverLifecycleTestSupport.LastLocationSentAtUtc(model, null);
             api.Workspace = _ => Task.FromResult(ActiveWorkspace(DriverWorkOfferStatus.MovingToDropoff, "fresh"));
             await FDriverLifecycleTestSupport.RefreshBackground(model);
             await Task.Delay(1100); // Exercises the independent GPS/map tick while the page is hidden.

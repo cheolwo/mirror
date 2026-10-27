@@ -1,4 +1,5 @@
-﻿using Request = Ssalddel.Contracts.Shipper.Request;
+using Ssalddel.Application.Common.Transport;
+using Request = Ssalddel.Contracts.Shipper.Request;
 
 using Ssalddel.Services.Community;
 
@@ -9,13 +10,16 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
     private readonly SsalddelContext _db;
     private readonly I차량화물적합성Service _compatibilityService;
     private readonly I생활배송기사정보제공동의Service? _disclosure;
+    private readonly I기사실차적재근거조회Service _실차조회;
 
     public 운송의뢰상세조회QueryHandler(SsalddelContext db, I차량화물적합성Service compatibilityService,
-        I생활배송기사정보제공동의Service? disclosure = null)
+        I생활배송기사정보제공동의Service? disclosure = null,
+        I기사실차적재근거조회Service? 실차조회 = null)
     {
         _db = db;
         _compatibilityService = compatibilityService;
         _disclosure = disclosure;
+        _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
     }
 
     public async Task<Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답> Handle(운송의뢰상세조회Query request, CancellationToken cancellationToken)
@@ -30,10 +34,7 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
             throw new UnauthorizedAccessException("현재 배송에 배정되거나 제안받은 기사만 조회할 수 있습니다.");
         }
         var cargoRequirement = await _db.화물요구조건.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
-        var driver = await _db.용달기사.AsNoTracking().FirstOrDefaultAsync(x => x.기사Id == request.기사Id, cancellationToken);
-        var vehicle = driver is null
-            ? null
-            : await _db.차량제원.AsNoTracking().FirstOrDefaultAsync(x => x.차량코드 == driver.차량 || x.차량명 == driver.차량, cancellationToken);
+        var vehicle = (await _실차조회.조회Async(request.기사Id, cancellationToken)).유효제원;
         var fit = _compatibilityService.판정(vehicle, dispatchRequest, cargoRequirement);
 
         var response = new Ssalddel.Contracts.Driver.Recommendation.기사운송의뢰상세응답
@@ -73,6 +74,7 @@ public sealed class 운송의뢰상세조회QueryHandler : IRequestHandler<운�
             생성일시 = dispatchRequest.CreatedAt,
             수정일시 = dispatchRequest.UpdatedAt
         };
+        화물운송조건Projector.투영(response, dispatchRequest);
         if (생활배송기사정보공개Policy.생활배송인가(dispatchRequest.클라이언트요청Id))
             생활배송기사정보공개Policy.의뢰내부정보가림(response);
         if (생활배송기사정보공개Policy.생활배송인가(dispatchRequest.클라이언트요청Id)

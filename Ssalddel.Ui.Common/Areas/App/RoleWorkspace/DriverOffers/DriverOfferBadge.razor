@@ -6,7 +6,7 @@
         @if (Visual.SecondaryColor is { } second) { <span style="@($"background-color:{second}")"></span> }
     </span>
     <svg class="driver-offer-badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <path d="@DriverOfferPresentation.WorkIconPath" />
+        <path d="@Visual.IconPath" />
     </svg>
     <span><strong>@Visual.Label</strong><small>@Visual.ActivityText</small></span>
 </div>

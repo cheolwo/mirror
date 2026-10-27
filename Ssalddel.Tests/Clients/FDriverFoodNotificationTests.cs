@@ -6,11 +6,24 @@ using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Food;
 using Ssalddel.Contracts.Food;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace Ssalddel.Tests.Clients;
 
 public sealed class FDriverFoodNotificationTests
 {
+    [Theory]
+    [InlineData(DriverWorkKinds.FoodDelivery)]
+    [InlineData(DriverWorkKinds.QuickDelivery)]
+    public void CanonicalRecommendation_PreservesWorkKindForLocalSettingsAndArtwork(string kind)
+    {
+        var offer = Offer("canonical-kind"); offer.WorkKind = kind;
+        var notifications = new Notifications(); var state = new FDriverFoodNotificationState(notifications);
+        state.BindAccount("driver-a"); state.Reconcile([DeliveryTicketPreview.From(offer)], DateTime.UtcNow);
+
+        Assert.Equal(kind, Assert.Single(notifications.PublishedKinds)); Assert.Single(notifications.Published);
+    }
+
     [Fact]
     public void NewRecommendationRound_RealertsTheSameOriginalOfferIdAfterRead_WhileLegacyReceiptStillWorks()
     {
@@ -353,6 +366,7 @@ public sealed class FDriverFoodNotificationTests
         public bool PublishAllowed { get; set; } = true;
         public int CancelCount { get; private set; }
         public List<FDriverFoodNotificationTarget> Published { get; } = [];
+        public List<string?> PublishedKinds { get; } = [];
         public FDriverFoodNotificationReceipt? ReadReceipt() => Receipt;
         public void WriteReceipt(FDriverFoodNotificationReceipt receipt) => Receipt = new(receipt.UserId, receipt.SeenOfferIds.ToArray());
         public FDriverFoodNotificationTarget? ReadOpenTarget() => Target;
@@ -363,6 +377,8 @@ public sealed class FDriverFoodNotificationTests
             if (!PublishAllowed) return false;
             Published.Add(new(userId, offerId)); return true;
         }
+        public bool PublishForWorkKind(string userId, string offerId, DateTime expiry, string? workKind)
+        { PublishedKinds.Add(workKind); return Publish(userId, offerId, expiry); }
         public void Cancel() => CancelCount++;
         public void ClearAccount() { Cancel(); Receipt = null; Target = null; }
     }

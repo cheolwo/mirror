@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Ssalddel.Contracts.Admin.BusinessPackages;
 using Ssalddel.Contracts.Admin.Progress;
+using Ssalddel.Application.Common.Transport;
+using Ssalddel.Contracts.Common.Transport;
 
 namespace Ssalddel.Application.Admin.Progress;
 
@@ -37,8 +39,37 @@ public sealed class 관리자운송목록조회QueryHandler : IRequestHandler<�
             .OrderByDescending(x => x.UpdatedAt)
             .ToListAsync(cancellationToken);
 
+        // 화물 원장의 명시 의뢰 관계만 일괄 조회합니다. 음식 운송이나 같은 운송번호의 다른 의뢰로 전파하지 않습니다.
+        var requestIds = entities.Where(x => x.배차업무유형 == 상태값.배차업무유형.용달운송)
+            .Select(x => string.IsNullOrWhiteSpace(x.의뢰Id) ? x.운송번호 : x.의뢰Id)
+            .Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToArray();
+        var requests = await _db.화주운송의뢰.AsNoTracking()
+            .Where(x => Enumerable.Contains(requestIds, x.의뢰Id))
+            .ToDictionaryAsync(x => x.의뢰Id, StringComparer.Ordinal, cancellationToken);
+        var locationRequestIds = entities.Where(x => x.배차업무유형 == 상태값.배차업무유형.용달운송)
+            .Select(x => x.의뢰Id).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToArray();
+        var locations = await 현재배정기사위치조회.조회Async(_db, locationRequestIds, cancellationToken);
+
         return entities
-            .Select(Map)
+            .Select(entity =>
+            {
+                var response = Map(entity);
+                response.기사위치상태Code = 기사위치상태Codes.Unavailable;
+                if (entity.배차업무유형 == 상태값.배차업무유형.용달운송)
+                {
+                    var requestId = string.IsNullOrWhiteSpace(entity.의뢰Id) ? entity.운송번호 : entity.의뢰Id;
+                    requests.TryGetValue(requestId, out var source);
+                    화물운송조건Projector.투영(response, source, requestId);
+                    if (locations.TryGetValue(entity.의뢰Id, out var location) && location.운송Id == entity.Id)
+                    {
+                        response.기사위치상태Code = location.상태Code;
+                        response.기사최근위도 = location.위치?.위도;
+                        response.기사최근경도 = location.위치?.경도;
+                        response.기사최근위치시각Utc = location.위치?.기록시각;
+                    }
+                }
+                return response;
+            })
             .ToArray();
     }
 

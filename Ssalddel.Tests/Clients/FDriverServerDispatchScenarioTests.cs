@@ -3,6 +3,7 @@ using FDriverApp.PageModels;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Tests.Services.Dispatch.AI;
+using DriverWorkKinds = Ssalddel.Contracts.Driver.Settings.DriverWorkKinds;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -58,7 +59,9 @@ public sealed class FDriverServerDispatchScenarioTests
 
         var push = Assert.Single(fixture.PushMessages);
         Assert.True(push.DataOnly && push.HighPriority);
-        Assert.Equal(5, push.Data.Count);
+        Assert.Equal(new[] { "appKey", "expiresAtUtc", "offerId", "type", "userId", "workKind" },
+            push.Data.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(DriverWorkKinds.FoodDelivery, push.Data["workKind"]);
         Assert.True(await mobile.Receiver.ReceiveAsync(push.Data));
         Assert.True(mobile.Notifications.PublishRequests > 0);
         Assert.Empty(mobile.Transport.Requests); // A push hint cannot accept or fetch work itself.
@@ -183,6 +186,8 @@ public sealed class FDriverServerDispatchScenarioTests
     [InlineData("type", "DriverDispatchRecommendation")]
     [InlineData("offerId", "")]
     [InlineData("expiresAtUtc", "2000-01-01T00:00:00Z")]
+    [InlineData("workKind", DriverWorkKinds.CargoTransport)]
+    [InlineData("workKind", "unknown")]
     public async Task AlteredActualServerHint_IsRejectedWithoutApiOrStateMutation(string key, string value)
     {
         using var modelHttp = new HttpClient(new FDriverWorkflowModelHandler());

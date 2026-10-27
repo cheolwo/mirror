@@ -24,7 +24,7 @@ public sealed class FDriverAutomaticLocationTests
         {
             await model.InitializeAsync();
             var previous = api.LocationCalls;
-            Set(model, "_lastLocationSentAtUtc", DateTime.UtcNow.AddSeconds(-11));
+            FDriverLifecycleTestSupport.LastLocationSentAtUtc(model, DateTime.UtcNow.AddSeconds(-11));
             await FDriverLifecycleTestSupport.RefreshBackground(model);
             Assert.Equal(previous + 1, api.LocationCalls);
             await FDriverLifecycleTestSupport.RefreshBackground(model);
@@ -127,7 +127,7 @@ public sealed class FDriverAutomaticLocationTests
         {
             await model.InitializeAsync();
             await model.StartMonitoringAsync();
-            Set(model, "_lastLocationSentAtUtc", null);
+            FDriverLifecycleTestSupport.LastLocationSentAtUtc(model, null);
             api.LocationUpdate = (_, token) => { uploadToken = token; return response.Task; };
             var upload = Capture(model);
             Assert.True(uploadToken.CanBeCanceled);
@@ -137,7 +137,7 @@ public sealed class FDriverAutomaticLocationTests
             Assert.True(uploadToken.IsCancellationRequested);
             response.SetResult(null); // A provider may complete after cancellation.
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => upload);
-            Assert.Null(Get<DateTime?>(model, "_lastLocationSentAtUtc"));
+            Assert.Null(FDriverLifecycleTestSupport.LastLocationSentAtUtc(model));
             if (action == "stop") Assert.True(gps.IsListening);
             else Assert.False(gps.IsListening);
         }
@@ -178,7 +178,7 @@ public sealed class FDriverAutomaticLocationTests
         {
             await model.InitializeAsync();
             var previous = api.LocationCalls;
-            Set(model, "_lastLocationSentAtUtc", null);
+            FDriverLifecycleTestSupport.LastLocationSentAtUtc(model, null);
             api.LocationUpdate = (_, _) => response.Task;
             var first = Capture(model);
             var second = Capture(model);
@@ -211,10 +211,6 @@ public sealed class FDriverAutomaticLocationTests
     private static Task<FDriverLocationSnapshot?> Capture(MainPageModel model)
         => (Task<FDriverLocationSnapshot?>)typeof(MainPageModel).GetMethod("CaptureLocationAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(model, [true, CancellationToken.None])!;
-    private static void Set(MainPageModel model, string name, object? value)
-        => typeof(MainPageModel).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(model, value);
-    private static T Get<T>(MainPageModel model, string name)
-        => (T)typeof(MainPageModel).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(model)!;
 
     private sealed class LocationFake : IFDriverLocationService
     {

@@ -25,7 +25,7 @@ public sealed class CargoWorkspaceProjectionR16Tests
         Assert.NotNull(item.Summary);
         Assert.Equal(label, item.Summary.DestinationLabel);
         Assert.Equal(address, item.Summary.Destination);
-        Assert.Contains(item.Summary.Metrics!, field => field.Label == "운임" && field.Value == "45,000원");
+        Assert.Contains(item.Summary.Metrics!, field => field.Label == "기사 지급 예정액" && field.Value == "6,200원");
         Assert.Contains(item.Summary.Metrics!, field => field.Label == "운송 거리" && field.Value == "8.25 km");
         Assert.Contains(item.Summary.Metrics!, field => field.Label == "거리 기준" && field.Value == "확인된 견적 거리");
         Assert.Equal(action, Assert.Single(item.Actions!.Where(x => x.IsPrimary)).Key);
@@ -43,7 +43,7 @@ public sealed class CargoWorkspaceProjectionR16Tests
         Assert.Null(item.Markers);
         Assert.Equal("상차 주소", item.Summary!.Destination);
         Assert.Contains(item.Summary.Metrics!, field => field.Label == "운송 거리" && field.Value == "미확인");
-        Assert.Contains(item.Summary.Metrics!, field => field.Label == "운임" && field.Value == "미확정");
+        Assert.Contains(item.Summary.Metrics!, field => field.Label == "기사 지급 예정액" && field.Value == "미확인");
     }
 
     [Theory]
@@ -120,7 +120,7 @@ public sealed class CargoWorkspaceProjectionR16Tests
             픽업_위도 = 37m, 픽업_경도 = 127m, 하차_위도 = 38m, 하차_경도 = 128m, 추천만료시각 = expiry
         });
         Assert.Contains(item.Summary!.Metrics!, field => field.Label == "거리 기준" && field.Value == "직선 거리");
-        Assert.Contains(item.Summary.Metrics!, field => field.Label == "운임" && field.Value == "미확정");
+        Assert.Contains(item.Summary.Metrics!, field => field.Label == "기사 제안 보수" && field.Value == "미확인");
         Assert.All(item.Markers!, marker => Assert.Equal(new DateTimeOffset(expiry), marker.ExpiresAt));
         Assert.Equal(new DateTimeOffset(expiry), Assert.Single(item.Routes!).ExpiresAt);
         Assert.Equal("cargo-straight-candidate", Assert.Single(item.Routes!).SourceCode);
@@ -230,6 +230,7 @@ public sealed class CargoWorkspaceProjectionR16Tests
     private static 기사운송상세응답 Detail(long id, string state) => new()
     {
         Id = id, 상태 = state, 출발지 = "상차 주소", 도착지 = "하차 주소", 운임 = 45000m, 예상거리Km = 8.25m,
+        기사지급예정액 = 6200m, 기사지급예정액근거 = "운송원장.기사지급예정액",
         거리계산방식 = "확인된 견적 거리", 상차담당자명 = "담당자", 상차연락처 = "010-0000-1001", 전달요청 = "1층에서 확인",
         픽업위도 = 37.57m, 픽업경도 = 127.01m, 하차위도 = 37.59m, 하차경도 = 127.04m
     };
@@ -248,7 +249,14 @@ public sealed class CargoWorkspaceProjectionR16Tests
         public Func<string, bool> AllowedProcess { get; set; } = process => process == "inbound";
         public List<string> Reads { get; } = [];
         public Task<T> GetAsync<T>(string roleKey, string path, CancellationToken ct)
-        { Reads.Add(path); return Task.FromResult((T)Read(path)); }
+        {
+            Reads.Add(path);
+            object value = path == "api/v1/driver/work/status"
+                ? new Ssalddel.Contracts.Driver.Work.기사운행상태응답 { DriverId = "projection-owner", Status = "대기" }
+                : path == "api/v1/driver/operational-dispatch/availability"
+                    ? new Ssalddel.Contracts.Common.Dispatch.운영배차수신상태Dto { 주체Id = "projection-owner" } : Read(path);
+            return Task.FromResult((T)value);
+        }
         public Task<T?> PostAsync<T>(string roleKey, string path, object body, CancellationToken ct)
         {
             if (body is not 창고작업진입확인요청 gate) throw new InvalidOperationException("예상하지 않은 변경");

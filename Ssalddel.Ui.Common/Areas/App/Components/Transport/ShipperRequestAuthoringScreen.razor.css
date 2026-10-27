@@ -62,6 +62,8 @@
     gap: .75rem;
 }
 
+.shipper-request-authoring__mobile-entry{display:none}
+
 @media (max-width: 960px) {
     .shipper-request-authoring__layout {
         grid-template-columns: 1fr;
@@ -74,6 +76,12 @@
 }
 
 @media (max-width: 720px) {
+    .shipper-request-authoring__layout{display:none}
+    .shipper-request-authoring__mobile-entry{display:grid;gap:12px;padding:20px;border:1px solid var(--mud-palette-lines-default);border-radius:14px;background:var(--mud-palette-surface)}
+    .shipper-request-authoring__mobile-entry h2,.shipper-request-authoring__mobile-entry p{margin:0}
+    .shipper-request-authoring__mobile-entry h2{font-size:1.2rem}
+    .shipper-request-authoring__mobile-entry p{line-height:1.5;color:var(--mud-palette-text-secondary)}
+    .shipper-request-authoring__header nav{display:none}
     .shipper-request-authoring__header {
         align-items: stretch;
         flex-direction: column;

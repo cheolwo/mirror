@@ -1,8 +1,10 @@
 @page "/transports/{RequestId}/settlement"
 @using Ssalddel.Contracts.Common.Community
 @using SsalddelAdmin.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
 @inject I백오피스Service DataService
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <PageTitle>1.0 운송 결제/정산</PageTitle>
 
@@ -19,7 +21,8 @@
 }
 else if (!string.IsNullOrWhiteSpace(errorMessage))
 {
-    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+    <업무오류복구Panel Message="@errorMessage" ContextKey="@($"transport-settlement:{RequestId}:{generation}")"
+        RetryRequested="LoadAsync" ReturnHref="@SafeOverviewHref" ReturnLabel="관제 개요" />
 }
 else if (detail is null)
 {
@@ -35,7 +38,7 @@ else
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.h6">화주 수납</MudText>
                     <MudGrid Spacing="2">
-                        <MudItem xs="12"><AdminInfoField Label="수납 확인" Value="@Settlement.CollectionStatus" /></MudItem>
+                        <MudItem xs="12"><AdminInfoField Label="수납 확인" Value="@Settlement.Collection.Status" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 상태" Value="@(detail.결제?.결제상태 ?? detail.의뢰?.결제상태)" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 수단" Value="@(detail.결제?.결제수단 ?? detail.의뢰?.결제수단)" /></MudItem>
                         <MudItem xs="12" md="6"><AdminInfoField Label="결제 금액" Value="@(detail.결제 is null ? null : $"{detail.결제.결제금액:N0}원")" /></MudItem>
@@ -74,14 +77,17 @@ else
                 <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@(Settlement.QueryCompleted ? $"{Settlement.PayoutRequests.Count:N0}건" : "미확인")</MudChip>
             </MudStack>
             <MudGrid Spacing="2">
-                <MudItem xs="12" md="4"><AdminInfoField Label="지급준비" Value="@Settlement.PreparationStatus" /></MudItem>
-                <MudItem xs="12" md="4"><AdminInfoField Label="지급요청" Value="@Settlement.RequestStatus" /></MudItem>
-                <MudItem xs="12" md="4"><AdminInfoField Label="실지급" Value="@Settlement.ActualTransferStatus" /></MudItem>
+                <MudItem xs="12" md="4"><AdminInfoField Label="지급준비" Value="@Settlement.Payout.PreparationStatus" /></MudItem>
+                <MudItem xs="12" md="4"><AdminInfoField Label="지급요청" Value="@Settlement.Payout.RequestStatus" /></MudItem>
+                <MudItem xs="12" md="4"><AdminInfoField Label="실지급" Value="@Settlement.Payout.ActualTransferStatus" /></MudItem>
             </MudGrid>
             <MudText Typo="Typo.body2" Color="Color.Secondary">@Settlement.QueryScope</MudText>
             @if (Settlement.QueryFailed)
             {
-                <MudAlert Severity="Severity.Warning" Dense="true">지급요청 조회 실패. 새로고침 후 다시 확인하세요.</MudAlert>
+                <MudText Typo="Typo.body2">지급요청 조회 실패</MudText>
+                <업무오류복구Panel Message="지급요청을 확인하지 못했습니다."
+                    ContextKey="@($"transport-payout:{RequestId}:{generation}")"
+                    RetryRequested="LoadAsync" ReturnHref="@SafeOverviewHref" ReturnLabel="관제 개요" />
             }
             else if (!Settlement.QueryCompleted)
             {
@@ -129,9 +135,14 @@ else
     private bool isLoading = true;
     private string? errorMessage;
     private 운송워크플로우관제상세응답? detail;
+    private CancellationTokenSource? loadLifetime;
+    private long generation;
+    private bool disposed;
     private TransportWorkflowSettlementViewModel Settlement => detail is null ? new() : TransportWorkflowSettlementViewModel.Create(detail);
 
     private string OverviewHref => BuildHref(null);
+    private string SafeOverviewHref => string.IsNullOrWhiteSpace(RequestId)
+        ? 운송관제NavigationContext.ResolveListHref(ReturnPath) : OverviewHref;
     private string EventsHref => BuildHref("events");
     private string ProofsHref => BuildHref("proofs");
 
@@ -142,6 +153,11 @@ else
 
     private async Task LoadAsync()
     {
+        if (disposed) return;
+        var current = ++generation;
+        loadLifetime?.Cancel(); loadLifetime?.Dispose(); loadLifetime = new();
+        var token = loadLifetime.Token;
+        var requestId = RequestId;
         if (string.IsNullOrWhiteSpace(RequestId))
         {
             detail = null;
@@ -155,16 +171,21 @@ else
 
         try
         {
-            detail = await DataService.운송워크플로우관제상세조회Async(RequestId);
+            var data = await DataService.운송워크플로우관제상세조회Async(requestId, token);
+            if (current == generation && !disposed) detail = data;
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch
         {
-            detail = null;
-            errorMessage = $"결제/정산 조회 실패: {ex.Message}";
+            if (current == generation && !disposed)
+            {
+                detail = null;
+                errorMessage = "수납·지급 정보를 확인하지 못했습니다.";
+            }
         }
         finally
         {
-            isLoading = false;
+            if (current == generation && !disposed) isLoading = false;
         }
     }
 
@@ -173,5 +194,11 @@ else
 
     private void NavigateToOverview()
         => NavigationManager.NavigateTo(OverviewHref);
+
+    public void Dispose()
+    {
+        if (disposed) return;
+        disposed = true; generation++; loadLifetime?.Cancel(); loadLifetime?.Dispose();
+    }
 
 }

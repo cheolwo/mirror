@@ -3,6 +3,7 @@
 @attribute [SsalddelCodeMetadata(SsalddelCodeFeatureKeys.FoodDriverWork, SsalddelCodeLayer.View, "전체 지도와 독립된 상태별 카드·행동을 표시하는 공통 역할 화면", StepKey = "ui.role-map-view", FlowOrder = 230, ExecutionStage = SsalddelCodeExecutionStage.Presentation, DependsOnStepKeys = new[] { "ui.workspace-view-model" }, ReadsFrom = SsalddelCodeDataScope.ClientPresentation, WritesTo = SsalddelCodeDataScope.ClientPresentation | SsalddelCodeDataScope.OperationalState, Effects = SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost, Boundary = "Model에 조회·명령을 위임한다. 카드 높이로 지도를 변경하지 않으며 서버 권한·실제 GPS·지도 SDK 성공을 이 메타데이터가 증명하지 않는다.")]
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food
 @using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
 @inject RoleWorkspaceViewModel Model
 @inject INeighborhoodMapHost MapHost
 @inject NavigationManager Navigation
@@ -57,6 +58,8 @@
         { <div class="role-map-workspace__empty" role="status"><h2>업무를 다시 확인하는 중입니다</h2><p>돌아오면 최신 정보를 확인합니다.</p></div> }
         else
         {
+            @if (Model.CompletionFeedback is { } completion)
+            { <WorkflowCompletionPanel State="completion" ReturnHref="@Model.WorkspaceHref" ReturnLabel="현재 업무로" /> }
             @if (Model.Error is { } error)
             {
                 <div class="role-map-workspace__error" role="alert"><p>@error</p>
@@ -89,6 +92,8 @@
                             { <div class="role-map-workspace__required-request"><h3>@request.Label</h3><p>@request.Value</p></div> }
                         </section>
                     }
+                    @if (IsCargoWorkspace && item.ComparisonFields is { Count: > 0 } selectedConditions)
+                    { <화물운송조건Panel Fields="selectedConditions" /> }
                     @if (Model.DetailsExpanded)
                     {
                         <div id="role-workspace-details" class="role-map-workspace__details">
@@ -184,7 +189,7 @@
             { <p role="status" class="role-map-workspace__hint">처리 결과를 확인하고 있습니다.</p> }
             @if (Model.Items.Count > 1 || Model.ListOnly && Model.Items.Count > 0)
             {
-                <details class="role-map-workspace__list" open="@Model.ListOnly"><summary>업무 목록 · @Model.Items.Count 건</summary><ul>@foreach (var row in Model.Items) { <li><button type="button" disabled="@(Model.CommandBusy || Model.IsRefreshing)" aria-pressed="@(row.Id == Model.SelectedId ? "true" : "false")" @onclick="() => SelectItem(row.Id)"><span><strong>@row.Title</strong><small>@row.Status</small></span><MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" /></button></li> }</ul></details>
+                <details class="role-map-workspace__list" open="@Model.ListOnly"><summary>업무 목록 · @Model.Items.Count 건</summary><ul>@foreach (var row in Model.Items) { <li><button type="button" disabled="@(Model.CommandBusy || Model.IsRefreshing)" aria-pressed="@(row.Id == Model.SelectedId ? "true" : "false")" @onclick="() => SelectItem(row.Id)"><span><strong>@row.Title</strong><small>@row.Status</small></span><MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" /></button>@if (IsCargoWorkspace && row.ComparisonFields is { Count: > 0 } rowConditions) { <화물운송조건Panel Fields="rowConditions" Compact="true" /> }</li> }</ul></details>
             }
             @if (!IsFoodDriver)
             {
@@ -230,11 +235,24 @@
             }
             else if (Model.AccessDenied)
             {
-                <div class="role-map-workspace__error" role="alert"><p>@Model.Error</p><a href="@Href(HomeHref)">역할 선택으로</a></div>
+                <div class="role-map-workspace__error" role="alert">
+                    <p>@Model.Error</p>
+                    <div class="role-map-workspace__actions">
+                        <a href="@ActionHref(LoginHref)">다른 계정으로 로그인</a>
+                        <button type="button" disabled="@(Model.CommandBusy || Model.AccountBusy)" @onclick="Model.SignOutAsync">@(Model.AccountBusy ? "로그아웃 중" : "로그아웃")</button>
+                        <a href="@Href(HomeHref)">역할 선택으로</a>
+                    </div>
+                    @if (Model.AccountError is { } deniedAccountError) { <p role="alert">@deniedAccountError</p> }
+                </div>
             }
             else if (Model.IsLoading && !Model.RequiresLogin)
             {
                 <p class="role-map-workspace__loading" role="status">로그인 상태를 확인하고 있습니다.</p>
+            }
+            else if (!Model.IsAuthenticated && Model.Role?.Key is "shipper" or "cargo-driver")
+            {
+                <CargoPublicBrowseScreen PrimaryActionHref="@(Model.Role.Key == "shipper" ? CargoPublicBrowseNavigation.ShipperRequestLogin : ActionHref(LoginHref))"
+                                         PrimaryActionLabel="@(Model.Role.Key == "shipper" ? "로그인하고 운송 의뢰" : "로그인하고 배차 추천받기")" />
             }
             else
             {
@@ -251,6 +269,7 @@
 @code {
     private bool CanShowWorkspace => Model.IsAuthenticated && !Model.RequiresLogin && !Model.AccessDenied;
     private bool IsFoodDriver => Model.Role?.Key == "food-driver";
+    private bool IsCargoWorkspace => Model.BusinessCode == "freight-delivery";
     private bool IsDriver => IsFoodDriver || Model.Role?.Key == "cargo-driver";
     private string ReceivingActionKey => IsFoodDriver ? FoodDriverRoleWorkspaceAdapter.DisableDispatch : CargoDriverWorkSession.DisableDispatch;
     private RoleWorkspaceAction? DispatchControl => !IsDriver ? null : Model.EmptyActions.FirstOrDefault(action => action.Key is

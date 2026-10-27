@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace DriverApp.Services;
 
@@ -11,6 +12,84 @@ public interface IDriverCargoPhotoRecoveryStore
     Task<DriverTransportCompletionPhoto?> LoadAsync(string owner, DriverTransportCompletionPhotoKind kind, long id,
         CancellationToken cancellationToken = default);
     Task RemoveAsync(string owner, DriverTransportCompletionPhotoKind kind, long id, CancellationToken cancellationToken = default);
+}
+
+/// <summary>촬영·업로드를 시작할 때 고정한 계정·서버를 후속 보호 IO에도 사용합니다.</summary>
+public interface IDriverCargoPhotoRecoveryScope : IDriverCargoPhotoRecoveryStore
+{
+    WorkflowRecoverySnapshot Capture(string owner, CancellationToken cancellationToken = default);
+    bool IsCurrent(WorkflowRecoverySnapshot snapshot);
+    Task SaveAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhoto photo, CancellationToken cancellationToken = default);
+    Task<DriverTransportCompletionPhoto?> LoadAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default);
+    Task RemoveAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// 암호화 사진 저장소를 현재 계정·서버에 결속합니다. 서버가 기록되지 않은 과거 캐시는 보존하되 자동 복원하지 않습니다.
+/// </summary>
+public sealed class DriverCargoServerPhotoRecoveryStore(IDriverCargoPhotoRecoveryStore inner, IWorkflowRecoveryContext context)
+    : IDriverCargoPhotoRecoveryScope
+{
+    public Task SaveAsync(string owner, DriverTransportCompletionPhoto photo, CancellationToken cancellationToken = default)
+        => SaveAsync(Capture(owner, cancellationToken), photo, cancellationToken);
+
+    public async Task SaveAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhoto photo, CancellationToken cancellationToken = default)
+    {
+        RequireCurrent(snapshot, cancellationToken);
+        await inner.SaveAsync(PhotoOwner(snapshot), photo, cancellationToken);
+        RequireCurrent(snapshot, cancellationToken);
+    }
+
+    public Task<DriverTransportCompletionPhoto?> LoadAsync(string owner, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default)
+        => LoadAsync(Capture(owner, cancellationToken), kind, id, cancellationToken);
+
+    public async Task<DriverTransportCompletionPhoto?> LoadAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default)
+    {
+        RequireCurrent(snapshot, cancellationToken);
+        var photo = await inner.LoadAsync(PhotoOwner(snapshot), kind, id, cancellationToken);
+        try { RequireCurrent(snapshot, cancellationToken); }
+        catch
+        {
+            if (photo?.Bytes is { } bytes) CryptographicOperations.ZeroMemory(bytes);
+            throw;
+        }
+        return photo;
+    }
+
+    public Task RemoveAsync(string owner, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default)
+        => RemoveAsync(Capture(owner, cancellationToken), kind, id, cancellationToken);
+
+    public async Task RemoveAsync(WorkflowRecoverySnapshot snapshot, DriverTransportCompletionPhotoKind kind, long id,
+        CancellationToken cancellationToken = default)
+    {
+        RequireCurrent(snapshot, cancellationToken);
+        await inner.RemoveAsync(PhotoOwner(snapshot), kind, id, cancellationToken);
+        RequireCurrent(snapshot, cancellationToken);
+    }
+
+    public bool IsCurrent(WorkflowRecoverySnapshot snapshot) => context.IsCurrent(snapshot);
+
+    public WorkflowRecoverySnapshot Capture(string owner, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var snapshot = context.Capture();
+        if (snapshot.Owner != owner) throw new OperationCanceledException("현재 계정의 사진만 복구할 수 있습니다.", cancellationToken);
+        RequireCurrent(snapshot, cancellationToken);
+        return snapshot;
+    }
+
+    private void RequireCurrent(WorkflowRecoverySnapshot snapshot, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!context.IsCurrent(snapshot)) throw new OperationCanceledException("계정이나 서버가 변경되어 이전 사진을 적용하지 않았습니다.", cancellationToken);
+    }
+
+    private static string PhotoOwner(WorkflowRecoverySnapshot snapshot) => snapshot.Owner + ".server-" + snapshot.EndpointKey;
 }
 
 /// <summary>

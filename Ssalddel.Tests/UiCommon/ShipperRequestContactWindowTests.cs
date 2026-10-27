@@ -85,6 +85,7 @@ public sealed class ShipperRequestContactWindowTests
     internal static 운송의뢰작성ViewModel CompleteState() => new()
     {
         화물종류 = "검증 화물", 화물수량 = 1,
+        화물중량Kg = 2m, 화물길이Mm = 300, 화물폭Mm = 200, 화물높이Mm = 100,
         상차도로명주소 = "검증 상차지", 하차도로명주소 = "검증 하차지",
         상차시간창시작일시 = new(2030, 10, 3, 9, 0, 0),
         상차시간창종료일시 = new(2030, 10, 3, 10, 0, 0),

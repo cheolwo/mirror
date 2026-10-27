@@ -3,6 +3,10 @@ using Microsoft.Extensions.Options;
 using 살뜰.Data;
 using 살뜰.Services.Dispatch.Notification;
 using 살뜰.Services.Dispatch.Queue;
+using Ssalddel.Services.Dispatch.Compliance;
+using Ssalddel.Services.Dispatch.Participation;
+using 살뜰.Services.Dispatch.Common;
+using 살뜰.Services.Dispatch.Recommendation;
 
 namespace 살뜰.Services.Dispatch.Coordination;
 
@@ -11,7 +15,7 @@ public interface I국내화물배차조율적용Service
     Task<국내화물배차조율적용결과> 추천잠금적용Async(
         국내화물배차조율결과 조율결과,
         int? timeoutSeconds = null,
-        int 기사동시추천잠금건수 = 2,
+        int 기사동시추천잠금건수 = 1,
         CancellationToken cancellationToken = default);
 }
 
@@ -23,6 +27,12 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
     private readonly I국내화물운송기사상태Service _기사상태Service;
     private readonly I국내화물배달권실행공간Store _배달권실행공간Store;
     private readonly ILogger<국내화물배차조율적용Service> _logger;
+    private readonly I신규화물업무자격Guard? _신규업무자격;
+    private readonly I화물배차상태SnapshotService? _상태근거;
+    private readonly I운영배차공통UseCase? _수신;
+    private readonly ISharedDriverWorkAdmissionService? _참여;
+    private readonly I화물배차수락적격성Service? _적격성;
+    private readonly TimeProvider _clock;
 
     public 국내화물배차조율적용Service(
         SsalddelContext db,
@@ -30,7 +40,13 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
         I배차추천알림Service 알림Service,
         I국내화물운송기사상태Service 기사상태Service,
         I국내화물배달권실행공간Store 배달권실행공간Store,
-        ILogger<국내화물배차조율적용Service> logger)
+        ILogger<국내화물배차조율적용Service> logger,
+        I신규화물업무자격Guard? 신규업무자격 = null,
+        I화물배차상태SnapshotService? 상태근거 = null,
+        I운영배차공통UseCase? 수신 = null,
+        ISharedDriverWorkAdmissionService? 참여 = null,
+        I화물배차수락적격성Service? 적격성 = null,
+        TimeProvider? clock = null)
     {
         _db = db;
         _options = options.Value;
@@ -38,12 +54,18 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
         _기사상태Service = 기사상태Service;
         _배달권실행공간Store = 배달권실행공간Store;
         _logger = logger;
+        _신규업무자격 = 신규업무자격;
+        _상태근거 = 상태근거;
+        _수신 = 수신;
+        _참여 = 참여;
+        _적격성 = 적격성;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<국내화물배차조율적용결과> 추천잠금적용Async(
         국내화물배차조율결과 조율결과,
         int? timeoutSeconds = null,
-        int 기사동시추천잠금건수 = 2,
+        int 기사동시추천잠금건수 = 1,
         CancellationToken cancellationToken = default)
     {
         var 잠금목록 = new List<국내화물배차추천잠금>();
@@ -55,8 +77,11 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
 
             try
             {
+                var plans = 조율결과.검증계획목록.Where(x => x.계획Id == 배차제안.수행계획Id).Take(2).ToArray();
                 var 적용된잠금 = await 추천잠금시도Async(
                     배차제안,
+                    plans.Length == 1 ? plans[0] : null,
+                    조율결과.판정근거?.입력지문,
                     timeoutSeconds,
                     Math.Max(1, 기사동시추천잠금건수),
                     cancellationToken);
@@ -65,7 +90,7 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
                     실패목록.Add(new 국내화물배차추천잠금실패(
                         배차제안.의뢰Id,
                         배차제안.기사Id,
-                        "이미 추천중이거나 확정되어 잠금 대상에서 제외되었습니다."));
+                        "현재 의뢰·기사 자격 또는 추천 상태가 유효하지 않아 잠금 대상에서 제외되었습니다."));
                 }
                 else
                 {

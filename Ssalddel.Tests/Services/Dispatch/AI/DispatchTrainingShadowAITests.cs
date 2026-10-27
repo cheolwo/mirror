@@ -62,9 +62,9 @@ public sealed class DispatchTrainingShadowAITests
     {
         var responses = new[]
         {
-            "{\"message\":{\"role\":\"assistant\",\"content\":\"{}\",\"tool_calls\":[{}]}}",
-            "{\"message\":{\"role\":\"user\",\"content\":\"{}\"}}",
-            "{\"message\":{},\"message\":{\"role\":\"assistant\",\"content\":\"{}\"}}",
+            "{\"model\":\"qwen3:1.7b\",\"done\":true,\"message\":{\"role\":\"assistant\",\"content\":\"{}\",\"tool_calls\":[{}]}}",
+            "{\"model\":\"qwen3:1.7b\",\"done\":true,\"message\":{\"role\":\"user\",\"content\":\"{}\"}}",
+            "{\"model\":\"qwen3:1.7b\",\"done\":true,\"message\":{},\"message\":{\"role\":\"assistant\",\"content\":\"{}\"}}",
             "{}"
         };
         foreach (var body in responses)
@@ -193,7 +193,8 @@ public sealed class DispatchTrainingShadowAITests
 
     private static HttpResponseMessage Reply(string token) => Envelope(JsonSerializer.Serialize(new { candidateToken = token }));
     private static HttpResponseMessage Envelope(string content) => new(HttpStatusCode.OK)
-    { Content = new StringContent(JsonSerializer.Serialize(new { message = new { role = "assistant", content } }), Encoding.UTF8, "application/json") };
+    { Content = new StringContent(JsonSerializer.Serialize(new { model = DispatchTrainingShadowAI.Model, done = true,
+        message = new { role = "assistant", content } }), Encoding.UTF8, "application/json") };
 
     private sealed class Handler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> response) : HttpMessageHandler
     {

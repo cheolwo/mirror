@@ -11,6 +11,8 @@ using 살뜰.Services.Dispatch.Recommendation;
 using Ssalddel.Services.Community;
 using Ssalddel.Services.External.Naver;
 using 살뜰.Services.Transport;
+using Microsoft.Extensions.Options;
+using Ssalddel.Application.Common.Transport;
 
 namespace Ssalddel.Application.Driver.Work;
 
@@ -41,6 +43,7 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
     private readonly INaverMapsReverseGeocodingService _reverseGeocodingService;
     private readonly ITransportRequestLedgerRealtimeService _transportLedgerRealtimeService;
     private readonly ILogger<위치갱신CommandHandler> _logger;
+    private readonly IOptions<배차큐정책Options>? _위치정책;
 
     public 위치갱신CommandHandler(
         SsalddelContext db,
@@ -54,7 +57,8 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
         ICommunityDriverAvailabilityService communityDriverAvailabilityService,
         INaverMapsReverseGeocodingService reverseGeocodingService,
         ITransportRequestLedgerRealtimeService transportLedgerRealtimeService,
-        ILogger<위치갱신CommandHandler> logger)
+        ILogger<위치갱신CommandHandler> logger,
+        IOptions<배차큐정책Options>? 위치정책 = null)
     {
         _db = db;
         _driverLocationStore = driverLocationStore;
@@ -68,6 +72,7 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
         _reverseGeocodingService = reverseGeocodingService;
         _transportLedgerRealtimeService = transportLedgerRealtimeService;
         _logger = logger;
+        _위치정책 = 위치정책;
     }
 
     public async Task<Result<기사위치갱신응답>> Handle(위치갱신Command request, CancellationToken cancellationToken)
@@ -81,6 +86,13 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
         {
             return Result.Fail<기사위치갱신응답>("위도와 경도가 필요합니다.");
         }
+        var now = DateTime.UtcNow;
+        if (request.위도 is < -90 or > 90 || request.경도 is < -180 or > 180
+            || (request.위도 == 0 && request.경도 == 0) || request.정확도_m is < 0)
+            return Result.Fail<기사위치갱신응답>("유효한 GPS 좌표와 정확도를 확인해 주세요.");
+        if (request.기록시각 is { } recorded
+            && (현재배정기사위치조회.Utc(recorded) > now || now - 현재배정기사위치조회.Utc(recorded) >= TimeSpan.FromMinutes(10)))
+            return Result.Fail<기사위치갱신응답>("현재 GPS를 다시 확인해 주세요. 미래이거나 오래된 위치는 전송할 수 없습니다.");
 
         var applied = await ApplyCurrentWorkLocationAsync(request, cancellationToken);
         if (applied.IsFailed)
@@ -136,7 +148,7 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
             Aging점수 = osState.Aging점수,
             Aging기준시각 = osState.Aging기준시각Utc,
             상차접근허용반경Km = osState.상차접근허용반경Km,
-            권장위치전송간격초 = 300,
+            권장위치전송간격초 = Math.Max(1, _위치정책?.Value.기사위치전송간격초 ?? 30),
             커뮤니티현재공개지역 = communityDistrictLabel
         });
     }
@@ -181,15 +193,22 @@ public sealed class 위치갱신CommandHandler : IRequestHandler<위치갱신Com
                     "현재 근무의 운송 실행유형과 위치를 전송한 기사 앱이 일치하지 않습니다.");
             }
 
-            // 위치 보고는 운행 시작 명령이 아니다. 동시에 종료된 근무 상태도 덮어쓰지 않는다.
-            driver.UpdatedAt = DateTime.UtcNow;
-
-            var recordedAt = request.기록시각 ?? DateTime.UtcNow;
+            var recordedAt = request.기록시각.HasValue ? 현재배정기사위치조회.Utc(request.기록시각.Value) : DateTime.UtcNow;
             var receivedAt = DateTime.UtcNow;
+            if (currentShift?.StoppedAtUtc is not null
+                || (currentShift?.시작시각 is { } startedAt && recordedAt < 현재배정기사위치조회.Utc(startedAt)))
+                return Result.Fail<LocationProjection>("현재 근무를 시작한 뒤의 GPS를 다시 확인해 주세요.");
+            var latest = await _db.기사위치기록.AsNoTracking().Where(x => x.기사Id == request.기사Id)
+                .OrderByDescending(x => x.기록시각).ThenByDescending(x => x.Id).FirstOrDefaultAsync(cancellationToken);
+            if (recordedAt > receivedAt || receivedAt - recordedAt >= TimeSpan.FromMinutes(10)
+                || (latest is not null && recordedAt <= 현재배정기사위치조회.Utc(latest.기록시각)))
+                return Result.Fail<LocationProjection>("새 GPS를 다시 확인해 주세요. 이전 위치를 최신 위치로 덮어쓰지 않습니다.");
+            // 위치 보고는 운행 시작 명령이 아니다. 동시 종료나 검증 실패로 운행을 되살리지 않는다.
+            driver.UpdatedAt = receivedAt;
             var snapshot = new DriverLocationSnapshot(
                 request.기사Id,
-                request.위도.Value,
-                request.경도.Value,
+                request.위도!.Value,
+                request.경도!.Value,
                 request.정확도_m,
                 상태값.기사운행상태.운행중,
                 recordedAt,

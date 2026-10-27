@@ -1,0 +1,31 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
+
+<MudDialog>
+    <TitleContent>
+        <div class="completion-heading" style="--completion-color:@Notice.AccentColor">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="@Notice.IconPath" /></svg>
+            <MudText Typo="Typo.h6">@Notice.Title</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="completion-body" role="status">
+            <p>@Notice.Message</p>
+            @if (!string.IsNullOrWhiteSpace(Notice.NextStep)) { <p class="completion-next">@Notice.NextStep</p> }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="completion-actions">
+            @if (CanReturn) { <MudButton Variant="Variant.Outlined" OnClick="Return">@ReturnLabel</MudButton> }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">확인</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter, EditorRequired] public WorkflowCompletionNotice Notice { get; set; } = default!;
+    [Parameter] public bool CanReturn { get; set; }
+    [Parameter] public string ReturnLabel { get; set; } = "업무 화면으로";
+    private void Close() => Dialog.Close(DialogResult.Ok("dismiss"));
+    private void Return() => Dialog.Close(DialogResult.Ok("return"));
+}

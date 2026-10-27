@@ -1,42 +1,62 @@
 @namespace Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Contracts.Shipper.Request
+@implements IDisposable
 
-<MudPaper Elevation="0" Outlined="true" Class="pa-3">
+<MudPaper Elevation="0" Outlined="true" Class="pa-3" data-testid="shipper-vehicle-recommendation">
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
             <MudStack Spacing="0">
-                <MudText Typo="Typo.subtitle2">화물 기반 추천</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">@ViewModel.추천운송설명</MudText>
+                <MudText Typo="Typo.subtitle2">화물에 맞는 차량 확인</MudText>
+                <div role="status" aria-live="polite" data-testid="vehicle-recommendation-status"><MudText Typo="Typo.body2" Color="Color.Secondary">@ViewModel.추천운송설명</MudText></div>
             </MudStack>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
                        Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.AutoFixHigh"
-                       OnClick="ApplyAsync">
-                추천값 적용
+                       StartIcon="@Icons.Material.Filled.LocalShipping"
+                       Disabled="@(IsBusy || ViewModel.차량추천조회중 || !ViewModel.차량추천조회가능 || RecommendationRequested is null)"
+                       OnClick="RecommendAsync">
+                차량 추천 확인
             </MudButton>
         </MudStack>
 
-        <MudStack Row="true" Spacing="1" Class="flex-wrap">
-            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
-                권장 운송: @ViewModel.권장운송방식
-            </MudChip>
-            @foreach (var 차량 in ViewModel.추천차량종류목록)
+        @if (ViewModel.차량추천조회중)
+        { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+        @if (ViewModel.차량추천현재유효)
+        {
+            @foreach (var reason in ViewModel.서버추천사유)
+            { <MudText Typo="Typo.body2">@reason</MudText> }
+            @foreach (var warning in ViewModel.서버추천경고)
+            { <MudText Typo="Typo.body2" Color="Color.Warning">@warning</MudText> }
+            @if (ViewModel.서버추천후보.Count > 0)
             {
-                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
-                    @차량
-                </MudChip>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check"
+                           Disabled="IsBusy" OnClick="ApplyAsync">첫 추천 차량 선택</MudButton>
             }
-        </MudStack>
+        }
+        @if (!string.IsNullOrWhiteSpace(ViewModel.차량종류))
+        { <MudText Typo="Typo.body2">현재 선택: @ViewModel.차량종류</MudText> }
     </MudStack>
 </MudPaper>
 
 @code {
     [Parameter, EditorRequired] public 운송의뢰작성ViewModel ViewModel { get; set; } = default!;
     [Parameter] public EventCallback OnApplied { get; set; }
+    [Parameter] public Func<차량추천요청, CancellationToken, Task<차량추천응답>>? RecommendationRequested { get; set; }
+    [Parameter] public bool IsBusy { get; set; }
+    private readonly CancellationTokenSource lifetime = new();
+
+    private async Task RecommendAsync()
+    {
+        if (RecommendationRequested is null || IsBusy) return;
+        await ViewModel.차량추천조회Async(RecommendationRequested, lifetime.Token);
+        if (!lifetime.IsCancellationRequested) await OnApplied.InvokeAsync();
+    }
 
     private async Task ApplyAsync()
     {
         ViewModel.화물기반추천적용();
         await OnApplied.InvokeAsync();
     }
+
+    public void Dispose() { lifetime.Cancel(); lifetime.Dispose(); }
 }

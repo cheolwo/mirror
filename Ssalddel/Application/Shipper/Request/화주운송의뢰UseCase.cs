@@ -244,9 +244,11 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
         => await _sender.Send(new 의뢰수정Command(
             requestId,
             new 운송조건입력값(request.운송방식, request.차량종류, request.요금옵션?.서비스레벨),
-            new 화물정보입력값(request.화물?.화물종류, request.화물?.설명, request.화물?.수량, request.화물?.중량Kg, request.화물?.부피Cbm, request.화물?.화물파손주의여부, request.화물?.온도조건),
-            new 위치정보입력값(request.픽업?.주소?.도로명주소, request.픽업?.주소?.상세주소, request.픽업?.주소?.위도, request.픽업?.주소?.경도, request.픽업?.연락처?.이름, request.픽업?.연락처?.전화번호, request.픽업?.시간창?.시작일시, request.픽업?.시간창?.종료일시),
-            new 위치정보입력값(request.하차?.주소?.도로명주소, request.하차?.주소?.상세주소, request.하차?.주소?.위도, request.하차?.주소?.경도, request.하차?.연락처?.이름, request.하차?.연락처?.전화번호, request.하차?.시간창?.시작일시, request.하차?.시간창?.종료일시),
+            new 화물정보입력값(request.화물?.화물종류, request.화물?.설명, request.화물?.수량, request.화물?.중량Kg, request.화물?.부피Cbm, request.화물?.화물파손주의여부, request.화물?.온도조건,
+                request.화물?.길이Mm, request.화물?.폭Mm, request.화물?.높이Mm, request.화물?.팔레트개수,
+                request.화물?.바닥회전가능여부, request.화물?.적층가능여부, request.화물?.부피입력초기화 ?? false),
+            new 위치정보입력값(request.픽업?.주소?.도로명주소, request.픽업?.주소?.상세주소, request.픽업?.주소?.위도, request.픽업?.주소?.경도, request.픽업?.연락처?.이름, request.픽업?.연락처?.전화번호, request.픽업?.시간창?.시작일시, request.픽업?.시간창?.종료일시) { 작업시간분 = request.픽업?.작업시간분, 작업시간입력초기화 = request.픽업?.작업시간입력초기화 == true },
+            new 위치정보입력값(request.하차?.주소?.도로명주소, request.하차?.주소?.상세주소, request.하차?.주소?.위도, request.하차?.주소?.경도, request.하차?.연락처?.이름, request.하차?.연락처?.전화번호, request.하차?.시간창?.시작일시, request.하차?.시간창?.종료일시) { 작업시간분 = request.하차?.작업시간분, 작업시간입력초기화 = request.하차?.작업시간입력초기화 == true },
             new 요청조건입력값(request.요금옵션?.요청사항),
             request.정산조건 is null ? null : new 정산조건입력값(request.결제수단, request.정산조건),
             request.요금옵션,
@@ -388,7 +390,16 @@ public sealed class 화주운송의뢰UseCase : I화주운송의뢰UseCase
             request.클라이언트요청Id,
             request.결제상태,
             pricing?.거리계산방식,
-            pricing?.단가출처) { SimulationFulfillment = request.SimulationFulfillment, SimulationAutomaticFulfillment = request.SimulationAutomaticFulfillment, SimulationDesiredCompletionUtc = request.SimulationDesiredCompletionUtc };
+            pricing?.단가출처)
+        {
+            SimulationFulfillment = request.SimulationFulfillment,
+            SimulationAutomaticFulfillment = request.SimulationAutomaticFulfillment,
+            SimulationDesiredCompletionUtc = request.SimulationDesiredCompletionUtc,
+            화물바닥회전가능여부 = cargo.바닥회전가능여부,
+            화물적층가능여부 = cargo.적층가능여부,
+            픽업작업시간분 = pickup?.작업시간분,
+            하차작업시간분 = dropoff?.작업시간분
+        };
     }
 
     private async Task<Result<PricingDTO?>> BuildServerPricingAsync(

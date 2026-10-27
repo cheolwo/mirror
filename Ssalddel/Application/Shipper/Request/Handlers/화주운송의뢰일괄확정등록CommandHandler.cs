@@ -36,8 +36,10 @@ public sealed class 화주운송의뢰일괄확정등록CommandHandler : IReques
 
             var errors = 화주운송의뢰일괄등록지원.ValidateRow(row).ToList();
             var baseRecommendation = _recommendationService.추천(row);
-            var vehicleRecommendation = await _vehicleRecommendationService.추천Async(화주운송의뢰일괄등록지원.To차량추천요청(row), cancellationToken);
+            var vehicleInput = 화주운송의뢰일괄등록지원.To차량추천요청(row, baseRecommendation.운송방식);
+            var vehicleRecommendation = await _vehicleRecommendationService.추천Async(vehicleInput, cancellationToken);
             var mergedRecommendation = 화주운송의뢰일괄등록지원.To통합추천결과(baseRecommendation, vehicleRecommendation, item.최종선택차량종류);
+            errors.AddRange(화주운송의뢰일괄등록지원.ValidateVehicleRecommendation(row.행번호, vehicleRecommendation, mergedRecommendation.차량종류, vehicleInput));
             rowResult.추천결과 = mergedRecommendation;
 
             if (!item.등록여부)

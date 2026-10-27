@@ -3,6 +3,7 @@ using Ssalddel.Application.Admin.Progress;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Common;
 
@@ -20,6 +21,7 @@ public sealed class 운송원장Controller : ControllerBase
     }
 
     [HttpGet("{requestId}/events")]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     public async Task<IActionResult> 이벤트조회(
         string requestId,
         [FromQuery] DateTime? sinceUtc,

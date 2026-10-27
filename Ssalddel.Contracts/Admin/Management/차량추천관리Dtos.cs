@@ -25,6 +25,11 @@ public sealed class 차량추천기준수정요청
     public bool 추천사용여부 { get; set; }
     public int? 운영권장중량Kg { get; set; }
     public int? 팔레트적재개수 { get; set; }
+    // 실차·적재 장비를 확인한 값. 생략하면 기존 제원을 보존한다.
+    public int? 적재함길이Mm { get; set; }
+    public int? 적재함폭Mm { get; set; }
+    public int? 적재함높이Mm { get; set; }
+    public int? 최대적재중량Kg { get; set; }
 }
 
 public sealed class 차량추천시뮬레이션요청

@@ -1,167 +1,20 @@
 @page "/driver/notifications/settings"
-@using Ssalddel.Contracts.Driver.Notification
-@inject 기사알림Service 알림Service
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverNotifications
+@inject IDriverRecommendationSettingsClient Client
+@implements IDisposable
 
-<WebPageHeader Eyebrow="Driver Web"
-               Title="알림 설정"
-               Description="추천콜, 운송, 정산 알림을 어떻게 받을지 확인하고 저장합니다."
-               Badge="기사 알림" />
-
-<MudGrid>
-    <MudItem xs="12" lg="8">
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-            <MudStack Spacing="3">
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
-                    <MudText Typo="Typo.h6">알림 방식</MudText>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@IsBusy" StartIcon="@Icons.Material.Filled.Sync" OnClick="LoadAsync">
-                        새로고침
-                    </MudButton>
-                </MudStack>
-
-                @if (!string.IsNullOrWhiteSpace(StatusMessage))
-                {
-                    <MudAlert Severity="@StatusSeverity" Variant="Variant.Outlined">@StatusMessage</MudAlert>
-                }
-
-                <MudSwitch T="bool" @bind-Value="배차추천알림사용" Color="Color.Primary" Label="배차 추천 알림 사용" />
-                <MudSwitch T="bool" @bind-Value="운전중푸시만사용" Color="Color.Primary" Label="운전 중에는 푸시 알림만 사용" />
-                <MudSwitch T="bool" @bind-Value="소리사용" Color="Color.Primary" Label="소리 사용" />
-                <MudSwitch T="bool" @bind-Value="진동사용" Color="Color.Primary" Label="진동 사용" />
-                <MudSwitch T="bool" @bind-Value="야간알림제한" Color="Color.Primary" Label="야간 알림 제한" />
-                <MudSwitch T="bool" @bind-Value="정차후모아보기" Color="Color.Primary" Label="정차 후 모아보기" />
-
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@IsBusy" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync">
-                    알림 설정 저장
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" lg="4">
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-            <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">푸시 토큰</MudText>
-                <MudText Typo="Typo.body2">@(PushToken?.HasToken == true ? "등록됨" : "미등록")</MudText>
-                @if (PushToken?.HasToken == true)
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@MaskToken(PushToken.PushToken)</MudText>
-                }
-                <MudButton Href="/driver/me" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountCircle">
-                    내 정보 메뉴
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+<WebPageHeader Eyebrow="Driver Web" Title="알림 설정"
+               Description="받고 싶은 추천과 알림 방식을 선택해 주세요." Badge="기사 알림" />
+<DriverRecommendationSettingsForm Model="Model" ShowAdvancedOptions="true" />
+<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-4">
+    <MudButton Href="/driver/notifications" Variant="Variant.Outlined">알림함 보기</MudButton>
+    <MudButton Href="/driver/me" Variant="Variant.Text">내 정보로</MudButton>
+</MudStack>
 
 @code {
-    private 기사푸시토큰응답? PushToken { get; set; }
-    private bool IsBusy { get; set; }
-    private string? StatusMessage { get; set; }
-    private Severity StatusSeverity { get; set; } = Severity.Info;
-    private bool 배차추천알림사용 { get; set; } = true;
-    private bool 운전중푸시만사용 { get; set; } = true;
-    private bool 소리사용 { get; set; } = true;
-    private bool 진동사용 { get; set; } = true;
-    private bool 야간알림제한 { get; set; } = true;
-    private bool 정차후모아보기 { get; set; } = true;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await TryLoadAsync();
-    }
-
-    private async Task TryLoadAsync()
-    {
-        try
-        {
-            await LoadCoreAsync();
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"알림 설정을 아직 불러오지 못했습니다. {ex.Message}", Severity.Info);
-        }
-    }
-
-    private async Task LoadAsync()
-    {
-        IsBusy = true;
-        SetStatus("알림 설정을 조회하는 중입니다.", Severity.Info);
-
-        try
-        {
-            await LoadCoreAsync();
-            SetStatus("알림 설정을 조회했습니다.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            SetStatus(ex.Message, Severity.Error);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private async Task LoadCoreAsync()
-    {
-        var settings = await 알림Service.설정조회Async();
-        PushToken = await 알림Service.푸시토큰조회Async();
-        배차추천알림사용 = settings.배차추천알림사용;
-        운전중푸시만사용 = settings.운전중푸시만사용;
-        소리사용 = settings.소리사용;
-        진동사용 = settings.진동사용;
-        야간알림제한 = settings.야간알림제한;
-        정차후모아보기 = settings.정차후모아보기;
-    }
-
-    private async Task SaveAsync()
-    {
-        IsBusy = true;
-        SetStatus("알림 설정을 저장하는 중입니다.", Severity.Info);
-
-        try
-        {
-            var result = await 알림Service.설정저장Async(new 기사알림설정수정요청
-            {
-                배차추천알림사용 = 배차추천알림사용,
-                운전중푸시만사용 = 운전중푸시만사용,
-                소리사용 = 소리사용,
-                진동사용 = 진동사용,
-                야간알림제한 = 야간알림제한,
-                정차후모아보기 = 정차후모아보기
-            });
-
-            배차추천알림사용 = result.배차추천알림사용;
-            운전중푸시만사용 = result.운전중푸시만사용;
-            소리사용 = result.소리사용;
-            진동사용 = result.진동사용;
-            야간알림제한 = result.야간알림제한;
-            정차후모아보기 = result.정차후모아보기;
-            SetStatus("알림 설정을 저장했습니다.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            SetStatus(ex.Message, Severity.Error);
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private void SetStatus(string message, Severity severity)
-    {
-        StatusMessage = message;
-        StatusSeverity = severity;
-    }
-
-    private static string MaskToken(string? token)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return "토큰 없음";
-        }
-
-        return token.Length <= 8 ? "********" : $"{token[..4]}****{token[^4..]}";
-    }
+    private DriverRecommendationSettingsViewModel Model = default!;
+    protected override void OnInitialized() => Model = new(Client);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    { if (firstRender) { await Model.LoadAsync(); StateHasChanged(); } }
+    public void Dispose() => Model.Dispose();
 }

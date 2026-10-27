@@ -40,7 +40,7 @@ public sealed class 배차수락취소CommandHandler : IRequestHandler<배차수
             return Result.Fail<배차수락취소결과>(권한오류);
         }
 
-        var queue = await _db.운송원장.FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
+        var queue = await _db.운송원장.AsNoTracking().FirstOrDefaultAsync(x => x.의뢰Id == request.RequestId, cancellationToken);
         if (queue is null)
         {
             return Result.Fail<배차수락취소결과>("배차대기 데이터를 찾을 수 없습니다.");
@@ -48,7 +48,10 @@ public sealed class 배차수락취소CommandHandler : IRequestHandler<배차수
 
         if (!배차응답가능정책.수락취소가능(queue, request.기사Id))
         {
-            return Result.Fail<배차수락취소결과>("수락 취소 가능한 배차가 아닙니다.");
+            return 취소불가(배차응답가능정책.물품인수이후인가(queue)
+                ? 배차응답가능정책.물품보유복구필요Code : 배차응답가능정책.취소상태변경Code,
+                배차응답가능정책.물품인수이후인가(queue)
+                    ? 배차응답가능정책.물품보유복구안내 : "현재 운송 상태와 담당 기사를 다시 확인해 주세요. 일반 수락 취소를 진행하지 않았습니다.");
         }
 
         var now = DateTime.UtcNow;
@@ -67,7 +70,7 @@ public sealed class 배차수락취소CommandHandler : IRequestHandler<배차수
                     request.기사Id,
                     전환결과.결과코드,
                     전환결과.메시지);
-                return Result.Fail<배차수락취소결과>("수락 취소 가능한 배차가 아닙니다.");
+                return 취소불가(전환결과.결과코드, 전환결과.메시지);
             }
         }
         catch (Exception ex)
@@ -94,4 +97,8 @@ public sealed class 배차수락취소CommandHandler : IRequestHandler<배차수
 
         return Result.Ok(new 배차수락취소결과(request.RequestId, "수락 취소가 접수되었습니다."));
     }
+
+    private static Result<배차수락취소결과> 취소불가(string code, string message)
+        => Result.Fail<배차수락취소결과>(new Error(message)
+            .WithMetadata("StatusCode", 409).WithMetadata("ErrorCode", code));
 }

@@ -4,12 +4,14 @@
 @using Ssalddel.Contracts.Common.Workflow
 @using Ssalddel.Contracts.Common.Versioning
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
 @inherits MvvmComponentBase<기사상차PageViewModel>
 
 <PageTitle>상차</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Spacing="3">
+        <WorkflowCompletionPanel State="ViewModel.CompletionFeedback" ReturnHref="ViewModel.CompletionReturnHref" ReturnLabel="운송 화면으로" />
         <MudPaper Class="driver-page-legacy-header pa-4" Elevation="1">
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h4">상차</MudText>
@@ -340,6 +342,8 @@
                                                @bind-IssueType="ViewModel.예외.유형"
                                                @bind-Memo="ViewModel.예외.메모"
                                                IsReporting="@ViewModel.예외.신고중"
+                                               CanSubmit="@ViewModel.예외.신고가능"
+                                               ResultUncertain="@ViewModel.예외.결과확인필요"
                                                OnSubmit="@(() => ViewModel.예외.신고Command.ExecuteAsync(null))" />
 
                     @if (ViewModel.인수증.필요)

@@ -5,6 +5,7 @@ using FDriverApp.PageModels;
 using FDriverApp.Services;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Tests.Services.Dispatch.AI;
+using Ssalddel.Contracts.Driver.Notification;
 
 namespace Ssalddel.Tests.Clients;
 
@@ -42,6 +43,13 @@ internal sealed class FDriverWorkflowMobileSession : IAsyncDisposable
             var auth = new FDriverAuthApiService(http, session);
             var api = new FoodDeliveryDriverApiService(http, session, auth);
             var notifications = new FDriverWorkflowNotifications();
+            // The recorded device boundary starts with an explicit food opt-in;
+            // missing legacy flags must not silently make a new alert permissible.
+            notifications.ApplySettings(fixture.DriverId, new 기사알림설정응답
+            {
+                DriverId = fixture.DriverId, 배차추천알림사용 = true, 음식배달추천알림사용 = true,
+                소리사용 = true, 진동사용 = true
+            }, DateTime.UtcNow);
             var receiver = new FDriverFoodPushReceiver(session, new FDriverWorkflowPushStore(fixture.DriverId), notifications);
             var model = new MainPageModel(new(), session, auth, api, new FDriverTestLocationService(), new(), notifications);
             // These switches pause map/device presentation, not the work lifetime or commands.
@@ -80,6 +88,8 @@ internal sealed class FDriverWorkflowPushStore(string owner) : IFDriverPushDevic
 
 internal sealed class FDriverWorkflowNotifications : IFDriverFoodNotificationService
 {
+    private string? _settingsOwner;
+    private 기사알림설정응답? _settings;
     public FDriverFoodNotificationReceipt? Receipt { get; private set; }
     public FDriverFoodNotificationTarget? Target { get; private set; }
     public int PublishRequests { get; private set; }
@@ -93,12 +103,19 @@ internal sealed class FDriverWorkflowNotifications : IFDriverFoodNotificationSer
     public void ClearOpenTarget() => Target = null;
     public bool Publish(string userId, string offerId, DateTime expiresAtUtc)
     {
+        if (userId != _settingsOwner || !FDriverNotificationPublicationGate.AllowsFoodAlert(_settings)) return false;
         PublishRequests++;
         // This is a request to the device port. No OS banner or sound is emitted.
         return PublicationAllowed;
     }
     public void Cancel() => CancelRequests++;
-    public void ClearAccount() { Cancel(); Receipt = null; Target = null; }
+    public void ClearAccount() { Cancel(); Receipt = null; Target = null; _settings = null; _settingsOwner = null; }
+    public void ApplySettings(string ownerId, 기사알림설정응답 settings, DateTime checkedAtUtc)
+    {
+        if (ownerId != settings.DriverId) return;
+        _settingsOwner = ownerId; _settings = settings;
+        if (!FDriverNotificationPublicationGate.AllowsFoodAlert(settings)) Cancel();
+    }
 }
 
 internal sealed class FDriverWorkflowHttpHandler : DelegatingHandler

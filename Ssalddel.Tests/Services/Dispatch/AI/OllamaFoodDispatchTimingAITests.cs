@@ -72,6 +72,11 @@ public sealed class OllamaFoodDispatchTimingAITests
         Assert.Null(handler.Authorization);
         Assert.DoesNotContain("PRIVATE-", handler.Body!);
         using var request = JsonDocument.Parse(handler.Body!);
+        Assert.Equal(new[] { "model", "stream", "think", "keep_alive", "format", "options", "messages" },
+            request.RootElement.EnumerateObject().Select(x => x.Name));
+        Assert.Equal(new[] { "temperature", "seed", "num_ctx", "num_predict" },
+            request.RootElement.GetProperty("options").EnumerateObject().Select(x => x.Name));
+        Assert.Equal(52, request.RootElement.GetProperty("options").GetProperty("seed").GetInt32());
         Assert.False(request.RootElement.GetProperty("stream").GetBoolean());
         Assert.False(request.RootElement.GetProperty("think").GetBoolean());
         Assert.False(request.RootElement.TryGetProperty("tools", out _));

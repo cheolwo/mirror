@@ -7,6 +7,7 @@ using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Contracts.Common.Privacy;
 using SsalddelApp.Models.Shipper;
+using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace SsalddelApp.Services;
 
@@ -157,15 +158,23 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
                ?? [];
     }
 
-    public async Task<decimal> EstimateFareAsync(string vehicleType, decimal distanceKm, CancellationToken cancellationToken = default)
+    public async Task<차량추천응답> RecommendVehiclesAsync(차량추천요청 request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        return await PostAuthorizedJsonAsync<차량추천요청, 차량추천응답>(
+            "api/v1/shipper/requests/recommend-vehicle", request, cancellationToken)
+            ?? throw new InvalidOperationException("차량 추천 응답을 확인하지 못했습니다.");
+    }
+
+    public Task<decimal> EstimateFareAsync(string vehicleType, decimal distanceKm, CancellationToken cancellationToken = default)
+        => EstimateFareAsync(new 화주운송기준운임견적요청 { 차량종류 = vehicleType, 예상거리Km = distanceKm }, cancellationToken);
+
+    public async Task<decimal> EstimateFareAsync(화주운송기준운임견적요청 request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
         var response = await PostAuthorizedJsonAsync<화주운송기준운임견적요청, 화주운송기준운임견적응답>(
             "api/v1/shipper/requests/fare-estimate",
-            new 화주운송기준운임견적요청
-            {
-                차량종류 = vehicleType,
-                예상거리Km = distanceKm
-            },
+            request,
             cancellationToken);
 
         return response?.최종운임
@@ -350,9 +359,9 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
             하차 = ShipperRequestHandoffMapper.Copy(source.하차정보, source.하차지),
             요금옵션 = new PricingDTO
             {
-                서비스레벨 = source.서비스레벨 ?? "standard",
+                서비스레벨 = source.서비스레벨,
                 // 적재 형태에는 독립 계약 필드가 없으므로 명시한 작업 조건으로만 보존합니다.
-                요청사항 = CreateWorkInstructions(source),
+                요청사항 = 운송의뢰작성ViewModel.요청사항전송문구(source.요청사항, source.화물적재형태),
                 예상거리Km = source.예상거리Km,
                 최종운임 = source.기준운임,
                 기사지급예정운임 = source.기사지급예정운임,
@@ -372,26 +381,28 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         };
     }
 
-    private static string CreateWorkInstructions(ShipperRequestItem source)
-    {
-        var instructions = source.요청사항 ?? "SsalddelApp 서버 API 생성";
-        return string.IsNullOrWhiteSpace(source.화물적재형태)
-            ? instructions
-            : $"{instructions}\n적재 형태: {source.화물적재형태}";
-    }
-
     private static ShipperRequestItem ToRequestItem(화주운송의뢰응답 source)
     {
+        var rawCargo = ShipperRequestItem.화물복사(source.화물);
+        if (rawCargo is not null && source.적재조건 is { } loading)
+        {
+            rawCargo.부피Cbm = loading.입력.입력부피Cbm;
+            rawCargo.바닥회전가능여부 = loading.입력.바닥회전가능여부;
+            rawCargo.적층가능여부 = loading.입력.적층가능여부;
+        }
         return new ShipperRequestItem
         {
             의뢰Id = source.의뢰Id,
             화물종류 = source.화물?.화물종류 ?? source.요약?.화물종류 ?? string.Empty,
-            화물원본 = ShipperRequestItem.화물복사(source.화물),
+            화물원본 = rawCargo,
+            원본화물 = ShipperRequestItem.화물복사(rawCargo),
+            적재조건 = source.적재조건,
             원본화물종류 = source.화물?.화물종류 ?? source.요약?.화물종류,
             의뢰상태 = source.의뢰상태,
             결제상태 = source.결제상태,
             배차상태 = source.배차상태,
             운송상태 = source.운송상태,
+            비정상운송검토보류중 = source.비정상운송검토보류중,
             운송원장갱신일시Utc = source.운송원장갱신일시Utc,
             확정기사Id = source.확정기사Id ?? string.Empty,
             확정기사명 = source.확정기사명 ?? string.Empty,
@@ -465,17 +476,22 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     private static CargoDTO? ToUpdateCargo(ShipperRequestItem source)
     {
         var originalType = source.원본화물종류 ?? source.화물원본?.화물종류;
-        if (string.IsNullOrWhiteSpace(source.화물종류)
-            || string.Equals(source.화물종류, originalType, StringComparison.Ordinal))
-            return null;
+        if (string.IsNullOrWhiteSpace(source.화물종류)) return null;
         var cargo = ShipperRequestItem.화물복사(source.화물원본);
         if (cargo is null)
         {
+            if (string.Equals(source.화물종류, originalType, StringComparison.Ordinal)) return null;
             if (originalType is not null)
                 throw new InvalidOperationException("화물 원본 정보를 확인하지 못했습니다. 의뢰를 다시 조회한 뒤 화물종류를 수정해 주세요.");
             return null;
         }
         cargo.화물종류 = source.화물종류;
+        if (source.원본화물 is { } original)
+        {
+            if (System.Text.Json.JsonSerializer.Serialize(cargo) == System.Text.Json.JsonSerializer.Serialize(original)) return null;
+            if (original.부피Cbm.HasValue && !cargo.부피Cbm.HasValue) cargo.부피입력초기화 = true;
+        }
+        else if (string.Equals(source.화물종류, originalType, StringComparison.Ordinal)) return null;
         return cargo;
     }
 

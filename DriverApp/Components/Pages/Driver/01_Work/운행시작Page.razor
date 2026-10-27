@@ -20,7 +20,7 @@
                 <MudText Typo="Typo.body1">시작 모드: @ViewModel.시작모드</MudText>
                 <MudText Typo="Typo.body1">기본 시작 위치: @ViewModel.시작위치</MudText>
                 <MudText Typo="Typo.body1">복귀지: @(ViewModel.복귀지 ?? "미설정")</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">위치 송신 간격: 서버 권장값 기준, 기본 5분</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">위치 송신은 30초 간격으로 요청하며, 서버 권장값에 따라 조정됩니다.</MudText>
                 <MudCheckBox T="bool" @bind-Value="ViewModel.커뮤니티운행공개" Color="Color.Success"
                              Disabled="@(ViewModel.처리중 || ViewModel.운행시작결과미확인)">
                     운행 시작을 커뮤니티에 공개하고 개별 운송 의뢰 받기
@@ -53,6 +53,11 @@
                            OnClick="@(() => ViewModel.운행종료Command.ExecuteAsync(null))">
                     운행 종료
                 </MudButton>
+                @if (ViewModel.지도이동가능)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="ViewModel.처리중"
+                               OnClick="@(() => ViewModel.지도열기Command.ExecuteAsync(null))">운행 지도 열기</MudButton>
+                }
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.HomeSummary">기사 홈에서 상태 보기</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Success" Href="@DriverRoutes.Recommendations">추천 운송 보기</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Forum" Href="@DriverRoutes.CommunityInquiries">커뮤니티 개별 의뢰 보기</MudButton>

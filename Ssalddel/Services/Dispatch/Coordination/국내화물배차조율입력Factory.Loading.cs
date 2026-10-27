@@ -112,6 +112,16 @@ public sealed partial class 국내화물배차조율입력Factory
         IEnumerable<용달기사> drivers,
         CancellationToken cancellationToken)
     {
+        if (_실차제원 is not null)
+        {
+            var actual = new Dictionary<string, 차량제원>(StringComparer.Ordinal);
+            foreach (var driver in drivers)
+            {
+                var resolved = await _실차제원.조회Async(driver.기사Id, cancellationToken);
+                if (resolved.유효제원 is not null) actual[driver.기사Id] = resolved.유효제원;
+            }
+            return actual;
+        }
         var vehicles = drivers
             .Select(x => x.차량)
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -141,7 +151,8 @@ public sealed partial class 국내화물배차조율입력Factory
             }
         }
 
-        return result;
+        return drivers.Where(x => result.ContainsKey(x.차량))
+            .ToDictionary(x => x.기사Id, x => result[x.차량], StringComparer.Ordinal);
     }
 
     private async Task<Dictionary<string, int>> LoadAcceptedTransportCountsAsync(

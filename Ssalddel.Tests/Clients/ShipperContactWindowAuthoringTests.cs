@@ -25,6 +25,7 @@ public sealed class ShipperContactWindowAuthoringTests
         state.화물수량 = 5;
         state.화물설명 = "봉인된 상자를 기울이지 마세요.";
         state.화물중량Kg = 12.5m;
+        state.화물길이Mm = 450; state.화물폭Mm = 350; state.화물높이Mm = 250; state.팔레트개수 = 2;
         state.화물부피Cbm = .48m;
         state.온도조건 = "냉장";
         state.화물적재형태 = "컨테이너 화물(LCL/FCL)";
@@ -50,6 +51,10 @@ public sealed class ShipperContactWindowAuthoringTests
         Assert.Equal(5, operations.Submitted?.화물원본?.수량);
         Assert.Equal(state.화물설명, operations.Submitted?.화물원본?.설명);
         Assert.Equal(12.5m, operations.Submitted?.화물원본?.중량Kg);
+        Assert.Equal(450, operations.Submitted?.화물원본?.길이Mm);
+        Assert.Equal(350, operations.Submitted?.화물원본?.폭Mm);
+        Assert.Equal(250, operations.Submitted?.화물원본?.높이Mm);
+        Assert.Equal(2, operations.Submitted?.화물원본?.팔레트개수);
         Assert.Equal(.48m, operations.Submitted?.화물원본?.부피Cbm);
         Assert.Equal("냉장", operations.Submitted?.화물원본?.온도조건);
         Assert.Equal(state.화물적재형태, operations.Submitted?.화물적재형태);

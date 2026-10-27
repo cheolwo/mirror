@@ -4,7 +4,13 @@ using Ssalddel.Contracts.Admin.Management;
 
 namespace SsalddelAdmin.Services;
 
-public sealed class 차량관리Service
+public interface I기사실차적재확인Client
+{
+    Task<기사실차적재제원응답> 실차조회Async(string driverId, CancellationToken ct = default);
+    Task<기사실차적재제원응답> 실차수정Async(string driverId, 기사실차적재제원수정요청 payload, CancellationToken ct = default);
+}
+
+public sealed class 차량관리Service : I기사실차적재확인Client
 {
     private readonly HttpClient _httpClient;
     private readonly 관리자인증세션Service _session;
@@ -68,5 +74,31 @@ public sealed class 차량관리Service
         }
 
         return request;
+    }
+
+    public async Task<기사실차적재제원응답> 실차조회Async(string driverId, CancellationToken ct = default)
+    {
+        RequireActualAccess(driverId);
+        using var request = CreateRequest(HttpMethod.Get, $"api/v1/admin/vehicle-recommendations/drivers/{Uri.EscapeDataString(driverId)}/actual-loading");
+        using var response = await _httpClient.SendAsync(request, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<기사실차적재제원응답>(cancellationToken: ct) ?? throw new InvalidDataException();
+    }
+
+    public async Task<기사실차적재제원응답> 실차수정Async(string driverId, 기사실차적재제원수정요청 payload, CancellationToken ct = default)
+    {
+        RequireActualAccess(driverId);
+        using var request = CreateRequest(HttpMethod.Put, $"api/v1/admin/vehicle-recommendations/drivers/{Uri.EscapeDataString(driverId)}/actual-loading");
+        request.Content = JsonContent.Create(payload);
+        using var response = await _httpClient.SendAsync(request, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<기사실차적재제원응답>(cancellationToken: ct) ?? throw new InvalidDataException();
+    }
+
+    private void RequireActualAccess(string driverId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(driverId);
+        if (!_session.로그인됨 || !_session.서버관리자인가)
+            throw new HttpRequestException("관리자 로그인이 필요합니다.", null, System.Net.HttpStatusCode.Forbidden);
     }
 }

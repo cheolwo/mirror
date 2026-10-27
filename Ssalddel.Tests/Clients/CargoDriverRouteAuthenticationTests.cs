@@ -12,6 +12,8 @@ public sealed class CargoDriverRouteAuthenticationTests
     [InlineData("community")]
     [InlineData("/common-contents/story")]
     [InlineData("/driver-help")]
+    [InlineData("/driver/public-cargo")]
+    [InlineData("driver/public-cargo?page=2")]
     public async Task PublicRoutes_DoNotRestoreOrRequireAuthentication(string route)
     {
         var auth = new Auth { Restore = _ => throw new InvalidOperationException("Must not restore public content.") };
@@ -29,6 +31,9 @@ public sealed class CargoDriverRouteAuthenticationTests
     [InlineData("driver/home/summary")]
     [InlineData("/driver/transports/current")]
     [InlineData("/driver/transports/detail/synthetic-order?section=loading")]
+    [InlineData("/driver/public-cargo/private-detail")]
+    [InlineData("/driver/recommendations")]
+    [InlineData("/driver/work/start")]
     public async Task AnonymousWorkEntry_RequiresIndependentLoginAndPreservesInternalReturnRoute(string route)
     {
         var auth = new Auth();

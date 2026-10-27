@@ -155,9 +155,14 @@ public sealed class FoodDispatchTimingTransitionTests
     [InlineData("retry")]
     public async Task 비활성_다른업무_마트_재추천에는_수집판정을_호출하지않는다(string mode)
     {
-        await using var f = new Fixture();
+        await using var f = new Fixture(cargo: mode == "cargo");
         if (mode == "off") f.Timing.Enabled = false;
-        if (mode == "cargo") f.Queue.배차업무유형 = 상태값.배차업무유형.용달운송;
+        if (mode == "cargo")
+        {
+            f.Queue.배차업무유형 = 상태값.배차업무유형.용달운송;
+            // 다른 업무의 수집 판정 분리 시험이며, 화물 신규 자격·원본 존재는 명시적인 합성 전제다.
+            f.Db.화주운송의뢰.Add(new 살뜰.도메인.화주.화주운송의뢰 { 의뢰Id = f.Queue.의뢰Id });
+        }
         if (mode == "mart") f.Queue.원본의뢰유형 = 운송의뢰배차원천유형.살뜰마트음식주문;
         if (mode == "retry") f.Queue.추천라운드 = 1;
         await f.Db.SaveChangesAsync();
@@ -178,7 +183,7 @@ public sealed class FoodDispatchTimingTransitionTests
         public NotificationPort Notifications { get; } = new();
         public CargoPort Cargo { get; } = new();
         public 배차대기원장전환Service Service { get; }
-        public Fixture()
+        public Fixture(bool cargo = false)
         {
             connection.Open();
             Db = new(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options, new PersonalDataPort());
@@ -192,7 +197,8 @@ public sealed class FoodDispatchTimingTransitionTests
             Service = new(Db, Options.Create(new 배차큐정책Options()), Selection, Notifications, Cargo,
                 new 음식배달배차흐름Resolver(), Pricing, new FoodRecordPort(), dispatchTiming: Timing, timeProvider: Clock,
                 운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
-                화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service());
+                화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+                신규업무자격: cargo ? Ssalddel.Tests.Support.Simulation운송자격Guard.Instance : null);
         }
         public async ValueTask DisposeAsync() { await Db.DisposeAsync(); await connection.DisposeAsync(); }
     }

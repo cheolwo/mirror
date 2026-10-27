@@ -76,8 +76,11 @@ public sealed class 화주운송의뢰조회QueryHandlerTests
         {
             기사Id = "driver-1",
             기사명 = "안전기사",
-            차량 = "1톤 카고"
+            차량 = "1톤 카고",
+            운행상태 = 상태값.기사운행상태.운행중
         });
+        db.기사근무.Add(new 기사근무 { 기사Id = "driver-1", ActiveDriverId = "driver-1",
+            시작시각 = recordedAt.AddMinutes(-1), 운송실행유형 = Ssalddel.Contracts.Common.Transport.운송실행유형코드.화물운송 });
         db.기사위치기록.Add(new 기사위치기록
         {
             기사Id = "driver-1",
