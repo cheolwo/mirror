@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import importlib.util
 import io
 from pathlib import Path
@@ -46,6 +47,62 @@ def quiet_check(mode, paths, assets=None):
 
 
 class RawMediaGuardTests(unittest.TestCase):
+    def test_reviewed_legacy_beep_and_new_voice_can_share_outgoing_history(self):
+        path = 'FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav'
+        # The unchanged member resource carries the exact legacy beep even in
+        # a shallow checkout whose HEAD already contains the new driver voice.
+        beep = tone_bytes('SsalddelApp/Platforms/Android/Resources/raw/ssalddel_member_delivery.wav')
+        voice = tone_bytes(path)
+        self.assertEqual(hashlib.sha256(beep).hexdigest(), '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61')
+        self.assertEqual(hashlib.sha256(voice).hexdigest(), 'd0ed818d6e9d6449d7224f849d5dc71ea88f3d2a4b788be1d5aa3828765d577b')
+        with fixture_repo() as (repo, git):
+            base = git('rev-parse', 'HEAD')
+            put(repo, path, beep)
+            git('add', '.'); git('commit', '-m', 'reviewed legacy beep')
+            put(repo, path, voice)
+            git('add', '.'); git('commit', '-m', 'reviewed voice')
+            head = git('rev-parse', 'HEAD')
+            paths = guard.history_paths(head, base)
+            assets = guard.notification_asset_blobs(head, base)
+            self.assertEqual(len(assets[path]), 2)
+            self.assertEqual(quiet_check('mirror', paths, assets), 0)
+            self.assertEqual(quiet_check('delivery', paths, assets), 1)
+
+    def test_each_reviewed_voice_rejects_changed_bytes_and_other_paths(self):
+        for path in ['FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav',
+                     'DriverApp/Platforms/Android/Resources/raw/hongdal_dispatch.wav']:
+            with self.subTest(path=path), fixture_repo() as (repo, git):
+                original = tone_bytes(path)
+                put(repo, path, original)
+                git('add', '.')
+                self.assertEqual(quiet_check('mirror', guard.index_paths(), guard.indexed_notification_asset_blobs()), 0)
+                changed = bytearray(original); changed[-1] ^= 1
+                put(repo, path, changed)
+                git('add', '.')
+                self.assertEqual(quiet_check('mirror', guard.index_paths(), guard.indexed_notification_asset_blobs()), 1)
+                put(repo, path, original)
+                put(repo, 'other/' + Path(path).name, original)
+                git('add', '.')
+                self.assertEqual(quiet_check('mirror', guard.index_paths(), guard.indexed_notification_asset_blobs()), 1)
+
+    def test_each_reviewed_voice_cannot_hide_bad_history_by_restoring_or_deleting(self):
+        for path in ['FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav',
+                     'DriverApp/Platforms/Android/Resources/raw/hongdal_dispatch.wav']:
+            for restore in [True, False]:
+                with self.subTest(path=path, restore=restore), fixture_repo() as (repo, git):
+                    base = git('rev-parse', 'HEAD')
+                    put(repo, path, b'captured voice that was not reviewed')
+                    git('add', '.'); git('commit', '-m', 'unreviewed version')
+                    if restore:
+                        put(repo, path, tone_bytes(path))
+                        git('add', '.')
+                    else:
+                        git('rm', path)
+                    git('commit', '-m', 'restore or remove current resource')
+                    head = git('rev-parse', 'HEAD')
+                    self.assertEqual(quiet_check('mirror', guard.history_paths(head, base),
+                                                 guard.notification_asset_blobs(head, base)), 1)
+
     def test_leading_lf_path_cannot_borrow_approved_tone_exception(self):
         path = next(iter(guard.MIRROR_NOTIFICATION_ASSETS))
         disguised = '\n' + path

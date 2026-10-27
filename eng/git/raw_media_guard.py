@@ -13,12 +13,23 @@ IMAGES = frozenset('.jpg .jpeg .png .heic .heif .dng .raw .arw .cr2 .cr3 .nef .o
 CAPTURE_DIRS = frozenset({'originals', 'footage', 'raw-footage', 'raw-captures', '촬영원본', '원본', '쇼츠용', '롱폼-주행용', '.codex-remote-attachments'})
 ZERO = re.compile(r'^0+$')
 OID = re.compile(r'^[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$')
-# Product notification tones generated for r35/r43, not captured audio. Both
-# the exact Git path and the SHA-256 of every outgoing version must match.
+# Product notification tones generated for r35/r43 and the two manually reviewed
+# r19 synthesized voice assets, never captured audio. Every outgoing version
+# must match its exact path and one of these explicitly reviewed SHA-256 values.
 MIRROR_NOTIFICATION_ASSETS = {
-    'FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav': '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
-    'RestaurantDeskApp/Platforms/Android/Resources/raw/ssalddel_order.wav': 'de4c10c92e28d1a0ba4a085713f358fcaea938cda96af105b9894aecdd65dd28',
-    'SsalddelApp/Platforms/Android/Resources/raw/ssalddel_member_delivery.wav': '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
+    'FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav': frozenset({
+        '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
+        'd0ed818d6e9d6449d7224f849d5dc71ea88f3d2a4b788be1d5aa3828765d577b',
+    }),
+    'RestaurantDeskApp/Platforms/Android/Resources/raw/ssalddel_order.wav': frozenset({
+        'de4c10c92e28d1a0ba4a085713f358fcaea938cda96af105b9894aecdd65dd28',
+    }),
+    'SsalddelApp/Platforms/Android/Resources/raw/ssalddel_member_delivery.wav': frozenset({
+        '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
+    }),
+    'DriverApp/Platforms/Android/Resources/raw/hongdal_dispatch.wav': frozenset({
+        '6e0da9aaa1b36521b71a7ce0dff5412edd315cc6531d96c308e385a4c4cbbab2',
+    }),
 }
 
 
@@ -122,7 +133,7 @@ def check(mode: str, paths: set[str], asset_blobs: dict[str, set[str]] | None = 
                 raise ValueError('Invalid notification asset object ID')
             if oid not in hashes:
                 hashes[oid] = hashlib.sha256(git('cat-file', 'blob', oid)).hexdigest()
-            if hashes[oid] != expected:
+            if hashes[oid] not in expected:
                 allowed = False
                 break
         if not allowed:

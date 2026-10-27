@@ -40,5 +40,18 @@
       "mediaGuardExceptionGranted": false,
       "publicDistributionApproved": false
     }
-  ]
+  ],
+  "repositoryPushReview": {
+    "date": "2026-10-27",
+    "userRequest": "푸시",
+    "originalLocalOnlyFieldsAreHistorical": true,
+    "sourceRepository": "https://github.com/cheolwo/mirror.git",
+    "branch": "dev/mirror-integration",
+    "reviewedExactAssetsOnly": true,
+    "recordedAudioNotAllowed": true,
+    "plan": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/generated-notification-assets-push.r19.md",
+    "planSha256": "a59b3bf3b064d16de43364c1c3071929ad5afae7f42e06229f1a79b91fc19228",
+    "commercialDistributionTermsVerified": false,
+    "audiblePlaybackVerified": false
+  }
 }
