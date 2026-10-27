@@ -1,0 +1,21 @@
+{$SSALDDEL_SITE_HOST} {
+	encode zstd gzip
+	route {
+		@backend path /api/* /hubs/* /health/*
+		handle @backend {
+			reverse_proxy app:8080
+		}
+		handle {
+			root * /srv
+			try_files {path} /index.html
+			file_server
+		}
+	}
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(self)"
+		Cache-Control "no-cache"
+	}
+}

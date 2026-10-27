@@ -1,0 +1,93 @@
+{
+  "name": "mirror-integrated-preparation",
+  "x-mirror-readiness": {
+    "stage": "PreparationOnly",
+    "targetExecutionMode": "Operational",
+    "availability": "24h",
+    "apiInstances": 1,
+    "workerInstances": 1,
+    "autoShutdown": false,
+    "monthlyBudgetKrw": 500000,
+    "publicStorageAllowed": false,
+    "operationalEffectsEnabled": false,
+    "databaseScope": "IsolatedPreparation",
+    "requiresSeparateOperationalProfileReview": true
+  },
+  "services": {
+    "mysql": {
+      "environment": {
+        "MYSQL_DATABASE": "mirror_integrated_preparation"
+      }
+    },
+    "mongo": {
+      "environment": {
+        "MONGO_INITDB_DATABASE": "mirror_integrated_preparation"
+      }
+    },
+    "app": {
+      "deploy": {
+        "replicas": 1
+      },
+      "environment": {
+        "ASPNETCORE_ENVIRONMENT": "Staging",
+        "SsalddelExecution__Mode": "Simulation",
+        "DatabaseInitialization__RunAtStartup": "false",
+        "DatabaseInitialization__FailOnError": "true",
+        "ConnectionStrings__DefaultConnection": "server=mysql;port=3306;database=mirror_integrated_preparation;user=ssalddel;password=${SSALDDEL_MYSQL_PASSWORD};SslMode=None;AllowPublicKeyRetrieval=True;",
+        "MongoDb__Database": "mirror_integrated_preparation",
+        "ObjectStorage__Provider": "GoogleCloud",
+        "GoogleCloudStorage__BucketName": "${MIRROR_PRIVATE_STORAGE_BUCKET:?private preparation bucket required}",
+        "GoogleCloudStorage__PrivateBucketName": "${MIRROR_PRIVATE_STORAGE_BUCKET:?private preparation bucket required}",
+        "GoogleCloudStorage__PublicBucketName": "",
+        "GoogleCloudStorage__PublicBaseUrl": "",
+        "TossPayments__ClientKey": "",
+        "TossPayments__SecretKey": "",
+        "TransportPrepayment__Enabled": "false",
+        "DriverPayoutBatch__Enabled": "false",
+        "DriverPayoutBatch__AutomaticPreparationEnabled": "false",
+        "DistributedFulfillment__Enabled": "false",
+        "NeighborhoodSettlement__Enabled": "false",
+        "FreightContinuity__Enabled": "false",
+        "FreightContinuity__ShadowMode": "true",
+        "SharedDriverWork__Enabled": "false",
+        "OperationsAlerts__Enabled": "false",
+        "OperationsAlerts__ExternalSendEnabled": "false",
+        "SalesChannelOrderSync__Enabled": "false",
+        "MobileFieldTest__Enabled": "false",
+        "IdentitySeed__BootstrapAdmin__Enabled": "false",
+        "IdentitySeed__DevelopmentAccounts__Enabled": "false",
+        "VersionFeatureFlags__CommunityTrustWorkflow": "false",
+        "VersionFeatureFlags__DomesticTransportWorkflow": "false",
+        "VersionFeatureFlags__WarehouseFulfillmentWorkflow": "false",
+        "VersionFeatureFlags__SalesChannelFulfillmentWorkflow": "false",
+        "VersionFeatureFlags__HrParticipationWorkflow": "false",
+        "VersionFeatureFlags__FoodDeliveryWorkflow": "false",
+        "VersionFeatureFlags__SsalddelMartWorkflow": "false",
+        "VersionFeatureFlags__PlatformOperationsControl": "false",
+        "VersionFeatureFlags__GroupPurchaseDemandWorkflow": "false",
+        "VersionFeatureFlags__GroupPurchasePracticeWorkflow": "false",
+        "VersionFeatureFlags__CustomsAndTradeDataWorkflow": "false"
+      }
+    }
+  },
+  "volumes": {
+    "mysql_data": {
+      "name": "mirror-integrated-preparation-mysql-data"
+    },
+    "mongo_data": {
+      "name": "mirror-integrated-preparation-mongo-data"
+    },
+    "app_data": {
+      "name": "mirror-integrated-preparation-app-data"
+    },
+    "app_uploads": {
+      "name": "mirror-integrated-preparation-app-uploads"
+    },
+    "caddy_data": {
+      "name": "mirror-integrated-preparation-caddy-data"
+    },
+    "caddy_config": {
+      "name": "mirror-integrated-preparation-caddy-config"
+    }
+  }
+}

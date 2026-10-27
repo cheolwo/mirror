@@ -90,7 +90,7 @@ run_deployment() {
 
   # Explicit migration approval is required for existing Operational databases.
   # The isolated mobile wrapper prepares its own databases and initialization.
-  if [[ "$profile_name" != food-mobile-field-test ]]; then
+  if [[ "$profile_name" != food-mobile-field-test && "$profile_name" != integrated-mobile-field-test ]]; then
     [[ "${SSALDDEL_DEPLOY_MIGRATIONS_VERIFIED:-}" == true ]] || {
       echo "Set SSALDDEL_DEPLOY_MIGRATIONS_VERIFIED=true only after same-image migration and backup verification." >&2
       false
@@ -139,9 +139,78 @@ deploy_profile() {
         echo "Use a separate mobile-test host; an Operational preview project is present." >&2; return 1;
       }
       ;;
+    integrated-mobile-field-test)
+      [[ "$application_root" == /opt/mirror-integrated-field-test ]] || { echo "Integrated test root must be isolated." >&2; return 1; }
+      [[ "${4:-}" == DEPLOY_ISOLATED_INTEGRATED_FIELD_TEST ]] || { echo "Explicit isolated integrated field-test confirmation is required." >&2; return 1; }
+      [[ "$(readlink -f -- "$application_root")" == "$application_root" ]] || { echo "Integrated test root must be a real dedicated directory, not a linked root." >&2; return 1; }
+      project_name=mirror-integrated-field-test
+      [[ -f "$release_directory/deployment.sha256" ]] || { echo "Integrated deployment checksums are required." >&2; return 1; }
+      # Initial setup copies these reviewed files. Do not silently replace an existing gateway/base.
+      cmp -s "$release_directory/Caddyfile" "$application_root/Caddyfile" \
+        && cmp -s "$release_directory/compose.yaml" "$application_root/compose.yaml" || {
+          echo "Integrated base Compose/Caddy must match the reviewed bundle; prepare the dedicated root first." >&2; return 1;
+        }
+      command -v python3 >/dev/null || { echo "Python3 is required for the offline profile guard." >&2; return 1; }
+      validate_integrated_field_profile "$release_directory" || return 1
+      for occupied_project in ssalddel-preview ssalddel-mobile-field-test mirror-integrated-preparation; do
+        [[ -z "$(docker ps -q --filter "label=com.docker.compose.project=$occupied_project")" ]] || {
+          echo "Use a separate integrated-test host; another known preview/preparation project is present." >&2; return 1;
+        }
+      done
+      validate_integrated_public_ports || return 1
+      ;;
     *) echo "Unsupported deployment profile: $profile_name" >&2; return 1 ;;
   esac
   run_deployment "$release_directory" "$profile_name" "$application_root" "$project_name"
+}
+
+validate_integrated_public_ports() {
+  local port ids id owner
+  for port in 80 443; do
+    ids="$(docker ps -q --filter "publish=$port")" || return 1
+    for id in $ids; do
+      owner="$(docker inspect "$id" --format '{{index .Config.Labels "com.docker.compose.project"}}')" || return 1
+      [[ "$owner" == mirror-integrated-field-test ]] || {
+        echo "Another container owns a public gateway port; use a dedicated integrated-test host." >&2; return 1;
+      }
+    done
+  done
+}
+
+# Fixed field-test guards are checked again on the host, before image/DB changes.
+# Generic projections/inbox HostedServices may still run in this isolated synthetic DB.
+validate_integrated_field_profile() {
+  python3 - "$1" <<'PY'
+import json, pathlib, sys
+try:
+    root = pathlib.Path(sys.argv[1])
+    p = json.loads((root/'compose.integrated-mobile-field-test.override.yaml').read_text(encoding='utf-8-sig'))
+    manifest = json.loads((root/'deployment-manifest.json').read_text(encoding='utf-8-sig'))
+    m = p['x-mirror-field-test']; e = p['services']['app']['environment']
+    assert p['name'] == manifest['composeProject'] == 'mirror-integrated-field-test'
+    assert manifest['profile'] == 'integrated-mobile-field-test' and manifest['runtimeMode'] == e['SsalddelExecution__Mode'] == 'Simulation'
+    assert e['ASPNETCORE_ENVIRONMENT'] == 'Staging' and manifest['deploymentRoot'] == '/opt/mirror-integrated-field-test'
+    assert manifest['automaticCloudDeployment'] is False and manifest['physicalDeviceVerified'] is False
+    assert m['autoShutdown'] is False and m['apiInstances'] == p['services']['app']['deploy']['replicas'] == 1
+    assert m['allHostedServicesDisabled'] is False and m['generalProjectionAndInboxWorkersMayRun'] is True
+    assert m['automaticDispatchEnabled'] is False and m['financialExecutionEnabled'] is False and m['weeklyPreparationEnabled'] is False and m['publicReleaseReady'] is False
+    assert e['NeighborhoodMemberDelivery__Enabled'] == 'true' and e['NeighborhoodMemberDelivery__OperationalEnabled'] == 'false'
+    for key in ['TransportPrepayment__Enabled','DriverPayoutBatch__Enabled','DriverPayoutBatch__AutomaticPreparationEnabled','MobileFieldTest__FoodDispatch__Enabled','FoodObserverVerification__Enabled','ObservableOperationsVerification__Enabled','FulfillmentRouting__Enabled','FreightContinuity__Enabled','DistributedFulfillment__Enabled','NeighborhoodSettlement__Enabled','SharedDriverWork__Enabled','DatabaseInitialization__RunAtStartup','IdentitySeed__BootstrapAdmin__Enabled']:
+        assert e[key] == 'false'
+    assert not e['TossPayments__ClientKey'] and not e['TossPayments__SecretKey'] and not e['PushNotifications__ServerKey']
+    assert p['services']['mysql']['environment']['MYSQL_DATABASE'] == p['services']['mongo']['environment']['MONGO_INITDB_DATABASE'] == e['MongoDb__Database'] == 'mirror_integrated_field_test'
+    parts = [part.split('=',1) for part in e['ConnectionStrings__DefaultConnection'].split(';') if part]
+    assert len([part for part in parts if part[0].lower() == 'database']) == 1
+    connection = {key.lower(): value for key, value in parts}
+    assert connection['server'] == 'mysql' and connection['database'] == 'mirror_integrated_field_test'
+    assert e['ObjectStorage__Provider'] == 'GoogleCloud' and not e['GoogleCloudStorage__PublicBucketName'] and not e['GoogleCloudStorage__PublicBaseUrl']
+    assert e['GoogleCloudStorage__PrivateBucketName'].startswith('${MIRROR_FIELD_PRIVATE_BUCKET:?')
+    assert e['GoogleCloudStorage__BucketName'] == e['GoogleCloudStorage__PrivateBucketName']
+    assert all(v['read_only'] is True and v['bind']['create_host_path'] is False and v['source'].startswith('${MIRROR_') for v in p['services']['app']['volumes'])
+    assert all(p['volumes'][v]['name'] == 'mirror-integrated-field-test-'+v.replace('_','-') for v in ['mysql_data','mongo_data','app_data','app_uploads','caddy_data','caddy_config'])
+except Exception:
+    sys.exit('Integrated field-test profile/manifest is invalid; no deployment changes were performed.')
+PY
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
