@@ -56,8 +56,9 @@
                     {
                     <section class="exchange-surface"><h2>배송할 물건</h2><p class="exchange-note">생활 화물 배송용입니다. 음식 주문은 기존 음식 배달 화면을 이용해 주세요.</p>
                         <label for="delivery-cargo">물건 이름</label><input id="delivery-cargo" @bind="Model.Draft.CargoName" @bind:event="oninput" @bind:after="Model.InputChanged" maxlength="120" required />
-                        <label for="delivery-quantity">수량</label><input id="delivery-quantity" type="number" @bind="Model.Draft.Quantity" @bind:after="Model.InputChanged" min="1" max="1000" required />
+                        <label for="delivery-quantity">같은 규격의 포장 수량</label><input id="delivery-quantity" type="number" @bind="Model.Draft.Quantity" @bind:after="Model.InputChanged" min="1" max="1000" required />
                         <label for="delivery-weight">전체 중량(kg)</label><input id="delivery-weight" type="number" @bind="Model.Draft.WeightKg" @bind:after="Model.InputChanged" min="0.001" max="10000" step="0.001" required />
+                        <NeighborhoodDeliveryPackageInput Id="detail-package" Value="Model.Draft" Changed="Model.InputChanged" />
                         <label for="delivery-package-size">포장 크기 <small>선택</small></label><select id="delivery-package-size" @bind="Model.PackageSizeCode" @bind:after="Model.InputChanged"><option value="">미입력</option><option value="Small">작음</option><option value="Medium">보통</option><option value="Large">큼</option></select>
                         <p class="exchange-note">우리 배송 입력용 분류입니다. 실제 업체의 규격을 뜻하지 않으며, 필요한 크기가 없으면 해당 모의 처리처에 접수하지 않습니다.</p>
                         <label for="delivery-vehicle">배송 차량</label><select id="delivery-vehicle" @bind="Model.Draft.VehicleType" @bind:after="Model.InputChanged"><option value="">선택해 주세요</option><option>오토바이</option><option>다마스</option><option>라보</option><option>1톤</option></select>
@@ -67,6 +68,12 @@
 
                     <NeighborhoodDeliveryLocationEditor Id="delivery-pickup" Title="픽업지" Value="Model.Draft.Pickup" @bind-Start="Model.PickupStart" @bind-End="Model.PickupEnd" Changed="Model.InputChanged" />
                     <NeighborhoodDeliveryLocationEditor Id="delivery-dropoff" Title="전달지" Value="Model.Draft.Dropoff" @bind-Start="Model.DropoffStart" @bind-End="Model.DropoffEnd" Changed="Model.InputChanged" />
+                    <section class="exchange-surface"><h2>픽업·전달 작업시간</h2>
+                        <div class="delivery-input-grid">
+                            <div><label for="delivery-pickup-work">픽업 작업시간(분)</label><input id="delivery-pickup-work" type="number" @bind="Model.Draft.Pickup.작업시간분" @bind:after="Model.InputChanged" min="0" step="any" /></div>
+                            <div><label for="delivery-dropoff-work">전달 작업시간(분)</label><input id="delivery-dropoff-work" type="number" @bind="Model.Draft.Dropoff.작업시간분" @bind:after="Model.InputChanged" min="0" step="any" /></div>
+                        </div><p class="exchange-note">물건을 싣거나 건네는 데 필요한 시간을 입력하세요. 즉시 처리할 수 있다고 확인한 경우에만 0분을 입력하며, 빈칸을 0분으로 바꾸지 않습니다.</p>
+                    </section>
                     <section class="exchange-surface"><h2>배송 요청 사항</h2><label for="delivery-notes">요청 사항 <small>선택</small></label><textarea id="delivery-notes" @bind="Model.Draft.Notes" @bind:event="oninput" @bind:after="Model.InputChanged" maxlength="1000" rows="3"></textarea></section>
                     @if (!Model.NeedsSubmissionReview)
                     {
@@ -97,7 +104,9 @@
                 {
                     <section class="exchange-surface" aria-labelledby="delivery-quote-title"><h2 id="delivery-quote-title">배송비 확인</h2>
                         @if (Model.AutoRoutingEnabled)
-                        { <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Model.AutoConditions" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /> }
+                        { <Ssalddel.Ui.Common.Areas.App.Components.Fulfillment.AutoFulfillmentConditions Model="Model.AutoConditions" Disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" />
+                          @if (Model.AutoConditions.AllowedProviderIds.Contains("internal") && NeighborhoodDeliveryLoadingInput.InternalCourierMissing(Model.CurrentInputSnapshot()).Count > 0)
+                          { <p class="delivery-warning">자체 기사 배송을 허용했지만 포장 규격·작업시간·전달 마감 정보가 부족하면 해당 기사 후보는 보류될 수 있습니다. 물품·시간 단계에서 정보를 보완하거나 허용할 처리처를 확인해 주세요.</p> } }
                         @if (!Model.HasCurrentQuote) { <p role="status">입력이 바뀌었습니다. 배송비를 다시 확인해 주세요.</p> }
                         else
                         {
@@ -123,6 +132,9 @@
                             { <p class="delivery-warning">@dispatchNotice</p> }
                             @if (Model.MemberDeliveryRequested || !Model.AutoRoutingEnabled && (!Model.HasFulfillmentOptions || Model.SelectedFulfillmentOption?.ProviderId == "internal")) { <label class="delivery-check"><input type="checkbox" @bind="Model.DirectPaymentAgreed" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>이 배송비를 배송 참여자에게 직접 지급하기로 합의합니다.</span></label> }
                             <label class="delivery-check"><input type="checkbox" @bind="Model.DispatchRequested" disabled="@(Model.IsSending || Model.NeedsSubmissionReview)" /><span>위 조건으로 배송을 요청합니다. 접수와 기사 수락은 별도입니다.</span></label>
+                            @if (Model.InternalCourierMissing.Count > 0)
+                            { <p class="exchange-note">기사 배송을 접수하기 전에 물품·시간 단계에서 보완해 주세요.</p>
+                              @foreach (var missing in Model.InternalCourierMissing) { <p class="delivery-warning">@missing</p> } }
                             @if (Model.NeedsSubmissionReview) { <p role="status">접수 결과 확인이 필요합니다. 내 배송 의뢰를 먼저 확인해 주세요. 다시 제출하면 같은 요청 번호와 입력을 사용합니다.</p> }
                             <button type="submit" class="exchange-primary" disabled="@(Model.IsSending || !Model.NeedsSubmissionReview && !Model.CanConfirmCurrentQuote || !Model.DispatchRequested || Model.Draft.CommerceProtection?.NoticeAccepted != true)">@(Model.IsSending ? "접수 중…" : Model.NeedsSubmissionReview ? "같은 요청 다시 확인하기" : "배송 요청 접수하기")</button>
                         }

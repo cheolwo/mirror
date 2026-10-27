@@ -1,0 +1,98 @@
+@inject NavigationManager Navigation
+
+<main class="quick-intro" data-quick-introduction data-platform-introduction>
+    <header class="quick-intro__top">
+        <a class="quick-intro__brand" href="@Href("/")" aria-label="Mirror 역할 선택 홈">
+            <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 7h8v17H4zM16 4h8v17h-8z" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+            <span>Mirror <strong>거울</strong></span>
+        </a>
+        <nav aria-label="서비스 안내">
+            <a href="#platform-services">할 수 있는 일</a>
+            <a href="#quick-how">이용 방법</a>
+            <a href="#quick-driver">기사 참여</a>
+            <a href="@Href(NeighborhoodDeliveryRoutes.Home)">내 배송</a>
+        </nav>
+    </header>
+
+    <aside class="quick-intro__stage" role="note">
+        <span>운영 준비 중</span>
+        <p>음식·배송·공간·현장 작업을 함께 준비하고 있어요. 실제 이용 가능 여부는 각 업무 화면에서 확인해 주세요.</p>
+    </aside>
+
+    <section class="quick-intro__hero" aria-labelledby="quick-title">
+        <div class="quick-intro__hero-copy">
+            <p class="quick-intro__eyebrow">일상의 공간과 사람을 잇는 Mirror</p>
+            <h1 id="quick-title">가까운 일상을,<br />함께 이어가요.</h1>
+            <p class="quick-intro__lead">음식을 주문하고, 물건을 보내고, 공간과 일손을 나눠요. 각자의 조건을 확인하고 맡은 일을 끝까지 이어갈 수 있도록 준비하고 있습니다.</p>
+            <div class="quick-intro__actions">
+                <a class="quick-intro__button quick-intro__button--primary" href="@Href("/")">내가 할 일 선택 <span aria-hidden="true">↗</span></a>
+                <a class="quick-intro__text-link" href="#quick-how">먼저 이용 방법 보기 <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="quick-intro__scope">특정 지역으로 한정하지 않고 준비합니다.<br />실제 작업은 참여자와 각자의 가능 시간·조건에 따라 달라집니다.</p>
+        </div>
+        <div class="quick-intro__journey" aria-label="배송 의뢰에서 기사 확인, 픽업과 전달로 이어지는 흐름 예시">
+            <div class="quick-intro__journey-heading"><span>한 건의 배송을 차근차근</span><span class="quick-intro__example">흐름 예시</span></div>
+            <svg class="quick-intro__scene" viewBox="0 0 480 280" aria-hidden="true" focusable="false">
+                <path d="M40 218H440M89 66V218M389 92V218" stroke="#d6e3df" stroke-width="2" />
+                <path d="M97 170C158 170 133 87 209 87S274 177 379 177" fill="none" stroke="#90b6ac" stroke-width="3" stroke-dasharray="7 8" />
+                <rect x="54" y="123" width="70" height="76" rx="8" fill="#fff" stroke="#77988e" stroke-width="2" />
+                <path d="M54 145H124M80 123V199M98 154V173" fill="none" stroke="#77988e" stroke-width="2" />
+                <path d="M356 146L388 126L420 146V199H356Z" fill="#fff" stroke="#77988e" stroke-width="2" />
+                <path d="M381 199V170H397V199" fill="none" stroke="#77988e" stroke-width="2" />
+                <g transform="translate(184 103)">
+                    <path d="M0 17L38 0L76 17V66L38 86L0 66Z" fill="#f6eee3" stroke="#9b8065" stroke-width="2" />
+                    <path d="M0 17L38 36L76 17M38 36V86M18 9L56 28V46" fill="none" stroke="#9b8065" stroke-width="2" />
+                </g>
+                <circle cx="89" cy="100" r="13" fill="#c96a2a" /><circle cx="388" cy="104" r="13" fill="#3170b0" />
+                <circle cx="89" cy="100" r="4" fill="#fff" /><circle cx="388" cy="104" r="4" fill="#fff" />
+            </svg>
+            <ol class="quick-intro__journey-steps"><li><span>01</span>의뢰 작성</li><li><span>02</span>기사 확인</li><li><span>03</span>픽업·전달</li></ol>
+            <p>기사 배정과 전달 기록, 실제 지급은 각각 확인해요.</p>
+        </div>
+    </section>
+
+    <section id="platform-services" class="quick-intro__services" aria-labelledby="platform-services-title">
+        <div class="quick-intro__section-heading"><p class="quick-intro__eyebrow">할 수 있는 일</p><h2 id="platform-services-title">역할은 달라도, 함께 이어지는 일.</h2></div>
+        <div class="quick-intro__service-rows">
+            <article><span aria-hidden="true">01</span><div><h3>음식 주문과 배달</h3><p>메뉴 확인부터 음식점 준비, 기사 픽업과 전달까지.</p></div><a href="@Href("/workspace/orderer")">주문하기 →</a></article>
+            <article><span aria-hidden="true">02</span><div><h3>퀵과 화물 배송</h3><p>물품·장소·시간·보수를 확인하고, 맡을 수 있는 기사와 연결해요.</p></div><a href="@Href(CreatePath)">보내기 →</a></article>
+            <article><span aria-hidden="true">03</span><div><h3>공간과 현장 작업</h3><p>동의한 공간에서 입고·보관·피킹·포장·인계를 기록해요.</p></div><a href="@Href("/workspace/warehouse")">업무 보기 →</a></article>
+        </div>
+    </section>
+
+    <section id="quick-how" class="quick-intro__how" aria-labelledby="quick-how-title">
+        <div class="quick-intro__section-heading"><p class="quick-intro__eyebrow">이용 방법</p><h2 id="quick-how-title">무엇을 준비하면 되나요?</h2><p>복잡한 설명 대신, 배송에 필요한 조건부터 확인합니다.</p></div>
+        <ol class="quick-intro__process">
+            <li><span class="quick-intro__number">1</span><h3>물품과 장소</h3><p>물품·무게·포장과 픽업지·전달지를 입력해 주세요.</p></li>
+            <li><span class="quick-intro__number">2</span><h3>요금과 조건</h3><p>견적과 지급 방식, 정보 제공 범위를 확인한 뒤 의뢰합니다.</p></li>
+            <li><span class="quick-intro__number">3</span><h3>배차와 수행</h3><p>조건에 맞는 기사가 제안을 확인하고 수락하면 배송을 이어갑니다.</p></li>
+            <li><span class="quick-intro__number">4</span><h3>전달 기록 확인</h3><p>내 배송에서 진행과 전달 증빙을 확인하고, 지급 여부를 따로 확인합니다.</p></li>
+        </ol>
+    </section>
+
+    <section id="quick-driver" class="quick-intro__people" aria-labelledby="quick-driver-title">
+        <div><p class="quick-intro__eyebrow">보내는 사람과 배송하는 사람</p><h2 id="quick-driver-title">서로의 조건을 알고<br />시작할 수 있도록.</h2></div>
+        <div class="quick-intro__people-copy">
+            <article><h3>보내는 분이라면</h3><p>의뢰를 작성한 뒤 내 배송에서 진행을 확인하세요. 신청했다고 바로 기사 배정이나 전달이 완료되는 것은 아닙니다.</p><a class="quick-intro__text-link" href="@Href(NeighborhoodDeliveryRoutes.Home)">내 배송 확인 <span aria-hidden="true">→</span></a></article>
+            <article><h3>기사님이라면</h3><p>맡을 수 있는 물품과 운송 조건, 제안 보수를 수락 전에 확인하세요. 수락한 업무와 신규 배차 수신은 구분해 관리합니다.</p><a class="quick-intro__text-link" href="@Href("/workspace/cargo-driver")">기사 업무로 이동 <span aria-hidden="true">→</span></a></article>
+        </div>
+    </section>
+
+    <section class="quick-intro__faq" aria-labelledby="quick-faq-title">
+        <div class="quick-intro__section-heading"><p class="quick-intro__eyebrow">자주 묻는 질문</p><h2 id="quick-faq-title">시작하기 전에 확인해요.</h2></div>
+        <div>
+            <details><summary>어느 지역에서 이용할 수 있나요?</summary><p>준비 범위를 특정 지역으로 제한하지 않습니다. 실제 접수와 수행 가능 여부는 요청 지역의 기사와 물품·운송 조건에 따라 확인해야 합니다. 전국 즉시 배차를 보장하는 서비스는 아닙니다.</p></details>
+            <details><summary>배송료는 어떻게 확인하나요?</summary><p>의뢰 화면에 물품과 장소·조건을 입력해 견적을 확인합니다. 실제 접수 전에 표시된 금액과 지급 조건을 확인해 주세요.</p></details>
+            <details><summary>배송료와 작업비는 언제 지급되나요?</summary><p>배송료·피킹료·포장료 등 합의된 서비스 비용을 플랫폼에서 수납하고, 완료 실적을 주간 정산하는 방식으로 준비하고 있습니다. 현재 주간 자동 입금은 제공하지 않습니다. 상품·음식 대금은 당사자 직접 거래로 구분하며 실제 의뢰 화면의 지급 조건을 확인해 주세요.</p></details>
+            <details><summary>운영자가 매번 승인해야 하나요?</summary><p>정상 업무는 당사자가 조건을 확인하고 서버에 기록하며 이어갑니다. 해결되지 않은 신고·금전·안전 문제만 비상 담당자가 검토하는 방식으로 준비합니다. 신고는 6시간 이내 응답, 24시간 이내 처리를 목표로 하며 연장 사건은 72시간까지 추적합니다.</p></details>
+            <details><summary>문제가 생기면 어떻게 하나요?</summary><p>먼저 해당 배송 기록의 상태와 전달 증빙을 확인해 주세요. 문의 연락처와 운영 시간은 서비스 개시 전에 안내할 예정입니다.</p><a href="@Href("/commerce/notices")">거래·개인정보 안내 보기</a></details>
+        </div>
+    </section>
+
+    <footer class="quick-intro__footer"><span>Mirror · 서비스 준비 안내</span><nav aria-label="기본 안내"><a href="@Href("/")">역할 선택</a><a href="@Href("/commerce/notices")">거래·개인정보 안내</a></nav><p>이 화면에서는 개인 정보를 수집하거나 업무를 자동 접수하지 않습니다.</p></footer>
+</main>
+
+@code {
+    private string CreatePath => NeighborhoodDeliveryRoutes.Create + "?returnUrl=%2Fservices";
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+}

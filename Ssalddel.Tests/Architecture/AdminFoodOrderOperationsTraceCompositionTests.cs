@@ -65,7 +65,9 @@ public sealed class AdminFoodOrderOperationsTraceCompositionTests
         Assert.Contains("시험 공제액", payout);
         Assert.Contains("SimulationPayments", payout);
         Assert.Contains("실제 송금은 하지 않습니다.", payout);
-        Assert.Contains("settlement.ServerExecutionModeCode == \"Simulation\"", page);
+        var payoutWorkflow = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "SsalddelAdmin", "Services", "음식주문모의지급Workflow.cs"));
+        Assert.Contains("settlement.ServerExecutionModeCode == \"Simulation\"", payoutWorkflow);
+        Assert.Contains("payout.CanSimulatePayout(orderNo, trace?.주문번호, settlement)", page);
     }
 
     [Fact]

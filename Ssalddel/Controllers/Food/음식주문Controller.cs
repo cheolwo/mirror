@@ -25,8 +25,47 @@ public sealed class 음식주문Controller(
     I주문자음식주문조회UseCase readUseCase,
     I음식점음식주문조회UseCase restaurantReadUseCase,
     I음식점조리시간Service? preparationTimeService = null,
-    I음식자동수행UseCase? autoFulfillment = null) : ControllerBase
+    I음식자동수행UseCase? autoFulfillment = null,
+    I음식주문취소합의UseCase? cancellationAgreements = null) : ControllerBase
 {
+    [HttpGet("{orderNo}/cancellation-agreements")]
+    [Authorize]
+    public Task<IActionResult> 취소합의목록(string orderNo, CancellationToken ct)
+        => 취소합의응답Async(async () => await cancellationAgreements!.목록Async(orderNo, ct));
+
+    [HttpGet("{orderNo}/cancellation-agreements/{agreementId}")]
+    [Authorize]
+    public Task<IActionResult> 취소합의조회(string orderNo, string agreementId, [FromQuery] Guid? clientRequestId, CancellationToken ct)
+        => 취소합의응답Async(async () => await cancellationAgreements!.조회Async(orderNo, agreementId, clientRequestId, ct));
+
+    [HttpPost("{orderNo}/cancellation-agreements")]
+    [Authorize]
+    public Task<IActionResult> 취소합의제안(string orderNo, [FromBody] 음식주문취소합의제안요청 request, CancellationToken ct)
+        => 취소합의응답Async(async () => await cancellationAgreements!.제안Async(orderNo, request, ct));
+
+    [HttpPost("{orderNo}/cancellation-agreements/{agreementId}/consents")]
+    [Authorize]
+    public Task<IActionResult> 취소조건동의(string orderNo, string agreementId, [FromBody] 음식주문취소합의변경요청 request, CancellationToken ct)
+        => 취소합의응답Async(async () => await cancellationAgreements!.동의Async(orderNo, agreementId, request, ct));
+
+    [HttpPost("{orderNo}/cancellation-agreements/{agreementId}/apply")]
+    [Authorize]
+    public Task<IActionResult> 합의취소반영(string orderNo, string agreementId, [FromBody] 음식주문취소합의변경요청 request, CancellationToken ct)
+        => 취소합의응답Async(async () => await cancellationAgreements!.실행Async(orderNo, agreementId, request, ct));
+
+    private async Task<IActionResult> 취소합의응답Async(Func<Task<object?>> execute)
+    {
+        NoStore();
+        if (cancellationAgreements is null) return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        try { var result = await execute(); return result is null ? NotFound() : Ok(result); }
+        catch (음식주문취소합의Exception ex)
+        {
+            var problem = new ProblemDetails { Title = ex.Message, Status = ex.Status };
+            problem.Extensions["errorCode"] = ex.Code;
+            return StatusCode(ex.Status, problem);
+        }
+    }
+
     [HttpPost("fulfillment-quote")]
     [Authorize]
     public async Task<IActionResult> 자동수행조건조회([FromBody] 음식주문등록요청 request, CancellationToken ct)

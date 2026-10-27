@@ -1,4 +1,5 @@
 using FDriverApp.Services;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace FDriverApp.PageModels;
 
@@ -53,7 +54,8 @@ public sealed class FDriverFoodNotificationState
         {
             LatestOfferId = incoming[^1].TicketId;
             // 교체 가능한 OS 알림 하나로 표시하고 같은 제안의 주기 조회에는 소리를 반복하지 않는다.
-            if (_service.Publish(_userId, LatestOfferId, incoming[^1].ExpiresAtUtc!.Value))
+            if (_service.PublishForWorkKind(_userId, LatestOfferId, incoming[^1].ExpiresAtUtc!.Value,
+                incoming[^1].WorkKind ?? DriverWorkKinds.FoodDelivery))
             { _publishedOfferId = LatestOfferId; _publishedOfferKey = Key(incoming[^1]); }
         }
         var receiptChanged = incoming.Length > 0;

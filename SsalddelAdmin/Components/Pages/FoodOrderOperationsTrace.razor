@@ -320,19 +320,20 @@ else
 }
 
 @code {
-    private string orderNo = string.Empty;
-    private 음식주문운영추적응답? trace;
-    private bool isLoading;
-    private bool notFound;
-    private string? errorMessage;
-    private bool isSimulatingPayout;
-    private decimal? fixtureDeduction;
-    private string fixtureEvidence = string.Empty;
-    private string? payoutError;
-    private FoodDeliverySimulatedPayoutRequest? payoutRequest;
+    private 음식주문운영추적ReadSession traceRead = default!;
+    private 음식주문모의지급Workflow payout = default!;
+    private string orderNo => traceRead.OrderNo;
+    private 음식주문운영추적응답? trace => traceRead.Trace;
+    private bool isLoading => traceRead.IsLoading;
+    private bool notFound => traceRead.NotFound;
+    private string? errorMessage => traceRead.ErrorMessage;
+    private bool isSimulatingPayout => payout.IsBusy;
+    private decimal? fixtureDeduction { get => payout.FixtureDeduction; set => payout.FixtureDeduction = value; }
+    private string fixtureEvidence { get => payout.FixtureEvidence; set => payout.FixtureEvidence = value; }
+    private string? payoutError => payout.ErrorMessage;
     private bool reviewMode;
     private string? reviewOrderNo;
-    private bool requiresLogin;
+    private bool requiresLogin => traceRead.RequiresLogin;
     private bool disposed;
     private long generation;
     private CancellationTokenSource lifetime = new();
@@ -345,6 +346,8 @@ else
 
     protected override void OnInitialized()
     {
+        traceRead = new(TraceService.조회Async);
+        payout = new(TraceService.모의지급검증Async);
         pagePath = new Uri(Navigation.Uri).AbsolutePath;
         Navigation.LocationChanged += LocationChanged;
     }
@@ -362,13 +365,10 @@ else
     {
         if (orderNo == value) return;
         Invalidate();
-        orderNo = value;
+        traceRead.ChangeOrderNo(value);
         reviewMode = false;
         reviewOrderNo = null;
-        trace = null;
-        errorMessage = payoutError = null;
-        notFound = false;
-        payoutRequest = null;
+        payout.ChangeOrder();
     }
 
     private void EnterReview()
@@ -398,7 +398,8 @@ else
         lifetime.Cancel();
         lifetime.Dispose();
         lifetime = new();
-        isLoading = isSimulatingPayout = false;
+        traceRead.InvalidatePending();
+        payout.InvalidatePending();
     }
     private void LocationChanged(object? sender, LocationChangedEventArgs args)
     {
@@ -416,12 +417,7 @@ else
     }
 
     private bool CanSimulatePayout(FoodDeliveryOrderSettlementDto settlement)
-        => string.Equals(orderNo.Trim(), trace?.주문번호, StringComparison.Ordinal)
-           && settlement.ServerExecutionModeCode == "Simulation"
-           && settlement.GrossAmount.HasValue
-           && settlement.ReceiptConfirmedAtUtc.HasValue
-           && settlement.PayoutStatusCode != "SimulationSucceeded"
-           && settlement.SettlementStatusCode != "BlockedMissingQuote";
+        => payout.CanSimulatePayout(orderNo, trace?.주문번호, settlement);
 
     private async Task SimulatePayoutAsync()
     {
@@ -431,31 +427,9 @@ else
         var identity = AuthenticationIdentity;
         if (string.IsNullOrWhiteSpace(identity)) return;
         var token = lifetime.Token;
-        isSimulatingPayout = true;
-        payoutError = null;
-        try
-        {
-            if (payoutRequest is null || payoutRequest.ExpectedSettlementRevision != settlement.Revision
-                || payoutRequest.ConfirmedDeductionAmount != fixtureDeduction || payoutRequest.DeductionEvidenceReference != fixtureEvidence.Trim())
-            {
-                payoutRequest = new()
-                {
-                    IdempotencyKey = Guid.NewGuid().ToString("N"), ExpectedSettlementRevision = settlement.Revision,
-                    ConfirmedGrossAmount = settlement.GrossAmount!.Value, ConfirmedDeductionAmount = fixtureDeduction,
-                    DeductionEvidenceReference = fixtureEvidence.Trim()
-                };
-            }
-            var result = await TraceService.모의지급검증Async(requestedOrderNo, payoutRequest, token);
-            if (IsCurrent(owner, identity, requestedOrderNo)) trace.DriverSettlement = result;
-        }
-        catch (Exception) when (!IsCurrent(owner, identity, requestedOrderNo) || token.IsCancellationRequested) { }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-        { requiresLogin = true; trace = null; payoutError = "로그인이 만료되었습니다. 다시 로그인해 주세요."; }
-        catch (Exception ex)
-        {
-            payoutError = ex.Message;
-        }
-        finally { if (!disposed && owner == generation) isSimulatingPayout = false; }
+        await payout.SimulateAsync(requestedOrderNo, settlement,
+            result => { if (trace is not null) trace.DriverSettlement = result; }, traceRead.RequireLogin,
+            () => IsCurrent(owner, identity, requestedOrderNo), () => !disposed && owner == generation, token);
     }
 
     private async Task LoadAsync()
@@ -467,48 +441,12 @@ else
 
         var requestedOrderNo = orderNo.Trim();
         var identity = AuthenticationIdentity;
-        if (string.IsNullOrWhiteSpace(identity)) { requiresLogin = true; trace = null; return; }
-        requiresLogin = false;
+        if (string.IsNullOrWhiteSpace(identity)) { traceRead.RequireLogin(); return; }
         var owner = generation;
         var token = lifetime.Token;
-        isLoading = true;
-        notFound = false;
-        errorMessage = null;
-        trace = null;
-        payoutError = null;
-        payoutRequest = null;
-        fixtureDeduction = null;
-        fixtureEvidence = string.Empty;
-
-        try
-        {
-            var result = await TraceService.조회Async(requestedOrderNo, token);
-            if (!IsCurrent(owner, identity, requestedOrderNo)) return;
-            if (result is not null && result.주문번호 != requestedOrderNo)
-                throw new InvalidOperationException("조회한 주문번호가 요청과 다릅니다.");
-            trace = result;
-            notFound = trace is null;
-            if (trace?.DriverSettlement is { DeductionEvidenceScopeCode: "SimulationFixture" } storedFixture)
-            {
-                fixtureDeduction = storedFixture.DeductionAmount;
-                fixtureEvidence = storedFixture.DeductionEvidenceReference;
-            }
-        }
-        catch (Exception) when (!IsCurrent(owner, identity, requestedOrderNo) || token.IsCancellationRequested) { }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-        { requiresLogin = true; trace = null; errorMessage = "로그인이 만료되었습니다. 다시 로그인해 주세요."; }
-        catch (ArgumentException ex)
-        {
-            errorMessage = ex.Message;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"운영 추적 정보를 불러오지 못했습니다: {ex.Message}";
-        }
-        finally
-        {
-            if (!disposed && owner == generation) isLoading = false;
-        }
+        payout.ResetForTraceLoad();
+        await traceRead.LoadAsync(requestedOrderNo, loaded => payout.RestoreFixture(loaded?.DriverSettlement),
+            () => IsCurrent(owner, identity, requestedOrderNo), () => !disposed && owner == generation, token);
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs args)

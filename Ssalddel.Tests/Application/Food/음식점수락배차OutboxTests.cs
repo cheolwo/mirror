@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -147,6 +147,77 @@ public sealed class 음식점수락배차OutboxTests
         Assert.Equal(0, await service.대기항목처리Async());
     }
 
+    [Theory]
+    [InlineData(음식주문상태코드.취소, false)]
+    [InlineData(음식주문상태코드.취소, true)]
+    [InlineData(음식주문상태코드.거절, false)]
+    [InlineData(음식주문상태코드.거절, true)]
+    public async Task 늦게처리한수락이벤트는_종료주문의큐나배차시작알림을만들지않는다(string status, bool alreadyBound)
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var order = CreateOrderSnapshot();
+        var queue = new FailOnceQueue();
+        var food = new NoOpFoodLedgerOutbox();
+        var notification = new NoOpRestaurantNotification();
+        var store = new RecordingOrderStore(order);
+        var service = new 음식배차요청OutboxService(database.Context, queue, null!, food,
+            null!, notification, store, null!, NullLogger<음식배차요청OutboxService>.Instance);
+        await service.예약Async(order, "restaurant-41", "cancelled-late");
+        order.상태 = status;
+        if (alreadyBound) order.배차대기Id = 77;
+
+        Assert.Equal(1, await service.대기항목처리Async());
+
+        Assert.Equal(OutboxProcessingStatuses.Succeeded, (await database.Context.음식마트원장동기화Outbox.SingleAsync()).처리상태);
+        Assert.Equal(0, queue.Attempts); Assert.Equal(0, store.DispatchLinks);
+        Assert.Equal(0, food.FoodAttempts); Assert.Equal(0, notification.StateChanges);
+    }
+
+    [Fact]
+    public async Task 좌표조회중취소되면_큐생성직전정본을재확인하여_배차와알림을중단한다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var order = CreateOrderSnapshot(); var queue = new FailOnceQueue();
+        var notification = new NoOpRestaurantNotification(); var store = new RecordingOrderStore(order);
+        var geo = new NoOpGeo { OnResolve = () => order.상태 = 음식주문상태코드.취소 };
+        var service = new 음식배차요청OutboxService(database.Context, queue, null!, null!, null!,
+            notification, store, geo, NullLogger<음식배차요청OutboxService>.Instance);
+        await service.예약Async(order, "restaurant-41", "cancelled-during-geocode");
+
+        Assert.Equal(1, await service.대기항목처리Async());
+
+        Assert.Equal(OutboxProcessingStatuses.Succeeded, (await database.Context.음식마트원장동기화Outbox.SingleAsync()).처리상태);
+        Assert.Equal(0, queue.Attempts); Assert.Equal(0, store.DispatchLinks);
+        Assert.Equal(0, notification.StateChanges); Assert.Null(order.배차대기Id);
+        Assert.Empty(await database.Context.운송원장.ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task 원주문결속실패는_새SQL큐도롤백하고_재시도는한큐로연결한다()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var order = CreateOrderSnapshot(); var queue = new PersistingQueue(database.Context);
+        var store = new RecordingOrderStore(order) { FailBinding = true };
+        var service = new 음식배차요청OutboxService(database.Context, queue, new NoOpTransportSync(),
+            new NoOpFoodLedgerOutbox(), new NoOpRealtime(), new NoOpRestaurantNotification(), store,
+            new NoOpGeo(), NullLogger<음식배차요청OutboxService>.Instance);
+        await service.예약Async(order, "restaurant-41", "binding-rollback");
+
+        Assert.Equal(1, await service.대기항목처리Async());
+        Assert.Empty(await database.Context.운송원장.ToArrayAsync());
+        Assert.Null(order.배차대기Id);
+        var item = await database.Context.음식마트원장동기화Outbox.SingleAsync();
+        Assert.Equal(OutboxProcessingStatuses.Pending, item.처리상태);
+        store.FailBinding = false;
+        item.UpdatedAtUtc = DateTime.UtcNow - OutboxProcessingPolicy.RetryDelay - TimeSpan.FromSeconds(1);
+        await database.Context.SaveChangesAsync();
+
+        Assert.Equal(1, await service.대기항목처리Async());
+        Assert.Equal(OutboxProcessingStatuses.Succeeded, item.처리상태);
+        Assert.Equal(Assert.Single(await database.Context.운송원장.ToArrayAsync()).Id, order.배차대기Id);
+        Assert.Equal(1, store.DispatchLinks);
+    }
+
     [Fact]
     public async Task 기존음식마트원장처리기는_배차요청유형을소비하지않는다()
     {
@@ -272,8 +343,24 @@ public sealed class 음식점수락배차OutboxTests
         }
     }
 
+    private sealed class PersistingQueue(SsalddelContext context) : I운송의뢰배차대기Service
+    {
+        public Task<운송원장> 생성또는조회Async(출고예정운송대상 target,
+            운송의뢰배차대기생성옵션? options = null, CancellationToken cancellationToken = default)
+        {
+            var queue = new 운송원장
+            {
+                운송번호 = target.운송의뢰Id!, 의뢰Id = target.운송의뢰Id!, 화주Id = target.판매자UserId,
+                배차업무유형 = 상태값.배차업무유형.음식배달,
+                원본의뢰유형 = 운송의뢰배차원천유형.음식점주문, 원본의뢰Id = target.원천참조번호
+            };
+            context.운송원장.Add(queue); return Task.FromResult(queue);
+        }
+    }
+
     private sealed class RecordingOrderStore(음식주문응답 order) : ISsalddelFoodOrderStore
     {
+        public bool FailBinding { get; set; }
         public int DispatchLinks { get; private set; }
         public 음식주문목록응답 GetOrders() => new() { Items = [order] };
         public 음식주문응답? GetOrder(string orderNo) => orderNo == order.주문번호 ? order : null;
@@ -282,6 +369,7 @@ public sealed class 음식점수락배차OutboxTests
         public 음식주문응답? 배차대기반영(string orderNo, long dispatchWaitId, DateTime dispatchRequestedAtUtc)
         {
             if (orderNo != order.주문번호) return null;
+            if (FailBinding) throw new InvalidOperationException("binding-failed");
             DispatchLinks++;
             order.배차대기Id = dispatchWaitId;
             order.배차상태 = 음식주문배차상태코드.배차대기;
@@ -331,18 +419,20 @@ public sealed class 음식점수락배차OutboxTests
 
     private sealed class NoOpRestaurantNotification : I음식점주문실시간알림Service
     {
+        public int StateChanges { get; private set; }
         public Task 신규주문알림발송Async(음식주문응답 order, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
         public Task 주문상태변경알림발송Async(음식주문응답 order, string reason, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        { StateChanges++; return Task.CompletedTask; }
     }
 
     private sealed class NoOpGeo : IKakao좌표변환Service
     {
+        public Action? OnResolve { get; init; }
         public Task<(double 위도, double 경도)?> 도로명주소좌표변환Async(string 주소, CancellationToken cancellationToken = default)
             => Task.FromResult<(double, double)?>(null);
         public Task<Kakao주소정보?> 주소정보조회Async(string 주소, CancellationToken cancellationToken = default)
-            => Task.FromResult<Kakao주소정보?>(null);
+        { OnResolve?.Invoke(); return Task.FromResult<Kakao주소정보?>(null); }
         public Task<Kakao지역정보?> 좌표지역정보조회Async(decimal 위도, decimal 경도, CancellationToken cancellationToken = default)
             => Task.FromResult<Kakao지역정보?>(null);
     }

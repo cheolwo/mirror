@@ -45,12 +45,14 @@ public sealed partial class 판매채널페이지접근ViewModel : 업무작업V
 {
     private static readonly string[] AllowedRoles = ["화주", "판매자", "서버관리자"];
     private readonly I판매채널페이지접근Service _service;
+    internal ISsalddel현재사용자변경알림? 현재사용자변경알림 { get; }
 
     public 판매채널페이지접근ViewModel(
         I판매채널페이지접근Service service,
         ISsalddel현재사용자Context currentUserContext)
     {
         _service = service;
+        현재사용자변경알림 = currentUserContext as ISsalddel현재사용자변경알림;
         현재사용자Context연결(currentUserContext);
     }
 

@@ -58,7 +58,7 @@ public sealed class RolePageViewModelCompositionTests
         "기사월정산PageViewModel")]
     [InlineData(
         "DriverApp/Components/Pages/Driver/05_Settlement/계좌정보Page.razor",
-        "기사계좌정보PageViewModel")]
+        null)]
     [InlineData(
         "DriverApp/Components/Pages/Driver/05_Settlement/이용료안내Page.razor",
         "기사이용료안내PageViewModel")]
@@ -67,7 +67,7 @@ public sealed class RolePageViewModelCompositionTests
         "기사알림함PageViewModel")]
     [InlineData(
         "DriverApp/Components/Pages/Driver/06_Notification/푸시설정Page.razor",
-        "기사푸시설정PageViewModel")]
+        null)]
     [InlineData(
         "DriverApp/Components/Pages/Driver/02_Recommendation/탐색캠페인Page.razor",
         "기사탐색캠페인PageViewModel")]
@@ -77,11 +77,19 @@ public sealed class RolePageViewModelCompositionTests
     [InlineData(
         "WarehouseManagerApp/Components/Pages/ExpectedInbounds.razor",
         "창고입고예정조회PageViewModel")]
-    public void 대표_역할화면은_DI_MvvmComponent로_PageViewModel을조립한다(
+    public void 대표_역할화면은_업무조회가필요할때만_DI_PageViewModel을조립한다(
         string relativePath,
-        string viewModelName)
+        string? viewModelName)
     {
         var source = Read(relativePath);
+
+        // 계좌·휴대폰 알림은 미연결 상태를 안내하며 무관한 정산/알림 조회를 시작하지 않는다.
+        if (viewModelName is null)
+        {
+            Assert.DoesNotContain("MvvmComponentBase<", source);
+            Assert.DoesNotContain("@inject", source);
+            return;
+        }
 
         Assert.Contains($"MvvmComponentBase<{viewModelName}>", source);
         Assert.DoesNotContain($"new {viewModelName}", source);

@@ -1,0 +1,19 @@
+@namespace RestaurantDeskApp
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="/" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="_content/Ssalddel.Ui.Common/Areas/App/css/role-app-foundation.css" rel="stylesheet" />
+    <link href="app.css" rel="stylesheet" />
+    <link href="RestaurantPosPreview.styles.css" rel="stylesheet" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+<body class="role-app role-app--restaurant">
+    <PreviewRoutes @rendermode="InteractiveServer" />
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+</html>

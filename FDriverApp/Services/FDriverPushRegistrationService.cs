@@ -1,8 +1,7 @@
 using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using Ssalddel.Client.Infrastructure.Notifications;
 using Ssalddel.Contracts.Common.Drivers;
 using Ssalddel.Contracts.Common.Notifications;
 
@@ -10,8 +9,7 @@ namespace FDriverApp.Services;
 
 public sealed class FDriverPushRegistrationService
 {
-    private const string Path = "api/v1/mobile/push/installations";
-    private readonly HttpClient _http;
+    private readonly SsalddelMobilePushInstallationTransport _transport;
     private readonly IFDriverAuthSession _session;
     private readonly FDriverAuthApiService _auth;
     private readonly IFDriverPushDeviceStore _store;
@@ -22,7 +20,7 @@ public sealed class FDriverPushRegistrationService
     public FDriverPushRegistrationService(HttpClient http, IFDriverAuthSession session,
         FDriverAuthApiService auth, IFDriverPushDeviceStore store)
     {
-        _http = http; _session = session; _auth = auth; _store = store;
+        _transport = new(http); _session = session; _auth = auth; _store = store;
         _session.SessionChanged += (_, _) => Interlocked.Increment(ref _sessionRevision);
     }
 
@@ -103,11 +101,11 @@ public sealed class FDriverPushRegistrationService
         if (!state.RevocationPending && state.RegisteredOwnerId == owner && state.RegisteredTokenHash == tokenHash
             && state.RegisteredAtUtc > DateTime.UtcNow.AddDays(-1))
             return new(FDriverPushRegistrationState.Registered);
-        using var request = Authorized(HttpMethod.Put, Path, credentials.Value.Token);
-        request.Content = JsonContent.Create(new SsalddelMobilePushInstallationUpsertRequest(
+        using var request = _transport.CreateUpsertRequest(credentials.Value.Token);
+        request.Content = SsalddelMobilePushInstallationTransport.CreateUpsertContent(new SsalddelMobilePushInstallationUpsertRequest(
             InstallationForOwner(state.DeviceInstallationId, owner), 기사앱식별자.FoodDeliveryDriverApp,
             "android", state.PushToken));
-        using var response = await _http.SendAsync(request, cancellationToken);
+        using var response = await _transport.SendAsync(request, cancellationToken);
         EnsureCurrentOwner(owner, credentials.Value.Revision, cancellationToken);
         if (!response.IsSuccessStatusCode) return Failed("알림 연결을 확인하지 못했습니다. 앱 복귀와 자동 갱신으로 요청을 확인합니다.");
         await _store.SaveAsync(state with { RegisteredOwnerId = owner, RegisteredTokenHash = tokenHash,
@@ -137,9 +135,9 @@ public sealed class FDriverPushRegistrationService
     private bool HasDriverRole() => _session.Roles.Any(role => role == "기사" || string.Equals(role, "Driver", StringComparison.OrdinalIgnoreCase));
     private async Task<bool> DeleteAsync(FDriverPushDeviceState state, string token, CancellationToken cancellationToken)
     {
-        using var request = Authorized(HttpMethod.Delete,
-            $"{Path}/{Uri.EscapeDataString(InstallationForOwner(state.DeviceInstallationId, state.RegisteredOwnerId!))}", token);
-        using var response = await _http.SendAsync(request, cancellationToken);
+        using var request = _transport.CreateDeleteRequest(
+            InstallationForOwner(state.DeviceInstallationId, state.RegisteredOwnerId!), token);
+        using var response = await _transport.SendAsync(request, cancellationToken);
         return response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotFound;
     }
 
@@ -157,6 +155,4 @@ public sealed class FDriverPushRegistrationService
     public static string InstallationForOwner(string deviceId, string ownerId) => $"{deviceId}-{Hash(ownerId)[..16]}";
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     private static FDriverPushRegistrationResult Failed(string message) => new(FDriverPushRegistrationState.Failed, message);
-    private static HttpRequestMessage Authorized(HttpMethod method, string path, string token)
-    { var request = new HttpRequestMessage(method, path); request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token); return request; }
 }

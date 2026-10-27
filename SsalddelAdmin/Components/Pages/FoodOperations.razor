@@ -138,94 +138,26 @@
 </MudStack>
 
 @code {
-    private 음식배달요금정책응답 pricingPolicy = new();
-    private FoodDriverPricingEditor driverPricing = new(new());
-    private 음식점리뷰관리목록응답 reviewItems = new();
-    private 음식점리뷰운영정책응답 reviewPolicy = new();
+    private 음식운영PageState? pageState;
+    private 음식운영PageState State => pageState ??= new(FoodService);
+    private 음식배달요금정책응답 pricingPolicy => State.Pricing.Policy;
+    private FoodDriverPricingEditor driverPricing => State.Pricing.DriverPricing;
+    private 음식점리뷰관리목록응답 reviewItems => State.Reviews.Items;
+    private 음식점리뷰운영정책응답 reviewPolicy => State.Reviews.Policy;
     private int previewDistanceMeters = 2300;
-    private bool isLoading = true;
-    private bool hasLoadedData;
-    private bool isSaving;
-    private string? message;
-    private Severity messageSeverity = Severity.Info;
+    private bool isLoading => State.IsLoading;
+    private bool hasLoadedData => State.HasLoadedData;
+    private bool isSaving => State.IsSaving;
+    private string? message => State.Message;
+    private Severity messageSeverity => State.MessageSeverity;
 
-    private decimal PreviewPlatformFee => CalculatePlatformFee(previewDistanceMeters);
-    private decimal PreviewDriverPayout => CalculateDriverPayout(previewDistanceMeters);
-    private decimal PreviewMargin => PreviewPlatformFee - PreviewDriverPayout;
+    private 음식요금PreviewResult Preview => 음식요금Preview.Calculate(pricingPolicy, previewDistanceMeters);
+    private decimal PreviewPlatformFee => Preview.PlatformFee;
+    private decimal PreviewDriverPayout => Preview.DriverPayout;
+    private decimal PreviewMargin => Preview.Margin;
 
     protected override Task OnInitializedAsync() => LoadAsync();
 
-    private async Task LoadAsync()
-    {
-        isLoading = true;
-        hasLoadedData = false;
-        message = null;
-        try
-        {
-            var loadedPricingPolicy = await FoodService.배달요금정책조회Async();
-            var loadedReviewItems = await FoodService.리뷰운영목록조회Async();
-            var loadedReviewPolicy = await FoodService.운영정책조회Async();
-            pricingPolicy = loadedPricingPolicy;
-            driverPricing = new(pricingPolicy);
-            reviewItems = loadedReviewItems;
-            reviewPolicy = loadedReviewPolicy;
-            hasLoadedData = true;
-        }
-        catch (Exception ex)
-        {
-            messageSeverity = Severity.Error;
-            message = $"음식 운영 정보를 불러오지 못했습니다: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
-
-    private async Task SavePricingPolicyAsync()
-    {
-        if (isSaving || isLoading || !hasLoadedData)
-        {
-            return;
-        }
-
-        isSaving = true;
-        message = null;
-
-        try
-        {
-            pricingPolicy = await FoodService.배달요금정책수정Async(pricingPolicy);
-            driverPricing = new(pricingPolicy);
-            messageSeverity = Severity.Success;
-            message = "배달 요금 정책을 저장했습니다. 이후 새 제안부터 적용되며 기존 제안 금액은 유지됩니다.";
-        }
-        catch (Exception ex)
-        {
-            messageSeverity = Severity.Error;
-            message = $"정책 저장에 실패했습니다: {ex.Message}";
-        }
-        finally
-        {
-            isSaving = false;
-        }
-    }
-
-    private decimal CalculatePlatformFee(int distanceMeters)
-    {
-        var units = CalculateDistanceUnits(distanceMeters);
-        return Math.Max(pricingPolicy.MinimumFee, pricingPolicy.BaseFee + units * pricingPolicy.DistanceUnitFee);
-    }
-
-    private decimal CalculateDriverPayout(int distanceMeters)
-    {
-        var units = CalculateDistanceUnits(distanceMeters);
-        return Math.Max(pricingPolicy.DriverMinimumPayout, pricingPolicy.DriverBasePayout + units * pricingPolicy.DriverDistanceUnitPayout);
-    }
-
-    private int CalculateDistanceUnits(int distanceMeters)
-    {
-        var billableDistance = Math.Max(0, distanceMeters - Math.Max(0, pricingPolicy.IncludedDistanceMeters));
-        var unit = Math.Max(1, pricingPolicy.DistanceUnitMeters);
-        return (int)Math.Ceiling(billableDistance / (double)unit);
-    }
+    private Task LoadAsync() => State.LoadAsync();
+    private Task SavePricingPolicyAsync() => State.SavePricingPolicyAsync();
 }

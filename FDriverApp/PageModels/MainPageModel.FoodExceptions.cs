@@ -72,7 +72,7 @@ public sealed partial class MainPageModel
             var status = await _api.GetDispatchAvailabilityAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (workspaceGeneration is { } generation
-                && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+                && generation != _workspaceRefresh.SnapshotGeneration) return;
             DispatchAutomaticallyPaused = status.미응답자동중지여부;
             ReceivesNewDispatches = FoodDriverDispatchReceptionPolicy.IsReceiving(status);
             DispatchIntentKnown = status.수신의사Code is 운영배차수신의사Code.On or 운영배차수신의사Code.Off;
@@ -103,7 +103,7 @@ public sealed partial class MainPageModel
             NotifyExceptionState();
         }
         catch (Exception) when (workspaceGeneration is { } generation
-            && generation != Interlocked.Read(ref _workspaceSnapshotGeneration)
+            && generation != _workspaceRefresh.SnapshotGeneration
             && !cancellationToken.IsCancellationRequested)
         {
             // A newer command/read already owns both the work card and the dispatch intent.
@@ -276,8 +276,8 @@ public sealed partial class MainPageModel
     {
         ExceptionEditor.Reset(); _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingDispatchIntent = null;
         _pendingStartReceptionRequestId = null; _pendingStartRequestId = null; _verifiedStartRequestId = null;
-        _pendingArrivalOfferId = null; _restoredInterruption = null; _pendingLoadedOwner = null; _pendingMemoryOwner = null;
-        _pendingPersistedFingerprint = null; _pendingRecoveryReady = false;
+        _pendingArrivalOfferId = null; _restoredInterruption = null; _pendingOperations.ResetMemoryBoundary();
+        _pendingRecoveryReady = false;
         DispatchIntentKnown = false; ReceivesNewDispatches = false; DispatchAutomaticallyPaused = false;
         ApplyWaitingDispatchAvailability(null);
         DispatchIntentNotice = "신규 배차 수신 상태 확인 전";

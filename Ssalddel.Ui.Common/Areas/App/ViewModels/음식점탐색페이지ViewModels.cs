@@ -307,6 +307,7 @@ public sealed partial class 음식주문작성ViewModel(
 
     public decimal 주문금액 => 선택항목목록.Sum(item => item.합계);
     public long? 음식점Id => _음식점?.음식점.Id;
+    public bool? 음식점주문가능여부 => _음식점?.음식점.주문가능여부;
     public decimal 최소주문금액 => _음식점?.음식점.최소주문금액 ?? 0;
     public bool 최소주문충족 => 주문금액 >= 최소주문금액;
     public bool 메뉴선택됨 => 선택항목목록.Count > 0;

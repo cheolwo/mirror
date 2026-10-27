@@ -1,0 +1,38 @@
+@using Ssalddel.Contracts.Common.Community
+
+<section class="delivery-package-input" aria-label="포장 규격">
+    <h3>포장 규격</h3>
+    <p class="exchange-note">같은 규격의 포장 한 개를 재고, 수량에는 포장 개수를 적어 주세요. 전체 중량은 포장재·팔레트를 포함한 전량 기준입니다.</p>
+    <div class="delivery-input-grid">
+        <div><label for="@(Id + "-length")">한 개의 길이(mm)</label><input id="@(Id + "-length")" type="number" @bind="Value.PackageLengthMm" @bind:after="InputChanged" min="1" step="1" /></div>
+        <div><label for="@(Id + "-width")">한 개의 폭(mm)</label><input id="@(Id + "-width")" type="number" @bind="Value.PackageWidthMm" @bind:after="InputChanged" min="1" step="1" /></div>
+        <div><label for="@(Id + "-height")">한 개의 높이(mm)</label><input id="@(Id + "-height")" type="number" @bind="Value.PackageHeightMm" @bind:after="InputChanged" min="1" step="1" /></div>
+        <div><label for="@(Id + "-volume")">전체 부피(CBM) <small>선택</small></label><input id="@(Id + "-volume")" type="number" @bind="Value.VolumeCbm" @bind:after="InputChanged" min="0.000000001" step="any" /></div>
+        <div><label for="@(Id + "-pallet")">팔레트 개수 <small>없으면 0</small></label><input id="@(Id + "-pallet")" type="number" @bind="Value.PalletCount" @bind:after="InputChanged" min="0" step="1" /></div>
+        <div><label for="@(Id + "-rotation")">바닥 방향을 돌려 실을 수 있나요?</label><select id="@(Id + "-rotation")" value="@FlagValue(Value.FloorRotationAllowed)" @onchange="RotationChanged"><option value="">미확인</option><option value="true">가능</option><option value="false">불가</option></select></div>
+        <div><label for="@(Id + "-stacking")">다른 포장을 위에 쌓을 수 있나요?</label><select id="@(Id + "-stacking")" value="@FlagValue(Value.StackingAllowed)" @onchange="StackingChanged"><option value="">미확인</option><option value="true">가능</option><option value="false">불가</option></select></div>
+    </div>
+    @{ var loading = NeighborhoodDeliveryLoadingInput.Calculate(Value); }
+    <p class="exchange-note">@(loading.유효부피Cbm is { } volume ? $"차량 검토에 쓸 전체 부피: {volume:0.###########################} CBM" : "치수나 전체 부피가 없어 적재 공간은 아직 확인되지 않았습니다.")</p>
+    @if (loading.치수추정부피Cbm is { } estimated)
+    { <p class="exchange-note">치수 × 포장 수량으로 계산한 부피: @estimated.ToString("0.###########################") CBM. 입력 부피가 더 작으면 큰 값을 사용합니다.</p> }
+    @foreach (var error in loading.오류) { <p class="delivery-warning">@error</p> }
+    <p class="exchange-note">작음·보통·큼 분류로 실제 치수를 추정하지 않습니다. 내부 기사 배송을 접수할 때는 포장 규격과 운반 조건을 확인해 주세요.</p>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public NeighborhoodDeliveryRequest Value { get; set; } = null!;
+    [Parameter] public string Id { get; set; } = "delivery-package";
+    [Parameter] public EventCallback Changed { get; set; }
+    private Task InputChanged() => Changed.InvokeAsync();
+    private static string FlagValue(bool? value) => value switch { true => "true", false => "false", null => "" };
+    private Task RotationChanged(ChangeEventArgs args) => ChangeFlag(args, value => Value.FloorRotationAllowed = value);
+    private Task StackingChanged(ChangeEventArgs args) => ChangeFlag(args, value => Value.StackingAllowed = value);
+    private Task ChangeFlag(ChangeEventArgs args, Action<bool?> assign)
+    {
+        var raw = args.Value?.ToString() ?? "";
+        if (raw is not ("" or "true" or "false")) return Task.CompletedTask;
+        assign(raw == "" ? null : raw == "true");
+        return InputChanged();
+    }
+}

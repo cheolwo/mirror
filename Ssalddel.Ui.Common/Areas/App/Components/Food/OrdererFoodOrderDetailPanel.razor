@@ -125,6 +125,12 @@
             <section aria-label="주문 취소·변경 협의">
                 <MudText Typo="Typo.body2">음식점이 수락한 주문의 취소·변경은 협의가 필요합니다. 요청 접수만으로 주문·배송이 취소되거나 환불이 완료되지 않습니다.</MudText>
                 <MudButton Variant="Variant.Text" Href="@SupportHref(detail.주문.주문번호)">취소·변경 협의 요청 및 처리 확인</MudButton>
+                @if (detail.주문.상태 == 음식주문상태코드.주문확인)
+                {
+                    <FoodCancellationAgreementPanel OrderNo="@detail.주문.주문번호" OrderRevision="@detail.상태이력.Count"
+                        Disabled="@(!Detail.최신상태확인됨 || Detail.처리중 || Detail.AutoRouting.IsSending || Detail.AutoRouting.HasPending)"
+                        Applied="@(() => RetryRequested.InvokeAsync(detail.주문.주문번호))" />
+                }
             </section>
         }
         @if (detail.AutoFulfillment is { } automatic)

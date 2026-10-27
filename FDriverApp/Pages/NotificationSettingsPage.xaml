@@ -7,10 +7,21 @@
     <ScrollView><VerticalStackLayout Padding="16" Spacing="16">
         <Button Text="내 정보로 돌아가기" controls:DriverActionIcon.Glyph="{x:Static fonts:FluentUI.arrow_left_24_regular}" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" />
         <Label Text="알림 설정" Style="{StaticResource DriverTitleStyle}" />
-        <Label Text="새 배달 요청을 메시지와 짧은 알림음으로 알려드립니다." Style="{StaticResource DriverBodyStyle}" />
+        <Label Text="받을 업무의 알림을 선택해 주세요. 배차 수신과 알림 허용은 별도입니다." Style="{StaticResource DriverBodyStyle}" />
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         <VerticalStackLayout IsEnabled="{Binding CanEdit}" Spacing="12">
             <Grid ColumnDefinitions="*,Auto"><Label Text="배차 알림" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Enabled}" /></Grid>
+            <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="8">
+                <Path x:Name="FoodNotificationIcon" Stroke="#2563EB" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="음식 배달 알림" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" />
+                <Switch Grid.Column="2" IsToggled="{Binding FoodEnabled}" />
+            </Grid>
+            <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="8">
+                <Path x:Name="CargoNotificationIcon" Stroke="#DC2626" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="퀵·화물 운송 알림" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" />
+                <Switch Grid.Column="2" IsToggled="{Binding CargoEnabled}" />
+            </Grid>
+            <Label Text="선택한 업무와 배차 수신이 켜져 있어야 요청을 받습니다. 이 앱에서는 음식과 소형 물품·퀵 알림을, 화물 기사 앱에서는 퀵·화물 알림을 받습니다." Style="{StaticResource DriverMetadataStyle}" />
             <Grid ColumnDefinitions="*,Auto"><Label Text="알림음" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Sound}" /></Grid>
             <Grid ColumnDefinitions="*,Auto"><Label Text="진동" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Vibrate}" /></Grid>
             <Grid ColumnDefinitions="*,Auto"><Label Text="야간 무음" Style="{StaticResource DriverBodyStyle}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding QuietAtNight}" /></Grid>

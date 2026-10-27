@@ -22,7 +22,7 @@ public sealed class DriverLoginAndWorkspaceStateCompositionTests
     [Theory]
     [InlineData("02_Recommendation/추천목록Page.razor", "DriverRoutes.Recommendations")]
     [InlineData("02_Recommendation/추천상세Page.razor", "DriverRoutes.RecommendationDetail(의뢰Id)")]
-    [InlineData("02_Recommendation/배차처리Page.razor", "DriverRoutes.RecommendationDecision(의뢰Id)")]
+    [InlineData("02_Recommendation/배차처리Page.razor", "결정복귀경로")]
     [InlineData("03_Progress/진행중운송Page.razor", "DriverRoutes.CurrentTransport")]
     public void 기사업무화면은_직접진입해도_인증_조회_재시도_상태를_구분한다(
         string relativePath,
@@ -40,6 +40,18 @@ public sealed class DriverLoginAndWorkspaceStateCompositionTests
         Assert.Contains("다시 시도", source);
         Assert.Contains("_데이터로딩중", source);
         Assert.Contains("_데이터오류", source);
+    }
+
+    [Fact]
+    public void 배차결정_로그인복귀는_허용한_수락거절의도와_같은의뢰를_보존한다()
+    {
+        var source = Read("DriverApp", "Components/Pages/Driver/02_Recommendation/배차처리Page.razor");
+
+        Assert.Contains("Intent is \"accept\" or \"reject\" ? Intent : null", source);
+        Assert.Contains("private string 결정복귀경로 => 확인된의도 is { } intent", source);
+        Assert.Contains("$\"{DriverRoutes.RecommendationDecision(의뢰Id)}?intent={intent}\"", source);
+        Assert.Contains(": DriverRoutes.RecommendationDecision(의뢰Id)", source);
+        Assert.Contains("DriverRoutes.LoginFor(결정복귀경로)", source);
     }
 
     [Fact]

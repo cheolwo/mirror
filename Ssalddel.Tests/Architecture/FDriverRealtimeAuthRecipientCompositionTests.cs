@@ -51,7 +51,8 @@ public sealed class FDriverNotificationAuthRecipientCompositionTests
         var registrations = Read("FDriverApp", "MauiProgram.cs");
         var model = Read("FDriverApp", "PageModels/MainPageModel.cs");
 
-        Assert.Contains("_fcmPushService.SendToTokenAsync", push);
+        Assert.Contains("_fcmPushService.SendAsync", push);
+        Assert.Contains("DataOnly: true", push);
         Assert.Contains("[Route(\"api/v1/driver/notifications\")]", controller);
         Assert.Contains("[HttpPut(\"push-token\")]", controller);
         Assert.DoesNotContain("Microsoft.AspNetCore.SignalR.Client", project);

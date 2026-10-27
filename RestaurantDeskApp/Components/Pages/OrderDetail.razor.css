@@ -1,0 +1,26 @@
+.pos-detail-host { height:100%; min-height:0; }
+.pos-detail-host ::deep .pos-detail { min-width:0; padding:20px !important; height:100%; }
+.pos-detail-host .pos-detail-layout { display:flex; flex-direction:column; height:100%; min-height:0; }
+.pos-detail-host .pos-detail-scroll { flex:1; min-height:0; overflow:auto; padding-right:8px; scrollbar-gutter:stable; }
+.pos-detail-host ::deep .order-flow-heading { align-items:flex-start; }
+.pos-detail-host ::deep .order-menu-panel,.pos-detail-host ::deep .order-current-step { padding:0 !important; border:0; border-radius:0; }
+.pos-detail-host ::deep .order-current-step { padding-bottom:16px !important; border-bottom:1px solid #dce5e9; }
+.pos-detail-host ::deep .order-step-title { font-size:18px; line-height:26px; }
+.pos-detail-host ::deep .order-page-guide { font-size:14px; color:#586b78; }
+.pos-detail-host ::deep .pos-menu-line { display:grid; grid-template-columns:minmax(0,1fr) 48px 90px; gap:12px; align-items:start; }
+.pos-detail-host ::deep .pos-menu-line .order-amount { text-align:right; white-space:nowrap; }
+.order-command-panel { background:#fff; padding:16px 0 0; display:flex; flex-direction:column; gap:12px; }
+.pos-detail-host ::deep .order-command-panel { flex-shrink:0; padding:16px 0 0; border-top:1px solid #dce5e9; }
+.pos-detail-host ::deep .order-command-panel .mud-stack { gap:8px; }
+.pos-waiting-state { margin:0; display:flex; gap:8px; align-items:center; color:#586b78; font-size:14px; }
+@media(max-width:599px) { .pos-menu-line { grid-template-columns:minmax(0,1fr) 40px 76px; } }
+
+.pos-preparation-controls { display:flex; flex-direction:column; gap:8px; }
+.pos-detail-host .pos-preparation-controls { display:grid; grid-template-columns:140px minmax(0,1fr); gap:12px; align-items:start; }
+.pos-detail-host ::deep .pos-quick-times { align-content:center; padding-top:4px; }
+.pos-detail-host ::deep .pos-quick-times .mud-button-root { min-width:44px; min-height:36px; padding:4px 8px; }
+
+.pos-menu-line { display:grid; grid-template-columns:minmax(0,1fr) 48px 90px; gap:12px; align-items:start; }
+.pos-menu-line ::deep .mud-typography { min-width:0; overflow-wrap:anywhere; }
+.pos-detail-host ::deep .order-command-panel .mud-input-control { margin-top:0; }
+@media(max-width:599px) { .pos-menu-line { grid-template-columns:minmax(0,1fr) 40px 76px; gap:8px; } }

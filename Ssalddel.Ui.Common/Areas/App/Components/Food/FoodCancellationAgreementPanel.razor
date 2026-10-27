@@ -1,0 +1,86 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Food
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@inject IServiceProvider Services
+@implements IDisposable
+
+<section class="food-cancellation-agreement" aria-label="조리 전 취소 조건 협의">
+    @if (_model is { } model)
+    {
+        @if (model.Error is { } error) { <MudAlert Severity="Severity.Warning" Dense="true" role="status">@error</MudAlert> }
+        @if (model.HasPending)
+        {
+            <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || model.IsBusy)" OnClick="@(() => RunAsync(model.CheckAsync))">처리 결과 확인</MudButton>
+        }
+        <details>
+            <summary>조리 전 취소 조건 협의</summary>
+            <div class="food-cancellation-agreement__content">
+                <MudText Typo="Typo.body2">양측이 비용 조건에 동의한 뒤 별도로 취소를 반영합니다. 제안·동의는 취소가 아니며, 취소 반영도 환불·지급 완료가 아닙니다.</MudText>
+                <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || model.IsBusy || model.HasPending)" OnClick="@(() => RunAsync(model.LoadAsync))">취소 조건 확인</MudButton>
+                @if (model.HasLoaded && model.Agreements.Count == 0)
+                { <MudText Typo="Typo.body2">제안된 조건이 없습니다. 협의할 부담액과 근거를 입력해 주세요.</MudText> }
+                @if (model.Agreements.Count > 1)
+                {
+                    @foreach (var value in model.Agreements)
+                    {
+                        <MudButton Variant="Variant.Text" Disabled="@(Disabled || model.IsBusy || model.HasPending)" OnClick="@(() => model.Select(value))">
+                            주문자 @value.OrdererCostKrw.ToString("#,##0.##")원 · 음식점 @value.RestaurantCostKrw.ToString("#,##0.##")원
+                        </MudButton>
+                    }
+                }
+                @if (model.Current is { } current)
+                {
+                    <MudText Typo="Typo.subtitle2">현재 조건</MudText>
+                    <MudText Typo="Typo.body2">주문자 부담 @current.OrdererCostKrw.ToString("#,##0.##")원 · 음식점 부담 @current.RestaurantCostKrw.ToString("#,##0.##")원</MudText>
+                    <MudText Typo="Typo.body2">비용 근거 · @current.CostBasisReference</MudText>
+                    <MudText Typo="Typo.body2">주문자 @(current.OrdererAgreed ? "동의" : "미동의") · 음식점 @(current.RestaurantAgreed ? "동의" : "미동의")</MudText>
+                    @if (current.StateCode == "Cancelled")
+                    { <MudAlert Severity="Severity.Info" Dense="true">주문 취소가 반영됐습니다. 합의한 비용의 수납·환불·지급은 별도로 확인합니다.</MudAlert> }
+                    else if (current.BlockReasonCode.Length > 0 || current.FrozenOrderRevision != model.OrderRevision)
+                    { <MudAlert Severity="Severity.Warning" Dense="true">주문 또는 수행 상태가 달라졌습니다. 최신 상태를 확인하고 지원 담당자와 다시 협의해 주세요.</MudAlert> }
+                    <div class="food-cancellation-agreement__actions">
+                        <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || !model.CanConsent)" OnClick="@(() => RunAsync(() => model.ConsentAsync(true)))">이 조건에 동의</MudButton>
+                        <MudButton Variant="Variant.Text" Disabled="@(Disabled || !model.CanConsent)" OnClick="@(() => RunAsync(() => model.ConsentAsync(false)))">동의 철회</MudButton>
+                    </div>
+                    @if (current.CanApply)
+                    {
+                        <MudCheckBox T="bool" @bind-Value="model.ApplyConfirmed" Disabled="@(Disabled || model.IsBusy || model.HasPending)" Label="양측이 동의한 조건으로 주문 취소를 반영합니다." />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="@(Disabled || !model.CanApply)" OnClick="@(() => RunAsync(model.ApplyAsync))">합의한 취소 반영</MudButton>
+                    }
+                }
+                @if (model.HasLoaded && model.Current?.StateCode != "Cancelled")
+                {
+                    <MudText Typo="Typo.subtitle2">새 조건 제안</MudText>
+                    <MudNumericField T="decimal?" @bind-Value="model.OrdererCostKrw" Label="주문자 부담액 (원)" Min="0" Variant="Variant.Outlined" Disabled="@(Disabled || model.IsBusy || model.HasPending)" />
+                    <MudNumericField T="decimal?" @bind-Value="model.RestaurantCostKrw" Label="음식점 부담액 (원)" Min="0" Variant="Variant.Outlined" Disabled="@(Disabled || model.IsBusy || model.HasPending)" />
+                    <MudTextField T="string" @bind-Value="model.CostBasisReference" Label="합의할 비용 근거" MaxLength="200" Variant="Variant.Outlined" Disabled="@(Disabled || model.IsBusy || model.HasPending)" />
+                    <MudText Typo="Typo.body2">비용이 없으면 0원을 명시합니다. 개인정보는 비용 근거에 입력하지 마세요.</MudText>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || !model.CanPropose)" OnClick="@(() => RunAsync(model.ProposeAsync))">조건 제안</MudButton>
+                }
+            </div>
+        </details>
+    }
+    else { <MudText Typo="Typo.body2">취소 조건 협의 연결을 확인할 수 없습니다. 기존 지원 요청을 이용해 주세요.</MudText> }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string OrderNo { get; set; } = "";
+    [Parameter] public long OrderRevision { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback Applied { get; set; }
+    private 음식주문취소합의ViewModel? _model;
+    protected override void OnInitialized()
+    {
+        if (Services.GetService(typeof(I음식주문취소합의Client)) is I음식주문취소합의Client client)
+            _model = new 음식주문취소합의ViewModel(client);
+    }
+    protected override void OnParametersSet() => _model?.SetOrder(OrderNo, OrderRevision);
+    private async Task RunAsync(Func<Task> action)
+    {
+        if (Disabled) return;
+        var orderNo = OrderNo;
+        await action();
+        if (orderNo == OrderNo && _model?.Current?.StateCode == "Cancelled") await Applied.InvokeAsync();
+    }
+    public void Dispose() => _model?.Dispose();
+}

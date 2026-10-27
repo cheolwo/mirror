@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Restaurants;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
@@ -41,6 +42,9 @@ public sealed partial class OrdererFoodOrderComposerRecoveryTests
         var html = await RenderComposerAsync(page.인증, page.작성);
         Assert.Contains("4,500원 → 5,500원", html);
         Assert.Contains("변경 금액 확인하고 주문", html);
+        var basicHtml = Regex.Replace(html, "<details\\b[^>]*>.*?</details>", "", RegexOptions.Singleline);
+        Assert.Contains("4,500원 → 5,500원", basicHtml);
+        Assert.Contains("변경 금액 확인하고 주문", basicHtml);
         Assert.Equal("문 앞", page.작성.요청사항);
 
         services.Write = (_, _) => Task.FromResult(new 음식주문응답 { 주문번호 = "FOOD-CONFIRMED" });

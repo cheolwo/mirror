@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Common.Dispatch;
 using Ssalddel.Contracts.Food;
@@ -7,11 +6,7 @@ namespace FDriverApp.PageModels;
 
 public sealed partial class MainPageModel
 {
-    private readonly IFDriverPendingOperationStore _pendingOperationStore;
-    private readonly SemaphoreSlim _pendingOperationGate = new(1, 1);
-    private string? _pendingLoadedOwner;
-    private string? _pendingMemoryOwner;
-    private string? _pendingPersistedFingerprint;
+    private readonly FDriverPendingOperationCoordinator _pendingOperations;
     private string? _pendingArrivalOfferId;
     private FDriverPendingInterruption? _restoredInterruption;
     private bool _pendingRecoveryReady;
@@ -33,41 +28,26 @@ public sealed partial class MainPageModel
     private async Task RestorePendingOperationsAsync(CancellationToken cancellationToken)
     {
         var actor = CapturePendingActor();
-        await _pendingOperationGate.WaitAsync(cancellationToken);
-        try
-        {
-            EnsurePendingActor(actor, cancellationToken);
-            if (_pendingLoadedOwner == actor.Owner) return;
-            if (_pendingMemoryOwner != actor.Owner)
+        await _pendingOperations.RestoreAsync(actor.Owner,
+            () => EnsurePendingActor(actor, cancellationToken),
+            resetMemory: () =>
             {
                 ExceptionEditor.Reset();
                 _pendingArrival = null; _pendingArrivalAttemptId = null; _pendingArrivalOfferId = null;
                 _pendingDispatchIntent = null; _pendingStartReceptionRequestId = null; _pendingStartRequestId = null; _verifiedStartRequestId = null; _restoredInterruption = null;
-                _pendingMemoryOwner = actor.Owner;
-            }
-            _pendingRecoveryReady = false;
-            var saved = await _pendingOperationStore.LoadAsync(cancellationToken);
-            EnsurePendingActor(actor, cancellationToken);
-            if (saved is not null && saved.OwnerId != actor.Owner)
+            },
+            markRecoveryUnready: () => _pendingRecoveryReady = false,
+            applySnapshot: saved =>
             {
-                await _pendingOperationStore.ClearAsync(saved.OwnerId, cancellationToken);
-                EnsurePendingActor(actor, cancellationToken);
-                saved = null;
-            }
-            _pendingArrival = saved?.Arrival?.Request;
-            _pendingArrivalAttemptId = saved?.Arrival?.AttemptId;
-            _pendingArrivalOfferId = saved?.Arrival?.OfferId;
-            _pendingDispatchIntent = saved?.DispatchIntent;
-            _pendingStartReceptionRequestId = saved?.StartReceptionRequestId;
-            _pendingStartRequestId = saved?.StartRequestId;
-            _verifiedStartRequestId = null;
-            _restoredInterruption = saved?.Interruption;
-            _pendingLoadedOwner = actor.Owner;
-            _pendingPersistedFingerprint = Fingerprint(saved ?? new(actor.Owner, null, null, null));
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex) { throw new FDriverPendingStorageException(ex); }
-        finally { _pendingOperationGate.Release(); }
+                _pendingArrival = saved?.Arrival?.Request;
+                _pendingArrivalAttemptId = saved?.Arrival?.AttemptId;
+                _pendingArrivalOfferId = saved?.Arrival?.OfferId;
+                _pendingDispatchIntent = saved?.DispatchIntent;
+                _pendingStartReceptionRequestId = saved?.StartReceptionRequestId;
+                _pendingStartRequestId = saved?.StartRequestId;
+                _verifiedStartRequestId = null;
+                _restoredInterruption = saved?.Interruption;
+            }, cancellationToken);
     }
 
     private FDriverPendingOperationsSnapshot CapturePendingSnapshot(string owner)
@@ -86,53 +66,15 @@ public sealed partial class MainPageModel
     private async Task PersistPendingOperationsAsync(CancellationToken cancellationToken)
     {
         var actor = CapturePendingActor();
-        await _pendingOperationGate.WaitAsync(cancellationToken);
-        try
-        {
-            EnsurePendingActor(actor, cancellationToken);
-            var snapshot = CapturePendingSnapshot(actor.Owner);
-            var fingerprint = Fingerprint(snapshot);
-            if (fingerprint == _pendingPersistedFingerprint) return;
-            if (snapshot.Arrival is null && snapshot.DispatchIntent is null && snapshot.Interruption is null)
-                await _pendingOperationStore.ClearAsync(actor.Owner, cancellationToken);
-            else
-                await _pendingOperationStore.SaveAsync(snapshot, cancellationToken);
-            EnsurePendingActor(actor, cancellationToken);
-            _pendingPersistedFingerprint = fingerprint;
-        }
-        catch (OperationCanceledException)
-        {
-            _pendingLoadedOwner = null;
-            if (_authSession.UserId is { } nextOwner && nextOwner != actor.Owner)
-                await _pendingOperationStore.ClearAsync(actor.Owner, CancellationToken.None);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _pendingLoadedOwner = null;
-            _pendingRecoveryReady = false;
-            throw new FDriverPendingStorageException(ex);
-        }
-        finally { _pendingOperationGate.Release(); }
+        await _pendingOperations.PersistAsync(actor.Owner,
+            () => EnsurePendingActor(actor, cancellationToken),
+            () => CapturePendingSnapshot(actor.Owner), () => _authSession.UserId,
+            () => _pendingRecoveryReady = false, cancellationToken);
     }
 
     private async Task ClearPendingAccountAsync(CancellationToken cancellationToken)
-    {
-        var owner = _authSession.UserId;
-        if (string.IsNullOrWhiteSpace(owner)) return;
-        await _pendingOperationGate.WaitAsync(cancellationToken);
-        try
-        {
-            await _pendingOperationStore.ClearAsync(owner, cancellationToken);
-            _pendingPersistedFingerprint = null;
-            _pendingLoadedOwner = null;
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex) { throw new FDriverPendingStorageException(ex); }
-        finally { _pendingOperationGate.Release(); }
-    }
+        => await _pendingOperations.ClearAccountAsync(_authSession.UserId, cancellationToken);
 
-    private static string Fingerprint(FDriverPendingOperationsSnapshot value) => JsonSerializer.Serialize(value);
     private static 음식배달가게도착요청 CopyArrival(음식배달가게도착요청 value) => new()
     { 클라이언트요청Id = value.클라이언트요청Id, 예상시도Revision = value.예상시도Revision };
     private static 운영배차수신의사변경요청 CopyIntent(운영배차수신의사변경요청 value) => new()

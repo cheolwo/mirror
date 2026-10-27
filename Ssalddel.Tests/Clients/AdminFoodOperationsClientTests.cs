@@ -8,6 +8,7 @@ using Ssalddel.Contracts.Common;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels;
 using SsalddelAdminApp.Services;
+using SecureStorage = SsalddelAdminApp.Services.SecureStorage;
 
 namespace Ssalddel.Tests.Clients
 {

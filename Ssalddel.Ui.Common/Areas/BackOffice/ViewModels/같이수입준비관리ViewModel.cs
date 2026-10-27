@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Contracts.Common.Orderer;
@@ -26,7 +23,6 @@ public static class 같이수입준비작업대필터코드
     Boundary = "플랫폼은 집계·최소화·동의·인계 사실과 포워더 회신만 기록하며 업체 자동 선정, 외부 자동 전송, 계약, 결제, 신고, 운송 또는 창고 실행 상태를 만들지 않습니다.")]
 public sealed class 같이수입준비관리ViewModel(I같이수입준비관리Client client) : ObservableObject
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private IReadOnlyList<공동구매자동집단요약응답> _작업대목록 = [];
     private 공동구매자동집단요약응답? _선택집단;
     private 공동구매수요모집Os상태응답? _운영상태;
@@ -858,15 +854,7 @@ public sealed class 같이수입준비관리ViewModel(I같이수입준비관리C
 
     private 같이수입준비원장저장요청 CreateDraft(공동구매자동집단요약응답 group)
     {
-        var draft = new 같이수입준비원장저장요청
-        {
-            재료키 = group.상품키,
-            재료명 = group.상품명,
-            재료품목목록 = [Material(group)],
-            도착국가코드 = 같이수입준비국가코드.대한민국,
-            기준통화코드 = "KRW",
-            미확인항목목록 = ["공급자·견적·품목분류·국가별 규제 자료 확인 필요"]
-        };
+        var draft = 같이수입준비초안Factory.CreateBase(group);
         foreach (var category in 같이수입준비비용범주코드.필수목록)
         {
             draft.예상비용목록.Add(NewCost($"cost-{category}", category, CostLabel(category), draft.기준통화코드));
@@ -891,51 +879,18 @@ public sealed class 같이수입준비관리ViewModel(I같이수입준비관리C
     }
 
     private static 같이수입준비재료품목 Material(공동구매자동집단요약응답 group)
-        => new()
-        {
-            재료키 = group.상품키,
-            재료명 = group.상품명,
-            원천자동집단Id = group.자동집단Id,
-            원천Hs코드 = group.HS코드,
-            모인수요수량 = group.총희망수량,
-            수량단위 = group.수량단위
-        };
+        => 같이수입준비초안Factory.Material(group);
 
     private static 같이수입품목분류후보 NewClassification(
         공동구매자동집단요약응답 group,
         같이수입준비원장저장요청 draft)
-        => new()
-        {
-            후보키 = $"classification-{draft.품목분류후보목록.Count + 1}",
-            재료키 = group.상품키,
-            관할국가코드 = draft.도착국가코드,
-            분류체계코드 = 같이수입준비품목분류체계코드.대상국가체계(draft.도착국가코드),
-            품목코드 = group.HS코드,
-            검토상태코드 = 같이수입준비검토상태코드.전문가검토필요,
-            전문가검토필요 = true,
-            확인시각Utc = DateTimeOffset.UtcNow
-        };
+        => 같이수입준비초안Factory.NewClassification(group, draft, DateTimeOffset.UtcNow);
 
     private static 같이수입예상비용근거 NewCost(string key, string category, string label, string currency)
-        => new()
-        {
-            비용키 = key,
-            범주코드 = category,
-            표시명 = label,
-            통화코드 = currency,
-            확인시각Utc = DateTimeOffset.UtcNow
-        };
+        => 같이수입준비초안Factory.NewCost(key, category, label, currency, DateTimeOffset.UtcNow);
 
     private static string CostLabel(string category)
-        => category switch
-        {
-            같이수입준비비용범주코드.상품원가 => "상품 원가",
-            같이수입준비비용범주코드.국제운송보험 => "국제 운송·보험",
-            같이수입준비비용범주코드.관세 => "예상 관세",
-            같이수입준비비용범주코드.세금 => "예상 수입 세금",
-            같이수입준비비용범주코드.국내이행 => "국내 이행 예상비",
-            _ => category
-        };
+        => 같이수입준비초안Factory.CostLabel(category);
 
     private async Task RunAsync(Func<Task> action)
     {
@@ -996,20 +951,10 @@ public sealed class 같이수입준비관리ViewModel(I같이수입준비관리C
     }
 
     private static 같이수입준비원장저장요청 Clone(같이수입준비원장저장요청 source)
-        => JsonSerializer.Deserialize<같이수입준비원장저장요청>(
-               JsonSerializer.Serialize(source, JsonOptions),
-               JsonOptions)
-           ?? new 같이수입준비원장저장요청();
+        => 같이수입준비초안Codec.Clone(source);
 
     private static string Fingerprint(같이수입준비원장저장요청 request)
-    {
-        var fingerprintRequest = Clone(request);
-        fingerprintRequest.요청멱등키 = string.Empty;
-        fingerprintRequest.기대Revision = null;
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-                JsonSerializer.Serialize(fingerprintRequest, JsonOptions))))
-            .ToLowerInvariant();
-    }
+        => 같이수입준비초안Codec.Fingerprint(request);
 
     private static bool Contains(string? value, string query)
         => value?.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase) == true;

@@ -1,0 +1,51 @@
+{
+  "id": "PLAN-SYSTEM-FRANCHISE-OPERATIONS-r66",
+  "status": "CompletedLocalValidation",
+  "approval": "2026-10-22 user requested implementation of the restaurant PC POS proposal",
+  "designDocumentRef": "restaurant-pos-workspace.r66.md",
+  "executionBoundary": "Local synthetic UI verification; existing server workflow unchanged",
+  "writePaths": [
+    "RestaurantDeskApp/Components/Pages/OrderInbox.razor*",
+    "RestaurantDeskApp/Components/Pages/OrderDetail.razor*",
+    "RestaurantDeskApp/Services/RestaurantPosPresentation.cs",
+    "RestaurantDeskApp/Services/음식점주문InboxProjection.cs",
+    "RestaurantDeskApp/Components/Layout/MainLayout.razor*",
+    "RestaurantDeskApp/Components/Layout/NavMenu.razor",
+    "RestaurantDeskApp/wwwroot/app.css",
+    "Ssalddel.Tests/Clients/RestaurantPosWorkspaceTests.cs",
+    "Ssalddel.Tests/Ssalddel.Tests.csproj",
+    "eng/RestaurantPosPreview/**",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/restaurant-pos-workspace.r66*",
+    "docs/ProjectOverview/page-docs/restaurant-order-usability-r1.md",
+    "docs/Changes/2026-10-22-restaurant-pos-workspace-r66.md",
+    "docs/Changes/README.md",
+    "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/**"
+  ],
+  "prohibitedEffects": [
+    "commit",
+    "push",
+    "cloud deployment",
+    "real financial effects",
+    "database migration",
+    "device installation"
+  ],
+  "validation": [
+    "scoped Fast",
+    "Task",
+    "Windows consumer build",
+    "linked actual Razor browser rendering"
+  ],
+  "designDocumentSha256": "2339c2ecbf534174ba1c53044de1418c137441fe7b646325b201a07f52b66eae",
+  "result": {
+    "fastPassed": 342,
+    "taskPassed": 15098,
+    "taskSkipped": 16,
+    "browserChecks": 12,
+    "screenshots": 12,
+    "deviceVerified": false,
+    "operationalEnabled": false,
+    "physicalPrinterVerified": false,
+    "commitCreated": false,
+    "pushPerformed": false
+  }
+}

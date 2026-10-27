@@ -151,7 +151,7 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var settings = Read("RestaurantDeskApp", "appsettings.json");
         var settingsPage = Read("RestaurantDeskApp", "Components/Pages/PreparationTimeSettings.razor");
         var startup = Read("RestaurantDeskApp", "MauiProgram.cs");
-        var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
+        var desk = ReadRestaurantDeskSources();
         var notification = Read("Ssalddel.Contracts", "Food/음식점주문알림Dtos.cs");
 
         Assert.Contains("\"상품별기본조리분\"", settings);
@@ -182,7 +182,7 @@ public sealed class FoodDeliveryV30PageCompositionTests
     public void 음식점Api실패는_샘플주문으로대체하지않는다()
     {
         var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
-        var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
+        var desk = ReadRestaurantDeskSources();
 
         Assert.DoesNotContain("RestaurantDeskSampleService", client);
         Assert.DoesNotContain("sampleService", desk);
@@ -198,7 +198,7 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var auth = Read("RestaurantDeskApp", "Services/RestaurantAuthService.cs");
         var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
         var realtime = Read("RestaurantDeskApp", "Services/음식점주문SignalRClientService.cs");
-        var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
+        var desk = ReadRestaurantDeskSources();
 
         Assert.Contains("RestaurantMauiSecureTokenStore", startup);
         Assert.Contains("ClientAuthSession", startup);
@@ -223,7 +223,7 @@ public sealed class FoodDeliveryV30PageCompositionTests
     public void 음식점진행변경은_원본요청을보존하고_명시재시도전에정본을재조회한다()
     {
         var client = Read("RestaurantDeskApp", "Services/Ssalddel음식주문Client.cs");
-        var desk = Read("RestaurantDeskApp", "Services/음식점주문DeskService.cs");
+        var desk = ReadRestaurantDeskSources();
 
         Assert.Contains("SsalddelApiProblemParser.Parse", client);
         Assert.Contains("var request = snapshot.ToRequest()", desk);
@@ -340,7 +340,8 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var driverFollowups = Read(
             "Ssalddel",
             "Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs");
-        var followupOutbox = Read("Ssalddel", "Services/Community/FoodMartLedgerSyncOutboxService.cs");
+        var followupOutbox = Read("Ssalddel", "Services/Community/FoodMartLedgerSyncOutboxService.cs")
+            + Read("Ssalddel", "Services/Community/음식기사후속PayloadHandler.cs");
         var registrations = Read("Ssalddel", "Extensions/ServiceCollectionExtensions.DomainServices.Community.cs");
         var realtime = Read(
             "RestaurantDeskApp",
@@ -405,6 +406,15 @@ public sealed class FoodDeliveryV30PageCompositionTests
         Assert.Contains("FoodDeliveryWorkflow", capability.FeatureKeys);
         Assert.Contains("FoodDelivery", capability.WorkflowCodes);
     }
+
+    private static string ReadRestaurantDeskSources()
+        => string.Join("\n", new[]
+        {
+            "Services/음식점주문DeskService.cs",
+            "Services/음식점주문InboxProjection.cs",
+            "Services/음식점주문ProgressSession.cs",
+            "Services/음식점주문알림수신Coordinator.cs"
+        }.Select(path => Read("RestaurantDeskApp", path)));
 
     private static string Read(string project, string relativePath)
     {

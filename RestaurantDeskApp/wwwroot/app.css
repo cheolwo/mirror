@@ -56,6 +56,23 @@ html, body {
     width: 100%;
 }
 
+.restaurant-navmenu .mud-nav-link {
+    min-height: 48px;
+    border-radius: 12px;
+    margin-bottom: 4px;
+    white-space: normal;
+}
+
+.restaurant-navmenu .mud-nav-link-text {
+    margin-left: 12px;
+    overflow-wrap: anywhere;
+}
+
+.restaurant-navmenu .mud-nav-link:focus-visible {
+    outline: 2px solid var(--restaurant-accent, #0f766e);
+    outline-offset: 2px;
+}
+
 .restaurant-login-shell {
     display: grid;
     gap: 24px;

@@ -5,21 +5,11 @@ namespace FDriverApp.PageModels;
 
 public sealed partial class MainPageModel
 {
-    private readonly SemaphoreSlim _locationTransmissionGate = new(1, 1);
-    private CancellationTokenSource? _locationTransmissionCancellation;
-    private long _locationTransmissionGeneration;
+    private readonly FDriverLocationTransmissionSession _locationTransmissions = new(LocationHeartbeatInterval);
 
     // Map GPS remains available before/after driving. Only the operational heartbeat
     // belongs to the current signed-in driver's active driving lifetime.
-    private void CancelLocationTransmissions()
-    {
-        Interlocked.Increment(ref _locationTransmissionGeneration);
-        var previous = _locationTransmissionCancellation;
-        _locationTransmissionCancellation = null;
-        previous?.Cancel();
-        previous?.Dispose();
-        _lastLocationSentAtUtc = null;
-    }
+    private void CancelLocationTransmissions() => _locationTransmissions.Cancel();
 
     private bool IsLocationCaptureCurrent(string? owner, CancellationTokenSource workspace, long mapLifetime)
         => owner == _authSession.UserId && HasDriverSession() && IsAuthenticated
@@ -31,7 +21,7 @@ public sealed partial class MainPageModel
         var owner = _authSession.UserId;
         var workspace = _workspaceCancellation;
         var mapLifetime = _foodMapLifetime;
-        var transmissionGeneration = Interlocked.Read(ref _locationTransmissionGeneration);
+        var transmissionGeneration = _locationTransmissions.Generation;
         cancellationToken = cancellationToken == default ? workspace.Token : cancellationToken;
         if (!IsLocationCaptureCurrent(owner, workspace, mapLifetime) || (sendToServer && !IsOnDuty)) return null;
 
@@ -51,22 +41,10 @@ public sealed partial class MainPageModel
         if (!ApplyFoodMapLocation(location)) return null;
         if (!sendToServer) return location;
 
-        await _locationTransmissionGate.WaitAsync(cancellationToken);
-        try
-        {
-            // A stop/start or account switch during GPS acquisition must never turn
-            // an old reading into a fresh operational location for the new lifetime.
-            if (!IsLocationCaptureCurrent(owner, workspace, mapLifetime) || !IsOnDuty
-                || transmissionGeneration != Interlocked.Read(ref _locationTransmissionGeneration)
-                || !IsFreshFoodMapLocation(location)) return null;
-            // Commands and polling can request the same heartbeat concurrently.
-            if (_lastLocationSentAtUtc is { } sentAt && DateTime.UtcNow - sentAt < LocationHeartbeatInterval)
-                return location;
-
-            var transmission = _locationTransmissionCancellation ??= new CancellationTokenSource();
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken, workspace.Token, transmission.Token);
-            await _api.UpdateLocationAsync(new 기사위치갱신요청
+        var accepted = await _locationTransmissions.TransmitAsync(transmissionGeneration, workspace,
+            isCaptureCurrent: () => IsLocationCaptureCurrent(owner, workspace, mapLifetime) && IsOnDuty,
+            isFresh: () => IsFreshFoodMapLocation(location),
+            send: token => _api.UpdateLocationAsync(new 기사위치갱신요청
             {
                 AppKey = _profile.AppKey,
                 위도 = location.Latitude,
@@ -75,14 +53,9 @@ public sealed partial class MainPageModel
                 상차접근허용반경Km = 3m,
                 운행상태 = DrivingStatus,
                 기록시각 = location.RecordedAtUtc
-            }, linked.Token);
-            linked.Token.ThrowIfCancellationRequested();
-            if (!IsLocationCaptureCurrent(owner, workspace, mapLifetime) || !IsOnDuty
-                || transmissionGeneration != Interlocked.Read(ref _locationTransmissionGeneration)) return null;
-            _lastLocationSentAtUtc = DateTime.UtcNow;
-            LocationSyncText = $"기사 위치 전송 {_lastLocationSentAtUtc.Value.ToLocalTime():HH:mm:ss}";
-        }
-        finally { _locationTransmissionGate.Release(); }
-        return location;
+            }, token),
+            confirm: sentAt => LocationSyncText = $"기사 위치 전송 {sentAt.ToLocalTime():HH:mm:ss}",
+            cancellationToken);
+        return accepted ? location : null;
     }
 }

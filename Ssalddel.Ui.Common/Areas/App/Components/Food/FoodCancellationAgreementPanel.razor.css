@@ -1,0 +1,5 @@
+.food-cancellation-agreement { display: grid; gap: 0.75rem; min-width: 0; }
+.food-cancellation-agreement summary { min-height: 48px; padding: 0.75rem 0; cursor: pointer; color: var(--ss-accent, #0f766e); }
+.food-cancellation-agreement summary:focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 2px; }
+.food-cancellation-agreement__content { display: grid; gap: 0.75rem; padding-top: 0.5rem; overflow-wrap: anywhere; }
+.food-cancellation-agreement__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }

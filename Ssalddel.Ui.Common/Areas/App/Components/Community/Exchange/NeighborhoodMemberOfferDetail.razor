@@ -4,7 +4,7 @@
     <NeighborhoodMemberStateNotice Model="Model" LoginHref="@LoginHref" />
     @if (Model.IsAuthenticated && Model.Selected is { } value)
     {
-        <section class="exchange-surface"><p>@NeighborhoodMemberDeliveryPresentation.State(value.StateCode)</p><h2>@value.CargoName</h2><p>@value.Quantity 개 · @value.WeightKg kg</p><p><strong>픽업 지역</strong><br />@value.PickupArea</p><p><strong>전달 지역</strong><br />@value.DropoffArea</p><p class="exchange-note">상세 주소와 연락처는 수락이 확정된 회원에게만 제공합니다.</p></section>
+        <section class="exchange-surface"><p>@NeighborhoodMemberDeliveryPresentation.State(value.StateCode)</p><h2>@value.CargoName</h2><p>@value.Quantity 개 · @value.WeightKg.ToString("G29") kg</p><p><strong>픽업 지역</strong><br />@value.PickupArea</p><p><strong>전달 지역</strong><br />@value.DropoffArea</p><p class="exchange-note">상세 주소와 연락처는 수락이 확정된 회원에게만 제공합니다.</p></section>
         <section class="exchange-surface"><h2>배송비</h2><strong class="delivery-fare">@NeighborhoodDeliveryPresentation.Money(value.FareKrw)</strong><p>@NeighborhoodDeliveryPresentation.Distance(value.DistanceKm)</p><p>플랫폼 이용료 @NeighborhoodDeliveryPresentation.Money(value.PlatformFeeKrw) · 배차 수수료 @NeighborhoodDeliveryPresentation.Money(value.DispatchFeeKrw)</p><p class="exchange-note">배송비는 당사자가 직접 지급합니다. 배송 완료와 실제 지급 확인은 별도입니다.</p></section>
         @if (Model.AcceptedRequestId is { } accepted) { <a class="exchange-primary" href="@Href(NeighborhoodMemberDeliveryRoutes.WorkDetail(accepted))">수락한 배송 보기</a> }
         else if (value.CanAccept && value.ExpiresAtUtc > DateTime.UtcNow || Model.Pending is not null && Model.Pending.Target == value.OfferId)

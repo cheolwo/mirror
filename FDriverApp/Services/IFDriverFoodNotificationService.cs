@@ -12,9 +12,18 @@ public interface IFDriverFoodNotificationService
     void SetOpenTarget(FDriverFoodNotificationTarget target);
     void ClearOpenTarget();
     bool Publish(string userId, string offerId, DateTime expiresAtUtc);
+    bool PublishForWorkKind(string userId, string offerId, DateTime expiresAtUtc, string? workKind)
+        => workKind == Ssalddel.Contracts.Driver.Settings.DriverWorkKinds.FoodDelivery && Publish(userId, offerId, expiresAtUtc);
+    bool PublishChecked(string userId, string offerId, DateTime expiresAtUtc, string? workKind,
+        CancellationToken cancellationToken, Func<bool> isCurrent)
+        => FDriverNotificationPublicationGate.CanContinuePublication(cancellationToken, isCurrent)
+            && PublishForWorkKind(userId, offerId, expiresAtUtc, workKind);
     void Cancel();
     void ClearAccount();
     void ApplySettings(string ownerId, Ssalddel.Contracts.Driver.Notification.기사알림설정응답 settings, DateTime checkedAtUtc) { }
+    void BeginSettingsChange(string ownerId, DateTime beganAtUtc) => Cancel();
+    void ConfirmSettings(string ownerId, Ssalddel.Contracts.Driver.Notification.기사알림설정응답 settings, DateTime readStartedAtUtc)
+        => ApplySettings(ownerId, settings, readStartedAtUtc);
 }
 
 public sealed class NullFDriverFoodNotificationService : IFDriverFoodNotificationService

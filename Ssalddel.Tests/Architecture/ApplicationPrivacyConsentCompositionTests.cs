@@ -46,12 +46,40 @@ public sealed class ApplicationPrivacyConsentCompositionTests
     {
         var source = ReadRepositoryFile("Ssalddel.WebApp", "Pages", pageName);
 
-        Assert.Contains("RequiresMapPrivacyConsent && !_privacyConsentAccepted", source);
+        if (pageName == "ShipperRequestPage.razor")
+        {
+            // 완료된 bool만으로 다음 의뢰의 동의를 재사용하지 않고 증적과 복구 경계도 검사합니다.
+            Assert.Contains("RequiresMapPrivacyConsent && (!_privacyConsentAccepted || !PageModel.ApplicationPrivacyConsentEvidenceId.HasValue) && !PageModel.HasSubmission", source);
+            Assert.Contains("@if (!PageModel.HasSubmission && !PageModel.IsBusy)", source);
+        }
+        else
+        {
+            Assert.Contains("RequiresMapPrivacyConsent && !_privacyConsentAccepted", source);
+        }
         Assert.Contains("<ApplicationPrivacyConsentPanel", source);
         Assert.Contains(applicationKind, source);
         Assert.Contains("Accepted=\"AcceptPrivacyAsync\"", source);
         Assert.Contains("CommunityMapApplicationRoutes.SourceCode", source);
         Assert.Contains("_privacyConsentAccepted = true", source);
+    }
+
+    [Fact]
+    public void 화주지도신청은_동의증적전에는동의Panel만_미확정이면복구만조립한다()
+    {
+        var source = ReadRepositoryFile("Ssalddel.WebApp", "Pages", "ShipperRequestPage.razor");
+        var consentGuard = source.IndexOf("@if (RequiresMapPrivacyConsent &&", StringComparison.Ordinal);
+        var consentPanel = source.IndexOf("<ApplicationPrivacyConsentPanel", StringComparison.Ordinal);
+        var alternate = source.IndexOf("else", consentPanel, StringComparison.Ordinal);
+        var recovery = source.IndexOf("<WebShipperSubmissionRecoveryPanel", StringComparison.Ordinal);
+        var editingGuard = source.IndexOf("@if (!PageModel.HasSubmission && !PageModel.IsBusy)", StringComparison.Ordinal);
+        var editor = source.IndexOf("<ShipperRequestAuthoringScreen", StringComparison.Ordinal);
+
+        Assert.True(consentGuard >= 0 && consentGuard < consentPanel);
+        Assert.True(consentPanel < alternate && alternate < recovery);
+        Assert.True(recovery < editingGuard && editingGuard < editor);
+        Assert.Contains("PageModel.SetApplicationPrivacyConsent(evidence)", source);
+        Assert.Contains("NewRequestStarted=\"ResetSubmissionContext\"", source);
+        Assert.Contains("_privacyConsentAccepted = false", source);
     }
 
     [Theory]

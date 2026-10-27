@@ -34,6 +34,9 @@ public sealed partial class 판매채널주문목록PageViewModel(
     public partial IReadOnlyList<판매채널주문요약응답> 주문목록 { get; private set; } = [];
 
     [ObservableProperty]
+    public partial IReadOnlyList<판매채널주문보류진단> 수집보류목록 { get; private set; } = [];
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(총페이지수))]
     public partial int 전체건수 { get; private set; }
 
@@ -68,6 +71,7 @@ public sealed partial class 판매채널주문목록PageViewModel(
                     Status = 출고상태
                 }, token);
                 주문목록 = response.Items;
+                수집보류목록 = response.SyncIssues;
                 전체건수 = response.TotalCount;
                 현재페이지 = response.Page + 1;
                 초기화됨 = true;

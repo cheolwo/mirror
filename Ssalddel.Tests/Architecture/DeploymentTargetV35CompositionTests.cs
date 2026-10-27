@@ -6,17 +6,20 @@ namespace Ssalddel.Tests.Architecture;
 public sealed class DeploymentTargetV35CompositionTests
 {
     [Fact]
-    public void 제품로드맵은_현재완성단계와_최종배포목표를분리한다()
+    public void 제품로드맵은_기존공개기준을보존하고_전체완성목표를_통합1점0으로묶는다()
     {
         Assert.Equal(
             SsalddelProductRoadmapCatalog.FoundationVersion,
             SsalddelProductRoadmapCatalog.CurrentDeliveryVersion);
         Assert.Equal(
-            SsalddelProductRoadmapCatalog.MartVersion,
+            SsalddelProductRoadmapCatalog.UnifiedReleaseVersion,
             SsalddelProductRoadmapCatalog.DeploymentTargetVersion);
         Assert.Equal(
             SsalddelProductRoadmapCatalog.DeploymentTargetVersion,
             Command기능버전Catalog.DeploymentTarget);
+        Assert.Same(
+            SsalddelProductRoadmapCatalog.UnifiedReleaseTarget,
+            Command기능버전Catalog.UnifiedDeploymentTarget);
     }
 
     [Theory]

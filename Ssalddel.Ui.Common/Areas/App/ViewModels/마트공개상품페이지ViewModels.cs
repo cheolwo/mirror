@@ -36,7 +36,7 @@ public sealed partial class 마트페이지접근ViewModel(
             },
             "알뜰살뜰 마트 기능 상태를 확인했습니다.",
             cancellationToken,
-            ex => $"알뜰살뜰 마트 기능 상태를 확인하지 못했습니다. {ex.Message}");
+            _ => "상품 화면을 준비하지 못했습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.");
         if (!succeeded)
         {
             화면상태 = 취소됨 ? 마트페이지접근상태.확인전 : 마트페이지접근상태.오류;

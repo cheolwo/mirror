@@ -8,6 +8,8 @@ using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Ui.Common.Areas.App.Models;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
 
@@ -21,8 +23,13 @@ namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
     Effects = SsalddelCodeEffect.NetworkCall | SsalddelCodeEffect.UiStateMutation | SsalddelCodeEffect.StateMutation | SsalddelCodeEffect.PersistentRead | SsalddelCodeEffect.PersistentWrite | SsalddelCodeEffect.ThirdPartyApiCall | SsalddelCodeEffect.MayIncurExternalCost,
     Boundary = "서버 명령 효과를 위임한다. 미확정 ID는 이 객체 수명에만 보존하며 네이티브 암호화 저장을 수행하지 않는다. 자동 조회는 수락이나 시작 POST 자동 재전송이 아니다.")]
 public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleWorkspaceLocationProvider locationProvider,
-    TimeProvider? clock = null) : IRoleWorkspaceAdapter, IRoleWorkspaceRecovery, IRoleWorkspaceDispatchReceptionState, IRoleWorkspacePresentationObserver
+    TimeProvider? clock = null) : IRoleWorkspaceAdapter, IRoleWorkspaceRecovery, IRoleWorkspaceDispatchReceptionState, IRoleWorkspacePresentationObserver, IRoleWorkspaceCompletionFeedback
 {
+    private sealed record PendingCompletion(string OfferId, string ActionKey, string AttemptId, long BeforeRevision,
+        string OrderNo, string DriverId, string? WorkKind, DateTime StartedAtUtc, FoodDeliveryDriverActionResponse? Response = null);
+    private PendingCompletion? pendingCompletion;
+    private string? confirmedCompletionAction;
+    public WorkflowCompletionFeedback CompletionFeedback { get; } = new();
     private FoodDeliveryDriverCurrentWorkDto? workspace;
     private 기사운행상태응답? work;
     private 운영배차수신상태Dto? dispatch;
@@ -64,6 +71,13 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         availability = await ReconcileStartedReceptionAsync(status, availability, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         dispatch = availability;
+        if (pendingCompletion is not null)
+        {
+            try { await ConfirmPendingCompletionAsync(value, cancellationToken); }
+            catch (OperationCanceledException) { throw; }
+            catch (RoleWorkspaceAccessException ex) when (ex.StatusCode is 401 or 403) { throw; }
+            catch (Exception) { /* 같은 요청의 결과를 다음 정본 조회로 확인하며 명령은 재전송하지 않습니다. */ }
+        }
         var onDuty = string.Equals(status.Status, "운행중", StringComparison.OrdinalIgnoreCase);
         var workStatusKnown = KnownWorkStatus(status.Status);
         var receives = FoodDriverDispatchReceptionPolicy.IsReceiving(availability);
@@ -110,6 +124,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
                     : "새로운 배달 요청을 기다리고 있습니다."
             };
         if (!string.IsNullOrWhiteSpace(value.DispatchAutomationNotice)) notice += " " + value.DispatchAutomationNotice;
+        if (pendingCompletion is not null) notice += " 이전 완료 처리 결과를 확인 중입니다. 같은 완료 버튼을 다시 누르지 마세요.";
         if (!string.IsNullOrWhiteSpace(automaticLocationNotice)) notice += " " + automaticLocationNotice;
         if (!string.IsNullOrWhiteSpace(routeNotice)) notice += " " + routeNotice;
         presentationGeneration++;
@@ -219,6 +234,8 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
     public async Task PerformAsync(string itemId, string actionKey, Guid requestId, CancellationToken cancellationToken)
     {
         if (workspace is null) throw new InvalidOperationException("기사 업무를 확인하고 있습니다. 잠시 후 다시 시도해 주세요.");
+        if (pendingCompletion is not null && actionKey is 음식배달가능행동Ids.기사가게도착 or 음식배달가능행동Ids.기사픽업확인 or 음식배달가능행동Ids.기사전달완료)
+            throw new InvalidOperationException("이전 완료 처리 결과를 먼저 확인해 주세요. 현재 업무를 다시 조회합니다.");
         if (actionKey is StartWork or StopWork or EnableDispatch or DisableDispatch or UpdateLocation)
         {
             await PerformWorkAsync(actionKey, requestId, cancellationToken); return;
@@ -247,8 +264,98 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         object body = active is not null && endpoint == "restaurant-arrival"
             ? new 음식배달가게도착요청 { 클라이언트요청Id = requestId, 예상시도Revision = allowed.ExpectedRevision ?? active.AttemptRevision }
             : new { };
-        await api.PostAsync<FoodDeliveryDriverActionResponse>(RoleKey,
-            $"api/v1/driver/food-deliveries/offers/{Uri.EscapeDataString(itemId)}/{endpoint}", body, cancellationToken);
+        var isCompletion = endpoint is "pickup-complete" or "delivery-complete";
+        if (isCompletion)
+        {
+            if (active is null || string.IsNullOrWhiteSpace(active.DeliveryAttemptId) || active.AttemptRevision < 1
+                || string.IsNullOrWhiteSpace(active.OrderNo) || string.IsNullOrWhiteSpace(workspace.DriverId))
+                throw new InvalidOperationException("현재 배달 시도와 주문 연결을 다시 확인해 주세요.");
+            pendingCompletion = new(itemId, actionKey, active.DeliveryAttemptId, active.AttemptRevision,
+                active.OrderNo, workspace.DriverId, active.WorkKind, time.GetUtcNow().UtcDateTime);
+        }
+        FoodDeliveryDriverActionResponse? response;
+        try
+        {
+            response = await api.PostAsync<FoodDeliveryDriverActionResponse>(RoleKey,
+                $"api/v1/driver/food-deliveries/offers/{Uri.EscapeDataString(itemId)}/{endpoint}", body, cancellationToken);
+        }
+        catch (RoleWorkspaceAccessException ex) when (ex.StatusCode is >= 400 and < 500 and not 408)
+        { if (isCompletion) pendingCompletion = null; throw; }
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!isCompletion) return;
+        var expected = pendingCompletion!;
+        if (response is null || response.OfferId != expected.OfferId || response.DeliveryAttemptId != expected.AttemptId
+            || response.AttemptRevision is not { } revision || revision <= expected.BeforeRevision
+            || response.OccurredAtUtc is not { Kind: DateTimeKind.Utc } occurred || occurred == default
+            || response.Status != (endpoint == "pickup-complete" ? DriverWorkOfferStatus.MovingToDropoff : DriverWorkOfferStatus.Completed))
+            throw new InvalidOperationException("완료 응답의 배달 시도와 처리 결과를 아직 확인하지 못했습니다. 현재 업무를 다시 조회해 주세요.");
+        pendingCompletion = expected with { Response = response };
+        var after = await api.GetAsync<FoodDeliveryDriverCurrentWorkDto>(RoleKey, "api/v1/driver/food-deliveries/workspace/current", cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!await ConfirmPendingCompletionAsync(after, cancellationToken))
+            throw new InvalidOperationException("저장된 완료 상태를 아직 확인하지 못했습니다. 현재 업무를 다시 조회해 주세요.");
+    }
+
+    private async Task<bool> ConfirmPendingCompletionAsync(FoodDeliveryDriverCurrentWorkDto current, CancellationToken token)
+    {
+        if (pendingCompletion is not { } pending) return false;
+        if (current.DriverId != pending.DriverId) return false;
+        var final = pending.ActionKey == 음식배달가능행동Ids.기사전달완료;
+        DateTime occurredAt;
+        if (!final)
+        {
+            var active = current.ActiveDeliveries.SingleOrDefault(item => item.OfferId == pending.OfferId
+                && item.DeliveryAttemptId == pending.AttemptId && item.OrderNo == pending.OrderNo);
+            if (active is null || active.AttemptRevision <= pending.BeforeRevision
+                || active.WorkStatus is not (DriverWorkOfferStatus.MovingToDropoff or DriverWorkOfferStatus.PickupConfirmed)) return false;
+            occurredAt = pending.Response?.OccurredAtUtc ?? active.UpdatedAtUtc;
+            if (occurredAt == default) return false;
+        }
+        else
+        {
+            FoodDeliveryOrderSettlementDto? matched = null;
+            var dates = new[] { pending.Response?.OccurredAtUtc ?? pending.StartedAtUtc, time.GetUtcNow().UtcDateTime, pending.StartedAtUtc }
+                .Select(value => DateOnly.FromDateTime(value.AddHours(9))).Distinct();
+            foreach (var date in dates)
+            {
+                var daily = await api.GetAsync<FoodDeliveryDailySettlementDto>(RoleKey,
+                    "api/v1/driver/food-deliveries/settlements/daily?date=" + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), token);
+                token.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(pending, pendingCompletion)) return false;
+                if (daily.DriverId != pending.DriverId || daily.CompletionDateKst != date) return false;
+                matched = daily.OrderSettlements.SingleOrDefault(item => item.DriverId == pending.DriverId
+                    && item.DeliveryAttemptId == pending.AttemptId && item.OrderNo == pending.OrderNo && item.CompletedAtUtc != default);
+                if (matched is not null)
+                {
+                    if (matched.CompletedAtUtc.Kind != DateTimeKind.Utc
+                        || DateOnly.FromDateTime(matched.CompletedAtUtc.AddHours(9)) != date) return false;
+                    break;
+                }
+            }
+            if (matched is null || RoleWorkspaceNavigation.StableId(matched.SettlementId) != matched.SettlementId
+                || string.IsNullOrWhiteSpace(matched.SettlementId)) return false;
+            var detail = await api.GetAsync<FoodDeliveryCompletedDeliveryDetailDto>(RoleKey,
+                "api/v1/driver/food-deliveries/settlements/" + Uri.EscapeDataString(matched.SettlementId) + "/detail", token);
+            token.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(pending, pendingCompletion) || detail.Settlement is not { } record
+                || detail.DetailAccessStatusCode == FoodDeliveryCompletedDetailAccessStatusCodes.CompletionEvidenceUnavailable
+                || record.DriverId != pending.DriverId || record.DeliveryAttemptId != pending.AttemptId
+                || record.OrderNo != pending.OrderNo || record.SettlementId != matched.SettlementId
+                || record.CompletedAtUtc.Kind != DateTimeKind.Utc || record.CompletedAtUtc != matched.CompletedAtUtc) return false;
+            occurredAt = record.CompletedAtUtc;
+        }
+        token.ThrowIfCancellationRequested();
+        if (!ReferenceEquals(pending, pendingCompletion) || occurredAt.Kind != DateTimeKind.Utc) return false;
+        if (pending.WorkKind is not (DriverWorkKinds.FoodDelivery or DriverWorkKinds.QuickDelivery))
+        { confirmedCompletionAction = pending.ActionKey; pendingCompletion = null; return true; }
+        var quick = pending.WorkKind == DriverWorkKinds.QuickDelivery;
+        CompletionFeedback.Record(new($"food:{pending.AttemptId}:{pending.ActionKey}:{occurredAt.Ticks}",
+            final ? "전달을 완료했습니다" : quick ? "물품을 픽업했습니다" : "음식을 픽업했습니다",
+            final ? "전달 완료 기록을 확인했습니다. 수령 확인·정산·입금은 별도로 확인합니다." : "현재 배달의 픽업 완료 상태를 확인했습니다.",
+            final ? "현재 업무에서 다음 배달을 확인해 주세요." : "전달 장소와 요청 사항을 확인해 주세요.",
+            final, quick ? WorkflowCompletionVisuals.CargoIconPath : WorkflowCompletionVisuals.FoodIconPath, quick ? "#DC2626" : "#2563EB"));
+        confirmedCompletionAction = pending.ActionKey; pendingCompletion = null;
+        return true;
     }
 
     private async Task PerformWorkAsync(string action, Guid requestId, CancellationToken token)
@@ -354,11 +461,14 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
         CompletePendingStart(); rejectedStartNotice = FoodDriverWorkRecoveryPolicy.StartOwnershipNotice;
     }
 
-    public bool BlocksAction(string actionKey) => StartReceptionPending && actionKey is StartWork or StopWork or EnableDispatch or DisableDispatch
+    public bool BlocksAction(string actionKey) => pendingCompletion is not null && actionKey is 음식배달가능행동Ids.기사가게도착 or 음식배달가능행동Ids.기사픽업확인 or 음식배달가능행동Ids.기사전달완료
+        || StartReceptionPending && actionKey is StartWork or StopWork or EnableDispatch or DisableDispatch
         || PreferenceStateUnconfirmed && actionKey is EnableDispatch or DisableDispatch;
 
     public string? RecordUnconfirmedAction(string actionKey)
     {
+        if (pendingCompletion?.ActionKey == actionKey)
+            return "완료 처리 결과를 아직 확인하지 못했습니다. 현재 업무를 다시 조회하며 같은 명령은 다시 보내지 않습니다.";
         if (actionKey is EnableDispatch or DisableDispatch)
         {
             unconfirmedPreferenceAction = actionKey;
@@ -380,6 +490,8 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
             unconfirmedPreferenceAction = null; confirmed = true;
         }
         var notice = rejectedStartNotice; rejectedStartNotice = null;
+        if (confirmedCompletionAction is { } completionAction)
+        { confirmedCompletionAction = null; return new(completed, true, notice, completionAction); }
         return new(completed, confirmed, notice, actionKey);
     }
 
@@ -427,6 +539,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
     public void Clear()
     {
         ClearTransientSnapshot();
+        CompletionFeedback.Clear(); pendingCompletion = null; confirmedCompletionAction = null;
         pendingStartReceptionRequestId = null;
         pendingStartRequestId = null; unconfirmedPreferenceAction = null; resolvedStart = false; rejectedStartNotice = null;
         acknowledgedPresentations.Clear();
@@ -435,6 +548,7 @@ public sealed class FoodDriverRoleWorkspaceAdapter(IRoleWorkspaceApi api, IRoleW
     // 같은 계정의 일시 숨김/조회 실패에서는 진행 중인 시작→수신 ON 요청만 보존합니다.
     public void ClearTransientSnapshot()
     {
+        CompletionFeedback.Dismiss();
         presentationGeneration++; presentationOffers.Clear(); presentationAttempts.Clear();
         workspace = null; work = null; dispatch = null; currentLocation = null;
         nextAutomaticLocationRead = default; locationRecoveryNeeded = false; automaticLocationNotice = null;

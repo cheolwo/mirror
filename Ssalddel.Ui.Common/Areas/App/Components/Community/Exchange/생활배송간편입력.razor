@@ -58,9 +58,10 @@
             <section class="exchange-surface"><h2>어떤 물건을 보내나요?</h2><p class="exchange-note">생활 화물 배송용입니다. 음식 주문은 기존 음식 배달 화면을 이용해 주세요.</p>
                 <label for="simple-cargo">물건 이름</label><input id="simple-cargo" @bind="Model.Draft.CargoName" @bind:event="oninput" @bind:after="Model.InputChanged" maxlength="120" required />
                 <div class="delivery-input-grid">
-                    <div><label for="simple-quantity">수량</label><input id="simple-quantity" type="number" @bind="Model.Draft.Quantity" @bind:after="Model.InputChanged" min="1" max="1000" required /></div>
+                    <div><label for="simple-quantity">같은 규격의 포장 수량</label><input id="simple-quantity" type="number" @bind="Model.Draft.Quantity" @bind:after="Model.InputChanged" min="1" max="1000" required /></div>
                     <div><label for="simple-weight">전체 중량(kg)</label><input id="simple-weight" type="number" @bind="Model.Draft.WeightKg" @bind:after="Model.InputChanged" min="0.001" max="10000" step="0.001" required /></div>
                 </div>
+                <NeighborhoodDeliveryPackageInput Id="simple-package" Value="Model.Draft" Changed="Model.InputChanged" />
                 <label for="simple-vehicle">배송 차량</label><select id="simple-vehicle" @bind="Model.Draft.VehicleType" @bind:after="Model.InputChanged" required><option value="">선택해 주세요</option><option>오토바이</option><option>다마스</option><option>라보</option><option>1톤</option></select>
                 <details><summary>포장 크기와 요청 사항</summary>
                     <label for="simple-size">포장 크기 <small>선택</small></label><select id="simple-size" @bind="Model.PackageSizeCode" @bind:after="Model.InputChanged"><option value="">미입력</option><option value="Small">작음</option><option value="Medium">보통</option><option value="Large">큼</option></select>
@@ -83,7 +84,7 @@
         }
         else if (Input.Step == 2)
         {
-            <section class="exchange-surface"><h2>언제 받을 수 있나요?</h2><p class="exchange-note">처음 표시된 시각은 작성용 기본값입니다. 실제 가능한 시각으로 고친 뒤 확인하세요. 픽업 시각은 필수이며, 전달 시간은 보완하거나 지정하지 않을 수 있습니다.</p>
+            <section class="exchange-surface"><h2>언제 받을 수 있나요?</h2><p class="exchange-note">처음 표시된 시각은 작성용 기본값입니다. 실제 가능한 시각으로 고친 뒤 확인하세요. 내부 기사 배송에는 전달 마감 시각과 작업시간이 필요합니다.</p>
                 <label for="simple-pickup-start">픽업 가능한 시작 시각</label><input id="simple-pickup-start" type="datetime-local" @bind="Input.PickupStart" required />
                 <label for="simple-pickup-end">픽업 가능한 종료 시각</label><input id="simple-pickup-end" type="datetime-local" @bind="Input.PickupEnd" required />
                 <label class="delivery-check"><input id="simple-dropoff-unspecified" type="checkbox" @bind="Input.DropoffTimeUnspecified" /><span>전달 시간 지정 안 함 · 선택</span></label>
@@ -92,6 +93,11 @@
                     <label for="simple-dropoff-start">전달 가능한 시작 시각</label><input id="simple-dropoff-start" type="datetime-local" @bind="Input.DropoffStart" required />
                     <label for="simple-dropoff-end">전달 가능한 종료 시각</label><input id="simple-dropoff-end" type="datetime-local" @bind="Input.DropoffEnd" required />
                 }
+                <div class="delivery-input-grid">
+                    <div><label for="simple-pickup-work">픽업 작업시간(분)</label><input id="simple-pickup-work" type="number" @bind="Model.Draft.Pickup.작업시간분" @bind:after="Model.InputChanged" min="0" step="any" /></div>
+                    <div><label for="simple-dropoff-work">전달 작업시간(분)</label><input id="simple-dropoff-work" type="number" @bind="Model.Draft.Dropoff.작업시간분" @bind:after="Model.InputChanged" min="0" step="any" /></div>
+                </div>
+                <p class="exchange-note">기사님이 멈춰서 물건을 싣거나 건네는 데 필요한 시간입니다. 즉시 처리할 수 있다고 확인한 경우에만 0분을 입력하고, 모르겠으면 비워 두세요.</p>
                 <label class="delivery-check"><input type="checkbox" @bind="Input.TimeReviewed" /><span>표시된 픽업·전달 시간창이 실제 가능한 시각임을 확인했습니다.</span></label>
                 @if (!Model.AutoRoutingEnabled) { <label for="simple-desired">희망 완료 시각 <small>선택</small></label><input id="simple-desired" type="datetime-local" @bind="Model.DesiredCompletionLocal" @bind:after="Model.InputChanged" /> }
             </section>
@@ -103,16 +109,24 @@
                 <dl class="delivery-input-review">
                     <dt>물품</dt><dd>@review.CargoName · @review.Quantity 개 · @review.WeightKg.ToString("0.###") kg</dd>
                     <dt>배송 차량</dt><dd>@review.VehicleType</dd><dt>포장 크기</dt><dd>@NeighborhoodPackageSizes.Label(review.PackageSizeCode)</dd>
+                    <dt>포장 한 개 규격</dt><dd>@(review.PackageLengthMm?.ToString() ?? "미확인") × @(review.PackageWidthMm?.ToString() ?? "미확인") × @(review.PackageHeightMm?.ToString() ?? "미확인") mm</dd>
+                    <dt>전체 부피</dt><dd>@(NeighborhoodDeliveryLoadingInput.Calculate(review).유효부피Cbm?.ToString("0.###########################") ?? "미확인") CBM · 치수와 수량 기준 계산 포함</dd>
+                    <dt>팔레트</dt><dd>@(review.PalletCount?.ToString() ?? "미확인") 개</dd>
+                    <dt>바닥 회전 / 적층</dt><dd>@Flag(review.FloorRotationAllowed) / @Flag(review.StackingAllowed)</dd>
                     @foreach (var place in new[] { (Title: "픽업지", Value: review.Pickup), (Title: "전달지", Value: review.Dropoff) })
                     {
                         <dt>@place.Title</dt><dd>@place.Value.주소.도로명주소 @place.Value.주소.상세주소</dd>
                         <dt>@place.Title 담당자</dt><dd>@place.Value.연락처.이름 · @place.Value.연락처.전화번호</dd>
                         <dt>@place.Title 시간창</dt><dd>@(place.Value.시간창 is { } window ? $"{window.시작일시.ToLocalTime():yyyy-MM-dd HH:mm} ~ {window.종료일시.ToLocalTime():yyyy-MM-dd HH:mm}" : place.Title == "전달지" && Input.DropoffTimeUnspecified ? "지정 안 함" : "미입력")</dd>
+                        <dt>@place.Title 작업시간</dt><dd>@(place.Value.작업시간분?.ToString("0.###########################") ?? "미확인") 분</dd>
                     }
                     <dt>요청 사항</dt><dd>@(review.Notes ?? "없음")</dd><dt>기사 찾는 방식</dt><dd>@NeighborhoodDispatchModes.Label(review.DispatchMode)</dd>
                     <dt>희망 완료 시각</dt><dd>@(review.DesiredCompletionUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "미지정")</dd>
                 </dl>
                 @foreach (var missing in Input.MissingForStep(3)) { <p class="delivery-warning">@missing</p> }
+                @if (Model.InternalCourierMissing.Count > 0)
+                { <p class="exchange-note">배송비는 먼저 확인할 수 있습니다. 내부 기사 배송으로 접수하려면 아래 정보를 보완해 주세요.</p>
+                  @foreach (var missing in Model.InternalCourierMissing) { <p class="delivery-warning">@missing</p> } }
                 <details><summary>기사를 찾는 방식 변경</summary><label for="simple-mode">배차 방식</label><select id="simple-mode" @bind="Model.Draft.DispatchMode" @bind:after="Model.InputChanged"><option value="automatic">자동 추천</option><option value="public-call">공개 콜 · 기사 자율 수락</option><option value="hybrid">자동 추천과 공개 콜 함께</option></select><p class="exchange-note">@NeighborhoodDeliveryPresentation.배차선택안내(Model.Draft.DispatchMode)</p></details>
             </section>
         }
@@ -127,6 +141,7 @@
     [Parameter, EditorRequired] public NeighborhoodDeliveryAuthoringViewModel Model { get; set; } = null!;
     private 생활배송간편입력ViewModel Input => Model.SimpleInput;
     private bool Disabled => !Model.CanEditInput || Input.IsBusy;
+    private static string Flag(bool? value) => value.HasValue ? value.Value ? "가능" : "불가" : "미확인";
     protected override void OnParametersSet() => Input.IsActive = true;
     private async Task Import(InputFileChangeEventArgs args)
     {

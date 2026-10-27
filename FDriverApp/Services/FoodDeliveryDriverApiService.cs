@@ -382,15 +382,8 @@ public sealed class FoodDeliveryDriverApiService : IFoodDeliveryDriverApiService
         try
         {
             using var document = JsonDocument.Parse(content);
-            foreach (var propertyName in new[] { "detail", "message", "title" })
-            {
-                if (document.RootElement.TryGetProperty(propertyName, out var value)
-                    && value.ValueKind == JsonValueKind.String
-                    && !string.IsNullOrWhiteSpace(value.GetString()))
-                {
-                    return value.GetString()!;
-                }
-            }
+            var message = Ssalddel.Client.Infrastructure.Http.ProblemMessagePropertyReader.Read(document.RootElement);
+            if (message is not null) return message;
         }
         catch (JsonException)
         {

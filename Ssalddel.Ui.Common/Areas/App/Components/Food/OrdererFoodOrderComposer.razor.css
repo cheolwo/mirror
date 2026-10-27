@@ -1,10 +1,11 @@
 .food-order-composer {
     display: grid;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-top: 1rem;
     padding: 1rem;
-    border-color: rgba(35, 94, 168, 0.24);
-    background: linear-gradient(180deg, rgba(236, 246, 255, 0.88), #fff 42%);
+    min-width: 0;
+    border-color: var(--ss-border, #dce5e9);
+    background: var(--ss-surface, #fff);
 }
 
 .food-order-composer__heading,
@@ -22,6 +23,28 @@
 .food-order-composer__items > div {
     justify-content: space-between;
     gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.food-order-composer__section {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--ss-border, #dce5e9);
+}
+
+.food-order-composer__section:first-of-type {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.food-order-composer__section h3 {
+    margin: 0;
+    color: var(--ss-ink, #172b36);
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 600;
 }
 
 .food-order-composer__items {
@@ -41,19 +64,24 @@
 }
 
 .food-order-composer__items > div {
-    padding: 0.65rem 0.75rem;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.9);
+    min-width: 0;
+    padding: 0.25rem 0;
+    overflow-wrap: anywhere;
+}
+
+.food-order-composer__items strong {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
 }
 
 .food-order-composer__minimum {
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(35, 94, 168, 0.14);
-    color: #76531b;
+    border-top: 1px solid var(--ss-border, #dce5e9);
+    color: var(--ss-warning, #92400e);
 }
 
 .food-order-composer__minimum .is-ready {
-    color: #157347;
+    color: var(--ss-success, #166534);
 }
 
 .food-order-composer__state {
@@ -71,8 +99,27 @@
 .food-order-composer__wide {
     grid-column: 1 / -1;
 }
-.food-order-composer__address-search { min-width: 0; }
-.food-order-composer__address-search summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; color: var(--ss-accent, #0f766e); }
+.food-order-composer__address-search,
+.food-order-composer__optional { min-width: 0; }
+.food-order-composer__address-search summary,
+.food-order-composer__optional summary {
+    min-height: 48px;
+    padding: 0.75rem 0;
+    cursor: pointer;
+    color: var(--ss-accent, #0f766e);
+    overflow-wrap: anywhere;
+}
+.food-order-composer__address-search summary:focus-visible,
+.food-order-composer__optional summary:focus-visible {
+    outline: 3px solid var(--ss-accent-strong, #0b5c56);
+    outline-offset: 2px;
+}
+.food-order-composer__optional-state {
+    display: inline-block;
+    margin-left: 0.5rem;
+    color: var(--ss-muted, #586b78);
+    font-size: 0.875rem;
+}
 .food-order-composer__address-search p { font-size: 14px; overflow-wrap: anywhere; }
 .food-order-composer__address-search ::deep button { min-height: 48px; overflow-wrap: anywhere; text-align: left; }
 

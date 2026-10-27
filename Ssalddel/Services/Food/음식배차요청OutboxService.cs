@@ -1,3 +1,4 @@
+﻿using System.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Contracts.Common.Warehouse;
@@ -11,6 +12,7 @@ using 살뜰.Services.Transport;
 using 살뜰.도메인.공통;
 using 살뜰.도메인.설정;
 using 살뜰.도메인.운송;
+using 살뜰.도메인.음식;
 using Ssalddel.Services.PrivacyRetention;
 using Ssalddel.Contracts.Common.PrivacyRetention;
 
@@ -169,27 +171,18 @@ public sealed class 음식배차요청OutboxService(
         // payload는 수락 의도의 과거 사본입니다. 재시도는 현재 주문·현재 큐를 투영합니다.
         var order = orderStore.GetOrder(snapshot.주문번호)
                     ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
-        var current = 음식배달업무상태전이Guard.정본상태확인(order.상태);
-        운송원장 queue;
-        if (order.배차대기Id is { } dispatchWaitId)
+        if (IsCancelled(order)) return;
+        // 외부 주소 조회는 transaction 밖에서 끝낸다. 그 사이 취소된 주문은 아래 정본 재확인에서 중단한다.
+        (decimal 위도, decimal 경도)? pickup = null, dropoff = null;
+        if (order.배차대기Id is null)
         {
-            queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == dispatchWaitId, cancellationToken)
-                    ?? throw new InvalidOperationException("음식 주문에 연결된 배차대기를 찾을 수 없습니다.");
+            pickup = await ResolveCoordinateAsync(order.음식점위도, order.음식점경도,
+                JoinAddress(order.음식점주소, order.음식점상세주소), cancellationToken);
+            dropoff = await ResolveCoordinateAsync(null, null, order.수령인정보.주소, cancellationToken);
         }
-        else
-        {
-            if (current is 음식주문상태코드.주문대기 or 음식주문상태코드.거절 or 음식주문상태코드.취소)
-                throw new InvalidOperationException("음식점 수락 뒤의 주문에만 배차대기를 연결할 수 있습니다.");
-            queue = await CreateDispatchQueueAsync(order, cancellationToken);
-        }
-        if (queue.배차업무유형 != 상태값.배차업무유형.음식배달
-            || queue.원본의뢰유형 != 운송의뢰배차원천유형.음식점주문
-            || !string.Equals(queue.원본의뢰Id, order.주문번호, StringComparison.Ordinal))
-            throw new InvalidOperationException("음식 주문과 배차대기의 업무 출처가 일치하지 않습니다.");
-
-        var updated = orderStore.배차대기반영(order.주문번호, queue.Id, DateTime.UtcNow)
-                      ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
-        queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == queue.Id, cancellationToken) ?? queue;
+        var binding = await BindQueueAsync(order, pickup, dropoff, cancellationToken);
+        if (binding is null) return;
+        var (updated, queue) = binding.Value;
         var transportLedger = await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken);
         if (transportLedger is null)
             throw new InvalidOperationException("FoodOrderDeliveryLedgerUnavailable");
@@ -203,19 +196,79 @@ public sealed class 음식배차요청OutboxService(
             "운송 실시간 투영",
             order.주문번호,
             cancellationToken);
+        // 늦게 소비된 수락 이벤트가 이미 취소된 주문의 배차 시작 알림으로 보이지 않게 한다.
+        var latest = orderStore.GetOrder(order.주문번호);
+        if (latest is null || IsCancelled(latest)) return;
         await BestEffortAsync(
-            () => restaurantNotification.주문상태변경알림발송Async(updated, "음식점 수락 후 기사 배차를 시작했습니다.", cancellationToken),
+            () => restaurantNotification.주문상태변경알림발송Async(latest, "음식점 수락 후 기사 배차를 시작했습니다.", cancellationToken),
             "음식점 알림",
             order.주문번호,
             cancellationToken);
     }
 
-    private async Task<운송원장> CreateDispatchQueueAsync(음식주문응답 order, CancellationToken cancellationToken)
+    private static bool IsCancelled(음식주문응답 order)
+        => 음식배달업무상태전이Guard.정본상태확인(order.상태) is 음식주문상태코드.취소 or 음식주문상태코드.거절;
+
+    private Task<(음식주문응답 Order, 운송원장 Queue)?> BindQueueAsync(
+        음식주문응답 prepared,
+        (decimal 위도, decimal 경도)? pickup,
+        (decimal 위도, decimal 경도)? dropoff,
+        CancellationToken cancellationToken)
+        => db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+                ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
+            try
+            {
+                // 취소 실행·기사 수락과 같은 SQL 경계에서 현재 주문을 다시 읽고 큐 생성과 원주문 결속을 끝낸다.
+                var current = orderStore.GetOrder(prepared.주문번호)
+                    ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
+                if (IsCancelled(current))
+                {
+                    if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                    return ((음식주문응답 Order, 운송원장 Queue)?)null;
+                }
+                운송원장 queue;
+                if (current.배차대기Id is { } id)
+                    queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
+                        ?? throw new InvalidOperationException("음식 주문에 연결된 배차대기를 찾을 수 없습니다.");
+                else
+                {
+                    if (current.상태 == 음식주문상태코드.주문대기
+                        || prepared.배차대기Id is not null
+                        || JoinAddress(current.음식점주소, current.음식점상세주소) != JoinAddress(prepared.음식점주소, prepared.음식점상세주소)
+                        || current.수령인정보.주소 != prepared.수령인정보.주소)
+                        throw new InvalidOperationException("음식 주문 주소 또는 배차 상태가 변경되어 다시 확인해야 합니다.");
+                    queue = await CreateDispatchQueueAsync(current, pickup, dropoff, cancellationToken);
+                }
+                if (queue.배차업무유형 != 상태값.배차업무유형.음식배달
+                    || queue.원본의뢰유형 != 운송의뢰배차원천유형.음식점주문
+                    || !string.Equals(queue.원본의뢰Id, current.주문번호, StringComparison.Ordinal))
+                    throw new InvalidOperationException("음식 주문과 배차대기의 업무 출처가 일치하지 않습니다.");
+                var updated = orderStore.배차대기반영(current.주문번호, queue.Id, DateTime.UtcNow)
+                    ?? throw new InvalidOperationException("배차대기를 연결할 음식 주문을 찾을 수 없습니다.");
+                queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == queue.Id, cancellationToken) ?? queue;
+                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                return ((음식주문응답 Order, 운송원장 Queue)?)(updated, queue);
+            }
+            catch
+            {
+                if (transaction is not null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    // 실패한 시도의 추적 사본을 재시도에 사용하지 않는다. 처리 중인 Outbox 행은 보존한다.
+                    foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is 운송원장 or 음식주문 or 음식주문상품 or 음식주문상태이력).ToArray())
+                        entry.State = EntityState.Detached;
+                }
+                throw;
+            }
+        });
+
+    private async Task<운송원장> CreateDispatchQueueAsync(음식주문응답 order,
+        (decimal 위도, decimal 경도)? pickup, (decimal 위도, decimal 경도)? dropoff, CancellationToken cancellationToken)
     {
         var pickupAddress = JoinAddress(order.음식점주소, order.음식점상세주소);
         var dropoffAddress = order.수령인정보.주소;
-        var pickup = await ResolveCoordinateAsync(order.음식점위도, order.음식점경도, pickupAddress, cancellationToken);
-        var dropoff = await ResolveCoordinateAsync(null, null, dropoffAddress, cancellationToken);
         var target = new 출고예정운송대상
         {
             원천유형 = 출고예정운송대상원천유형.음식주문,

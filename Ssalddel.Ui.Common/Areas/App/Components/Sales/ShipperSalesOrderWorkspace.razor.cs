@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Ssalddel.Contracts.Common.Sales;
+using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 
 namespace Ssalddel.Ui.Common.Areas.App.Components.Sales;
@@ -16,6 +17,13 @@ public partial class ShipperSalesOrderWorkspace
 {
     private bool _initialized;
     private bool _initialListStateApplied;
+    private bool _disposed;
+    private bool _loadingWorkspace;
+    private bool _recheckingAccess;
+    private bool _identityInvalidated;
+    private 현재사용자Snapshot? _loadedUser;
+    private ISsalddel현재사용자변경알림? _userChanges;
+    private readonly CancellationTokenSource _lifetimeCancellation = new();
 
     [Parameter]
     public long? OrderId { get; set; }
@@ -35,9 +43,27 @@ public partial class ShipperSalesOrderWorkspace
     [Parameter]
     public int InitialPage { get; set; } = 1;
 
+    [Parameter]
+    public string HomeHref { get; set; } = "/shipper";
+
+    [Parameter]
+    public string HomeLabel { get; set; } = "화주 홈으로";
+
+    [Parameter]
+    public string PublicHref { get; set; } = "/community";
+
+    [Parameter]
+    public string PublicLabel { get; set; } = "공개 커뮤니티 보기";
+
     private 판매채널페이지접근ViewModel Access => ViewModel.접근;
     private 판매채널주문목록PageViewModel List => ViewModel.목록;
     private 판매채널주문상세PageViewModel Detail => ViewModel.상세;
+
+    // 재확인 중 동일 사용자의 입력 요소만 유지한다. 서버 권한 판정을 대신하지 않는다.
+    private bool LoadedUserMatchesCurrent => SameUser(_loadedUser, Access.현재사용자);
+    private bool CanShowWorkspace => !_identityInvalidated && LoadedUserMatchesCurrent &&
+        (Access.사용가능 || (_recheckingAccess && Access.화면상태 == 판매채널페이지접근상태.확인전));
+    private bool ReadActionsBlocked => List.처리중 || Access.처리중 || _recheckingAccess || !CanShowWorkspace;
 
     private bool ShowList => Mode is ShipperSalesOrderWorkspaceMode.List or ShipperSalesOrderWorkspaceMode.Combined;
     private bool ShowDetail => Mode is ShipperSalesOrderWorkspaceMode.Detail or ShipperSalesOrderWorkspaceMode.Combined;
@@ -49,16 +75,34 @@ public partial class ShipperSalesOrderWorkspace
     private int CurrentPageWarehouseCount => List.주문목록.Sum(item => item.출고창고수);
     private int CurrentPageTransportCount => List.주문목록.Count(item => item.운송인계여부);
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _userChanges = Access.현재사용자변경알림;
+        if (_userChanges is not null) _userChanges.Changed += CurrentUserChanged;
+    }
+
+    private void CurrentUserChanged()
+        => _ = InvokeAsync(() =>
+        {
+            if (_disposed || _loadedUser is null || LoadedUserMatchesCurrent) return;
+            // 변경 후 원래 계정으로 돌아오더라도 정본을 새로 읽기 전에는 이전 자료를 재노출하지 않는다.
+            _identityInvalidated = true;
+            List.작업취소();
+            Detail.작업취소();
+            StateHasChanged();
+        });
+
     protected override async Task OnInitializedAsync()
     {
         ApplyInitialListState();
         await CheckAccessAndLoadAsync();
-        _initialized = true;
+        if (!_disposed) _initialized = true;
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!_initialized || !Access.사용가능)
+        if (_disposed || !_initialized || _loadingWorkspace || !CanShowWorkspace || Access.처리중)
         {
             return;
         }
@@ -67,7 +111,7 @@ public partial class ShipperSalesOrderWorkspace
         {
             if (Detail.요청OrderId != orderId)
             {
-                await Detail.조회Async(orderId);
+                await Detail.조회Async(orderId, _lifetimeCancellation.Token);
             }
         }
         else if (ShowDetail && Detail.요청OrderId.HasValue)
@@ -78,38 +122,111 @@ public partial class ShipperSalesOrderWorkspace
 
     private async Task CheckAccessAndLoadAsync()
     {
-        if (!await Access.확인Async() || !Access.사용가능)
+        if (_disposed) return;
+        var token = _lifetimeCancellation.Token;
+        var previousUser = _loadedUser;
+        _loadingWorkspace = true;
+        try
+        {
+            if (!await Access.확인Async(token) || _disposed || token.IsCancellationRequested || !Access.사용가능)
+            {
+                return;
+            }
+
+            var user = CopyUser(Access.현재사용자);
+            if (previousUser is not null && (_identityInvalidated || !SameUser(previousUser, user)))
+            {
+                List.필터초기화();
+                Detail.선택해제();
+            }
+            var page = List.초기화됨 && SameUser(previousUser, user) ? List.현재페이지 : Math.Max(1, InitialPage);
+            var listTask = ShowList ? List.페이지조회Async(page, token) : Task.FromResult(true);
+            var detailTask = ShowDetail && OrderId is long orderId
+                ? Detail.조회Async(orderId, token)
+                : Task.FromResult(true);
+            var readResults = await Task.WhenAll(listTask, detailTask);
+            if (!_disposed && !token.IsCancellationRequested && SameUser(user, Access.현재사용자)
+                && (!_identityInvalidated || readResults.All(result => result)))
+            {
+                _loadedUser = user;
+                _identityInvalidated = false;
+            }
+        }
+        finally
+        {
+            _loadingWorkspace = false;
+            if (!_disposed) StateHasChanged();
+        }
+    }
+
+    /// <summary>같은 목록의 입력과 페이지를 유지하며 접근 조건과 정본만 다시 확인합니다.</summary>
+    public async Task RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        if (_disposed || !_initialized || !ShowList || Access.처리중 || List.처리중 || _recheckingAccess)
         {
             return;
         }
 
-        var listTask = ShowList
-            ? List.초기화됨
-                ? Task.FromResult(true)
-                : List.페이지조회Async(Math.Max(1, InitialPage))
-            : Task.FromResult(true);
-        var detailTask = ShowDetail && OrderId is long orderId
-            ? Detail.조회Async(orderId)
-            : Task.FromResult(true);
-        await Task.WhenAll(listTask, detailTask);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetimeCancellation.Token);
+        _recheckingAccess = true;
+        try
+        {
+            if (!await Access.확인Async(linked.Token) || _disposed || linked.IsCancellationRequested || !Access.사용가능 || _identityInvalidated || !LoadedUserMatchesCurrent)
+            {
+                return;
+            }
+
+            if (!List.처리중) await List.페이지조회Async(List.현재페이지, linked.Token);
+        }
+        finally
+        {
+            _recheckingAccess = false;
+            if (!_disposed) StateHasChanged();
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_disposed)
+        {
+            _disposed = true;
+            if (_userChanges is not null) _userChanges.Changed -= CurrentUserChanged;
+            _userChanges = null;
+            _lifetimeCancellation.Cancel();
+            Access.작업취소();
+            List.작업취소();
+            Detail.작업취소();
+            _lifetimeCancellation.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     private Task RetryAccessAsync() => CheckAccessAndLoadAsync();
 
-    private Task SearchAsync() => List.조회Async();
+    private Task SearchAsync() => ReadActionsBlocked ? Task.CompletedTask : List.조회Async();
 
-    private Task ReloadListAsync() => List.페이지조회Async(List.현재페이지);
+    private Task ReloadListAsync() => ReadActionsBlocked ? Task.CompletedTask : List.페이지조회Async(List.현재페이지);
 
-    private Task ChangePageAsync(int page) => List.페이지조회Async(page);
+    private Task ChangePageAsync(int page) => ReadActionsBlocked ? Task.CompletedTask : List.페이지조회Async(page);
 
     private async Task ClearFiltersAsync()
     {
+        if (ReadActionsBlocked) return;
         List.필터초기화();
         await List.조회Async();
     }
 
     private Task SelectOrderAsync(long orderId)
-        => Detail.조회Async(orderId);
+        => ReadActionsBlocked ? Task.CompletedTask : Detail.조회Async(orderId);
+
+    private static 현재사용자Snapshot CopyUser(현재사용자Snapshot user)
+        => user with { Roles = user.Roles.ToArray() };
+
+    private static bool SameUser(현재사용자Snapshot? loaded, 현재사용자Snapshot current)
+        => loaded is { 인증됨: true } && current.인증됨 &&
+           string.Equals(loaded.UserId, current.UserId, StringComparison.Ordinal) &&
+           loaded.Roles.ToHashSet(StringComparer.OrdinalIgnoreCase).SetEquals(current.Roles);
 
     private void ApplyInitialListState()
     {

@@ -96,11 +96,11 @@ public sealed partial class MainPageModel
         if (_pendingDispatchIntent is null && _workStatusKnown) return;
         var actor = CapturePendingActor();
         var requestId = _pendingDispatchIntent?.클라이언트요청Id;
-        var generation = Interlocked.Read(ref _workspaceSnapshotGeneration);
+        var generation = _workspaceRefresh.SnapshotGeneration;
         void EnsureCurrent()
         {
             EnsurePendingActor(actor, token);
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)
+            if (generation != _workspaceRefresh.SnapshotGeneration
                 || _pendingDispatchIntent?.클라이언트요청Id != requestId)
                 throw new OperationCanceledException("더 최신 배차 수신 확인이 진행 중입니다.", token);
         }
@@ -137,7 +137,7 @@ public sealed partial class MainPageModel
 
         await LoadDispatchAvailabilityAsync(token, generation);
         EnsurePendingActor(actor, token);
-        if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+        if (generation != _workspaceRefresh.SnapshotGeneration) return;
         // A canonical matching read completes the saved request without a second PUT.
         if (_pendingDispatchIntent is null)
         {
@@ -161,7 +161,7 @@ public sealed partial class MainPageModel
         }
         await LoadDispatchAvailabilityAsync(token, generation);
         EnsurePendingActor(actor, token);
-        if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+        if (generation != _workspaceRefresh.SnapshotGeneration) return;
         await PersistPendingOperationsAsync(token);
         NotifyExceptionState();
     }

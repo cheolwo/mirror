@@ -1,0 +1,58 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Settlement
+@using Ssalddel.Contracts.Common.Settlement
+
+@{
+    var agreement = Value.Agreement;
+    var consent = 약정책임확인표시.현재판본동의(agreement);
+    var ownLines = 약정책임확인표시.본인항목(agreement, CurrentUserId);
+}
+<section class="agreement-responsibility" aria-label="약정 담당과 확인 상태">
+    <h2>이 약정의 담당과 확인 상태</h2>
+    <dl>
+        @if (약정책임확인표시.상품업무인가(agreement))
+        {
+            <dt>물품 소유자</dt><dd>@약정책임확인표시.담당연결(agreement.Terms.GoodsOwnerUserId, CurrentUserId)</dd>
+            <dt>판매 담당자</dt><dd>@약정책임확인표시.담당연결(agreement.Terms.SellerUserId, CurrentUserId)</dd>
+            <dt>상품대금 경로</dt><dd>@약정책임확인표시.수금방식(agreement.Terms.GoodsPaymentRoute)</dd>
+        }
+        <dt>조회 범위의 판본 동의</dt>
+        <dd>
+            @if (consent.당사자확인필요)
+            { <span>필요 당사자·판본 확인 필요</span><small>확인된 동의 @consent.동의인원 명</small> }
+            else
+            { <span>동의 @consent.동의인원 / @consent.필요인원 명</span> }
+        </dd>
+    </dl>
+    @if (consent.동일판본기록충족)
+    { <p>이 조회에 포함된 필요 당사자의 동일 판본 동의 기록이 있습니다. 전체 계약·업무·금액 확정·지급 완료는 각각 확인합니다.</p> }
+    else
+    { <p>현재 약정에 필요한 당사자와 동의 상태를 확인하세요. 이전 판본 동의는 포함하지 않습니다.</p> }
+    <p>동의 수는 본인에게 표시된 약정 항목의 조회 범위입니다.</p>
+    <details>
+        <summary>내 지급·수령 약정 @ownLines.Count 건</summary>
+        @if (ownLines.Count == 0)
+        { <p>본인에게 연결된 지급·수령 항목을 확인할 수 없습니다.</p> }
+        @foreach (var line in ownLines)
+        {
+            <article>
+                <h3>@사전보수요약표시.항목명(line)</h3>
+                <p>@약정책임확인표시.지급관계(line, CurrentUserId)</p>
+                <strong>@사전보수요약표시.금액(line)</strong>
+                @if (약정책임확인표시.미확정조건(line) is { } pending) { <p class="pending">@pending</p> }
+                @if (line.IncludedInDelivery) { <p>배송비에 포함된 참고 항목 · 별도 지급액으로 더하지 않습니다.</p> }
+            </article>
+        }
+        <p>약정은 실제 발생·수금·지급 기록과 다릅니다. 확인되지 않은 금액을 0원으로 계산하지 않습니다.</p>
+    </details>
+    <details>
+        <summary>이 약정에서 확인할 수 없는 책임</summary>
+        <p>마트 운영주체·현장 업무 배정자·법적 계약 당사자는 이 약정의 담당 연결만으로 확정할 수 없습니다.</p>
+        <p>보관·입고 조건은 원래 업무의 협의 화면에서 확인하세요. 발생 항목에 이의제기가 표시되면 해당 절차를 이용할 수 있습니다.</p>
+        <p>담당 확인은 새 계약·권한·지급을 만들지 않습니다.</p>
+    </details>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public NeighborhoodSettlementSummaryDto Value { get; set; } = default!;
+    [Parameter] public string? CurrentUserId { get; set; }
+}

@@ -1,0 +1,7 @@
+@namespace RestaurantDeskApp
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="route"><RouteView RouteData="route" DefaultLayout="typeof(PreviewLayout)" /></Found>
+    <NotFound>
+        <PreviewLayout><p>이 검토에서는 주문 처리 화면만 연결했습니다.</p><a href="/orders">주문 처리로</a></PreviewLayout>
+    </NotFound>
+</Router>

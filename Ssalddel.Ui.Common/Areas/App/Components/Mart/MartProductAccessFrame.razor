@@ -5,7 +5,7 @@
 <section class="@(CompactCatalog ? "mart-product-screen mart-product-screen--catalog" : "mart-product-screen")" data-mart-product-screen="@CurrentScreen.ToString().ToLowerInvariant()">
     @if (!SamplePreview && ViewModel.처리중 && ViewModel.화면상태 == 마트페이지접근상태.확인전)
     {
-        <MudPaper Elevation="0" Outlined="true" Class="mart-product-screen__state">
+        <MudPaper Elevation="0" Outlined="true" Class="mart-product-screen__state" role="status">
             <MudProgressCircular Indeterminate="true" Color="Color.Success" />
             <MudText Typo="Typo.body1">알뜰살뜰 마트 기능 상태를 확인하고 있습니다.</MudText>
         </MudPaper>
@@ -16,13 +16,15 @@
             <MudText Typo="Typo.subtitle2">마트 상품 화면을 준비하지 못했습니다.</MudText>
             <MudText Typo="Typo.body2">@MartProductPresentation.ErrorMessage(ViewModel.오류메시지)</MudText>
             <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="CheckAccessAsync" Class="mt-3">다시 확인</MudButton>
+            <MudButton Href="@Context.ResolveReturnPath(HomeHref)" Variant="Variant.Text" Color="Color.Default" Class="mt-3">돌아가기</MudButton>
         </MudAlert>
     }
     else if (!SamplePreview && ViewModel.기능비활성)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
-            <MudText Typo="Typo.subtitle2">마트 공개 상품 흐름이 현재 비활성입니다.</MudText>
-            <MudText Typo="Typo.body2"><code>SsalddelMartWorkflow</code>가 활성화된 환경에서만 공개 원장을 조회하거나 요청을 저장합니다.</MudText>
+            <MudText Typo="Typo.subtitle2">아직 상품을 이용할 수 없어요.</MudText>
+            <MudText Typo="Typo.body2">상품 조회와 주문 요청을 준비하고 있습니다. 이전 화면에서 다른 업무를 이용해 주세요.</MudText>
+            <MudButton Href="@Context.ResolveReturnPath(HomeHref)" Variant="Variant.Outlined" Color="Color.Default" Class="mt-3">돌아가기</MudButton>
         </MudAlert>
     }
     else if (SamplePreview || ViewModel.사용가능)
@@ -31,7 +33,7 @@
             <div class="mart-product-screen__title">
                 @if (!CompactCatalog && !string.IsNullOrWhiteSpace(Eyebrow))
                 {
-                    <span>PUBLIC MART · @Eyebrow</span>
+                    <span>@Eyebrow</span>
                 }
                 <h1>@Title</h1>
                 <p>@Description</p>
@@ -75,8 +77,7 @@
         @if (!CompactCatalog && !AuthenticationOnly)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mart-product-screen__boundary">
-                공개 상품과 마지막 투영 시각 기준의 판매 가능 수량만 표시합니다. 목록·상세 조회는 상태를 바꾸지 않으며,
-                후기와 비구속 주문 요청은 각각의 별도 route에서만 명시적으로 저장합니다.
+                재고는 마지막 확인 시점 기준입니다. 주문 요청은 내용을 확인한 뒤 접수하며, 상품을 보는 것만으로 주문되지는 않습니다.
             </MudAlert>
 
             <MartProductNavigation Context="@Context"

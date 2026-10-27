@@ -14,11 +14,84 @@ using 살뜰.도메인.기사;
 using 살뜰.도메인.운송;
 using 살뜰.도메인.음식;
 using 살뜰.도메인.화주;
+using Ssalddel.Application.Admin.Progress;
+using Ssalddel.Contracts.Common.Transport;
 
 namespace Ssalddel.Tests.Application.Food;
 
 public sealed class RelatedDriverLocationR8Tests
 {
+    [Fact]
+    public async Task CargoOwnerAndAdminShareCurrentAssignmentAndWorkLocationOnly()
+    {
+        await using var f = await Fixture.CreateAsync(true);
+        var owner = await f.CargoAsync();
+        var admin = await f.CargoAdminAsync();
+        Assert.Equal(기사위치상태Codes.Available, owner!.기사위치상태Code);
+        Assert.Equal(owner.기사위치상태Code, admin.기사위치상태Code);
+        Assert.Equal(owner.기사최근위도, admin.기사최근위도);
+        Assert.Equal(owner.기사최근경도, admin.기사최근경도);
+        Assert.Equal(owner.기사최근위치시각Utc, admin.기사최근위치시각Utc);
+        Assert.Equal(DateTimeKind.Utc, admin.기사최근위치시각Utc!.Value.Kind);
+        var other = await new 의뢰단건조회QueryHandler(f.Db,
+            new 화주운송업무담당자UseCase(f.Db, new Actor("other-owner"), TimeProvider.System))
+            .Handle(new 의뢰단건조회Query("cargo-r8"), default);
+        Assert.Null(other);
+    }
+
+    [Theory]
+    [InlineData("no-work", 기사위치상태Codes.Unavailable)]
+    [InlineData("work-stopped", 기사위치상태Codes.Unavailable)]
+    [InlineData("driver-stopped", 기사위치상태Codes.Unavailable)]
+    [InlineData("old-work", 기사위치상태Codes.Unavailable)]
+    [InlineData("future", 기사위치상태Codes.Unavailable)]
+    [InlineData("reassigned", 기사위치상태Codes.Unavailable)]
+    [InlineData("stale", 기사위치상태Codes.Delayed)]
+    [InlineData("complete", 기사위치상태Codes.Closed)]
+    [InlineData("cancelled", 기사위치상태Codes.Closed)]
+    public async Task CargoAdminAndOwnerHideCoordinatesForInvalidWorkAssignmentOrOldLocation(string condition, string code)
+    {
+        await using var f = await Fixture.CreateAsync(true);
+        var shift = await f.Db.기사근무.SingleAsync();
+        switch (condition)
+        {
+            case "no-work": f.Db.기사근무.Remove(shift); break;
+            case "work-stopped": shift.StoppedAtUtc = DateTime.UtcNow; shift.ActiveDriverId = null; break;
+            case "driver-stopped": (await f.Db.용달기사.SingleAsync()).운행상태 = 상태값.기사운행상태.대기; break;
+            case "old-work": shift.시작시각 = DateTime.UtcNow.AddSeconds(-1); break;
+            case "future": f.Location.기록시각 = DateTime.UtcNow.AddMinutes(1); break;
+            case "reassigned": f.Queue.확정기사Id = "new-driver"; f.Queue.추천라운드++; break;
+            case "stale":
+                shift.시작시각 = DateTime.UtcNow.AddMinutes(-30);
+                f.Assignment!.이벤트시각 = DateTime.UtcNow.AddMinutes(-20);
+                f.Location.기록시각 = DateTime.UtcNow.AddMinutes(-11);
+                f.Location.CreatedAt = f.Location.기록시각.AddSeconds(1); break;
+            case "complete": f.Queue.상태 = 상태값.배차상태.하차완료; f.Queue.배차큐단계 = 상태값.배차큐단계.종료; break;
+            case "cancelled": f.Cargo!.상태 = 상태값.의뢰상태.취소; break;
+        }
+        await f.Db.SaveChangesAsync();
+        var owner = await f.CargoAsync(); var admin = await f.CargoAdminAsync();
+        Assert.Equal(code, owner!.기사위치상태Code); Assert.Equal(code, admin.기사위치상태Code);
+        Assert.Null(owner.기사최근위도); Assert.Null(owner.기사최근경도); Assert.Null(owner.기사최근위치시각Utc);
+        Assert.Null(admin.기사최근위도); Assert.Null(admin.기사최근경도); Assert.Null(admin.기사최근위치시각Utc);
+    }
+
+    [Fact]
+    public async Task CargoAdminDropsLocationWhenWorkStopsDuringLocationRead()
+    {
+        await using var f = await Fixture.CreateAsync(true);
+        f.Interceptor.OnLocation = () =>
+        {
+            using var other = f.OtherContext();
+            var shift = other.기사근무.Single(); shift.StoppedAtUtc = DateTime.UtcNow; shift.ActiveDriverId = null;
+            other.SaveChanges();
+        };
+        var response = await f.CargoAdminAsync();
+        Assert.True(f.Interceptor.Triggered);
+        Assert.Equal(기사위치상태Codes.Unavailable, response.기사위치상태Code);
+        Assert.Null(response.기사최근위도);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -209,6 +282,9 @@ public sealed class RelatedDriverLocationR8Tests
             f.Db.운송원장.Add(f.Queue); f.Db.기사위치기록.Add(f.Location);
             if (cargo)
             {
+                f.Db.용달기사.Add(new 용달기사 { 기사Id = "driver-r8", 운행상태 = 상태값.기사운행상태.운행중 });
+                f.Db.기사근무.Add(new 기사근무 { 기사Id = "driver-r8", ActiveDriverId = "driver-r8",
+                    시작시각 = f.AssignedAt.AddMinutes(-1), 운송실행유형 = 운송실행유형코드.화물운송 });
                 f.Cargo = new 화주운송의뢰 { 의뢰Id = "cargo-r8", 화주Id = "owner-r8", 주문자UserId = "owner-r8",
                     상태 = 상태값.의뢰상태.생성됨, 배차상태 = 상태값.배차상태.배차확정 };
                 f.Db.화주운송의뢰.Add(f.Cargo);
@@ -236,10 +312,12 @@ public sealed class RelatedDriverLocationR8Tests
         public Task<Ssalddel.Contracts.Shipper.Request.화주운송의뢰응답?> CargoAsync()
             => new 의뢰단건조회QueryHandler(Db, new 화주운송업무담당자UseCase(Db, new Actor(), TimeProvider.System))
                 .Handle(new 의뢰단건조회Query("cargo-r8"), default);
+        public async Task<Ssalddel.Contracts.Admin.Progress.운송진행응답> CargoAdminAsync()
+            => Assert.Single(await new 관리자운송목록조회QueryHandler(Db)
+                .Handle(new 관리자운송목록조회Query(null, "freight-delivery"), default));
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
-    private sealed record Actor : ICurrentUserAccessor
-    { public string UserId => "owner-r8"; public string Role => "화주"; }
+    private sealed record Actor(string UserId = "owner-r8", string Role = "화주") : ICurrentUserAccessor;
     private sealed class Encryption : IPersonalDataEncryptionService
     { public string? Protect(string? value) => value; public string? Unprotect(string? value) => value; }
     private sealed class LocationObservation

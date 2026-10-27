@@ -36,13 +36,11 @@ public sealed partial class MainPageModel : ObservableObject
     private readonly SemaphoreSlim _initializationGate = new(1, 1);
     private Task? _workspaceResumeTask;
     private CancellationTokenSource? _workspaceResumeCancellation;
-    private bool _monitorRefreshInProgress;
-    private long _workspaceSnapshotGeneration;
-    private WorkspaceRefreshFailure? _workspaceRefreshFailure;
-    private CancellationTokenSource _workspaceCancellation = new();
+    private readonly FDriverWorkspaceRefreshSession _workspaceRefresh = new();
+    // Other UI partials observe the session's current lifetime without owning it.
+    private CancellationTokenSource _workspaceCancellation => _workspaceRefresh.Lifetime;
     private CancellationTokenSource? _monitorCancellation;
     private Task? _monitorTask;
-    private DateTime? _lastLocationSentAtUtc;
 
     [ObservableProperty] private bool _isRefreshing;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(CanLogin))] private bool _isBusy;
@@ -98,7 +96,7 @@ public sealed partial class MainPageModel : ObservableObject
         _time = clock ?? TimeProvider.System;
         _locationService = locationService;
         _appLifecycle = appLifecycle;
-        _pendingOperationStore = pendingOperationStore ?? new FDriverMemoryPendingOperationStore();
+        _pendingOperations = new(pendingOperationStore ?? new FDriverMemoryPendingOperationStore());
         // The optional compatibility store is newly created and known empty. The
         // production secure store must still restore and reconcile before actions.
         _pendingRecoveryReady = pendingOperationStore is null;
@@ -152,6 +150,7 @@ public sealed partial class MainPageModel : ObservableObject
         _workspacePageVisible = visible;
         if (!visible)
         {
+            Completion.Dismiss();
             ExceptionEditor.Hide();
             _foodMapRoutes.Clear();
             SelectedRouteOverlays = [];
@@ -197,7 +196,7 @@ public sealed partial class MainPageModel : ObservableObject
     }
 
     private bool IsWorkspaceLifetimeCurrent(CancellationTokenSource lifetime)
-        => ReferenceEquals(_workspaceCancellation, lifetime) && !lifetime.IsCancellationRequested && _workspaceActive;
+        => _workspaceRefresh.IsLifetimeCurrent(lifetime) && _workspaceActive;
 
     public string AppName => _profile.DisplayName;
     public string DriverRole => _profile.DriverRole;
@@ -245,7 +244,7 @@ public sealed partial class MainPageModel : ObservableObject
     public bool HasWorkspaceWarning => !string.IsNullOrWhiteSpace(WorkspaceWarningText);
     public bool HasActiveRecipient => ActiveDelivery?.HasRecipient == true;
     private bool CanUseWorkspaceState => IsAuthenticated && _pendingRecoveryReady && !IsBusy
-        && _workspaceRefreshFailure is null;
+        && _workspaceRefresh.Failure is null;
     private bool CanAcceptNewDispatch => CanUseWorkspaceState && DispatchIntentKnown && ReceivesNewDispatches
         && !ExceptionEditor.IsOpen && !ExceptionEditor.HasPendingRequest;
     private bool CanRespondToTicket => CanUseWorkspaceState && !ExceptionEditor.IsOpen && !ExceptionEditor.HasPendingRequest;
@@ -372,19 +371,13 @@ public sealed partial class MainPageModel : ObservableObject
         }
     }
 
-    private void EnsureWorkspaceLifetime()
-    {
-        if (_workspaceCancellation.IsCancellationRequested)
-        {
-            _workspaceCancellation.Dispose();
-            _workspaceCancellation = new CancellationTokenSource();
-        }
-    }
+    private void EnsureWorkspaceLifetime() => _workspaceRefresh.EnsureLifetime();
 
     private void CancelWorkspaceLifetime()
     {
+        Completion.Dismiss();
         StopFoodMap();
-        _workspaceCancellation.Cancel();
+        _workspaceRefresh.CancelLifetime();
         _monitorCancellation?.Cancel();
     }
 
@@ -581,6 +574,7 @@ public sealed partial class MainPageModel : ObservableObject
     [RelayCommand]
     private async Task SelectTicket(DeliveryTicketPreview ticket)
     {
+        Completion.Dismiss();
         SelectedTicket = ticket;
         StatusMessage = $"{ticket.RestaurantName} 배달 요청을 선택했습니다.";
         await RefreshRouteAsync();
@@ -630,6 +624,7 @@ public sealed partial class MainPageModel : ObservableObject
     private async Task SelectActiveDelivery(ActiveDeliveryPreview delivery)
     {
         if (!IsAuthenticated || IsBusy || ExceptionEditor.IsOpen || ExceptionEditor.HasPendingRequest) return;
+        Completion.Dismiss();
         ActiveDelivery = delivery;
         StatusMessage = $"{delivery.OrderSummary} 진행 배달을 선택했습니다.";
         SetWorkStage();
@@ -667,7 +662,8 @@ public sealed partial class MainPageModel : ObservableObject
         }
 
         var offerId = ActiveDelivery.OfferId;
-        await RunDeliveryActionAsync(cancellationToken => _api.ConfirmPickupAsync(offerId, cancellationToken));
+        var target = new FoodDeliveryCompletionTarget(offerId, ActiveDelivery.DeliveryAttemptId, ActiveDelivery.AttemptRevision, false, ActiveDelivery.WorkKind);
+        await RunDeliveryActionAsync(cancellationToken => _api.ConfirmPickupAsync(offerId, cancellationToken), target);
     }
 
     [RelayCommand]
@@ -681,7 +677,8 @@ public sealed partial class MainPageModel : ObservableObject
         }
 
         var offerId = ActiveDelivery.OfferId;
-        await RunDeliveryActionAsync(cancellationToken => _api.CompleteAsync(offerId, cancellationToken));
+        var target = new FoodDeliveryCompletionTarget(offerId, ActiveDelivery.DeliveryAttemptId, ActiveDelivery.AttemptRevision, true, ActiveDelivery.WorkKind);
+        await RunDeliveryActionAsync(cancellationToken => _api.CompleteAsync(offerId, cancellationToken), target);
     }
 
     private async Task AcceptOfferAsync(string offerId)
@@ -721,20 +718,20 @@ public sealed partial class MainPageModel : ObservableObject
         await RestorePendingOperationsAsync(cancellationToken);
         var owner = _authSession.UserId;
         var lifetime = _workspaceCancellation;
-        var generation = Interlocked.Increment(ref _workspaceSnapshotGeneration);
+        var generation = _workspaceRefresh.AdvanceSnapshot();
         try
         {
             var workspace = await _api.GetCurrentWorkAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+            if (generation != _workspaceRefresh.SnapshotGeneration) return;
             await LoadDispatchAvailabilityAsync(cancellationToken, generation);
             cancellationToken.ThrowIfCancellationRequested();
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+            if (generation != _workspaceRefresh.SnapshotGeneration) return;
             var selectedTicketId = SelectedTicket?.TicketId;
             var activeOfferId = ActiveDelivery?.OfferId ?? _pendingArrivalOfferId ?? _restoredInterruption?.OfferId;
             await RefreshNotificationSettingsAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration) || owner != _authSession.UserId) return;
+            if (generation != _workspaceRefresh.SnapshotGeneration || owner != _authSession.UserId) return;
             ApplyFoodRecommendations(workspace);
 
             ActiveDeliveryItems.Clear();
@@ -771,30 +768,29 @@ public sealed partial class MainPageModel : ObservableObject
                 .ToArray();
             SetWorkStage();
             await ReconcileExceptionWorkspaceAsync(cancellationToken);
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+            if (generation != _workspaceRefresh.SnapshotGeneration) return;
             _pendingRecoveryReady = true;
             NotifyExceptionState();
             NotifyWorkspaceState();
             UpdateRecommendationCountdowns();
             await RestoreFoodNotificationTargetAsync(cancellationToken);
-            if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+            if (generation != _workspaceRefresh.SnapshotGeneration) return;
             UpdateFoodMapContext();
             if (_workspacePageVisible) _ = _foodMapRoutes.TickAsync();
             if (refreshRoute)
             {
                 await RefreshRouteAsync(cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                if (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)) return;
+                if (generation != _workspaceRefresh.SnapshotGeneration) return;
             }
 
-            if (_workspaceRefreshFailure is { } failure && failure.Owner == owner
-                && failure.Generation < generation && owner == _authSession.UserId
-                && ReferenceEquals(lifetime, _workspaceCancellation))
+            if (owner == _authSession.UserId
+                && _workspaceRefresh.EarlierFailure(owner, generation, lifetime) is { } failure)
             {
                 // Only the notice produced by this owner's failed read is obsolete.
                 // A newer command or storage failure still owns its message.
                 if (StatusMessage == failure.Message) StatusMessage = string.Empty;
-                _workspaceRefreshFailure = null;
+                _workspaceRefresh.ClearFailure();
             }
             if (string.IsNullOrWhiteSpace(StatusMessage)
                 || StatusMessage == "기사 로그인 후 배달 업무를 시작할 수 있습니다."
@@ -804,9 +800,14 @@ public sealed partial class MainPageModel : ObservableObject
                     : HasRecommendationContent ? "배달 요청을 확인해 주세요."
                     : IsOnDuty ? "배달 요청을 기다리고 있습니다." : "운행 시작을 눌러 배달을 시작하세요.";
             }
+            if (generation == _workspaceRefresh.SnapshotGeneration && owner == _authSession.UserId)
+            {
+                completionReadGeneration = generation;
+                completionReadOwner = workspace.DriverId;
+            }
             NotifyCommandState();
         }
-        catch (Exception) when (generation != Interlocked.Read(ref _workspaceSnapshotGeneration)
+        catch (Exception) when (generation != _workspaceRefresh.SnapshotGeneration
             && !cancellationToken.IsCancellationRequested)
         {
             // A completed command/newer read owns the screen; an older poll cannot undo it.
@@ -818,7 +819,7 @@ public sealed partial class MainPageModel : ObservableObject
             {
                 SetDeliveryExperienceSnapshotCurrent(false);
                 var message = WorkspaceRefreshErrorMessage(ex);
-                _workspaceRefreshFailure = new(owner, generation, message, ex);
+                _workspaceRefresh.RecordFailure(owner, generation, message, ex);
                 StatusMessage = message;
                 WorkspaceWarningText = "배달 상태를 자동으로 다시 확인하고 있습니다. 확인될 때까지 이전 정보일 수 있습니다.";
                 NotifyCommandState();
@@ -827,7 +828,7 @@ public sealed partial class MainPageModel : ObservableObject
         }
         catch
         {
-            if (generation == Interlocked.Read(ref _workspaceSnapshotGeneration)
+            if (generation == _workspaceRefresh.SnapshotGeneration
                 && owner == _authSession.UserId && ReferenceEquals(lifetime, _workspaceCancellation))
                 SetDeliveryExperienceSnapshotCurrent(false);
             throw;
@@ -844,14 +845,21 @@ public sealed partial class MainPageModel : ObservableObject
         RefreshRouteLabels();
         return Task.CompletedTask;
     }
-    private Task RunDeliveryActionAsync(Func<CancellationToken, Task<FoodDeliveryDriverActionResponse>> action)
+    private Task RunDeliveryActionAsync(Func<CancellationToken, Task<FoodDeliveryDriverActionResponse>> action,
+        FoodDeliveryCompletionTarget? completionTarget = null)
         => RunApiAsync(async cancellationToken =>
         {
+            var owner = _authSession.UserId;
+            FoodDeliveryDriverActionResponse? completionResponse = null;
+            Completion.Dismiss();
+            StatusMessage = "처리 결과를 확인하고 있습니다.";
             try
             {
                 var result = await action(cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                StatusMessage = result.Message;
+                StatusMessage = completionTarget is not null && !IsFoodCompletionReceipt(completionTarget, result)
+                    ? "처리 결과와 현재 배달 상태를 확인하고 있습니다." : result.Message;
+                completionResponse = result;
             }
             catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized
                 && !cancellationToken.IsCancellationRequested)
@@ -863,6 +871,8 @@ public sealed partial class MainPageModel : ObservableObject
                     : $"{ShortMessage(ex.Message)} 현재 배달 상태를 다시 확인합니다.";
             }
             await LoadWorkspaceAsync(cancellationToken: cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (completionTarget is not null) RecordFoodCompletion(completionTarget, completionResponse, owner);
         });
 
     private async Task RunApiAsync(Func<CancellationToken, Task> action)
@@ -881,7 +891,7 @@ public sealed partial class MainPageModel : ObservableObject
         }
 
         IsBusy = true;
-        Interlocked.Increment(ref _workspaceSnapshotGeneration);
+        _workspaceRefresh.AdvanceSnapshot();
         NotifyCommandState();
         try
         {
@@ -893,7 +903,7 @@ public sealed partial class MainPageModel : ObservableObject
         catch (FDriverApiException ex) when (!cancellationToken.IsCancellationRequested)
         {
             if (!IsWorkspaceLifetimeCurrent(lifetime) || owner != _authSession.UserId) return;
-            if (_workspaceRefreshFailure is not { } failure || failure.Owner != owner
+            if (_workspaceRefresh.Failure is not { } failure || failure.Owner != owner
                 || !ReferenceEquals(failure.Error, ex))
                 StatusMessage = ShortMessage(ex.Message);
             if (ex.StatusCode == HttpStatusCode.Unauthorized)
@@ -959,7 +969,10 @@ public sealed partial class MainPageModel : ObservableObject
 
     private void ClearWorkspace()
     {
-        _workspaceRefreshFailure = null;
+        Completion.Clear();
+        completionReadGeneration = -1;
+        completionReadOwner = null;
+        _workspaceRefresh.ClearFailure();
         _workStatusKnown = false;
         StopFoodMap();
         IsFollowingCurrentLocation = true;
@@ -997,7 +1010,7 @@ public sealed partial class MainPageModel : ObservableObject
         DispatchAutomationEnabled = false;
         DispatchAutomationNotice = "자동 배차 상태 확인 전";
         HasNewRecommendations = false;
-        _lastLocationSentAtUtc = null;
+        _locationTransmissions.ClearLastConfirmation();
         NotifyWorkspaceState();
     }
 
@@ -1104,14 +1117,14 @@ public sealed partial class MainPageModel : ObservableObject
 
     private async Task RefreshWorkspaceFromBackgroundAsync(string sourceLabel, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested || !IsAuthenticated || IsBusy || _monitorRefreshInProgress)
+        if (cancellationToken.IsCancellationRequested || !IsAuthenticated || IsBusy)
         {
             return;
         }
 
         var owner = _authSession.UserId;
         var lifetime = _workspaceCancellation;
-        _monitorRefreshInProgress = true;
+        if (!_workspaceRefresh.TryBeginBackgroundRefresh()) return;
         try
         {
             try { await ReconcileAutomaticWorkAsync(cancellationToken); }
@@ -1120,9 +1133,7 @@ public sealed partial class MainPageModel : ObservableObject
                 if (owner != _authSession.UserId || !IsWorkspaceLifetimeCurrent(lifetime)) return;
                 StatusMessage = "운행·배차 수신 결과를 자동으로 다시 확인하고 있습니다.";
             }
-            if (IsOnDuty
-                && (!_lastLocationSentAtUtc.HasValue
-                    || DateTime.UtcNow - _lastLocationSentAtUtc.Value >= LocationHeartbeatInterval))
+            if (IsOnDuty && _locationTransmissions.HeartbeatDue)
             {
                 try { await CaptureLocationAsync(sendToServer: true, cancellationToken); }
                 catch (FDriverApiException ex) when (ex.StatusCode != HttpStatusCode.Unauthorized && !cancellationToken.IsCancellationRequested)
@@ -1160,7 +1171,7 @@ public sealed partial class MainPageModel : ObservableObject
         }
         finally
         {
-            _monitorRefreshInProgress = false;
+            _workspaceRefresh.EndBackgroundRefresh();
         }
     }
 
@@ -1226,8 +1237,6 @@ public sealed partial class MainPageModel : ObservableObject
         => error.StatusCode is null || (int)error.StatusCode.Value >= 500
             ? "배달 상태를 불러오지 못했습니다. 자동으로 다시 확인합니다."
             : ShortMessage(error.Message);
-
-    private sealed record WorkspaceRefreshFailure(string? Owner, long Generation, string Message, FDriverApiException Error);
 }
 
 public sealed class DeliveryTicketPreview : ObservableObject

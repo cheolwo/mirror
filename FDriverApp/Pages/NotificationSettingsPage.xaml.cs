@@ -1,5 +1,6 @@
 using FDriverApp.PageModels;
 using FDriverApp.Services;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace FDriverApp.Pages;
 
@@ -8,7 +9,13 @@ public partial class NotificationSettingsPage : ContentPage
     public const string RouteName = "food-notification-settings";
     private readonly FDriverNotificationSettingsPageModel _model;
     public NotificationSettingsPage(FDriverNotificationSettingsPageModel model)
-    { InitializeComponent(); BindingContext = _model = model; }
+    {
+        InitializeComponent(); BindingContext = _model = model;
+        // Compiled string bindings do not turn path markup into the Geometry required by Path.Data.
+        var geometry = new PathGeometryConverter();
+        FoodNotificationIcon.Data = (Geometry)geometry.ConvertFromInvariantString(model.FoodIconPath)!;
+        CargoNotificationIcon.Data = (Geometry)geometry.ConvertFromInvariantString(model.CargoIconPath)!;
+    }
     protected override async void OnAppearing() { base.OnAppearing(); await _model.ActivateAsync(); }
     protected override void OnDisappearing() { _model.Deactivate(); base.OnDisappearing(); }
     private async void OnBackClicked(object? sender, EventArgs args)

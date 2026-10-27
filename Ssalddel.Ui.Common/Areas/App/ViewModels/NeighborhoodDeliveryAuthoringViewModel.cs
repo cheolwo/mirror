@@ -90,6 +90,11 @@ public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
     public NeighborhoodFulfillmentOption? SelectedFulfillmentOption
         => Quote?.FulfillmentOptions.SingleOrDefault(option => option.QuoteId == SelectedFulfillmentQuoteId);
     public bool HasFulfillmentOptions => Quote?.FulfillmentOptions.Count > 0;
+    public bool RequiresInternalCourierInput => !MemberDeliveryRequested && !AutoRoutingEnabled
+        && (!HasFulfillmentOptions || SelectedFulfillmentOption?.ProviderId == "internal");
+    public 화물적재입력결과 LoadingInput => NeighborhoodDeliveryLoadingInput.Calculate(Draft);
+    public IReadOnlyList<string> InternalCourierMissing => RequiresInternalCourierInput && !NeedsSubmissionReview
+        ? NeighborhoodDeliveryLoadingInput.InternalCourierMissing(BuildRequest()) : [];
     public bool CanConfirmFulfillment => SelectedFulfillmentOption is { } option
         && NeighborhoodDeliveryPresentation.FulfillmentOptionSelectable(option) && FulfillmentCostAgreed
         && (option.ProviderId == "internal" ? DirectPaymentAgreed : ProviderInformationSharingAgreed);
@@ -119,6 +124,9 @@ public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
         {
             ClientRequestId = requestId, CargoName = source.CargoName, Quantity = source.Quantity, WeightKg = source.WeightKg,
             PackageSizeCode = source.PackageSizeCode, VehicleType = source.VehicleType, Notes = source.Notes,
+            PackageLengthMm = source.PackageLengthMm, PackageWidthMm = source.PackageWidthMm, PackageHeightMm = source.PackageHeightMm,
+            VolumeCbm = source.VolumeCbm, PalletCount = source.PalletCount,
+            FloorRotationAllowed = source.FloorRotationAllowed, StackingAllowed = source.StackingAllowed,
             Pickup = CopyLocation(source.Pickup), Dropoff = CopyLocation(source.Dropoff),
             SourcePostId = Draft.SourcePostId, CollaborationId = Draft.CollaborationId, ExpectedTermsRevision = Draft.ExpectedTermsRevision,
             MemberDeliveryRequested = Draft.MemberDeliveryRequested, MemberDeliveryNoticeVersion = Draft.MemberDeliveryNoticeVersion,
@@ -132,6 +140,7 @@ public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
     {
         주소 = new() { 도로명주소 = value.주소.도로명주소, 상세주소 = value.주소.상세주소 },
         연락처 = new() { 이름 = value.연락처.이름, 전화번호 = value.연락처.전화번호 },
+        작업시간분 = value.작업시간분,
         시간창 = value.시간창 is { } window ? new() { 시작일시 = window.시작일시, 종료일시 = window.종료일시 } : null
     };
 
@@ -254,6 +263,8 @@ public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
         if (!await RestoreAsync() || RecoveryExpired) return null;
         if (Submitted is not null) return await RetryLinkAsync();
         if (IsSending || !CheckOwner() || !Validate()) return null;
+        if (!NeedsSubmissionReview && InternalCourierMissing is { Count: > 0 } loadingMissing)
+        { Error = "기사 배송에 필요한 정보를 보완해 주세요. " + string.Join(" ", loadingMissing); Changed(); return null; }
         if (!CanWriteCollaboration) { Error = "협업의 현재 합의를 먼저 확인해 주세요."; Changed(); return null; }
         Error = null;
         if (_submittedInput is null && (!HasCurrentQuote || !DispatchRequested || !CanConfirmCurrentQuote))
@@ -398,6 +409,8 @@ public sealed partial class NeighborhoodDeliveryAuthoringViewModel(
             Error = "픽업지와 전달지의 도로명 주소, 담당자 이름과 전화번호를 확인해 주세요.";
         else if (Draft.PackageSizeCode is not null && !NeighborhoodPackageSizes.IsKnown(Draft.PackageSizeCode))
             Error = "포장 크기는 작음·보통·큼 중에서 선택하거나 미입력으로 두세요.";
+        else if (NeighborhoodDeliveryLoadingInput.InputErrors(Draft) is { Count: > 0 } loadingErrors)
+            Error = string.Join(" ", loadingErrors);
         else if (_simpleInput?.HasMissingTimes == true || _simpleInput is { IsActive: true, TimeReviewed: false } && !NeedsSubmissionReview)
             Error = "픽업·전달 시간창을 보완하고 실제 표시된 시각을 확인해 주세요.";
         else if (PickupEnd <= PickupStart || _simpleInput?.DropoffTimeUnspecified != true && (DropoffEnd <= DropoffStart || DropoffEnd < PickupStart))

@@ -1,6 +1,4 @@
 using Ssalddel.Contracts.Food;
-using Ssalddel.Contracts.Common.Workflow;
-using Ssalddel.Ui.Common.Areas.App.Services;
 using Microsoft.Extensions.Options;
 using RestaurantDeskApp.Models.Restaurant;
 using RestaurantDeskApp.Options;
@@ -9,22 +7,14 @@ namespace RestaurantDeskApp.Services;
 
 public sealed class 음식점주문DeskService : I음식점주문DeskService, IDisposable
 {
-    private readonly object _gate = new();
     private readonly SemaphoreSlim _serverInboxGate = new(1, 1);
-    private readonly List<음식점주문DeskItem> _orders;
-    private readonly Dictionary<string, Guid> _operationRequestIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, RestaurantProgressPendingRequest> _pendingProgress = new(StringComparer.OrdinalIgnoreCase);
-    private readonly IRestaurantProgressPendingStore _pendingStore;
-    private readonly SemaphoreSlim _pendingPersistenceGate = new(1, 1);
-    private string? _pendingLoadedOwner;
-    private readonly RestaurantAuthService? _authService;
-    private string? _cacheOwner;
     private readonly I음식주문ApiClient _foodOrderClient;
-    private readonly I주문알림Service _orderAlertService;
     private readonly 음식점전표DraftFactory _slipFactory;
     private readonly I음식점조리시간설정Service _조리시간설정;
     private readonly RestaurantDeskOptions _options;
-    private long _nextId = 1000;
+    private readonly 음식점주문InboxProjection _inbox;
+    private readonly 음식점주문ProgressSession _progress;
+    private readonly 음식점주문알림수신Coordinator _notifications;
 
     public 음식점주문DeskService(
         I음식주문ApiClient foodOrderClient,
@@ -36,18 +26,14 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
         IRestaurantProgressPendingStore? pendingStore = null)
     {
         _foodOrderClient = foodOrderClient;
-        _orderAlertService = orderAlertService;
         _slipFactory = slipFactory;
         _조리시간설정 = 조리시간설정;
         _options = options.Value;
-        _orders = [];
-        _authService = authService;
-        _pendingStore = pendingStore ?? new RestaurantMemoryProgressPendingStore();
-        if (_authService is not null)
-        {
-            _authService.SessionEnding += EndSession;
-            _authService.SessionEndingAsync += EndSessionAsync;
-        }
+        var gate = new object();
+        _inbox = new 음식점주문InboxProjection(gate, 조리시간설정);
+        _progress = new 음식점주문ProgressSession(gate, _inbox, foodOrderClient, authService,
+            pendingStore ?? new RestaurantMemoryProgressPendingStore());
+        _notifications = new 음식점주문알림수신Coordinator(foodOrderClient, orderAlertService, _inbox, _progress);
     }
 
     public async Task<음식점주문DeskItem?> 주문조회Async(
@@ -61,22 +47,22 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
             return null;
         }
 
-        var actor = CaptureActor();
-        await RestorePendingProgressAsync(actor, cancellationToken);
+        var actor = _progress.CaptureActor();
+        await _progress.RestorePendingProgressAsync(actor, cancellationToken);
         var detail = await _foodOrderClient.주문상세조회Async(
             주문번호.Trim(),
             cancellationToken);
-        EnsureCurrentActor(actor, cancellationToken);
-        if (detail is not null) await ResolveConfirmedProgressAsync(detail, actor, cancellationToken);
-        return detail is null ? null : UpsertServerOrder(detail, 복구출처);
+        _progress.EnsureCurrentActor(actor, cancellationToken);
+        if (detail is not null) await _progress.ResolveConfirmedProgressAsync(detail, actor, cancellationToken);
+        return detail is null ? null : _inbox.UpsertServerOrder(detail, 복구출처);
     }
 
     public async Task<IReadOnlyList<음식점주문DeskItem>> 주문목록조회Async(
         음식점주문복구출처 복구출처 = 음식점주문복구출처.서버재조회,
         CancellationToken cancellationToken = default)
     {
-        var actor = CaptureActor();
-        await RestorePendingProgressAsync(actor, cancellationToken);
+        var actor = _progress.CaptureActor();
+        await _progress.RestorePendingProgressAsync(actor, cancellationToken);
         await _serverInboxGate.WaitAsync(cancellationToken);
         try
         {
@@ -97,7 +83,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
                         PageSize = pageSize
                     },
                     cancellationToken);
-                EnsureCurrentActor(actor, cancellationToken);
+                _progress.EnsureCurrentActor(actor, cancellationToken);
                 expectedTotal = response.TotalCount;
                 foreach (var serverOrder in response.Items)
                 {
@@ -120,23 +106,13 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
 
             foreach (var serverOrder in serverOrders.Values)
             {
-                await ResolveConfirmedProgressAsync(serverOrder, actor, cancellationToken);
-                UpsertServerOrder(serverOrder, 복구출처);
+                await _progress.ResolveConfirmedProgressAsync(serverOrder, actor, cancellationToken);
+                _inbox.UpsertServerOrder(serverOrder, 복구출처);
             }
 
-            lock (_gate)
-            {
-                if (fullSnapshotCaptured)
-                {
-                    var currentOrderNos = serverOrders.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                    _orders.RemoveAll(order => !currentOrderNos.Contains(order.주문번호));
-                }
-
-                return _orders
-                    .OrderByDescending(x => x.미확인)
-                    .ThenByDescending(x => x.접수시각)
-                    .ToArray();
-            }
+            return _inbox.CaptureSnapshot(fullSnapshotCaptured
+                ? serverOrders.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : null);
         }
         finally
         {
@@ -144,35 +120,8 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
         }
     }
 
-    public async Task<음식점주문DeskItem> 주문알림수신Async(음식점주문수신Payload payload, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(payload);
-        ArgumentException.ThrowIfNullOrWhiteSpace(payload.주문번호);
-        var actor = CaptureActor();
-        await RestorePendingProgressAsync(actor, cancellationToken);
-        var serverOrder = await _foodOrderClient.주문상세조회Async(
-            payload.주문번호,
-            cancellationToken);
-        EnsureCurrentActor(actor, cancellationToken);
-        if (serverOrder is null || serverOrder.음식점Id != payload.음식점Id)
-        {
-            throw new InvalidOperationException("인증된 음식점 수신함에서 주문 알림을 확인할 수 없습니다.");
-        }
-
-        await ResolveConfirmedProgressAsync(serverOrder, actor, cancellationToken);
-        var item = UpsertServerOrder(
-            serverOrder,
-            음식점주문복구출처.실시간);
-        lock (_gate)
-        {
-            item.최근메시지 = string.IsNullOrWhiteSpace(payload.본문)
-                ? "인증된 서버 원장에서 확인한 실시간 신규 주문"
-                : payload.본문;
-        }
-
-        await _orderAlertService.신규주문알림재생Async(cancellationToken);
-        return item;
-    }
+    public Task<음식점주문DeskItem> 주문알림수신Async(음식점주문수신Payload payload, CancellationToken cancellationToken = default)
+        => _notifications.주문알림수신Async(payload, cancellationToken);
 
     public async Task<음식점주문수락결과> 주문수락후전표준비Async(string 주문번호, CancellationToken cancellationToken = default)
     {
@@ -199,17 +148,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
         }
 
         var 선택조리예상분 = 음식점조리시간정책.Clamp(조리예상분);
-        음식점주문DeskItem? item;
-        lock (_gate)
-        {
-            item = FindLocked(주문번호);
-            if (item is not null)
-            {
-                item.선택조리예상분 = 선택조리예상분;
-                item.상태 = 음식점주문Desk상태코드.수락처리중;
-                item.최근메시지 = $"조리 예상 {선택조리예상분}분으로 서버 주문을 수락하고 있습니다.";
-            }
-        }
+        var item = _inbox.BeginAcceptance(주문번호, 선택조리예상분);
 
         음식주문응답? detail;
         try
@@ -218,7 +157,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
                 주문번호,
                 new 음식점주문수락요청
                 {
-                    클라이언트요청Id = GetOperationRequestId(
+                    클라이언트요청Id = _progress.GetOperationRequestId(
                         주문번호,
                         "acceptance"),
                     음식점명 = _options.RestaurantName,
@@ -234,30 +173,14 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
         }
         catch
         {
-            lock (_gate)
-            {
-                item = FindLocked(주문번호);
-                if (item is not null)
-                {
-                    item.상태 = 음식점주문Desk상태코드.상세조회실패;
-                    item.최근메시지 = "서버 주문 수락에 실패했습니다. 다시 시도할 수 있습니다.";
-                }
-            }
+            item = _inbox.FailAcceptance(주문번호, "서버 주문 수락에 실패했습니다. 다시 시도할 수 있습니다.");
 
             throw;
         }
 
         if (detail is null)
         {
-            lock (_gate)
-            {
-                item = FindLocked(주문번호);
-                if (item is not null)
-                {
-                    item.상태 = 음식점주문Desk상태코드.상세조회실패;
-                    item.최근메시지 = "서버에서 주문 상세를 찾지 못했습니다.";
-                }
-            }
+            item = _inbox.FailAcceptance(주문번호, "서버에서 주문 상세를 찾지 못했습니다.");
 
             return new 음식점주문수락결과
             {
@@ -268,24 +191,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
         }
 
         var draft = _slipFactory.Create주문전표Draft(detail);
-        lock (_gate)
-        {
-            item = FindLocked(주문번호);
-            if (item is null)
-            {
-                item = CreateDeskItem(detail);
-                item.Id = ++_nextId;
-                _orders.Add(item);
-            }
-
-            ApplyDetail(item, detail);
-            item.선택조리예상분 = 선택조리예상분;
-            item.상태 = 음식주문상태코드.Normalize(detail.상태);
-            item.미확인 = false;
-            item.수락시각 = DateTimeOffset.Now;
-            item.최근메시지 = $"주문 수락 완료 · 조리 예상 {선택조리예상분}분 · 전표 출력 준비";
-            RemoveOperationRequestId(주문번호, "acceptance");
-        }
+        item = _progress.CompleteAcceptance(주문번호, detail, 선택조리예상분);
 
         return new 음식점주문수락결과
         {
@@ -307,7 +213,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
             throw new ArgumentException("주문 거절 사유를 입력해 주세요.", nameof(사유));
         }
 
-        return 진행변경Async(
+        return _progress.진행변경Async(
             주문번호,
             음식점주문진행작업코드.거절,
             조리예상분: null,
@@ -317,14 +223,14 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
 
     public Task<음식점주문DeskItem?> 조리시작Async(
         string 주문번호, int 조리예상분, CancellationToken cancellationToken = default)
-        => 진행변경Async(주문번호, 음식점주문진행작업코드.조리시작,
+        => _progress.진행변경Async(주문번호, 음식점주문진행작업코드.조리시작,
             음식점조리시간정책.Clamp(조리예상분), string.Empty, cancellationToken);
 
     public Task<음식점주문DeskItem?> 조리시간변경Async(
         string 주문번호,
         int 조리예상분,
         CancellationToken cancellationToken = default)
-        => 진행변경Async(
+        => _progress.진행변경Async(
             주문번호,
             음식점주문진행작업코드.조리시간변경,
             음식점조리시간정책.Clamp(조리예상분),
@@ -334,7 +240,7 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
     public Task<음식점주문DeskItem?> 픽업준비완료Async(
         string 주문번호,
         CancellationToken cancellationToken = default)
-        => 진행변경Async(
+        => _progress.진행변경Async(
             주문번호,
             음식점주문진행작업코드.픽업준비,
             조리예상분: null,
@@ -372,449 +278,10 @@ public sealed class 음식점주문DeskService : I음식점주문DeskService, ID
     public Task 전표출력완료Async(string 주문번호, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        lock (_gate)
-        {
-            var item = FindLocked(주문번호);
-            if (item is not null)
-            {
-                item.전표출력요청시각 = DateTimeOffset.Now;
-                item.최근메시지 = "전표 출력 요청 완료";
-            }
-        }
+        _inbox.RecordPrintRequested(주문번호);
 
         return Task.CompletedTask;
     }
 
-    private 음식점주문DeskItem? FindLocked(string 주문번호)
-    {
-        return _orders.FirstOrDefault(x => string.Equals(x.주문번호, 주문번호, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private 음식점주문DeskItem UpsertServerOrder(
-        음식주문응답 detail,
-        음식점주문복구출처 복구출처)
-    {
-        lock (_gate)
-        {
-            var item = FindLocked(detail.주문번호);
-            if (item is null)
-            {
-                item = CreateDeskItem(detail);
-                item.Id = ++_nextId;
-                _orders.Add(item);
-            }
-            else
-            {
-                ApplyDetail(item, detail);
-            }
-
-            ApplyServerStatus(item, detail);
-            item.복구출처 = 복구출처;
-            item.최근복구시각 = DateTimeOffset.Now;
-            return item;
-        }
-    }
-
-    private 음식점주문DeskItem CreateDeskItem(음식주문응답 detail)
-    {
-        var item = new 음식점주문DeskItem
-        {
-            주문번호 = detail.주문번호,
-            접수시각 = ToLocalOffset(detail.CreatedAt),
-        };
-
-        ApplyDetail(item, detail);
-        return item;
-    }
-
-    private void ApplyDetail(음식점주문DeskItem item, 음식주문응답 detail)
-    {
-        item.음식점Id = detail.음식점Id;
-        item.고객명 = detail.수령인정보.수령인명;
-        item.메뉴요약 = BuildMenuSummary(detail);
-        item.상품목록 = Clone상품목록(detail.상품목록);
-        item.상품별조리기준 = Build상품별조리기준(item.상품목록);
-        var 조리시간설정 = _조리시간설정.현재조회();
-        item.추천조리예상분 = 음식점조리시간정책.주문추천분(
-            item.상품목록,
-            조리시간설정.상품별기본조리분,
-            조리시간설정.음식점기본조리분);
-        if (detail.조리예상분 is > 0) item.선택조리예상분 = detail.조리예상분;
-        item.주문금액 = detail.총주문금액;
-        item.배차상태 = detail.배차상태;
-        item.배차요청시각Utc = detail.배차요청시각Utc;
-        item.AvailableActions = detail.AvailableActions;
-        item.상세주문 = detail;
-    }
-
-    private static void ApplyServerStatus(
-        음식점주문DeskItem item,
-        음식주문응답 detail)
-    {
-        if (detail.상태 == 음식주문상태코드.주문대기)
-        {
-            item.상태 = 음식점주문Desk상태코드.주문대기;
-            item.미확인 = true;
-            item.최근메시지 ??= "서버 주문 원장에서 복구한 신규 주문";
-            return;
-        }
-
-        item.상태 = 음식주문상태코드.Normalize(detail.상태);
-
-        item.미확인 = false;
-        item.수락시각 = detail.음식점수락시각Utc.HasValue
-            ? ToLocalOffset(detail.음식점수락시각Utc.Value)
-            : item.수락시각;
-        item.최근메시지 = $"서버 상태 · {detail.상태}";
-    }
-
-    private static string BuildMenuSummary(음식주문응답 detail)
-    {
-        return string.Join(", ", detail.상품목록.Select(x => $"{x.상품명} {x.수량}"));
-    }
-
-    private static IReadOnlyList<음식주문상품Dto> Clone상품목록(
-        IEnumerable<음식주문상품Dto> 상품목록)
-        => 상품목록.Select(item => new 음식주문상품Dto
-        {
-            메뉴Id = item.메뉴Id,
-            상품명 = item.상품명,
-            수량 = item.수량,
-            단가 = item.단가
-        }).ToArray();
-
-    private async Task<음식점주문DeskItem?> 진행변경Async(
-        string 주문번호,
-        string 작업,
-        int? 조리예상분,
-        string 사유,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(주문번호);
-
-        var actor = CaptureActor();
-        await RestorePendingProgressAsync(actor, cancellationToken);
-        var key = ProgressKey(actor.Owner, 주문번호, 작업);
-        RestaurantProgressPendingRequest snapshot;
-        bool recovering;
-        await _pendingPersistenceGate.WaitAsync(cancellationToken);
-        try
-        {
-            EnsureCurrentActor(actor, cancellationToken);
-            lock (_gate) recovering = _pendingProgress.TryGetValue(key, out snapshot!);
-            if (!recovering)
-            {
-                snapshot = new(주문번호.Trim(), Guid.NewGuid(), GetExpectedRevision(주문번호, 작업), 작업, 조리예상분, 사유, null);
-                RestaurantProgressPendingRequest[] next;
-                lock (_gate) next = [.. _pendingProgress.Values, snapshot];
-                await SavePendingProgressAsync(actor, next, cancellationToken);
-                lock (_gate) _pendingProgress[key] = snapshot;
-            }
-        }
-        finally { _pendingPersistenceGate.Release(); }
-
-        if (recovering)
-        {
-            // GET 실패는 미접수의 증거가 아니다. 확인 전에는 POST하지 않는다.
-            var canonical = await _foodOrderClient.주문상세조회Async(주문번호, cancellationToken);
-            EnsureCurrentActor(actor, cancellationToken);
-            if (canonical is null || !string.Equals(canonical.주문번호, 주문번호, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("이전 진행 변경의 결과를 확인하지 못했습니다. 같은 주문을 다시 조회해 주세요.");
-            await ResolveConfirmedProgressAsync(canonical, actor, cancellationToken);
-            var current = UpsertServerOrder(canonical, 음식점주문복구출처.서버재조회);
-            if (canonical.상태이력.Any(history => history.클라이언트요청Id == snapshot.RequestId)) return current;
-        }
-
-        // HTTP 재시도와 명시 재시도 모두 처음의 입력/판본을 사용한다.
-        var request = snapshot.ToRequest();
-
-        음식주문응답? detail;
-        try
-        {
-            // 응답 유실 뒤 자동 재송신하지 않습니다. 다음 명시 행동이 GET 후 같은 요청을 사용합니다.
-            detail = await _foodOrderClient.음식점진행변경Async(주문번호, request, cancellationToken);
-            EnsureCurrentActor(actor, cancellationToken);
-        }
-        catch (SsalddelApiException ex) when (
-            ex.RequiresStateRefresh
-            && 업무복구행동목록.포함(ex.AvailableRecoveryActions, 업무복구행동Ids.상태전체재조회))
-        {
-            var refreshed = await TryRefreshCanonicalOrderAsync(주문번호, actor, cancellationToken);
-            // 명시 판본 충돌은 이번 입력이 거절된 응답이다. 정본 확인 후 다음 변경은 새 요청이다.
-            if (refreshed && ex.StatusCode == 409)
-                await RemoveProgressRequestAsync(key, snapshot.RequestId, actor, cancellationToken);
-            throw;
-        }
-        if (detail is null)
-        {
-            return null;
-        }
-
-        if (!string.Equals(detail.주문번호, 주문번호, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("진행 변경 응답의 주문번호가 요청과 다릅니다. 같은 주문을 다시 조회해 주세요.");
-        await RemoveProgressRequestAsync(key, snapshot.RequestId, actor, cancellationToken);
-        return UpsertServerOrder(
-            detail,
-            음식점주문복구출처.서버재조회);
-    }
-
-    private async Task<bool> TryRefreshCanonicalOrderAsync(
-        string orderNo,
-        (string Owner, long Generation) actor,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var canonical = await _foodOrderClient.주문상세조회Async(orderNo, cancellationToken);
-            EnsureCurrentActor(actor, cancellationToken);
-            if (canonical is not null && string.Equals(canonical.주문번호, orderNo, StringComparison.OrdinalIgnoreCase))
-            {
-                await ResolveConfirmedProgressAsync(canonical, actor, cancellationToken);
-                UpsertServerOrder(canonical, 음식점주문복구출처.서버재조회);
-                return true;
-            }
-        }
-        catch (Exception ex) when (ex is OperationCanceledException or RestaurantPendingStorageException)
-        {
-            throw;
-        }
-        catch
-        {
-            // 원래 명령 실패를 보존한다. 다음 수신함 조회가 다시 정본 상태를 복원한다.
-        }
-        return false;
-    }
-
-    private (string Owner, long Generation) CaptureActor()
-    {
-        var owner = _authService?.Session.UserId ?? string.Empty;
-        if (_authService is not null && (!_authService.Session.IsAuthenticated || string.IsNullOrWhiteSpace(owner)))
-            throw new UnauthorizedAccessException("음식점 로그인이 필요합니다.");
-        lock (_gate)
-        {
-            if (_cacheOwner != owner)
-            {
-                _cacheOwner = owner;
-                _orders.Clear();
-                _operationRequestIds.Clear();
-                _pendingProgress.Clear();
-                _pendingLoadedOwner = null;
-            }
-        }
-        return (owner, _authService?.SessionGeneration ?? 0);
-    }
-
-    private void EnsureCurrentActor((string Owner, long Generation) actor, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        _authService?.ThrowIfActorChanged(actor.Owner, actor.Generation);
-    }
-
-    private static string ProgressKey(string owner, string orderNo, string operation)
-        => $"{owner}\u001f{orderNo.Trim()}::{operation}";
-
-    private async Task RestorePendingProgressAsync((string Owner, long Generation) actor, CancellationToken cancellationToken)
-    {
-        await _pendingPersistenceGate.WaitAsync(cancellationToken);
-        try
-        {
-            EnsureCurrentActor(actor, cancellationToken);
-            if (_pendingLoadedOwner == actor.Owner) return;
-            RestaurantProgressPendingSnapshot? saved;
-            try
-            {
-                saved = await _pendingStore.LoadAsync(cancellationToken);
-                EnsureCurrentActor(actor, cancellationToken);
-                if (saved is not null && saved.OwnerId != actor.Owner)
-                {
-                    await _pendingStore.ClearAsync(saved.OwnerId, cancellationToken);
-                    EnsureCurrentActor(actor, cancellationToken);
-                    saved = null;
-                }
-            }
-            catch (OperationCanceledException) { throw; }
-            catch (Exception ex) { throw new RestaurantPendingStorageException(ex); }
-            lock (_gate)
-            {
-                _pendingProgress.Clear();
-                foreach (var pending in saved?.Requests ?? [])
-                    _pendingProgress[ProgressKey(actor.Owner, pending.OrderNo, pending.Operation)] = pending;
-                _pendingLoadedOwner = actor.Owner;
-            }
-        }
-        finally { _pendingPersistenceGate.Release(); }
-    }
-
-    private async Task SavePendingProgressAsync((string Owner, long Generation) actor,
-        IReadOnlyList<RestaurantProgressPendingRequest> next, CancellationToken cancellationToken)
-    {
-        EnsureCurrentActor(actor, cancellationToken);
-        try
-        {
-            await _pendingStore.SaveAsync(new(actor.Owner, next), cancellationToken);
-            EnsureCurrentActor(actor, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            _pendingLoadedOwner = null;
-            // 다른 계정의 늦은 저장은 다음 로그인에 복원하지 않습니다.
-            if (_authService?.Session.UserId is { } nextOwner && nextOwner != actor.Owner)
-                await _pendingStore.ClearAsync(actor.Owner, CancellationToken.None);
-            throw;
-        }
-        catch (Exception ex) { _pendingLoadedOwner = null; throw new RestaurantPendingStorageException(ex); }
-    }
-
-    private async Task ResolveConfirmedProgressAsync(음식주문응답 detail,
-        (string Owner, long Generation) actor, CancellationToken cancellationToken)
-    {
-        foreach (var operation in 음식점주문진행작업코드.전체)
-        {
-            var key = ProgressKey(actor.Owner, detail.주문번호, operation);
-            RestaurantProgressPendingRequest? pending;
-            lock (_gate) _pendingProgress.TryGetValue(key, out pending);
-            if (pending is not null && detail.상태이력.Any(history => history.클라이언트요청Id == pending.RequestId))
-                await RemoveProgressRequestAsync(key, pending.RequestId, actor, cancellationToken);
-        }
-    }
-
-    private async Task RemoveProgressRequestAsync(string key, Guid requestId,
-        (string Owner, long Generation) actor, CancellationToken cancellationToken)
-    {
-        await _pendingPersistenceGate.WaitAsync(cancellationToken);
-        try
-        {
-            EnsureCurrentActor(actor, cancellationToken);
-            RestaurantProgressPendingRequest[] next;
-            lock (_gate)
-            {
-                if (!_pendingProgress.TryGetValue(key, out var pending) || pending.RequestId != requestId) return;
-                next = _pendingProgress.Where(x => x.Key != key).Select(x => x.Value).ToArray();
-            }
-            await SavePendingProgressAsync(actor, next, cancellationToken);
-            lock (_gate) _pendingProgress.Remove(key);
-        }
-        finally { _pendingPersistenceGate.Release(); }
-    }
-
-    private async Task EndSessionAsync(bool explicitLogout, CancellationToken cancellationToken)
-    {
-        if (!explicitLogout) return;
-        var owner = _authService?.Session.UserId ?? string.Empty;
-        await _pendingPersistenceGate.WaitAsync(cancellationToken);
-        try
-        {
-            try { await _pendingStore.ClearAsync(owner, cancellationToken); }
-            catch (OperationCanceledException) { throw; }
-            catch (Exception ex) { throw new RestaurantPendingStorageException(ex); }
-        }
-        finally { _pendingPersistenceGate.Release(); }
-    }
-
-    private void EndSession(bool explicitLogout)
-    {
-        lock (_gate)
-        {
-            _orders.Clear();
-            _operationRequestIds.Clear();
-            if (explicitLogout)
-            {
-                _pendingProgress.Clear();
-                _cacheOwner = null;
-                _pendingLoadedOwner = null;
-            }
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_authService is not null)
-        {
-            _authService.SessionEnding -= EndSession;
-            _authService.SessionEndingAsync -= EndSessionAsync;
-        }
-        EndSession(explicitLogout: true);
-    }
-
-
-    private long? GetExpectedRevision(string orderNo, string operation)
-    {
-        var actionId = operation switch
-        {
-            음식점주문진행작업코드.조리시작 => 음식배달가능행동Ids.음식점조리시작,
-            음식점주문진행작업코드.거절 => 음식배달가능행동Ids.음식점주문거절,
-            음식점주문진행작업코드.조리시간변경 => 음식배달가능행동Ids.음식점조리시간변경,
-            음식점주문진행작업코드.픽업준비 => 음식배달가능행동Ids.음식점픽업준비완료,
-            _ => null
-        };
-        if (actionId is null)
-        {
-            return null;
-        }
-
-        lock (_gate)
-        {
-            return _orders
-                .FirstOrDefault(order => string.Equals(order.주문번호, orderNo, StringComparison.OrdinalIgnoreCase))?
-                .AvailableActions
-                .FirstOrDefault(action => string.Equals(action.ActionId, actionId, StringComparison.Ordinal))?
-                .ExpectedRevision;
-        }
-    }
-
-    private Guid GetOperationRequestId(string orderNo, string operation)
-    {
-        var key = $"{orderNo.Trim()}::{operation}";
-        lock (_gate)
-        {
-            if (_operationRequestIds.TryGetValue(key, out var existing))
-            {
-                return existing;
-            }
-
-            var created = Guid.NewGuid();
-            _operationRequestIds[key] = created;
-            return created;
-        }
-    }
-
-    private void RemoveOperationRequestId(string orderNo, string operation)
-    {
-        var key = $"{orderNo.Trim()}::{operation}";
-        lock (_gate)
-        {
-            _operationRequestIds.Remove(key);
-        }
-    }
-
-    private IReadOnlyList<음식점주문상품조리기준> Build상품별조리기준(
-        IEnumerable<음식주문상품Dto> 상품목록)
-    {
-        var 조리시간설정 = _조리시간설정.현재조회();
-        return 상품목록.Select(item =>
-        {
-            var 상품기본조리분 = 음식점조리시간정책.상품기본분(
-                item.상품명,
-                조리시간설정.상품별기본조리분,
-                조리시간설정.음식점기본조리분);
-            var 별도설정있음 = 조리시간설정.상품별기본조리분.Keys.Any(key =>
-                string.Equals(key.Trim(), item.상품명.Trim(), StringComparison.OrdinalIgnoreCase));
-
-            return new 음식점주문상품조리기준(
-                item.상품명,
-                item.수량,
-                상품기본조리분,
-                !별도설정있음);
-        }).ToArray();
-    }
-
-    private static DateTimeOffset ToLocalOffset(DateTime value)
-    {
-        if (value.Kind == DateTimeKind.Utc)
-        {
-            return new DateTimeOffset(value).ToLocalTime();
-        }
-
-        return new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Local));
-    }
+    public void Dispose() => _progress.Dispose();
 }

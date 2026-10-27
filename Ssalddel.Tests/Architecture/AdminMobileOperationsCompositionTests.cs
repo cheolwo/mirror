@@ -83,6 +83,10 @@ public sealed class AdminMobileOperationsCompositionTests
         Assert.Contains("RetryAuthenticationAsync", page);
         Assert.Contains("transport.관리자확인필요 || transport.예외신고됨", page);
         Assert.Contains("snapshot.OperatingDrivers", page);
+        Assert.Contains("Title=\"전체 운송\"", page);
+        Assert.Contains("Value=\"@snapshot.Transports.Count.ToString(\"N0\")\"", page);
+        Assert.Contains("Description=\"완료 포함 서버 운송 목록\"", page);
+        Assert.DoesNotContain("Title=\"진행 운송\"", page);
         Assert.Contains("\"api/v1/admin/transports\"", service);
         Assert.Contains("\"api/v1/admin/drivers/operating\"", service);
         Assert.Contains("Task.WhenAll", service);
@@ -117,20 +121,5 @@ public sealed class AdminMobileOperationsCompositionTests
     }
 
     private static string Read(string project, string relativePath)
-        => File.ReadAllText(Path.Combine(FindRepositoryRoot(), project, relativePath));
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
-             directory is not null;
-             directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "Ssalddel.slnx")))
-            {
-                return directory.FullName;
-            }
-        }
-
-        throw new DirectoryNotFoundException("Ssalddel 저장소 루트를 찾지 못했습니다.");
-    }
+        => RepositorySource.Read(project, relativePath);
 }

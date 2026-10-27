@@ -443,6 +443,13 @@
                                         Clicked="OnMartDeliveriesClicked" />
                                 </Border>
                                 <Label Style="{StaticResource DriverSectionStyle}" Text="설정" Margin="0,16,0,0" />
+                                <Label Style="{StaticResource DriverMetadataStyle}" Text="이 화면에서 완료 알림" />
+                                <Picker Title="완료 알림 표시" ItemsSource="{Binding Completion.Modes}"
+                                    SelectedIndex="{Binding Completion.ModeIndex}" FontSize="16" FontAutoScalingEnabled="False"
+                                    MinimumHeightRequest="48" />
+                                <Label Style="{StaticResource DriverMetadataStyle}" Text="현재 화면에서만 적용됩니다. 배차 추천 알림 설정과 별개입니다." />
+                                <Label Style="{StaticResource DriverMetadataStyle}" Text="최근 완료 결과" IsVisible="{Binding Completion.HasHistory}" />
+                                <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding Completion.RecentResultsText}" IsVisible="{Binding Completion.HasHistory}" />
                                 <Border Style="{StaticResource DriverCardStyle}" Padding="0">
                                     <VerticalStackLayout Spacing="0">
                                         <maps:DriverProfileMenuRow Text="받을 업무·적재 설정" Glyph="{x:Static fonts:FluentUI.list_24_regular}"
@@ -544,5 +551,6 @@
                 <Label Style="{StaticResource DriverMetadataStyle}" Text="{Binding StatusMessage}" TextColor="{AppThemeBinding Light={StaticResource DriverDanger}, Dark={StaticResource DriverDangerDark}}" />
             </VerticalStackLayout>
         </Border>
+        <maps:FDriverCompletionFeedbackView BindingContext="{Binding Completion}" ZIndex="20" />
     </Grid>
 </ContentPage>

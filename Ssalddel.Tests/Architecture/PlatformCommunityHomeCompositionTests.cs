@@ -83,6 +83,32 @@ public sealed class PlatformCommunityHomeCompositionTests
         Assert.Contains("CommunityPageRoutes.PostDetailFor", postCommands);
     }
 
+    [Fact]
+    public void 전문원장표현과레이어카탈로그는_화면owner없이_계산하고_기존화면어댑터로연결한다()
+    {
+        var componentDirectory = FindComponentDirectory();
+        var ledgerFacade = File.ReadAllText(Path.Combine(componentDirectory, "PlatformCommunityHome.LedgerStatePresentation.razor.cs"));
+        var projection = File.ReadAllText(Path.Combine(componentDirectory, "PlatformCommunityLedgerStatePresentation.cs"));
+        var catalog = File.ReadAllText(Path.Combine(componentDirectory, "PlatformCommunityDiagramCatalog.cs"));
+        var state = File.ReadAllText(Path.Combine(componentDirectory, "PlatformCommunityHome.State.razor.cs"));
+        var surface = File.ReadAllText(Path.Combine(componentDirectory, "PlatformCommunityHome.DiagramStageSurface.razor.cs"));
+
+        Assert.Contains("PlatformCommunityLedgerStatePresentation.ResolveActiveNodeIndex", ledgerFacade);
+        Assert.Contains("PlatformCommunityLedgerStatePresentation.FindNodeIndex", ledgerFacade);
+        Assert.Contains("internal static class PlatformCommunityLedgerStatePresentation", projection);
+        Assert.Contains("ContainsAny(stateLabel", projection);
+        Assert.DoesNotContain("PlatformCommunityHome", projection);
+        Assert.DoesNotContain("Navigation", projection);
+        Assert.DoesNotContain("owner", projection);
+        Assert.Contains("internal static class PlatformCommunityDiagramCatalog", catalog);
+        Assert.DoesNotContain("PlatformCommunityHome", catalog);
+        Assert.Contains("=> PlatformCommunityDiagramCatalog.All;", state);
+        Assert.Contains("Layers => PlatformCommunityDiagramCatalog.All;", surface);
+        Assert.Contains("public void Close() => owner.CloseDiagramSurface();", surface);
+        Assert.Contains("owner.BuildDesktopDiagramPresentation", surface);
+        Assert.Contains("owner.BuildMobileDiagramSteps", surface);
+    }
+
     private static string FindComponentDirectory()
         => Path.Combine(
             FindRepositoryRoot(),

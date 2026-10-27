@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Security.Claims;
@@ -24,6 +24,7 @@ using Ssalddel.Contracts.Food;
 using Ssalddel.Controllers.Food;
 using Ssalddel.Controllers.Admin;
 using Ssalddel.Services.Fulfillment;
+using Ssalddel.Filters;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
 using 살뜰.Services.Options;
@@ -36,6 +37,56 @@ namespace Ssalddel.Tests.Controllers;
 /// 인증과 Coordinator는 대역이며 실제 로그인·수행처 선정·기사 배송·운영 DB 검증은 아닙니다.</summary>
 public sealed class FoodAutoFulfillmentApiTests
 {
+    [Fact]
+    public async Task 실제HTTP의합의취소는_공식기능경계와당사자권한을거쳐_양측동의뒤취소영수증만반환한다()
+    {
+        await using var host = await Fixture.CreateAsync();
+        var order = await host.Db.음식주문.SingleAsync();
+        order.모의처리처수행 = false; order.상태 = 음식주문상태코드.주문확인; order.음식점수락시각Utc = DateTime.UtcNow;
+        order.상태이력.Add(new() { 이전상태 = 음식주문상태코드.주문대기, 다음상태 = order.상태, 사유 = "음식점 주문 수락", 전이시각Utc = DateTime.UtcNow });
+        await host.Db.SaveChangesAsync();
+        const string path = "/api/v1/food-orders/order-a/cancellation-agreements";
+        using var anonymous = await host.Client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        host.Actor("member-a");
+        var proposal = new 음식주문취소합의제안요청 { ClientRequestId = Guid.NewGuid(), ExpectedOrderRevision = 1,
+            OrdererCostKrw = 0, RestaurantCostKrw = 0, CostBasisReference = "explicit-agreement" };
+        using var proposed = await host.Client.PostAsJsonAsync(path, proposal);
+        Assert.Equal(HttpStatusCode.OK, proposed.StatusCode); Assert.True(proposed.Headers.CacheControl?.NoStore);
+        var value = (await proposed.Content.ReadFromJsonAsync<음식주문취소합의응답>())!;
+        Assert.False(value.OrdererAgreed); Assert.False(value.RestaurantAgreed);
+        Assert.DoesNotContain("private-address", await proposed.Content.ReadAsStringAsync());
+        Assert.DoesNotContain("private-phone", await proposed.Content.ReadAsStringAsync());
+        var itemPath = path + "/" + value.AgreementId;
+        host.Actor("other-member");
+        using var other = await host.Client.GetAsync(itemPath);
+        Assert.Equal(HttpStatusCode.NotFound, other.StatusCode); Assert.True(other.Headers.CacheControl?.NoStore);
+        host.Actor("member-a");
+        using var buyerConsent = await host.Client.PostAsJsonAsync(itemPath + "/consents", new 음식주문취소합의변경요청
+        { ClientRequestId = Guid.NewGuid(), ExpectedAgreementRevision = value.Revision, ExpectedOrderRevision = 1, Granted = true });
+        Assert.Equal(HttpStatusCode.OK, buyerConsent.StatusCode);
+        value = (await buyerConsent.Content.ReadFromJsonAsync<음식주문취소합의응답>())!;
+        host.Actor("merchant-a", restaurantId: 101);
+        using var sellerConsent = await host.Client.PostAsJsonAsync(itemPath + "/consents", new 음식주문취소합의변경요청
+        { ClientRequestId = Guid.NewGuid(), ExpectedAgreementRevision = value.Revision, ExpectedOrderRevision = 1, Granted = true });
+        Assert.Equal(HttpStatusCode.OK, sellerConsent.StatusCode);
+        value = (await sellerConsent.Content.ReadFromJsonAsync<음식주문취소합의응답>())!;
+        var apply = new 음식주문취소합의변경요청 { ClientRequestId = Guid.NewGuid(), ExpectedAgreementRevision = value.Revision,
+            ExpectedOrderRevision = 1, Granted = true };
+        using var applied = await host.Client.PostAsJsonAsync(itemPath + "/apply", apply);
+        Assert.Equal(HttpStatusCode.OK, applied.StatusCode);
+        Assert.Equal("Cancelled", (await applied.Content.ReadFromJsonAsync<음식주문취소합의응답>())!.StateCode);
+        using var checkedReceipt = await host.Client.GetAsync(itemPath + "?clientRequestId=" + apply.ClientRequestId.ToString("D"));
+        Assert.Equal(HttpStatusCode.OK, checkedReceipt.StatusCode);
+        var receipt = (await checkedReceipt.Content.ReadFromJsonAsync<음식주문취소합의응답>())!;
+        Assert.Equal(apply.ClientRequestId, receipt.ConfirmedClientRequestId); Assert.Equal("PendingExternalSettlement", receipt.FinanceStatusCode);
+        Assert.Empty(await host.Db.음식주문기사정산.ToListAsync()); Assert.Empty(await host.Db.결제.ToListAsync());
+        host.FeatureFlags.Active = false;
+        using var disabled = await host.Client.GetAsync(itemPath);
+        Assert.Equal(HttpStatusCode.NotFound, disabled.StatusCode);
+        Assert.DoesNotContain("FeatureBoundaryUnclassified", await disabled.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task 모의사건HTTP는_관리자와Simulation관문을모두요구하며_일반회원은호출하지못한다()
     {
@@ -261,11 +312,12 @@ public sealed class FoodAutoFulfillmentApiTests
     }
 
     private sealed class Fixture(SqliteConnection connection, SsalddelContext db, WebApplication app,
-        HttpClient client, Coordinator coordinator) : IAsyncDisposable
+        HttpClient client, Coordinator coordinator, Flags flags) : IAsyncDisposable
     {
         public SsalddelContext Db { get; } = db;
         public HttpClient Client { get; } = client;
         public Coordinator Coordinator { get; } = coordinator;
+        public Flags FeatureFlags { get; } = flags;
         public void Actor(string actorId, long? restaurantId = null)
         {
             Client.DefaultRequestHeaders.Remove("X-Fixture-Actor");
@@ -292,10 +344,12 @@ public sealed class FoodAutoFulfillmentApiTests
             { EnvironmentName = "Testing", ApplicationName = typeof(음식주문Controller).Assembly.GetName().Name, ContentRootPath = AppContext.BaseDirectory });
             builder.WebHost.UseKestrel(options => options.Listen(IPAddress.Loopback, 0));
             builder.Services.AddLogging(); builder.Services.AddRouting();
-            builder.Services.AddSingleton<IVersionFeatureFlagService, Flags>();
-            builder.Services.AddControllers().ConfigureApplicationPartManager(manager =>
+            var flags = new Flags(); builder.Services.AddSingleton<IVersionFeatureFlagService>(flags);
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddControllers(options => options.Filters.Add<SsalddelApiFeatureBoundaryFilter>()).ConfigureApplicationPartManager(manager =>
             { manager.ApplicationParts.Clear(); manager.FeatureProviders.Clear(); manager.FeatureProviders.Add(new OnlyFoodController()); }).AddControllersAsServices();
-            builder.Services.AddTransient(_ => new 음식주문Controller(null!, null!, null!, autoFulfillment: useCase));
+            builder.Services.AddTransient(provider => new 음식주문Controller(null!, null!, null!, autoFulfillment: useCase,
+                cancellationAgreements: new 음식주문취소합의UseCase(db, provider.GetRequiredService<IHttpContextAccessor>(), TimeProvider.System)));
             builder.Services.AddTransient(_ => new 자동수행모의Controller(coordinator));
             builder.Services.AddAuthentication("Fixture").AddScheme<AuthenticationSchemeOptions, FixtureAuthentication>("Fixture", _ => { });
             builder.Services.AddAuthorization(options =>
@@ -310,7 +364,7 @@ public sealed class FoodAutoFulfillmentApiTests
             var addresses = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!;
             var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false })
             { BaseAddress = new Uri(Assert.Single(addresses.Addresses)), Timeout = TimeSpan.FromSeconds(20) };
-            return new(connection, db, app, client, coordinator);
+            return new(connection, db, app, client, coordinator, flags);
         }
         public async ValueTask DisposeAsync()
         {
@@ -326,7 +380,7 @@ public sealed class FoodAutoFulfillmentApiTests
         { feature.Controllers.Add(typeof(음식주문Controller).GetTypeInfo()); feature.Controllers.Add(typeof(자동수행모의Controller).GetTypeInfo()); }
     }
     private sealed class Flags : IVersionFeatureFlagService
-    { public bool IsEnabled(string featureKey) => true; public IReadOnlyDictionary<string, bool> GetAll() => new Dictionary<string, bool>(); }
+    { public bool Active { get; set; } = true; public bool IsEnabled(string featureKey) => Active; public IReadOnlyDictionary<string, bool> GetAll() => new Dictionary<string, bool>(); }
     private sealed class Encryption : IPersonalDataEncryptionService
     { public string? Protect(string? value) => value; public string? Unprotect(string? value) => value; }
     public sealed class FixtureAuthentication(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
@@ -339,7 +393,7 @@ public sealed class FoodAutoFulfillmentApiTests
             var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, actor) };
             if (actor == "fixture-admin") claims.Add(new("fixture-role", "admin"));
             var restaurant = Request.Headers["X-Fixture-Restaurant"].ToString();
-            if (!string.IsNullOrEmpty(restaurant)) { claims.Add(new(음식점접근ClaimTypes.음식점Id, restaurant)); claims.Add(new("fixture-role", "restaurant")); }
+            if (!string.IsNullOrEmpty(restaurant)) { claims.Add(new(음식점접근ClaimTypes.음식점Id, restaurant)); claims.Add(new("fixture-role", "restaurant")); claims.Add(new(ClaimTypes.Role, 살뜰.Data.역할명.음식점)); }
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Scheme.Name)), Scheme.Name)));
         }
         protected override Task HandleChallengeAsync(AuthenticationProperties properties) { Response.StatusCode = 401; return Task.CompletedTask; }

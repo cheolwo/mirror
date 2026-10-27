@@ -4,18 +4,18 @@
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
 
 <section class="sales-order-workspace" aria-label="판매채널 주문 출고 후보">
-    @if (Access.처리중 && Access.화면상태 == 판매채널페이지접근상태.확인전)
+    @if (_loadingWorkspace || (Access.화면상태 == 판매채널페이지접근상태.확인전 && !CanShowWorkspace))
     {
         <MudPaper Elevation="0" Outlined="true" Class="sales-order-state">
             <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
             <MudText Typo="Typo.body1">판매채널 기능과 주문 원장 접근 권한을 확인하고 있습니다.</MudText>
         </MudPaper>
     }
-    else if (Access.화면상태 == 판매채널페이지접근상태.오류)
+    else if (Access.화면상태 == 판매채널페이지접근상태.오류 || (_identityInvalidated && (List.오류발생 || Detail.오류발생)))
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="sales-order-access-alert">
             <MudText Typo="Typo.subtitle2">주문 출고 후보 화면을 준비하지 못했습니다.</MudText>
-            <MudText Typo="Typo.body2">@AccessErrorMessage(Access.오류, Access.오류메시지)</MudText>
+            <MudText Typo="Typo.body2">@AccessErrorMessage(Access.오류 ?? List.오류 ?? Detail.오류, Access.오류메시지 ?? List.오류메시지 ?? Detail.오류메시지)</MudText>
             <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RetryAccessAsync" Class="mt-3">다시 확인</MudButton>
         </MudAlert>
     }
@@ -26,17 +26,17 @@
             <MudText Typo="Typo.body2">
                 <code>SalesChannelFulfillmentWorkflow</code>가 비활성인 동안에는 주문 출고 원장을 조회하지 않습니다.
             </MudText>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/shipper" Class="mt-2">화주 홈으로</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@HomeHref" Class="mt-2">@HomeLabel</MudButton>
         </MudAlert>
     }
     else if (Access.로그인필요)
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="sales-order-access-alert">
             <MudText Typo="Typo.subtitle2">판매채널 주문 출고 후보는 화주·판매자 로그인이 필요합니다.</MudText>
-            <MudText Typo="Typo.body2">로그인하지 않아도 공개 커뮤니티의 익명 글과 댓글은 계속 이용할 수 있습니다.</MudText>
+            <MudText Typo="Typo.body2">로그인하면 본인이 소유한 판매 주문을 확인할 수 있습니다.</MudText>
             <MudStack Row="true" Spacing="1" Class="mt-3">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="/login">로그인</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Default" Href="/community">공개 커뮤니티 보기</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" Href="@PublicHref">@PublicLabel</MudButton>
             </MudStack>
         </MudAlert>
     }
@@ -45,10 +45,10 @@
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="sales-order-access-alert">
             <MudText Typo="Typo.subtitle2">화주 또는 판매자 역할이 필요한 화면입니다.</MudText>
             <MudText Typo="Typo.body2">현재 로그인은 유지되지만 다른 사용자의 주문 출고 원장은 조회하지 않습니다.</MudText>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/community" Class="mt-2">공개 커뮤니티 보기</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@PublicHref" Class="mt-2">@PublicLabel</MudButton>
         </MudAlert>
     }
-    else if (Access.사용가능)
+    else if (CanShowWorkspace)
     {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="sales-order-boundary">
             이 화면은 외부 채널 주문 중 <strong>재고 예약과 출고예정 저장까지 성공한 후보</strong>만 읽습니다. 새로고침은 외부 주문 수집·상품 발행·피킹·포장·운송 인계를 실행하지 않습니다.
@@ -56,6 +56,28 @@
 
         @if (ShowList)
         {
+            @if (List.초기화됨 && !List.처리중 && !List.오류발생 && List.수집보류목록.Count > 0)
+            {
+                <MudPaper Outlined="true" Elevation="0" Class="pa-3 mb-3" aria-label="주문 수집과 출고 보류">
+                    <MudText Typo="Typo.h6">확인이 필요한 주문 수집</MudText>
+                    <MudText Typo="Typo.body2">아래 보류는 주문 취소가 아닙니다. 원인을 보완한 뒤 수집 담당자가 다시 확인합니다. 이 목록을 여는 것으로 주문 수집·출고 예약을 다시 실행하지 않습니다.</MudText>
+                    <details class="mt-2"><summary>보류 @List.수집보류목록.Count 건 확인</summary>
+                    @foreach (var issue in List.수집보류목록)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                            <strong>@ChannelName(issue.ChannelType) · 계정 #@issue.AccountId</strong>
+                            <p>@SalesChannelSyncIssueCodes.Message(issue.IssueCode)</p>
+                            <small>확인 번호 @(issue.OrderKey[..Math.Min(12, issue.OrderKey.Length)])</small><br />
+                            <small>최근 확인 @DateTimeLabel(issue.LastObservedAtUtc) · @(issue.RetryStateCode == "OperatorReviewRequired" ? "운영자 확인 필요" : "보완 대기")</small>
+                        </MudAlert>
+                    }
+                    </details>
+                    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mt-3">
+                        <MudButton Variant="Variant.Outlined" Href="/shipper/sales/channels">채널 연결 확인</MudButton>
+                        <MudButton Variant="Variant.Outlined" Href="/shipper/sales/listings">상품 연결 확인</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
             <div class="sales-order-toolbar">
                 <div>
                     <MudText Typo="Typo.overline">PERSISTED OUTBOUND CANDIDATES</MudText>
@@ -65,7 +87,7 @@
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Refresh"
-                           Disabled="@List.처리중"
+                           Disabled="@ReadActionsBlocked"
                            OnClick="ReloadListAsync">
                     새로고침
                 </MudButton>
@@ -113,7 +135,7 @@
                         <MudSelectItem T="string" Value="@출고상태코드.완료">출고완료</MudSelectItem>
                         <MudSelectItem T="string" Value="@출고상태코드.취소">출고취소</MudSelectItem>
                     </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@List.처리중" OnClick="SearchAsync">조회</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@ReadActionsBlocked" OnClick="SearchAsync">조회</MudButton>
                 </div>
 
                 @if (List.처리중)
@@ -137,7 +159,7 @@
                     <div class="sales-order-state sales-order-state--compact">
                         <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Large" Color="Color.Primary" />
                         <MudText Typo="Typo.subtitle2">저장된 주문 출고 후보가 없습니다.</MudText>
-                        <MudText Typo="Typo.body2">연결 준비 계정만으로 외부 주문을 수집하지 않습니다. 출고 후보가 영속된 뒤 여기에 표시됩니다.</MudText>
+                        <MudText Typo="Typo.body2">출고 후보가 저장된 뒤 표시됩니다. 수집 연결과 보류 안내를 함께 확인해 주세요. 빈 목록이 외부 채널 주문 없음을 뜻하지는 않습니다.</MudText>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/shipper/sales/channels">채널 연결 준비 확인</MudButton>
                     </div>
                 }
@@ -197,7 +219,7 @@
                             <MudPagination Count="@List.총페이지수"
                                            Selected="@List.현재페이지"
                                            SelectedChanged="ChangePageAsync"
-                                           Disabled="@List.처리중"
+                                           Disabled="@ReadActionsBlocked"
                                            ShowFirstButton="true"
                                            ShowLastButton="true" />
                         </div>
@@ -312,7 +334,7 @@
                     </section>
 
                     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="sales-order-decision-boundary">
-                        매핑 실패, 재고 부족, 외부 수집 실패 주문은 아직 별도의 영속 주문 원장이 없어 이 목록에 나타나지 않습니다. 이 화면의 “없음”을 외부 채널 주문 없음으로 해석하지 마세요.
+                        주문 수집·상품 연결·재고 배정의 보류는 목록의 별도 안내를 확인하세요. 출고 후보 없음이 외부 채널 주문 없음을 뜻하지는 않습니다.
                     </MudAlert>
 
                     <div class="sales-order-next-actions">
@@ -329,5 +351,13 @@
             </MudPaper>
             }
         </div>
+    }
+    else if (Access.사용가능)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="sales-order-access-alert">
+            <MudText Typo="Typo.subtitle2">로그인 정보가 바뀌었습니다.</MudText>
+            <MudText Typo="Typo.body2">현재 계정의 주문을 다시 확인해 주세요.</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="RetryAccessAsync" Class="mt-3">다시 확인</MudButton>
+        </MudAlert>
     }
 </section>

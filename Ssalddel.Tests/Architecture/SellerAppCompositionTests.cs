@@ -20,9 +20,14 @@ public sealed class SellerAppCompositionTests
     {
         var layout = Read("SellerApp", "Components/Layout/MainLayout.razor");
         var home = Read("SellerApp", "Components/Pages/Home.razor");
-        var demand = Read("SellerApp", "Components/Pages/OrdererDemand.razor");
+        var demandPage = Read("SellerApp", "Components/Pages/OrdererDemand.razor");
+        var demand = string.Join("\n", demandPage,
+            Read("SellerApp", "Services/주문자수요ReadSession.cs"),
+            Read("SellerApp", "Services/주문자집단수요Projection.cs"));
         var orders = Read("SellerApp", "Components/Pages/Orders.razor");
 
+        Assert.Contains("주문자수요ReadSession", demandPage);
+        Assert.Contains("주문자집단수요Projection", demandPage);
         Assert.Contains("주문자 수요", layout);
         Assert.Contains("판매채널", layout);
         Assert.Contains("판매 페이지 초안", layout);

@@ -1,0 +1,29 @@
+@namespace RestaurantDeskApp
+@inherits LayoutComponentBase
+@inject Pos미리보기자료 Data
+<RoleAppProviders Role="Ssalddel.Ui.Common.Areas.App.Theme.역할앱시각역할.음식점" />
+<MainLayout Body="@PreviewContent" />
+@code {
+    private RenderFragment PreviewContent => @<div>
+<div class="preview-only-notice" role="note" style="padding:8px 16px;background:#fff2cf;color:#5e4616;font-size:13px;border-bottom:1px solid #e6d29b;">
+    화면 검토 · 합성 주문 · 메모리 자료 · 실제 서버·인쇄·발송 없음
+</div>
+<details style="padding:8px 16px;background:#f3f4f6;border-bottom:1px solid #d9dee5;">
+    <summary>검증 제어</summary>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:12px;">
+        <label>시험 주문 <select @bind="Data.ControlOrderNo" style="padding:8px;">
+            @foreach (var order in Data.목록())
+            { <option value="@order.주문번호">@order.주문번호 · @order.상태</option> }
+        </select></label>
+        <button type="button" @onclick="Data.새주문추가Async">신규 주문 추가</button>
+        <button type="button" @onclick="Data.기사배정Async">기사 배정</button>
+        <button type="button" @onclick="Data.픽업확인Async">기사 픽업 확인</button>
+        <button type="button" @onclick="Data.조회실패Async">조회 실패</button>
+        <button type="button" @onclick="Data.조회복구Async">조회 복구</button>
+        <label><input type="checkbox" @bind="Data.PrintFailure" /> 인쇄 요청 실패</label>
+        <span role="status">@Data.ControlMessage</span>
+    </div>
+</details>
+@Body
+    </div>;
+}

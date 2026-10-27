@@ -1,6 +1,7 @@
 using System.Globalization;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Driver.Settings;
 
 namespace FDriverApp.Services;
 
@@ -36,14 +37,21 @@ public sealed class FDriverFoodPushReceiver(IFDriverAuthSession session, IFDrive
             || !data.TryGetValue("expiresAtUtc", out var expiryText)
             || !DateTimeOffset.TryParse(expiryText, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expiry)
             || expiry <= DateTimeOffset.UtcNow || expiry > DateTimeOffset.UtcNow.AddHours(1)) return false;
+        var workKind = data.TryGetValue("workKind", out var suppliedKind) ? suppliedKind : DriverWorkKinds.FoodDelivery;
+        if (workKind is not (DriverWorkKinds.FoodDelivery or DriverWorkKinds.QuickDelivery)) return false;
         var revisionOwner = session.UserId;
+        var beforeRestoreRevision = session.SessionRevision;
         await session.RestoreAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (revisionOwner is not null && (revisionOwner != session.UserId || beforeRestoreRevision != session.SessionRevision)) return false;
+        var revision = session.SessionRevision;
         var state = await store.LoadAsync(cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        if ((revisionOwner is not null && revisionOwner != session.UserId) || owner != session.UserId
-            || session.CurrentState == ClientAuthSessionRestoreState.Anonymous
-            || !session.Roles.Any(role => role == "기사" || string.Equals(role, "Driver", StringComparison.OrdinalIgnoreCase))
+        bool IsCurrent() => owner == session.UserId && revision == session.SessionRevision
+            && session.CurrentState != ClientAuthSessionRestoreState.Anonymous
+            && session.Roles.Any(role => role == "기사" || string.Equals(role, "Driver", StringComparison.OrdinalIgnoreCase));
+        if (!IsCurrent()
             || state.RegisteredOwnerId != owner || state.RevocationPending) return false;
-        return notifications.Publish(owner, offer, expiry.UtcDateTime);
+        return notifications.PublishChecked(owner, offer, expiry.UtcDateTime, workKind, cancellationToken, IsCurrent);
     }
 }

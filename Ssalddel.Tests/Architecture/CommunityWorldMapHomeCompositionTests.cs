@@ -355,17 +355,19 @@ public sealed class CommunityWorldMapHomeCompositionTests
             "wwwroot",
             "js",
             "community-world-google-map.js");
+        var sdkSource = ReadRepositoryFile("Ssalddel.WebApp", "Services", "커뮤니티지도GoogleSdkAdapter.cs");
 
         Assert.Equal(1, CountOccurrences(pageSource, "id=\"community-world-google-map\""));
-        Assert.Contains("./js/community-world-google-map.js", pageSource);
+        Assert.Contains("./js/community-world-google-map.js", sdkSource);
         Assert.Contains("CurrentMapMarkers", pageSource);
-        Assert.Contains("updateDataset", pageSource);
+        Assert.Contains("GoogleSdk.UpdateDatasetAsync", pageSource);
+        Assert.Contains("\"updateDataset\"", sdkSource);
         Assert.Contains("new GoogleMap(element", scriptSource);
         Assert.Contains("instance.map.data", scriptSource);
         Assert.Contains("auth_referrer_policy", scriptSource);
         Assert.Contains("ssalddelRuntimeConfig", scriptSource);
         Assert.Contains("suppliedRuntimeConfig", scriptSource);
-        Assert.Contains("GoogleMapsRuntimeClient.TryGetAsync", pageSource);
+        Assert.Contains("runtime.TryGetAsync", sdkSource);
         Assert.DoesNotContain("AIza", scriptSource);
     }
 
@@ -469,12 +471,15 @@ public sealed class CommunityWorldMapHomeCompositionTests
             "wwwroot",
             "js",
             "community-world-google-map.js");
+        var snapshotSource = ReadRepositoryFile("Ssalddel.WebApp", "Services", "커뮤니티지도SnapshotSession.cs");
 
         Assert.Contains("지도에 표시할 분야", pageSource);
-        Assert.Contains("PollMapSnapshotsAsync", pageSource);
-        Assert.Contains("TimeSpan.FromSeconds(30)", pageSource);
-        Assert.Contains("preserveViewport: true", pageSource);
+        Assert.Contains("SnapshotSession.StartPolling", pageSource);
+        Assert.Contains("PollMapSnapshotsAsync", snapshotSource);
+        Assert.Contains("TimeSpan.FromSeconds(30)", snapshotSource);
+        Assert.Contains("preserveViewport: true", snapshotSource);
         Assert.DoesNotContain("_pendingSnapshot", pageSource);
+        Assert.DoesNotContain("_pendingSnapshot", snapshotSource);
         Assert.Contains("preserveViewport = false", scriptSource);
         Assert.Contains("!preserveViewport", scriptSource);
         Assert.Contains("markerStyleFor", scriptSource);

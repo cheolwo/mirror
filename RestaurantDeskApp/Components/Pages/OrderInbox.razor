@@ -1,3 +1,4 @@
+@using RestaurantDeskApp.Components.Pages
 @page "/orders"
 @page "/"
 @implements IAsyncDisposable
@@ -7,97 +8,117 @@
 @inject NavigationManager NavigationManager
 @inject RestaurantOrderNotificationCoordinator Notifications
 
-<PageTitle>주문 목록</PageTitle>
+<PageTitle>주문 처리</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="py-4 restaurant-order-flow">
-    <MudStack Spacing="3">
-        <div class="order-flow-heading">
-            <MudText Typo="Typo.h4">주문 목록</MudText>
-            <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined" Size="Size.Small">@RealtimeStatusLabel</MudChip>
+<section class="restaurant-pos" aria-label="음식점 주문 처리">
+    <header class="pos-heading">
+        <div>
+            <span class="pos-eyebrow">@DeskOptions.Value.RestaurantName</span>
+            <h1>주문 처리</h1>
         </div>
-        <MudText Typo="Typo.body1" Class="order-page-guide">주문을 열어 확인하고 다음 작업을 진행하세요.</MudText>
-        <MudButton Variant="Variant.Outlined" OnClick="@(() => showFulfillmentSupport = !showFulfillmentSupport)">음식점 배송 지원 설정</MudButton>
-        @if (showFulfillmentSupport)
+        <div class="pos-connection">
+            <MudChip T="string" Color="@RealtimeStatusColor" Variant="Variant.Outlined" Size="Size.Small">@RealtimeStatusLabel</MudChip>
+            <span>@(lastSuccessfulRefresh is null ? "확인 대기" : $"확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</span>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" aria-label="주문 목록 새로고침" />
+        </div>
+    </header>
+    @if (!string.IsNullOrWhiteSpace(message) && (messageSeverity == Severity.Warning || messageSeverity == Severity.Error))
+    {
+        <MudAlert Severity="@messageSeverity">@message</MudAlert>
+    }
+    <nav class="pos-queues" aria-label="현재 수신함 주문 분류">
+        @foreach (var queue in new[] { RestaurantPosQueue.All, RestaurantPosQueue.New, RestaurantPosQueue.InProgress, RestaurantPosQueue.Attention })
         {
-            <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodMerchantFulfillmentSettingsPanel />
+            var label = queue switch { RestaurantPosQueue.New => "신규", RestaurantPosQueue.InProgress => "진행", RestaurantPosQueue.Attention => "확인 필요", _ => "수신함" };
+            var count = queue switch { RestaurantPosQueue.New => NewCount, RestaurantPosQueue.InProgress => ProgressCount, RestaurantPosQueue.Attention => AttentionCount, _ => orders.Count };
+            <button type="button" class="pos-queue @(workspace.Queue == queue ? "is-active" : "")" aria-pressed="@(workspace.Queue == queue)" @onclick="() => SelectQueue(queue)">
+                @label <strong>@(hasLoaded ? count.ToString() : "—")</strong>
+            </button>
         }
-        @if (!string.IsNullOrWhiteSpace(message) && (messageSeverity == Severity.Warning || messageSeverity == Severity.Error))
-        {
-            <MudAlert Severity="@messageSeverity" Class="order-flow-message">@message</MudAlert>
-        }
-        @if (isRefreshing && !hasLoaded)
-        {
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="주문을 확인하고 있습니다" />
-        }
-        else if (orders.Count == 0 && hasLoaded && !reloadFailed)
-        {
-            <MudPaper Elevation="0" Outlined="true" Class="pa-5 order-empty-state">
-                <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                    <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6">지금은 처리할 주문이 없습니다.</MudText>
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">새 주문이 들어오면 알려드립니다.</MudText>
-                </MudStack>
-            </MudPaper>
-        }
-        else if (orders.Count > 0)
-        {
-            <MudStack Spacing="2" Class="order-inbox-list">
-                @foreach (var order in orders)
-                {
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 order-inbox-card">
-                        <MudStack Spacing="2">
-                            <div class="order-flow-summary-row order-card-meta">
-                                <MudChip T="string" Color="@StatusColor(order.상태)" Size="Size.Small">@OrderStatusLabel(order.상태)</MudChip>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">@order.접수시각.ToLocalTime().ToString("HH:mm") 접수</MudText>
-                            </div>
-                            <MudText Typo="Typo.h6" Class="order-inbox-menu">@order.메뉴요약</MudText>
-                            <div class="order-flow-summary-row order-card-total">
-                                <MudText Typo="Typo.body1">@order.고객명</MudText>
-                                <MudText Typo="Typo.h6" Class="order-amount">@order.주문금액.ToString("N0")원</MudText>
-                            </div>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">조리 예상 @(order.추천조리예상분)분</MudText>
-                            <MudButton Href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")" Variant="Variant.Filled" Color="Color.Primary"
-                                       FullWidth="true" Class="order-primary-action" EndIcon="@Icons.Material.Filled.ChevronRight">주문 보기</MudButton>
-                            <details class="order-flow-details order-card-details">
-                                <summary>상세 정보</summary>
-                                <div class="order-details-content">
-                                    <MudText Typo="Typo.body2">주문번호 · @order.주문번호</MudText>
-                                    <MudText Typo="Typo.body2">접수 · @order.접수시각.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudText>
-                                    <MudText Typo="Typo.body2">@RecoveryLabel(order.복구출처) · @order.최근복구시각.ToLocalTime().ToString("HH:mm:ss")</MudText>
-                                </div>
-                            </details>
-                        </MudStack>
-                    </MudPaper>
-                }
-            </MudStack>
-        }
+    </nav>
+    @if (reloadFailed && hasLoaded)
+    {
+        <p class="pos-list-notice">마지막 확인 목록 · 최신 상태 확인 필요</p>
+    }
+    <div class="pos-workspace">
+        <section class="pos-inbox" aria-label="주문 목록">
+            @if (isRefreshing && !hasLoaded)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="주문을 확인하고 있습니다" />
+            }
+            @if (!hasLoaded && reloadFailed)
+            {
+                <div class="pos-empty"><MudIcon Icon="@Icons.Material.Filled.CloudOff" /><h2>주문 확인 필요</h2>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync">다시 확인</MudButton>
+                </div>
+            }
+            else if ((orders.Count == 0 && hasLoaded && !reloadFailed) || (hasLoaded && !reloadFailed && workspace.VisibleOrders(orders).Count == 0))
+            {
+                <div class="pos-empty"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" /><h2>@(orders.Count == 0 ? "새 주문을 기다리고 있어요" : "해당 주문이 없습니다")</h2></div>
+            }
+            @foreach (var order in workspace.VisibleOrders(orders))
+            {
+                <article @key="order.주문번호" class="pos-order @(workspace.SelectedOrderNo == order.주문번호 ? "is-selected" : "")">
+                    <button type="button" class="pos-order-select pos-desktop-select" disabled="@(workspace.CommandInProgress || workLocked)" aria-pressed="@(workspace.SelectedOrderNo == order.주문번호)" @onclick="() => SelectOrderAsync(order.주문번호)">
+                        @OrderSummary(order)
+                    </button>
+                    <a class="pos-order-select pos-mobile-select" aria-label="주문 보기" href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")">@OrderSummary(order)</a>
+                </article>
+            }
+        </section>
+        <section class="pos-selected" aria-label="선택 주문 상세">
+            @if (!workLocked && workspace.SelectedOrderNo is not null)
+            {
+                <OrderDetail OrderNo="@workspace.SelectedOrderNo" Embedded="true" BusyChanged="OnDetailBusyChanged" OrderUpdated="OnDetailUpdatedAsync" />
+            }
+            else
+            {
+                <div class="pos-empty"><MudIcon Icon="@Icons.Material.Filled.TouchApp" /><h2>주문을 선택하세요</h2><p>메뉴와 요청사항을 확인하고 처리합니다.</p></div>
+            }
+        </section>
+    </div>
+    <details class="pos-support">
+        <summary>알림·배송 설정</summary>
         <div class="order-flow-secondary-row">
-            <MudButton Href="/settings/agreed-rates" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ReceiptLong">합의 요금표</MudButton>
+            <MudButton Href="/settings/agreed-rates" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ReceiptLong">합의 요금표</MudButton>
+            <MudButton Href="/settings/preparation-times" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Timer">기본 조리시간</MudButton>
             @if (Notifications.SupportsSystemNotification)
             {
-                <MudButton Href="/settings/notifications" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Notifications">주문 알림 설정</MudButton>
-                <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="EnableSystemNotificationsAsync" StartIcon="@Icons.Material.Filled.Notifications">주문 알림 허용</MudButton>
+                <MudButton Href="/settings/notifications" Variant="Variant.Text">주문 알림 설정</MudButton>
+                <MudButton Variant="Variant.Text" Disabled="@(isRefreshing || workLocked)" OnClick="EnableSystemNotificationsAsync">주문 알림 허용</MudButton>
             }
-            <MudButton Variant="Variant.Outlined" Disabled="@(isRefreshing || workLocked)" OnClick="ReloadManuallyAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">@(lastSuccessfulRefresh is null ? "확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
+            <MudButton Variant="Variant.Text" OnClick="@(() => showFulfillmentSupport = !showFulfillmentSupport)">음식점 배송 지원 설정</MudButton>
         </div>
-        <details class="order-flow-details">
-            <summary>상세 정보</summary>
-            <div class="order-details-content">
-                <MudText Typo="Typo.body2">@realtimeStatus</MudText>
-                <MudText Typo="Typo.body2">주문 목록은 30초마다 다시 확인합니다.</MudText>
-                @if (!string.IsNullOrWhiteSpace(message) && messageSeverity != Severity.Warning && messageSeverity != Severity.Error)
-                {
-                    <MudText Typo="Typo.body2">@message</MudText>
-                }
-                <MudButton Href="/settings/preparation-times" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Timer">기본 조리시간</MudButton>
-            </div>
-        </details>
-    </MudStack>
-</MudContainer>
+        @if (!string.IsNullOrWhiteSpace(notificationPermissionMessage)) { <p role="status">@notificationPermissionMessage</p> }
+        @if (showFulfillmentSupport) { <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodMerchantFulfillmentSettingsPanel /> }
+    </details>
+</section>
+
+@code {
+    private RenderFragment OrderSummary(음식점주문DeskItem item) => @<text>
+        <span class="pos-order-meta"><strong>@RestaurantPosPresentation.StatusLabel(item)</strong><time>@item.접수시각.ToLocalTime().ToString("HH:mm")</time></span>
+        <span class="pos-order-menu">@item.메뉴요약</span>
+        <span class="pos-order-total"><span>주문 @item.주문번호</span><strong>@item.주문금액.ToString("N0")원</strong></span>
+        <span class="pos-order-preparation">조리 예상 @(item.선택조리예상분 ?? item.추천조리예상분)분</span>
+        @if (RestaurantPosPresentation.NeedsAttention(item)) { <span class="pos-attention">확인 필요</span> }
+    </text>;
+}
 
 @code {
     private bool showFulfillmentSupport;
+    private readonly RestaurantPosPresentation workspace = new();
+    private Task SelectOrderAsync(string orderNo)
+    {
+        if (!workLocked) workspace.Select(orderNo);
+        return Task.CompletedTask;
+    }
+    private void OnDetailBusyChanged(bool busy) => workspace.SetCommandInProgress(busy);
+    private async Task OnDetailUpdatedAsync() => await TryReloadAsync(음식점주문복구출처.서버재조회);
+    private void SelectQueue(RestaurantPosQueue queue) => workspace.Queue = queue;
+    private int NewCount => orders.Count(RestaurantPosPresentation.IsNew);
+    private int ProgressCount => orders.Count(RestaurantPosPresentation.IsInProgress);
+    private int AttentionCount => orders.Count(RestaurantPosPresentation.NeedsAttention);
+
     private readonly CancellationTokenSource refreshCancellation = new();
     private Task? refreshTask;
     private Task<bool>? currentReloadTask;
@@ -105,6 +126,7 @@
     private IReadOnlyList<음식점주문DeskItem> orders = [];
     private string realtimeStatus = "실시간 연결 대기";
     private string? message;
+    private string? notificationPermissionMessage;
     private Severity messageSeverity = Severity.Info;
     private bool workLocked;
     private bool isRefreshing;
@@ -123,6 +145,7 @@
             if (disposed) return;
             messageSeverity = allowed ? Severity.Success : Severity.Warning;
             message = allowed ? "주문 알림을 허용했습니다." : "기기 알림이 꺼져 있습니다. 기기 설정에서 주문 알림을 허용해 주세요.";
+            notificationPermissionMessage = message;
         }
         catch (Exception) when (disposed || refreshCancellation.IsCancellationRequested) { }
         catch
@@ -171,11 +194,11 @@
                 message = ex.Message;
                 NavigationManager.NavigateTo("/login", replace: true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 realtimeStatus = "실시간 연결 실패 · 30초 서버 조회 유지";
                 messageSeverity = Severity.Warning;
-                message = $"주문 실시간 연결에 실패했습니다. {ex.Message}";
+                message = "주문 알림 연결을 확인하지 못했습니다. 30초마다 주문을 다시 확인합니다.";
             }
         }
 
@@ -204,6 +227,7 @@
             if (change.상태 == 음식점실시간연결상태.인증필요)
             {
                 workLocked = true;
+                workspace.Clear();
                 messageSeverity = Severity.Error;
                 message = change.안내;
                 NavigationManager.NavigateTo("/login", replace: true);
@@ -293,6 +317,7 @@
             reloadFailed = true;
             workLocked = true;
             orders = [];
+            workspace.Clear();
             messageSeverity = Severity.Error;
             message = ex.Message;
             NavigationManager.NavigateTo("/login", replace: true);
@@ -303,6 +328,7 @@
             reloadFailed = true;
             workLocked = true;
             orders = [];
+            workspace.Clear();
             messageSeverity = Severity.Error;
             message = "로그인 세션을 복구하지 못했습니다. 다시 로그인해 주세요.";
             NavigationManager.NavigateTo("/login", replace: true);
@@ -313,6 +339,7 @@
             reloadFailed = true;
             workLocked = true;
             orders = [];
+            workspace.Clear();
             messageSeverity = Severity.Error;
             message = "이 계정은 현재 음식점 주문을 볼 수 없습니다. 음식점 운영 권한을 확인해 주세요.";
             return false;
@@ -322,6 +349,7 @@
             reloadFailed = true;
             workLocked = true;
             orders = [];
+            workspace.Clear();
             messageSeverity = Severity.Error;
             message = "로그인이 만료되었습니다. 다시 로그인해 주세요.";
             NavigationManager.NavigateTo("/login", replace: true);
@@ -332,6 +360,7 @@
             reloadFailed = true;
             workLocked = true;
             orders = [];
+            workspace.Clear();
             messageSeverity = Severity.Error;
             message = "이 계정은 현재 음식점 주문을 볼 수 없습니다. 음식점 운영 권한을 확인해 주세요.";
             return false;

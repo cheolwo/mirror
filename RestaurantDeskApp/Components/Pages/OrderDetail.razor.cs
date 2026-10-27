@@ -22,6 +22,33 @@ public partial class OrderDetail : ComponentBase, IDisposable
     [Parameter]
     public string OrderNo { get; set; } = string.Empty;
 
+    [Parameter] public bool Embedded { get; set; }
+    [Parameter] public EventCallback<bool> BusyChanged { get; set; }
+    [Parameter] public EventCallback OrderUpdated { get; set; }
+
+    private async Task BeginCommandAsync()
+    {
+        isBusy = true;
+        await BusyChanged.InvokeAsync(true);
+    }
+
+    private async Task EndCommandAsync()
+    {
+        isCompletingCommand = true;
+        isBusy = false;
+        try
+        {
+            await DrainQueuedRefreshAsync();
+            // Refresh the list without replacing this selected component or its input draft.
+            await OrderUpdated.InvokeAsync();
+        }
+        finally
+        {
+            isCompletingCommand = false;
+            await BusyChanged.InvokeAsync(false);
+        }
+    }
+
     private 음식점주문DeskItem? order;
     private static readonly int[] QuickPreparationMinutes = [10, 15, 20, 30, 45];
     private string? loadedOrderNo;
@@ -29,6 +56,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
     private int? serverPreparationMinutes;
     private string rejectionReason = string.Empty;
     private bool isBusy;
+    private bool isCompletingCommand;
     private bool isLoading;
     private bool isRefreshing;
     private bool refreshQueued;
@@ -218,7 +246,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         if (IsCurrentSelection(requestedOrderNo, generation)) await ConnectRealtimeAsync();
     }
 
-    private bool WorkDisabled => isBusy || isLoading || readFailed || workLocked || disposed || isRefreshing;
+    private bool WorkDisabled => isBusy || isLoading || readFailed || workLocked || disposed || isRefreshing || isCompletingCommand;
     private bool CanPrintReceipt => order?.상세주문?.음식점수락시각Utc.HasValue == true
         && order.상태 is not 음식점주문Desk상태코드.취소 and not 음식점주문Desk상태코드.거절;
 
@@ -362,7 +390,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
             return;
         }
 
-        isBusy = true;
+        await BeginCommandAsync();
         message = null;
         var requestedOrderNo = OrderNo;
         var generation = selectionGeneration;
@@ -425,8 +453,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         {
             if (Current())
             {
-                isBusy = false;
-                await DrainQueuedRefreshAsync();
+                await EndCommandAsync();
             }
         }
     }
@@ -456,7 +483,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         bool Current() => IsCurrentSelection(requestedOrderNo, generation)
             && string.Equals(owner, AuthService?.Session.UserId, StringComparison.Ordinal)
             && (AuthService is null || AuthService.Session.IsAuthenticated);
-        isBusy = true;
+        await BeginCommandAsync();
         message = null;
         var printPhase = "prepare-receipt";
         try
@@ -498,8 +525,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         {
             if (IsCurrentSelection(requestedOrderNo, generation))
             {
-                isBusy = false;
-                await DrainQueuedRefreshAsync();
+                await EndCommandAsync();
             }
         }
     }
@@ -557,7 +583,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         string successMessage,
         Func<음식점주문DeskItem, string>? confirmedMessage = null)
     {
-        isBusy = true;
+        await BeginCommandAsync();
         message = null;
         var requestedOrderNo = OrderNo;
         var generation = selectionGeneration;
@@ -596,8 +622,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
         {
             if (Current())
             {
-                isBusy = false;
-                await DrainQueuedRefreshAsync();
+                await EndCommandAsync();
             }
         }
     }

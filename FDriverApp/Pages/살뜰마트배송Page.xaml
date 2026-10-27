@@ -2,13 +2,19 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:models="clr-namespace:FDriverApp.PageModels"
+    xmlns:controls="clr-namespace:FDriverApp.Controls"
     x:Class="FDriverApp.Pages.살뜰마트배송Page" x:DataType="models:살뜰마트배송PageViewModel"
     Title="살뜰마트 배송" Shell.NavBarIsVisible="False"
     BackgroundColor="{AppThemeBinding Light={StaticResource DriverCanvas}, Dark={StaticResource DriverCanvasDark}}">
+    <Grid>
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
             <Button Text="내 정보로 돌아가기" Clicked="OnBackClicked" Style="{StaticResource DriverSecondaryButtonStyle}" />
             <Label Text="살뜰마트 배송" Style="{StaticResource DriverTitleStyle}" />
+            <Label Text="이 화면에서 완료 알림" Style="{StaticResource DriverMetadataStyle}" />
+            <Picker Title="완료 알림 표시" ItemsSource="{Binding Completion.Modes}" SelectedIndex="{Binding Completion.ModeIndex}"
+                FontSize="16" FontAutoScalingEnabled="False" MinimumHeightRequest="48" />
+            <Label Text="현재 화면에서만 적용됩니다. 배차 추천 알림과 별개입니다." Style="{StaticResource DriverMetadataStyle}" />
             <Label Text="{Binding Notice}" Style="{StaticResource DriverMetadataStyle}" />
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Label Text="{Binding Status}" Style="{StaticResource DriverBodyStyle}" SemanticProperties.Description="배송 조회와 요청 결과" />
@@ -62,4 +68,6 @@
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
+        <controls:FDriverCompletionFeedbackView BindingContext="{Binding Completion}" ZIndex="20" />
+    </Grid>
 </ContentPage>

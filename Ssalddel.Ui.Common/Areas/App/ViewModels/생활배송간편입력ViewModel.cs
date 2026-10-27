@@ -76,6 +76,7 @@ public sealed class 생활배송간편입력ViewModel(NeighborhoodDeliveryAuthor
             if (string.IsNullOrWhiteSpace(input.VehicleType) || input.VehicleType.Length > 60) missing.Add("배송 차량을 선택해 주세요");
             if (input.PackageSizeCode is not null && !NeighborhoodPackageSizes.IsKnown(input.PackageSizeCode)) missing.Add("포장 크기를 다시 선택해 주세요");
             if (input.Notes?.Length > 1000) missing.Add("요청 사항은 1,000자 이내로 입력해 주세요");
+            missing.AddRange(NeighborhoodDeliveryLoadingInput.Calculate(input).오류);
         }
         if (step is 1 or 3)
         {
@@ -89,6 +90,7 @@ public sealed class 생활배송간편입력ViewModel(NeighborhoodDeliveryAuthor
         }
         if (step is 2 or 3)
         {
+            if (input.Pickup.작업시간분 < 0 || input.Dropoff.작업시간분 < 0) missing.Add("작업시간은 0분 이상으로 입력해 주세요");
             if (HasMissingTimes) missing.Add("비어 있는 픽업·전달 시각을 입력해 주세요");
             if (owner.PickupEnd <= owner.PickupStart || !DropoffTimeUnspecified && (owner.DropoffEnd <= owner.DropoffStart || owner.DropoffEnd < owner.PickupStart)) missing.Add("시작·종료 시각을 확인해 주세요");
             if (!TimeReviewed) missing.Add("표시된 시간창을 확인해 주세요");

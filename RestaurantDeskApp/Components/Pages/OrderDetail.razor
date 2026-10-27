@@ -1,13 +1,16 @@
 @page "/orders/{OrderNo}"
 @implements IDisposable
 
-<PageTitle>주문 상세</PageTitle>
+@if (!Embedded) { <PageTitle>주문 상세</PageTitle> }
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 restaurant-order-flow">
+<div class="@(Embedded ? "pos-detail-host" : "order-detail-host")">
+<MudContainer MaxWidth="@(Embedded ? MaxWidth.False : MaxWidth.Medium)" Class="@(Embedded ? "restaurant-order-flow pos-detail" : "py-4 restaurant-order-flow")">
+    <div class="pos-detail-layout">
+    <div class="pos-detail-scroll">
     <MudStack Spacing="3">
         <div class="order-flow-heading">
-            <MudText Typo="Typo.h4">주문 상세</MudText>
-            <MudButton Href="/orders" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">주문 목록</MudButton>
+            <MudText Typo="@(Embedded ? Typo.h6 : Typo.h4)">@(Embedded ? $"주문 {OrderNo}" : "주문 상세")</MudText>
+            @if (!Embedded) { <MudButton Href="/orders" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">주문 목록</MudButton> }
         </div>
         @if (!string.IsNullOrWhiteSpace(message))
         {
@@ -30,10 +33,11 @@
             <MudPaper Elevation="0" Outlined="true" Class="pa-4 order-current-step">
                 <MudStack Spacing="2">
                     <div class="order-flow-summary-row">
-                        <MudText Typo="Typo.h5" Class="order-step-title">@CurrentStepLabel</MudText>
-                        <MudChip T="string" Color="@StatusColor(order.상태)" Size="Size.Small">@OrderStatusLabel(order.상태)</MudChip>
+                        <MudText Typo="Typo.h5" Class="order-step-title">@(Embedded && !readFailed ? RestaurantPosPresentation.StatusLabel(order) : CurrentStepLabel)</MudText>
+                        @if (!Embedded) { <MudChip T="string" Color="@StatusColor(order.상태)" Size="Size.Small">@OrderStatusLabel(order.상태)</MudChip> }
                     </div>
-                    <MudText Typo="Typo.body1" Class="order-page-guide">@NextStepGuide</MudText>
+                    @if (!Embedded || ShowCurrentRecooking || (!order.수락가능 && !order.조리시작가능 && !order.픽업준비가능))
+                    { <MudText Typo="Typo.body1" Class="order-page-guide">@NextStepGuide</MudText> }
                     @if (!readFailed && !isLoading && !isRefreshing && !workLocked && order.배차상태 == 음식주문배차상태코드.기사배정
                         && order.상태 is not (음식주문상태코드.픽업완료 or 음식주문상태코드.전달완료 or 음식주문상태코드.수령확인 or 음식주문상태코드.취소 or 음식주문상태코드.거절))
                     { <Ssalddel.Ui.Common.Areas.App.Components.Food.DeliveryExperienceLines Lines="Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food.DeliveryExperiencePresentation.RestaurantLines(order.상세주문?.ExperienceSummaries)" /> }
@@ -52,32 +56,10 @@
                             }
                         </MudAlert>
                     }
-                    @if (order.수락가능 || order.조리시작가능)
-                    {
-                        @PreparationControls()
-                    }
-                    @if (order.수락가능)
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
-                                   Disabled="@WorkDisabled" OnClick="AcceptAndPrintAsync" StartIcon="@Icons.Material.Filled.Check">
-                            @(isBusy ? "주문 확인 중" : "주문 확인")
-                        </MudButton>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">조리 예상 @(preparationMinutes)분 · 확인 후 기사 배차를 요청합니다.</MudText>
-                    }
-                    else if (order.조리시작가능)
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
-                                   Disabled="@WorkDisabled" OnClick="StartCookingAsync">@(isBusy ? "처리 중" : "조리 시작")</MudButton>
-                    }
-                    else if (order.픽업준비가능)
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
-                                   Disabled="@WorkDisabled" OnClick="MarkPickupReadyAsync" StartIcon="@Icons.Material.Filled.TakeoutDining">
-                            @(isBusy ? "처리 중" : "픽업 준비 완료")
-                        </MudButton>
-                    }
                 </MudStack>
             </MudPaper>
+
+            @if (!Embedded) { @PrimaryAction() }
 
             <MudPaper Elevation="0" Outlined="true" Class="pa-4 order-menu-panel">
                 <MudStack Spacing="2">
@@ -85,7 +67,18 @@
                         <MudText Typo="Typo.h6">주문 메뉴</MudText>
                         <MudText Typo="Typo.h6" Class="order-amount">@order.주문금액.ToString("N0")원</MudText>
                     </div>
-                    @if (order.상품별조리기준.Count > 0)
+                    @if (order.상품목록.Count > 0)
+                    {
+                        @foreach (var item in order.상품목록)
+                        {
+                            <div class="order-menu-line pos-menu-line">
+                                <MudText Typo="Typo.body1">@item.상품명</MudText>
+                                <MudText Typo="Typo.body1" Class="order-menu-quantity">@(item.수량)개</MudText>
+                                <MudText Typo="Typo.body1" Class="order-amount">@((item.단가 * item.수량).ToString("N0"))원</MudText>
+                            </div>
+                        }
+                    }
+                    else if (order.상품별조리기준.Count > 0)
                     {
                         @foreach (var item in order.상품별조리기준)
                         {
@@ -129,6 +122,19 @@
                 </details>
             }
 
+            @if (order.상태 == 음식주문상태코드.주문확인 && order.상세주문 is { } currentOrder)
+            {
+                @if (Embedded)
+                {
+                    <MudButton Href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")" Variant="Variant.Text" Disabled="@WorkDisabled">취소 조건 협의</MudButton>
+                }
+                else
+                {
+                    <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodCancellationAgreementPanel
+                        OrderNo="@order.주문번호" OrderRevision="@currentOrder.Revision" Disabled="@WorkDisabled" Applied="RefreshAsync" />
+                }
+            }
+
             <div class="order-flow-secondary-row">
                 @if (CanPrintReceipt)
                 {
@@ -159,15 +165,53 @@
             </details>
         }
     </MudStack>
+    </div>
+    @if (Embedded && order is not null) { @PrimaryAction() }
+    </div>
 </MudContainer>
+</div>
 
 @code {
-    private RenderFragment PreparationControls() => @<MudStack Spacing="2">
+    private RenderFragment PrimaryAction() => @<div class="order-command-panel">
+        @if (order is not null)
+        {
+                    @if (order.수락가능 || order.조리시작가능)
+                    {
+                        @PreparationControls()
+                    }
+                    @if (order.수락가능)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
+                                   Disabled="@WorkDisabled" OnClick="AcceptAndPrintAsync" StartIcon="@Icons.Material.Filled.Check">
+                            @(isBusy ? "수락 확인 중" : "주문 수락")
+                        </MudButton>
+                        @if (!Embedded) { <MudText Typo="Typo.body2" Color="Color.Secondary">조리 예상 @(preparationMinutes)분 · 확인 후 기사 배차를 요청합니다.</MudText> }
+                    }
+                    else if (order.조리시작가능)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
+                                   Disabled="@WorkDisabled" OnClick="StartCookingAsync">@(isBusy ? "처리 중" : "조리 시작")</MudButton>
+                    }
+                    else if (order.픽업준비가능)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="order-primary-action"
+                                   Disabled="@WorkDisabled" OnClick="MarkPickupReadyAsync" StartIcon="@Icons.Material.Filled.TakeoutDining">
+                            @(isBusy ? "처리 중" : "픽업 준비 완료")
+                        </MudButton>
+                    }
+            @if (!order.수락가능 && !order.조리시작가능 && !order.픽업준비가능)
+            {
+                <p class="pos-waiting-state"><MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" /> @CurrentStepLabel</p>
+            }
+        }
+    </div>;
+
+    private RenderFragment PreparationControls() => @<div class="pos-preparation-controls">
         <MudNumericField T="int"
                          @bind-Value="preparationMinutes"
                          Immediate="true"
                          Label="조리 예상시간"
-                         HelperText="@($"추천 {order?.추천조리예상분 ?? 20}분 · 1~180분 사이에서 변경할 수 있습니다.")"
+                         HelperText="@(Embedded ? "1~180분" : $"추천 {order?.추천조리예상분 ?? 20}분 · 1~180분 사이에서 변경할 수 있습니다.")"
                          Min="1"
                          Max="180"
                          Step="1"
@@ -175,7 +219,7 @@
                          Variant="Variant.Outlined"
                          Adornment="Adornment.End"
                          AdornmentText="분" />
-        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap" Class="pos-quick-times">
             @foreach (var minutes in QuickPreparationMinutes)
             {
                 <MudButton Variant="Variant.Outlined"
@@ -188,5 +232,5 @@
                 </MudButton>
             }
         </MudStack>
-    </MudStack>;
+    </div>;
 }

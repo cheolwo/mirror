@@ -11,6 +11,11 @@ public partial class 살뜰마트배송Page : ContentPage
     { InitializeComponent(); BindingContext = _model = model; }
     protected override async void OnAppearing() { base.OnAppearing(); await _model.ActivateAsync(); }
     protected override void OnDisappearing() { _model.Deactivate(); base.OnDisappearing(); }
+    protected override bool OnBackButtonPressed()
+    {
+        if (!_model.Completion.HasNotice) return base.OnBackButtonPressed();
+        _model.Completion.Dismiss(); return true;
+    }
     private async void OnBackClicked(object? sender, EventArgs args)
     {
         if (Shell.Current is { } shell)

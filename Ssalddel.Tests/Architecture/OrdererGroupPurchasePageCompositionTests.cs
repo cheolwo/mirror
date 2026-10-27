@@ -136,16 +136,19 @@ public sealed class OrdererGroupPurchasePageCompositionTests
             "Components",
             "Pages",
             "GroupPurchaseDemandCreate.razor");
-        var demandPanel = File.ReadAllText(demandPanelPath);
+        var demandPanelPage = File.ReadAllText(demandPanelPath);
+        var demandPanel = string.Join("\n", demandPanelPage, File.ReadAllText(Path.Combine(
+            repositoryRoot, "OrdererApp", "Components", "GroupPurchase", "GroupPurchaseDemandSession.cs")));
         var demandPage = File.ReadAllText(demandPagePath);
 
+        Assert.Contains("GroupPurchaseDemandSession", demandPanelPage);
         Assert.DoesNotContain("<GroupPurchasePaymentSchedule", demandPanel, StringComparison.Ordinal);
         Assert.Contains("ShowFlowSummary", demandPanel);
         Assert.Contains("WithdrawDemandAsync", demandPanel);
         Assert.Contains("ShipmentTrackingService.ListGroupsAsync", demandPanel);
         Assert.True(
-            demandPanel.LastIndexOf("WithdrawDemandAsync", StringComparison.Ordinal)
-            < demandPanel.LastIndexOf("ShipmentTrackingService.ListGroupsAsync", StringComparison.Ordinal));
+            demandPanelPage.LastIndexOf("WithdrawDemandAsync", StringComparison.Ordinal)
+            < demandPanelPage.LastIndexOf("ShipmentTrackingService.ListGroupsAsync", StringComparison.Ordinal));
         Assert.Contains("철회한 뒤 서버 원장을 다시 확인했습니다.", demandPanel);
         Assert.Contains("ShowFlowSummary=\"false\"", demandPage);
         Assert.DoesNotContain("<GroupPurchaseProductAnalysisPanel", demandPage);

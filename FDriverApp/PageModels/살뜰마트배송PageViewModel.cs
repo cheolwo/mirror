@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FDriverApp.Services;
 using Ssalddel.Contracts.Mart;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace FDriverApp.PageModels;
 
@@ -19,6 +20,7 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
     private bool _restored;
     private bool _active;
     private bool _retryVerified;
+    public FDriverCompletionFeedbackState Completion { get; } = new();
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isEnabled;
     [ObservableProperty] private bool _hasLoaded;
@@ -61,6 +63,7 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
     }
     public void Deactivate()
     {
+        Completion.Dismiss();
         _active = false; _lifetime.Cancel(); PickupCode = string.Empty; NotifyState();
         // 계정 변경은 화면 밖에서도 감지합니다. 다음 Activate에서 중복 구독하지 않습니다.
     }
@@ -136,6 +139,7 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
             { 마트배송행동.Accept => !CanAccept, 마트배송행동.Reject => !CanReject,
                 마트배송행동.Pickup => !CanPickup, _ => !CanDeliver })) return;
         var value = SelectedItem.Value; var id = Guid.NewGuid(); var code = PickupCode.Trim();
+        Completion.Dismiss();
         var pending = new 살뜰마트배송미확인요청(_owner!, id, value.OfferId, action, value.Revision,
             value.LabelRevision ?? 0, value.RecommendationRound, value.QueueUpdatedAtUtc,
             action == 마트배송행동.Pickup && ByNumber, action == 마트배송행동.Pickup ? HashCode(id, code) : null);
@@ -164,7 +168,8 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
             };
             if (!Current(owner, token)) return;
             ValidateItem(result, pending.OfferId);
-            await ConfirmCurrentAsync(pending, owner, token);
+            ValidateCompletionReceipt(pending, result);
+            await ConfirmCurrentAsync(pending, owner, token, result);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested || !SameOwner(owner)) { }
         catch (FDriverApiException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
@@ -213,7 +218,8 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
             var result = await api.ResultAsync(pending.RequestId, token);
             if (!Current(owner, token)) return;
             ValidateItem(result, pending.OfferId);
-            await ConfirmCurrentAsync(pending, owner, token);
+            ValidateCompletionReceipt(pending, result);
+            await ConfirmCurrentAsync(pending, owner, token, result);
         }
         catch (FDriverApiException ex) when (살뜰마트배송ApiClient.IsConfirmedCommandRejection(ex))
         {
@@ -258,8 +264,10 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
         Status = removed ? "배송 제안이 변경되어 요청이 처리되지 않았습니다. 현재 목록을 확인해 주세요."
             : "요청이 처리되지 않았습니다. 현재 상태와 입력을 확인한 뒤 다시 선택해 주세요.";
     }
-    private async Task ConfirmCurrentAsync(살뜰마트배송미확인요청 pending, string owner, CancellationToken token)
+    private async Task ConfirmCurrentAsync(살뜰마트배송미확인요청 pending, string owner, CancellationToken token,
+        마트기사업무항목Dto receiptResult)
     {
+        마트기사업무항목Dto? confirmed = null;
         if (pending.Action == 마트배송행동.Reject)
         {
             // 거절 뒤에는 다음 기사의 업무 조회 권한이 없습니다. 본인 요청 영수증과 목록만 확인합니다.
@@ -278,13 +286,29 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
         {
             var current = await api.GetAsync(pending.OfferId, token);
             if (!Current(owner, token)) return;
-            ValidateItem(current, pending.OfferId); Apply(current);
+            ValidateItem(current, pending.OfferId);
+            if (pending.Action == 마트배송행동.Pickup && (current.StateCode is not ("PickedUp" or "Delivered" or "Completed") || current.Revision <= pending.Revision)
+                || pending.Action == 마트배송행동.Deliver && (current.StateCode is not ("Delivered" or "Completed") || current.Revision <= pending.Revision))
+                throw new InvalidDataException("완료 결과와 현재 배송 상태가 일치하지 않습니다.");
+            if (pending.Action is 마트배송행동.Pickup or 마트배송행동.Deliver
+                && (current.AttemptStableId != receiptResult.AttemptStableId || current.Revision < receiptResult.Revision))
+                throw new InvalidDataException("완료 기록과 현재 배송 시도가 일치하지 않습니다.");
+            Apply(current); confirmed = current;
         }
         await store.ClearAsync(owner, token);
         if (!Current(owner, token)) return;
         _pending = null; _retryVerified = false;
         Status = pending.Action switch { 마트배송행동.Accept => "마트 배송을 수락했습니다.", 마트배송행동.Reject => "배송 제안을 거절했습니다.",
             마트배송행동.Pickup => "픽업을 완료했습니다.", _ => "전달을 완료했습니다. 수령 확인·정산·지급은 별도입니다." };
+        if (confirmed is not null && pending.Action is 마트배송행동.Pickup or 마트배송행동.Deliver)
+        {
+            var final = pending.Action == 마트배송행동.Deliver;
+            Completion.Record(new($"mart:{pending.OfferId}:{pending.RequestId:D}:{pending.Action}",
+                final ? "전달을 완료했습니다" : "상품을 픽업했습니다",
+                final ? "해당 마트 배송의 전달 완료 기록을 확인했습니다." : "해당 마트 배송의 픽업 완료 기록을 확인했습니다.",
+                final ? "수령 확인·정산·지급은 각 내역에서 확인해 주세요." : "다음 단계: 전달 장소로 이동",
+                final, WorkflowCompletionVisuals.PickingIconPath, "#0F766E"));
+        }
     }
     [RelayCommand(CanExecute = nameof(CanRetry))]
     private async Task RetryAsync()
@@ -305,6 +329,14 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
     {
         if (item is null || item.OfferId != offerId || item.Revision < 0) throw new InvalidDataException("배송 대상이 일치하지 않습니다.");
     }
+    private static void ValidateCompletionReceipt(살뜰마트배송미확인요청 pending, 마트기사업무항목Dto receipt)
+    {
+        if (pending.Action is 마트배송행동.Pickup or 마트배송행동.Deliver && string.IsNullOrWhiteSpace(receipt.AttemptStableId))
+            throw new InvalidDataException("완료 기록의 배송 시도를 확인하지 못했습니다.");
+        if (pending.Action == 마트배송행동.Pickup && (receipt.StateCode is not ("PickedUp" or "Delivered" or "Completed") || receipt.Revision <= pending.Revision)
+            || pending.Action == 마트배송행동.Deliver && (receipt.StateCode is not ("Delivered" or "Completed") || receipt.Revision <= pending.Revision))
+            throw new InvalidDataException("완료 기록을 확인하지 못했습니다.");
+    }
     private static void ValidateList(마트기사업무목록Dto list)
     {
         if (list.Items is null || list.Items.Any(x => string.IsNullOrWhiteSpace(x.OfferId) || x.Revision < 0)
@@ -324,6 +356,7 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
     private static string Place(string? label, string? address) => string.IsNullOrWhiteSpace(address) ? label ?? "장소 확인 중" : $"{label}\n{address}";
     private void ClearMemory()
     {
+        Completion.Clear();
         Items.Clear(); SelectedItem = null; _pending = null; _retryVerified = false; PickupCode = string.Empty;
         HasLoaded = false; IsEnabled = false; Notice = string.Empty; IsBusy = false; NotifyState();
     }
@@ -332,7 +365,11 @@ public sealed partial class 살뜰마트배송PageViewModel(I살뜰마트배송A
         Items.Clear(); SelectedItem = null; HasLoaded = false; IsEnabled = false; _retryVerified = false; PickupCode = string.Empty;
         Status = "로그인 또는 배송 권한을 다시 확인해 주세요. 이전 요청은 보존했습니다.";
     }
-    partial void OnSelectedItemChanged(마트배송표시항목? value) { PickupCode = string.Empty; NotifyState(); }
+    partial void OnSelectedItemChanged(마트배송표시항목? oldValue, 마트배송표시항목? newValue)
+    {
+        if (oldValue?.Value.OfferId != newValue?.Value.OfferId) Completion.Dismiss();
+        PickupCode = string.Empty; NotifyState();
+    }
     partial void OnPickupCodeChanged(string value) => NotifyState();
     partial void OnByNumberChanged(bool value) { PickupCode = string.Empty; NotifyState(); }
     private void NotifyState()

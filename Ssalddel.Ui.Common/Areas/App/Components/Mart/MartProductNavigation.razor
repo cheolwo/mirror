@@ -30,9 +30,9 @@
     private static readonly IReadOnlyList<NavigationItem> Items =
     [
         new(MartProductScreenKind.List, "목록", "검색·상품 선택", Icons.Material.Filled.Storefront, false),
-        new(MartProductScreenKind.Detail, "상세", "공개 원장 읽기", Icons.Material.Filled.Description, true),
+        new(MartProductScreenKind.Detail, "상세", "상품 정보 확인", Icons.Material.Filled.Description, true),
         new(MartProductScreenKind.Review, "후기", "구매후기 작성", Icons.Material.Filled.RateReview, true),
-        new(MartProductScreenKind.Order, "주문 요청", "비구속 의향 저장", Icons.Material.Filled.AddShoppingCart, true)
+        new(MartProductScreenKind.Order, "주문 요청", "주문 확정 전", Icons.Material.Filled.AddShoppingCart, true)
     ];
 
     private string BuildClass(MartProductScreenKind screen)
