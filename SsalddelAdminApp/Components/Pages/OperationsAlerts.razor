@@ -2,23 +2,31 @@
 @page "/operations-alerts/{AlertId}"
 @using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
 @using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Contracts.Common.Community
 @inject OperationsAlertsState State
 @inject AdminAuthSession Session
 @inject AdminAuthService Auth
 @inject AdminOperationsPushService Push
+@inject NavigationManager Navigation
 @implements IDisposable
 <PageTitle>운영 알림</PageTitle>
 @if (restoring) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
-else { <OperationsAlertsView State="State" Authenticated="Session.IsServerAdmin" LoginHref="@LoginHref" DetailId="@AlertId" Status="@status"
+else { <OperationsAlertsView State="State" Authenticated="Session.IsServerAdmin" LoginHref="@LoginHref" DetailId="@AlertId" Status="@status" ListReturnHref="@ListHref"
     Retry="Load" SelectStatus="SelectStatus" Previous="Previous" Next="Next" Acknowledge="State.AcknowledgeAsync" />
     @if (Session.IsServerAdmin) { <MudButton Variant="Variant.Text" OnClick="EnableNotifications">이 기기 알림 허용</MudButton> }
 }
 @code {
     [Parameter] public string? AlertId { get; set; }
+    [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public int? PageQuery { get; set; }
+    [SupplyParameterFromQuery(Name = PageNavigationQueryNames.ReturnPath)] public string? ReturnPath { get; set; }
     private bool restoring = true;
-    private string status = "Open";
-    private int page = 1;
-    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(AlertId is null ? "/operations-alerts" : "/operations-alerts/" + Uri.EscapeDataString(AlertId));
+    private string status => OperationsAlertWorkflowPresentation.Status(StatusQuery);
+    private int page => Math.Clamp(PageQuery ?? 1, 1, 10000);
+    private string ListHref => AlertId is null ? OperationsAlertWorkflowPresentation.ListHref(status, page)
+        : OperationsAlertWorkflowPresentation.ResolveListHref(ReturnPath);
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(AlertId is null ? ListHref
+        : OperationsAlertWorkflowPresentation.DetailHref(AlertId, ListHref));
     protected override async Task OnInitializedAsync()
     {
         Session.Changed += SessionChanged; State.Changed += Changed;
@@ -33,9 +41,9 @@ else { <OperationsAlertsView State="State" Authenticated="Session.IsServerAdmin"
         if (Microsoft.Maui.ApplicationModel.Platform.CurrentActivity is MainActivity activity) activity.RequestOperationsNotificationPermission();
 #endif
     }
-    private async Task SelectStatus(string value) { status = value; page = 1; await Load(); }
-    private async Task Previous() { page = Math.Max(1, page - 1); await Load(); }
-    private async Task Next() { page++; await Load(); }
+    private Task SelectStatus(string value) { Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(value)); return Task.CompletedTask; }
+    private Task Previous() { Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(status, Math.Max(1, page - 1))); return Task.CompletedTask; }
+    private Task Next() { if (State.Page?.HasMore == true) Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(status, page + 1)); return Task.CompletedTask; }
     private void Changed() => InvokeAsync(StateHasChanged);
     private void SessionChanged() => InvokeAsync(async () => { State.SetOwner(Session.IsServerAdmin ? Session.UserId : null); await Load(); });
     public void Dispose() { Session.Changed -= SessionChanged; State.Changed -= Changed; State.Dispose(); }

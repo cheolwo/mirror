@@ -9,8 +9,10 @@ using 살뜰.Data;
 namespace Ssalddel.Services.OperationsAlerts;
 
 public sealed class OperationsAlertConflictException : Exception;
-public sealed class OperationsAlertCoordinator(SsalddelContext db, IOptionsMonitor<OperationsAlertsOptions> options, TimeProvider clock)
+public sealed class OperationsAlertCoordinator(SsalddelContext db, IOptionsMonitor<OperationsAlertsOptions> options, TimeProvider clock,
+    OperationsAlertQueryService? queries = null)
 {
+    private readonly OperationsAlertQueryService queryService = queries ?? new(db, options, clock);
     public static string Id(params object[] parts) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("|", parts)))).ToLowerInvariant();
     public DateTime Now => clock.GetUtcNow().UtcDateTime;
     public async Task ObserveAsync(OperationsObservation observation, DateTime startedAtUtc, CancellationToken ct = default)
@@ -78,22 +80,8 @@ public sealed class OperationsAlertCoordinator(SsalddelContext db, IOptionsMonit
             ExpectedRevision = input.ExpectedRevision, Episode = row.Episode });
         try { await db.SaveChangesAsync(ct); } catch (DbUpdateException) { throw new OperationsAlertConflictException(); }
     }
-    public async Task<OperationsAlertsPage> ListAsync(string? status, int page, CancellationToken ct = default)
-    {
-        page = Math.Clamp(page, 1, 10000);
-        var query = db.Set<OperationsAlert>().AsNoTracking();
-        if (status is "Open" or "Acknowledged" or "Resolved") query = query.Where(x => x.Status == status);
-        var rows = await query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id).Skip((page - 1) * 20).Take(21).ToListAsync(ct);
-        var dtos = new List<OperationsAlertDto>();
-        foreach (var row in rows.Take(20)) dtos.Add(await DtoAsync(row, ct));
-        return new(options.CurrentValue.Enabled, options.CurrentValue.ExternalSendEnabled, dtos, page, rows.Count > 20);
-    }
-    public async Task<OperationsAlertDto?> DetailAsync(string id, CancellationToken ct = default)
-        => await db.Set<OperationsAlert>().AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct) is { } row ? await DtoAsync(row, ct) : null;
-    private async Task<OperationsAlertDto> DtoAsync(OperationsAlert row, CancellationToken ct)
-        => new(row.Id, row.Episode, row.Revision, row.Severity, row.Status, OperationsAlertPresentation.Title(row.ProblemCode),
-            OperationsAlertPresentation.Action(row.ProblemCode), OperationsAlertPresentation.Href(row.SourceKind, row.SourceId), row.CreatedAtUtc,
-            row.LastVerifiedAtUtc, row.LastVerifiedAtUtc >= Now.AddMinutes(-2),
-            await db.Set<OperationsAlertOutbox>().Where(x => x.AlertId == row.Id && x.Episode == row.Episode)
-                .Select(x => x.Channel + ":" + x.Status).ToArrayAsync(ct));
+    public Task<OperationsAlertsPage> ListAsync(string? status, int page, CancellationToken ct = default)
+        => queryService.ListAsync(status, page, ct);
+    public Task<OperationsAlertDto?> DetailAsync(string id, CancellationToken ct = default)
+        => queryService.DetailAsync(id, ct);
 }

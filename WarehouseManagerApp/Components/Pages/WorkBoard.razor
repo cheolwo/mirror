@@ -5,7 +5,7 @@
 
 <WarehousePageShell Model="@ViewModel"
                     Title="창고 작업 보드"
-                    Description="입고 예정에서 선택한 같은 요청을 서버에서 다시 조회하고 다음 업무를 확인합니다."
+                    Description="선택한 입고 요청의 현재 상태와 다음 업무를 확인합니다."
                     Icon="@Icons.Material.Filled.ViewKanban"
                     Color="Color.Primary">
     <Actions>
@@ -64,7 +64,7 @@
                     <MudText Typo="Typo.subtitle1">창고 작업 보드가 비활성입니다.</MudText>
                     <MudText Typo="Typo.body2">@ViewModel.기능안내</MudText>
                     <MudText Typo="Typo.caption">
-                        기능 플래그가 활성화된 환경에서만 서버 입고 원장을 조회합니다.
+                        이 환경에서 창고 업무를 사용할 수 있는지 관리자에게 확인해 주세요.
                     </MudText>
                 </MudStack>
             </MudAlert>
@@ -82,7 +82,7 @@
                     <MudIcon Icon="@Icons.Material.Filled.PlaylistAddCheck" Size="Size.Large" Color="Color.Secondary" />
                     <MudText Typo="Typo.h6">확인할 입고 요청을 선택해 주세요.</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
-                        입고 예정 목록에서 한 건을 선택하면 해당 inboundId를 서버에서 다시 조회합니다.
+                        입고 예정 목록에서 한 건을 선택하면 현재 처리 상태와 다음 업무를 볼 수 있습니다.
                     </MudText>
                     <MudButton Href="@WarehouseManagerRoutes.ExpectedInbounds"
                                Variant="Variant.Filled"
@@ -128,7 +128,7 @@
         else if (ViewModel.입고상세조회.항목 is { } item && ViewModel.작업상태 is { } workState)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Science">
-                서버 원본을 읽는 Beta/ReadOnly 페이지입니다. 검수·적재·실제 보관·정산 상태 전이는 여기서 실행하지 않습니다.
+                시험 기능의 조회 전용 화면입니다. 검수·적재·보관·정산 처리는 이 화면에서 실행하지 않습니다.
             </MudAlert>
 
             <MudGrid>
@@ -153,7 +153,7 @@
                                     <MudText Typo="Typo.body1">@ValueOrFallback(item.예정상품명)</MudText>
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">SKU · 예정 수량</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">상품 코드 · 예정 수량</MudText>
                                     <MudText Typo="Typo.body1">@SkuAndQuantity(item)</MudText>
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
@@ -166,26 +166,26 @@
                                 </MudItem>
                             </MudGrid>
 
-                            <SsalddelSensitiveDisclosureList Title="업무 관계와 원장 연결"
-                                                            Summary="창고·주문·공급 관계 식별자는 업무상 필요할 때만 펼쳐 확인합니다."
+                            <SsalddelSensitiveDisclosureList Title="관련 업무 정보"
+                                                            Summary="창고·주문·공급 정보를 필요할 때 펼쳐 확인합니다."
                                                             RelatedParties="@($"{ValueOrFallback(item.공급처명)} · 창고 #{item.창고Id}")"
                                                             PrivacyHint="연락처와 상세 주소는 이 조회 응답에 포함하지 않습니다."
                                                             Icon="@Icons.Material.Filled.AccountTree"
                                                             Color="Color.Primary"
                                                             Compact="true">
                                 <MudExpansionPanel Text="입고 기준정보" Icon="@Icons.Material.Filled.Assignment">
-                                    <SsalddelSensitiveInfoRow Label="창고 ID" Value="@item.창고Id.ToString()" />
+                                    <SsalddelSensitiveInfoRow Label="창고 번호" Value="@item.창고Id.ToString()" />
                                     <SsalddelSensitiveInfoRow Label="공급처" Value="@ValueOrFallback(item.공급처명)" />
                                     <SsalddelSensitiveInfoRow Label="공급처 코드" Value="@ValueOrFallback(item.공급처코드)" />
                                     <SsalddelSensitiveInfoRow Label="생성 경로" Value="@ValueOrFallback(item.입고생성경로)" />
                                 </MudExpansionPanel>
-                                <MudExpansionPanel Text="주문·원장 연결" Icon="@Icons.Material.Filled.Hub">
+                                <MudExpansionPanel Text="관련 주문" Icon="@Icons.Material.Filled.Hub">
                                     <SsalddelSensitiveInfoRow Label="주문 참조" Value="@ValueOrFallback(item.주문참조번호)" />
                                     <SsalddelSensitiveInfoRow Label="원주문 참조" Value="@ValueOrFallback(item.원주문참조번호)" />
                                     <SsalddelSensitiveInfoRow Label="운송 의뢰" Value="@ValueOrFallback(item.운송의뢰Id)" />
-                                    <SsalddelSensitiveInfoRow Label="공동 원장" Value="@ValueOrFallback(item.커뮤니티원장Id)" />
+                                    <SsalddelSensitiveInfoRow Label="공동 업무 기록" Value="@ValueOrFallback(item.커뮤니티원장Id)" />
                                 </MudExpansionPanel>
-                                <MudExpansionPanel Text="계약 스냅샷" Icon="@Icons.Material.Filled.Description">
+                                <MudExpansionPanel Text="입고 계약 내용" Icon="@Icons.Material.Filled.Description">
                                     <SsalddelSensitiveInfoRow Label="계약 번호" Value="@ValueOrFallback(item.계약정보.계약번호)" />
                                     <SsalddelSensitiveInfoRow Label="계약 유형" Value="@입고계약유형코드.GetDisplayName(item.계약정보.계약유형)" />
                                     <SsalddelSensitiveInfoRow Label="계약 상대방" Value="@ValueOrFallback(item.계약정보.계약상대방명)" />
@@ -202,7 +202,7 @@
                             <MudStack Spacing="2">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                     <MudIcon Icon="@Icons.Material.Filled.Route" Color="Color.Primary" />
-                                    <MudText Typo="Typo.subtitle1">서버 상태 기준 다음 단계</MudText>
+                                    <MudText Typo="Typo.subtitle1">다음 업무</MudText>
                                 </MudStack>
                                 <MudChip T="string"
                                          Color="@(workState.상태전이후보 ? Color.Warning : Color.Default)"
@@ -214,7 +214,7 @@
                                            Color="Color.Primary"
                                            Disabled="true"
                                            StartIcon="@Icons.Material.Filled.LockClock">
-                                    상태 전이는 별도 Simulation에서
+                                    시험 환경에서 별도 처리
                                 </MudButton>
                             </MudStack>
                         </MudPaper>

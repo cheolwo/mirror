@@ -15,7 +15,7 @@
             <MudText Typo="Typo.overline" Color="Color.Primary">OPERATIONS</MudText>
             <MudText Typo="Typo.h4">운송·기사 현황</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                진행 중인 운송과 운행 기사 현황을 확인하세요.
+                운송 기록과 운행 기사 현황을 확인하세요.
             </MudText>
         </MudStack>
         @if (Session.IsServerAdmin)
@@ -72,9 +72,9 @@
         {
             <MudGrid Spacing="2">
                 <MudItem xs="6">
-                    <MetricCard Title="진행 운송"
+                    <MetricCard Title="전체 운송"
                                 Value="@snapshot.Transports.Count.ToString("N0")"
-                                Description="서버 운송 목록"
+                                Description="완료 포함 서버 운송 목록"
                                 Icon="@Icons.Material.Filled.Route"
                                 AccentColor="Color.Primary" />
                 </MudItem>

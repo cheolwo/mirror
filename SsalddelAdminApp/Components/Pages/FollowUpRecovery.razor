@@ -19,6 +19,7 @@
     @if (!Session.IsServerAdmin)
     {
         <MudAlert Severity="Severity.Warning">서버 관리자 로그인이 필요합니다.</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@LoginHref">로그인하고 복구 업무로 돌아가기</MudButton>
     }
     else
     {
@@ -27,6 +28,7 @@
 </MudStack>
 
 @code {
+    private static string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString("/operations/follow-up-recovery");
     private 운영후속처리복구목록Dto? value;
     private bool loading;
     private string? errorMessage;

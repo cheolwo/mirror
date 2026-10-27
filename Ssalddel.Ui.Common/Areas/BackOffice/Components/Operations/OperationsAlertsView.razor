@@ -1,4 +1,5 @@
 @using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.Components.Recovery
 <section class="operations-alerts" aria-label="운영 알림">
     <header><div class="eyebrow">MIRROR · 운영</div><h1>운영 알림</h1><p>지금 확인할 일을 모았습니다.</p></header>
     @if (!Authenticated)
@@ -7,7 +8,9 @@
     { <p role="status">알림을 불러오고 있습니다.</p> }
     else
     {
-        @if (State.Error is not null) { <div class="notice error" role="alert">@State.Error <button @onclick="Retry">다시 시도</button></div> }
+        <업무오류복구Panel Message="@State.Error" ContextKey="@State.ErrorContextKey"
+            OutcomeUnknown="@State.AcknowledgementOutcomeUnknown" Busy="@State.Busy"
+            RetryRequested="Retry" ReturnHref="@CurrentListHref" ReturnLabel="알림 목록" />
         @if (State.Page is { } page)
         {
             @if (!page.Enabled) { <div class="notice">운영 알림 감시가 꺼져 있습니다.</div> }
@@ -16,6 +19,7 @@
         @if (DetailId is null)
         {
             <nav class="filters" aria-label="알림 상태">
+                <button class="@(Status == "Unresolved" ? "selected" : "")" @onclick='() => SelectStatus.InvokeAsync("Unresolved")'>미해결</button>
                 <button class="@(Status == "Open" ? "selected" : "")" @onclick='() => SelectStatus.InvokeAsync("Open")'>긴급·확인 필요</button>
                 <button class="@(Status == "Acknowledged" ? "selected" : "")" @onclick='() => SelectStatus.InvokeAsync("Acknowledged")'>확인 중</button>
                 <button class="@(Status == "Resolved" ? "selected" : "")" @onclick='() => SelectStatus.InvokeAsync("Resolved")'>해결됨</button>
@@ -23,9 +27,9 @@
             @if (State.Page is { Items.Count: 0 }) { <div class="alert-card empty"><h2>확인할 알림이 없습니다</h2><p>새 문제가 접수되면 여기에 표시됩니다.</p></div> }
             @foreach (var row in State.Page?.Items ?? [])
             {
-                <a class="alert-card alert-row" href="@("/operations-alerts/" + row.Id)">
+                <a class="alert-card alert-row" href="@OperationsAlertWorkflowPresentation.DetailHref(row.Id, CurrentListHref)">
                     <span class="badge @(row.Severity == "Urgent" ? "urgent" : "")">@(row.Severity == "Urgent" ? "긴급" : "확인 필요")</span>
-                    <h2>@row.Title</h2><p>@row.CreatedAtUtc.AddHours(9).ToString("MM.dd HH:mm") · @Label(row.Status)</p><span class="arrow" aria-hidden="true">›</span>
+                    <h2>@row.Title</h2><p>@row.CreatedAtUtc.AddHours(9).ToString("MM.dd HH:mm") · @(new OperationsAlertWorkflowPresentation(row).State)</p><span class="arrow" aria-hidden="true">›</span>
                 </a>
             }
             <div class="pagination">
@@ -36,15 +40,27 @@
         }
         else if (State.Detail is { } row)
         {
-            <a class="back" href="/operations-alerts">‹ 알림 목록</a>
+            var handling = new OperationsAlertWorkflowPresentation(row);
+            <a class="back" href="@CurrentListHref">‹ 알림 목록</a>
+            @if (State.Error is not null) { <p role="status">이전 확인 내용 · 최신 원장 재조회 필요</p> }
             <article class="alert-card">
                 <span class="badge @(row.Severity == "Urgent" ? "urgent" : "")">@(row.Severity == "Urgent" ? "긴급" : "확인 필요")</span>
-                <h2>@row.Title</h2><p>@row.Action</p>
-                <dl><dt>처리 상태</dt><dd>@Label(row.Status)</dd><dt>발생 시각</dt><dd>@row.CreatedAtUtc.AddHours(9).ToString("MM.dd HH:mm")</dd></dl>
+                <h2>@row.Title</h2><p>@handling.NextAction</p>
+                <dl><dt>대응 상태</dt><dd>@handling.State</dd><dt>담당</dt><dd>@handling.ResponsibleParty</dd>
+                    <dt>다음 검토</dt><dd data-operator-review>@handling.OperatorReview</dd>
+                    <dt>원장 재조회</dt><dd data-source-revalidation>@handling.SourceRevalidation</dd>
+                    <dt>발생 시각</dt><dd>@row.CreatedAtUtc.AddHours(9).ToString("MM.dd HH:mm")</dd></dl>
+                @if (handling.ServiceTarget is { } target)
+                {
+                    <p class="service-target">@target</p>
+                    @if (handling.ServiceClockUnconfigured) { <p class="service-clock">첫 응답 미확인 · 근무시간 기준 미설정</p> }
+                }
                 @if (!row.SourceCurrent) { <div class="notice">최근 원장 확인이 지연되고 있습니다. 해당 업무에서 상태를 확인하세요.</div> }
-                <a class="primary" href="@row.SourceHref">해당 업무 보기</a>
+                @if (handling.SourceHrefWithReturn(OperationsAlertWorkflowPresentation.DetailHref(row.Id, CurrentListHref)) is { } sourceHref)
+                { <a class="primary" href="@sourceHref">@handling.SourceLabel</a> }
+                else { <p>업무 연결 확인 필요</p> }
             </article>
-            <section class="alert-card"><h2>알림 확인</h2><p>확인하면 재알림을 멈춥니다. 실제 업무의 해결 상태는 바뀌지 않습니다.</p>
+            <section class="alert-card"><h2>알림 확인</h2><p>알림 확인은 고객 응답·문제 해결이 아닙니다.</p>
                 <button class="secondary" disabled="@(!State.CanAcknowledge)" @onclick="Acknowledge">@(row.Status == "Acknowledged" ? "확인 중" : "알림 확인")</button>
                 @if (row.DeliveryStates.Length > 0) { <details><summary>알림 전달 상태</summary>@foreach (var channel in row.DeliveryStates) { <p>@DeliveryLabel(channel)</p> }</details> }
             </section>
@@ -56,13 +72,15 @@
     [Parameter] public bool Authenticated { get; set; }
     [Parameter] public string LoginHref { get; set; } = "/login";
     [Parameter] public string? DetailId { get; set; }
-    [Parameter] public string Status { get; set; } = "Open";
+    [Parameter] public string Status { get; set; } = "Unresolved";
+    [Parameter] public string? ListReturnHref { get; set; }
     [Parameter] public EventCallback Retry { get; set; }
     [Parameter] public EventCallback Previous { get; set; }
     [Parameter] public EventCallback Next { get; set; }
     [Parameter] public EventCallback<string> SelectStatus { get; set; }
     [Parameter] public EventCallback Acknowledge { get; set; }
-    private static string Label(string status) => status switch { "Open" => "확인 필요", "Acknowledged" => "확인 중", "Resolved" => "해결됨", _ => "확인 필요" };
+    private string CurrentListHref => OperationsAlertWorkflowPresentation.ResolveListHref(ListReturnHref
+        ?? OperationsAlertWorkflowPresentation.ListHref(Status, State.Page?.Page ?? 1));
     private static string DeliveryLabel(string channel)
     {
         var parts = channel.Split(':');

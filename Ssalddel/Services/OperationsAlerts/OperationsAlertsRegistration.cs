@@ -10,6 +10,7 @@ public static class OperationsAlertsRegistration
         services.Configure<OperationsBudgetOptions>(configuration.GetSection("OperationsBudget"));
         services.AddScoped<OperationsBudgetGate>(); services.AddTransient<OperationsRouteBudgetHandler>();
         services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<OperationsAlertQueryService>();
         services.AddScoped<OperationsAlertCoordinator>(); services.AddScoped<OperationsAlertMonitor>(); services.AddScoped<OperationsAlertDispatcher>();
         services.AddScoped<IOperationsAlertSource, SupportOperationsAlertSource>();
         services.AddScoped<IOperationsAlertSource, FoodOperationsAlertSource>();

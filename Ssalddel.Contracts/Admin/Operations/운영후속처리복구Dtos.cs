@@ -4,6 +4,7 @@ public static class 운영후속처리복구원천Codes
 {
     public const string 음식마트원장동기화 = "FoodMartLedgerSync";
     public const string 운영체제업무인계 = "OperatingSystemHandoff";
+    public const string 화물수락후속 = "CargoAcceptanceFollowups";
 }
 
 public static class 운영후속처리복구상태Codes
@@ -21,6 +22,8 @@ public sealed record 운영후속처리복구항목Dto
     public long 원천항목Id { get; init; }
     public required string 업무유형Code { get; init; }
     public required string 상태Code { get; init; }
+    public string? 원천상태Code { get; init; }
+    public int? 원천판본 { get; init; }
     public required string 현재책임운영체제Id { get; init; }
     public int 처리시도수 { get; init; }
     public int? 최대자동시도수 { get; init; }
@@ -49,6 +52,7 @@ public sealed record 운영후속처리복구목록Dto
 public sealed record 운영후속처리재시도요청Dto
 {
     public int 예상처리시도수 { get; init; }
+    public int? 예상원천판본 { get; init; }
 }
 
 public sealed record 운영후속처리재시도응답Dto
@@ -56,5 +60,6 @@ public sealed record 운영후속처리재시도응답Dto
     public required string 복구StableId { get; init; }
     public required string 상태Code { get; init; }
     public int 처리시도수 { get; init; }
+    public int? 원천판본 { get; init; }
     public DateTime 재시도예약시각Utc { get; init; }
 }

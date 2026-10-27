@@ -71,6 +71,8 @@
                         <MudText Typo="Typo.body2">배달료 @display.GrossText · @(settlement.DeductionAmount.HasValue ? $"공제 {display.DeductionText}" : display.DeductionText)</MudText>
                         <MudText Typo="Typo.h6">@(settlement.NetAmount.HasValue ? $"수령액 {display.NetText}" : display.NetText)</MudText>
                         <MudText Typo="Typo.body2">@display.ProgressText</MudText>
+                        @if (!settlement.IsOperationalPayoutReady)
+                        { <MudText Typo="Typo.body2">지급 재원 확인 전입니다. 과거 결제 승인이나 현장결제 메모만으로 실제 지급을 진행하지 않습니다.</MudText> }
                         <MudAlert Severity="Severity.Info">@display.NoticeText</MudAlert>
                         @if (!string.IsNullOrWhiteSpace(settlement.HoldReason)) { <MudAlert Severity="Severity.Warning">@settlement.HoldReason</MudAlert> }
                     }

@@ -14,6 +14,6 @@ public sealed class FollowUpRecoveryMobileService(AdminAuthenticatedApiClient ap
         CancellationToken cancellationToken = default)
         => apiClient.PutAsync<운영후속처리재시도요청Dto, 운영후속처리재시도응답Dto>(
             $"api/v1/admin/operations/follow-up-recoveries/{Uri.EscapeDataString(item.원천Code)}/{item.원천항목Id}/retry",
-            new 운영후속처리재시도요청Dto { 예상처리시도수 = item.처리시도수 },
+            new 운영후속처리재시도요청Dto { 예상처리시도수 = item.처리시도수, 예상원천판본 = item.원천판본 },
             cancellationToken);
 }

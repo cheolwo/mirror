@@ -25,10 +25,12 @@ public interface I운영후속처리복구UseCase
         CancellationToken cancellationToken = default);
 }
 
-public sealed class 운영후속처리복구UseCase(
+public sealed partial class 운영후속처리복구UseCase(
     SsalddelContext db,
     I음식마트원장동기화복구Service 음식마트원장동기화Outbox,
-    I운영체제업무인계OutboxService 운영체제업무인계Outbox)
+    I운영체제업무인계OutboxService 운영체제업무인계Outbox,
+    Ssalddel.Application.Driver.DispatchAction.ICargoAcceptanceRecoveryService? 화물수락후속복구 = null,
+    Microsoft.Extensions.Options.IOptions<Ssalddel.Application.Driver.DispatchAction.CargoAcceptanceRecoveryOptions>? 화물수락후속Options = null)
     : I운영후속처리복구UseCase
 {
     public async Task<운영후속처리복구목록Dto> 목록조회Async(
@@ -67,9 +69,12 @@ public sealed class 운영후속처리복구UseCase(
             .Take(boundedTake)
             .ToListAsync(cancellationToken);
 
+        var acceptanceItems = await 화물수락후속목록Async(완료포함, boundedTake, now, cancellationToken);
+
         var items = ledgerItems
             .Select(x => MapLedger(x, now))
             .Concat(handoffItems.Select(x => MapHandoff(x.Outbox, x.Handoff, now)))
+            .Concat(acceptanceItems)
             .OrderByDescending(x => x.운영자확인필요)
             .ThenBy(x => x.다음처리예정시각Utc ?? DateTime.MaxValue)
             .ThenByDescending(x => x.UpdatedAtUtc)
@@ -102,6 +107,8 @@ public sealed class 운영후속처리복구UseCase(
         }
 
         var sourceCode = 원천Code?.Trim();
+        if (sourceCode == 운영후속처리복구원천Codes.화물수락후속)
+            return await 화물수락후속재시도Async(원천항목Id, 요청, cancellationToken);
         if (string.Equals(
                 sourceCode,
                 운영후속처리복구원천Codes.운영체제업무인계,
