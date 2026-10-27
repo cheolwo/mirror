@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from pathlib import PurePosixPath
 import re
 import subprocess
@@ -12,6 +13,13 @@ IMAGES = frozenset('.jpg .jpeg .png .heic .heif .dng .raw .arw .cr2 .cr3 .nef .o
 CAPTURE_DIRS = frozenset({'originals', 'footage', 'raw-footage', 'raw-captures', '촬영원본', '원본', '쇼츠용', '롱폼-주행용', '.codex-remote-attachments'})
 ZERO = re.compile(r'^0+$')
 OID = re.compile(r'^[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$')
+# Product notification tones generated for r35/r43, not captured audio. Both
+# the exact Git path and the SHA-256 of every outgoing version must match.
+MIRROR_NOTIFICATION_ASSETS = {
+    'FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav': '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
+    'RestaurantDeskApp/Platforms/Android/Resources/raw/ssalddel_order.wav': 'de4c10c92e28d1a0ba4a085713f358fcaea938cda96af105b9894aecdd65dd28',
+    'SsalddelApp/Platforms/Android/Resources/raw/ssalddel_member_delivery.wav': '19846118acc73172933e20068874138c799fbf802701fc1027fedaa07d9f2e61',
+}
 
 
 def git(*args: str) -> bytes:
@@ -22,6 +30,8 @@ def git(*args: str) -> bytes:
 
 
 def blocked(path: str, mode: str) -> bool:
+    if any(ord(char) < 32 or ord(char) == 127 for char in path):
+        return True  # Ambiguous/control-character Git paths fail closed.
     name = PurePosixPath(path.replace('\\', '/').casefold())
     if any(part in CAPTURE_DIRS for part in name.parts):
         return True
@@ -32,7 +42,7 @@ def blocked(path: str, mode: str) -> bool:
     return False
 
 
-def history_paths(local_oid: str, remote_oid: str | None = None) -> set[str]:
+def history_revision(local_oid: str, remote_oid: str | None = None) -> list[str]:
     if not OID.fullmatch(local_oid):
         raise ValueError('Invalid local object ID')
     revision = [local_oid]
@@ -43,16 +53,18 @@ def history_paths(local_oid: str, remote_oid: str | None = None) -> set[str]:
         if known.returncode == 0:
             revision.append('^' + remote_oid)
         # A remote boundary absent locally cannot justify skipping old history.
+    return revision
+
+
+def history_paths(local_oid: str, remote_oid: str | None = None) -> set[str]:
+    revision = history_revision(local_oid, remote_oid)
     paths = set()
-    for line in git('-c', 'core.quotepath=false', 'rev-list', '--objects', *revision).decode('utf-8').splitlines():
-        fields = line.split(' ', 1)
-        if len(fields) == 2:
-            paths.add(fields[1])
-    # A renamed path can reuse a blob that already exists on the remote. Object
-    # enumeration alone omits that blob; changed paths also catch this case,
-    # including a prohibited path introduced and then deleted before HEAD.
-    changed = git('-c', 'core.quotepath=false', 'log', '-m', '--format=', '--name-only', '-z', '--no-renames', '--root', *revision)
-    paths.update(path.lstrip('\n') for path in changed.decode('utf-8').split('\0') if path.lstrip('\n'))
+    # NUL-delimited diff-tree has no log headers mixed into paths. Never strip
+    # path characters: a leading LF must not become an allowed resource path.
+    # Per-commit changes include reused blobs, merge parents and later deletion.
+    for commit in git('rev-list', *revision).decode('ascii').splitlines():
+        changed = git('diff-tree', '--root', '-m', '--no-commit-id', '--name-only', '-z', '-r', '--no-renames', commit)
+        paths.update(path for path in changed.decode('utf-8').split('\0') if path)
     return paths
 
 
@@ -60,8 +72,61 @@ def index_paths() -> set[str]:
     return set(git('ls-files', '-z').decode('utf-8').split('\0')) - {''}
 
 
-def check(mode: str, paths: set[str]) -> int:
-    found = sorted(path for path in paths if blocked(path, mode))
+def notification_asset_blobs(local_oid: str, remote_oid: str | None = None) -> dict[str, set[str]]:
+    """Inspect the exact resource paths in every outgoing commit tree.
+
+    Object enumeration alone can omit a reused blob or only give one of its
+    paths. Tree snapshots also retain an altered asset later restored/deleted.
+    """
+    revision = history_revision(local_oid, remote_oid)
+    trees = set(git('log', '--format=%T', *revision).decode('ascii').splitlines())
+    result: dict[str, set[str]] = {}
+    for tree in trees:
+        for entry in git('ls-tree', '-r', '-z', '--full-tree', tree, '--', *MIRROR_NOTIFICATION_ASSETS).split(b'\0'):
+            if not entry:
+                continue
+            metadata, raw_path = entry.split(b'\t', 1)
+            mode, kind, raw_oid = metadata.decode('ascii').split()
+            path = raw_path.decode('utf-8')
+            if path not in MIRROR_NOTIFICATION_ASSETS or mode != '100644' or kind != 'blob':
+                raise ValueError('Unexpected notification asset tree entry')
+            result.setdefault(path, set()).add(raw_oid)
+    return result
+
+
+def indexed_notification_asset_blobs() -> dict[str, set[str]]:
+    result: dict[str, set[str]] = {}
+    for entry in git('ls-files', '--stage', '-z', '--', *MIRROR_NOTIFICATION_ASSETS).split(b'\0'):
+        if not entry:
+            continue
+        metadata, raw_path = entry.split(b'\t', 1)
+        mode, oid, stage = metadata.decode('ascii').split()
+        path = raw_path.decode('utf-8')
+        if path not in MIRROR_NOTIFICATION_ASSETS or mode != '100644' or stage != '0':
+            raise ValueError('Unexpected notification asset index entry')
+        result.setdefault(path, set()).add(oid)
+    return result
+
+
+def check(mode: str, paths: set[str], asset_blobs: dict[str, set[str]] | None = None) -> int:
+    hashes: dict[str, str] = {}
+    found = []
+    for path in sorted(paths):
+        if not blocked(path, mode):
+            continue
+        expected = MIRROR_NOTIFICATION_ASSETS.get(path) if mode == 'mirror' else None
+        versions = (asset_blobs or {}).get(path, set())
+        allowed = bool(expected and versions)
+        for oid in versions if allowed else ():
+            if not OID.fullmatch(oid):
+                raise ValueError('Invalid notification asset object ID')
+            if oid not in hashes:
+                hashes[oid] = hashlib.sha256(git('cat-file', 'blob', oid)).hexdigest()
+            if hashes[oid] != expected:
+                allowed = False
+                break
+        if not allowed:
+            found.append(path)
     if found:
         print('PUSH BLOCKED: raw capture/media paths were found in Git history.', file=sys.stderr)
         for path in found[:20]:
@@ -81,10 +146,16 @@ def main(argv: list[str] | None = None) -> int:
     action.add_argument('--pre-push', action='store_true')
     args = parser.parse_args(argv)
     try:
+        assets: dict[str, set[str]] = {}
         if args.audit_index:
             paths = index_paths()
+            if args.mode == 'mirror':
+                assets = indexed_notification_asset_blobs()
         elif args.audit_head:
-            paths = history_paths(git('rev-parse', 'HEAD').decode().strip())
+            head = git('rev-parse', 'HEAD').decode().strip()
+            paths = history_paths(head)
+            if args.mode == 'mirror':
+                assets = notification_asset_blobs(head)
         else:
             paths = set()
             for line in sys.stdin:
@@ -97,7 +168,10 @@ def main(argv: list[str] | None = None) -> int:
                 if ZERO.fullmatch(local_oid):
                     continue  # Deleting a remote ref uploads no footage.
                 paths.update(history_paths(local_oid, remote_oid))
-        return check(args.mode, paths)
+                if args.mode == 'mirror':
+                    for path, versions in notification_asset_blobs(local_oid, remote_oid).items():
+                        assets.setdefault(path, set()).update(versions)
+        return check(args.mode, paths, assets)
     except (RuntimeError, ValueError, UnicodeError, OSError) as exc:
         print(f'PUSH BLOCKED: media inspection did not complete ({exc}).', file=sys.stderr)
         return 2
