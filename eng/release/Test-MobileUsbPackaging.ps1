@@ -18,6 +18,16 @@ try{
     foreach($taskEndpoint in @('https://example.test/','http://example.test:5363/','http://127.0.0.1:5362/','http://10.0.2.2:5363/','http://127.0.0.1:5363/api/','http://x:y@127.0.0.1:5363/','http://127.0.0.1:5363/?token=test','http://127.0.0.1:5363/#test')){
         Check ('reject non-USB origin '+$taskEndpoint){MustReject {& $taskPublisher -ServerBaseAddress $taskEndpoint -PlanOnly} 'loopback HTTP origin'}
     }
+    Check 'integrated app and cargo warehouse roles reuse isolated standalone USB packaging'{
+        $taskPlan=& $taskPublisher -AppNames @('shipper','cargo-driver','warehouse') -PlanOnly|ConvertFrom-Json
+        if($taskPlan.apps.Count -ne 3 -or $taskPlan.configuration -ne 'Debug'){throw 'Integrated USB packaging plan mismatch.'}
+        foreach($taskApp in $taskPlan.apps){
+            if('-p:EmbedAssembliesIntoApk=true' -notin $taskApp.arguments -or
+                '-p:AndroidUseSharedRuntime=false' -notin $taskApp.arguments -or
+                '-p:UseArtifactsOutput=true' -notin $taskApp.arguments){throw 'Integrated apps must retain isolated standalone packaging.'}
+        }
+        if(($taskPlan.apps|Where-Object Name -eq 'shipper').packageId -ne 'com.companyname.ssalddelapp'){throw 'Existing integrated package ID must be preserved.'}
+    }
     Check 'four food roles use standalone Debug APK arguments'{
         $taskPlan=& $taskPublisher -PlanOnly|ConvertFrom-Json
         if($taskPlan.configuration -ne 'Debug' -or $taskPlan.version -ne '0.1.27' -or $taskPlan.versionCode -ne 27 -or $taskPlan.apps.Count -ne 4){throw 'Default packaging plan mismatch.'}

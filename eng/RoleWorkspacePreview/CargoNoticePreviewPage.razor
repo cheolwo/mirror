@@ -1,0 +1,16 @@
+@page "/cargo-notice-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@inject CargoNoticePreviewFixture Fixture
+
+<main style="min-height:100vh;background:#f5f7fa">
+    <p style="margin:0;padding:12px 16px;color:#586b78;font-size:14px">합성 자료 · 공통 제품 화면 검토 · 실제 게시/운송 없음</p>
+    @if (Scenario is "public" or "empty" or "disabled" or "error" or "loading")
+    { <CargoNoticeListScreen @key="Scenario" /> }
+    else
+    { <CargoNoticeManageScreen @key="Scenario" /> }
+</main>
+
+@code {
+    [Parameter] public string Scenario { get; set; } = "public";
+    protected override void OnParametersSet() => Fixture.Prepare(Scenario);
+}

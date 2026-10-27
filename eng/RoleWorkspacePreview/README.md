@@ -1,5 +1,47 @@
 # 역할 지도 공통 화면 배치 미리보기
 
+## 운송 자격·플랫폼 등록 준비 r1 · 2026-10-19
+
+`/qualification-readiness-preview/{driver,admin,platform,error}`는 공통 `TransportQualificationPanel`과 `FreightPlatformReadinessPanel`의 실제 Razor를 메모리 응답으로 렌더한다. 실제 서류·기관 자격조회·DB·운영 상태는 변경하지 않는다. 기사 제출과 관리자 내부검토, 플랫폼 등록 준비 조회를 나누고 기관 확인 미완료·원본번호 입력 금지·오류 복구를 표시한다. 비공개 관리 ID는 예시이며 실서류 보관소가 아니다.
+
+`verify-qualification-readiness.cjs`는 320/390/1280px의 4가지 상태와 운송수단별 자료 변경, 오류 재확인, 가로 넘침, 외부·업무 API 요청이 없는지 확인하도록 준비했다. 기존 호스트를 중단하지 말고 현재 소스로 소비 프로젝트를 빌드한 뒤 빈 루프백 포트에서 실행한다. `SSALDDEL_QUALIFICATION_PREVIEW_URL`은 실행 주소, `SSALDDEL_QUALIFICATION_PREVIEW_OUTPUT`은 아직 없는 `artifacts/local/` 하위 결과 폴더를 지정한다. 실행 결과는 해당 `result.json`으로 판단하고 스크립트 존재만으로 통과를 보고하지 않는다.
+
+최종 소비 DLL로 루프백 5596에서 **12개 장면 재검증 통과**, 브라우저 오류 0개·외부/업무 API 요청 0건을 확인했다. 최종 원시는 `artifacts/local/freight-registration-ui-r71-final-20261019-123648/result.json`이며 이전 원시도 보존한다. 대표 PNG와 원시 결과·호스트·공통 UI DLL 해시는 [검증 요약](../../docs/assets/changes/freight-registration-r71/validation-summary.json)에 남겼다. APK 설치·휴대폰·기관 확인·실제 영업 검증으로 확대하지 않는다.
+
+`verify-cargo-registration-fields.cjs`는 기존 `/shipper-pc-layout-preview/input`의 실제 공통 화물 입력 화면에서 390/1280px의 총중량(포장·깔판 포함)·길이·너비·높이와 누락·0중량 보완·양수 복구·입력 유지·가로 넘침을 검사한다. `SSALDDEL_CARGO_FIELDS_PREVIEW_URL`과 아직 없는 `artifacts/local/` 하위 `SSALDDEL_CARGO_FIELDS_PREVIEW_OUTPUT`을 지정한다. 최종 **2개 장면·4개 검사 통과**, 오류와 외부/업무 API 요청 0건을 확인했고, 원시는 `artifacts/local/cargo-registration-fields-r71-r2-20261019-123855/result.json`이다. 대표 PNG 2장을 직접 확인하고 위 검증 요약에 추가했다. 모바일에서는 기존 본문 스크롤을 총중량 위치에 맞춰 캡처하며 실제 접수·DB·운송 등록을 수행하지 않는다.
+
+## 퀵 기사 시작·상하차 준비 r110 · 2026-10-18
+
+`/quick-driver-controls-preview/{initial,off,on,active,permission-denied,start-lost,toggle-lost}`는 실제 공통 화물 기사 adapter·지도·토글을 사용한다. 운행과 수신은 메모리 예시이며 실제 HTTP·DB·GPS·알림·지급을 호출하지 않는다. 유실 사례는 예시 상태를 한 번 바꾼 뒤 응답을 끊고 기존 VM의 조회로 결과를 확인한다. 관찰 대기만 단축하며 별도 업무 명령이나 POST 재전송으로 복구하지 않는다.
+
+`/cargo-transport-action-preview/{pickup-missing,pickup-completed,dropoff-missing,dropoff-completed,pickup-lost,dropoff-lost}`는 실제 `CargoTransportActionScreen`의 준비 안내·정본 완료를 확인한다. 예시 사진 업로드는 메모리 응답만 반환하고 파일을 저장하지 않는다. 대표 확인과 시험 결과는 [r110 변경 기록](../../docs/Changes/2026-10-18-quick-driver-usability-r110.md)에 연결한다. 사진 없는 준비/완료 화면 관찰과 실제 파일 선택·업로드·단말 카메라의 검증 범위를 나눈다.
+
+검증용 고정값을 제품의 실제 근무·사진·주소·운임으로 사용하지 않는다. 완료 화면의 기존 지도 복귀 링크는 제품 route 계약 그대로이며, 복귀한 일반 미리보기는 같은 예시 실행의 연속 상태를 보장하지 않는다. 다른 서버를 종료하지 않고 빈 loopback 포트에 실행하며 기존 원시 자료는 새 폴더에 보존한다.
+
+## 전체 서비스 소개·판매 입력 지속 r105 · 2026-10-17
+
+`/services`와 기존 `/quick`은 실제 공통 `QuickServiceIntroduction`을 사용한다. 음식·퀵/화물·공간/현장 작업을 함께 소개하며 현재 제공 조건과 운영 준비 중인 기능을 구별한다. `verify-platform-introduction.cjs`로 320/390/1280px의 두 route, FAQ, 안내·내부 링크와 가로 넘침 **9개 검사를 통과**했다. 브라우저 오류와 외부·업무 API 요청은 0건이다. 원시 JSON과 대표 PNG는 `artifacts/local/integrated-platform-r105/ui/`에 있다.
+
+`/sales-continuity-preview`는 실제 공통 `ShipperSalesOrderWorkspace`와 메모리 전용 접근·주문 서비스를 사용한다. 같은 계정의 접근 재확인·토큰 갱신 중 입력 DOM·포커스·선택 범위·작성값을 유지하고, 기능 OFF·오류·계정/역할 변경·로그아웃에서는 이전 자료를 숨긴다. 계정이 바뀌었다 돌아온 경우의 명시적 재조회와 새 계정 조회 실패 뒤 복구도 확인한다. `verify-sales-continuity.cjs`의 **320/390px 총 14개 검사를 통과**했으며 브라우저 오류와 외부·업무 API 요청은 0건, PNG는 4장이다. 접근 응답의 Pending 해제와 후속 목록 조회 완료를 나눠 기다린 뒤 DOM·포커스·작성값·조회 횟수를 검사한다.
+
+판매의 최신 원시는 `artifacts/local/integrated-platform-r105/sales-r3/result.json`과 같은 폴더의 PNG다. 이전 인증 변경 신호 누락/조회 완료 시점 실패는 `artifacts/local/quick-readiness-20261016/sales-continuity/`와 `artifacts/local/integrated-platform-r105/sales-failed-r2/`에 보존한다. 새 실행은 `SSALDDEL_SALES_CONTINUITY_OUTPUT`으로 다른 원시 폴더를 지정해 기존 결과를 덮어쓰지 않는다.
+
+```powershell
+$env:NODE_PATH = 'C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'
+$env:SSALDDEL_USABILITY_PREVIEW_URL = 'http://127.0.0.1:5586'
+node eng/RoleWorkspacePreview/verify-platform-introduction.cjs
+$env:SSALDDEL_SALES_CONTINUITY_OUTPUT = 'artifacts/local/integrated-platform-r105/sales-' + [Guid]::NewGuid().ToString('N')
+node eng/RoleWorkspacePreview/verify-sales-continuity.cjs
+```
+
+판매 재실행은 위 예시처럼 새 출력 경로를 선택한다. 소개 검사는 `ui/`가 고정 출력이므로 재실행 전에 기존 원시 폴더를 별도 실행 경로에 보존한다. 현재 소스의 소비 빌드와 실행 DLL을 먼저 대조하며 실행 중인 다른 호스트를 교체하지 않는다. 이 검증은 실제 Razor의 격리 루프백 렌더·행동 증거다. 운영 판매자 계정·외부 주문 수집·DB·기기 설치·실결제·입금 검증이 아니며 [전체 역할 통합 공개 준비 r105](../../docs/Changes/2026-10-16-integrated-platform-preparation-r105.md)에서 전체 준비 상태와 남은 조건을 확인한다.
+
+첫 이용 사용성 r1은 `/usability-preview/{scenario}`에서 실제 `MartProductAccessFrame`과 링크된 Driver `계좌정보Page`를 검토한다. `mart-off/mart-error/mart-sample/driver-bank`를 제공하며 오류 재확인은 메모리 fixture의 기능 조회만 반복한다. 상품 본문은 명시적인 검토용 문구이며 전체 상품 상세·MAUI 네이티브 화면의 복원은 아니다. 업무 HTTP·DB·실제 계좌·주문·지급은 연결하지 않는다.
+
+저장소 루트에서 `dotnet build eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj --no-restore`로 참조까지 빌드하고 `dotnet eng/RoleWorkspacePreview/bin/Debug/net10.0/RoleWorkspacePreview.dll --contentRoot eng/RoleWorkspacePreview --LifeFacilitationPreviewPort=5586`을 실행한다. 다른 호스트가 이 출력을 사용 중이면 새 `OutDir`에 참조 프로젝트까지 빌드하고 해당 출력의 DLL을 실행한다. 격리 출력에서 참조 빌드를 생략하면 이전 공통 UI 사본이 남을 수 있으므로 현재 제품 바이너리와 출력/해시를 확인한다. 최종 검증은 솔루션 빌드 뒤 기본 출력에서 소비 빌드했고 공통 UI의 동일 해시도 확인했다.
+
+설치된 Playwright 모듈 경로를 `NODE_PATH`로 제공하고 `node eng/RoleWorkspacePreview/verify-usability.cjs`로 320/390px의 복귀·본문 차단·명시 재확인·샘플 경계·계좌 미확인 표시를 확인한다. 음식 주문은 기존 `/auto-fulfillment-preview/food-create`의 메모리 자료와 실제 `OrdererFoodOrderComposer`를 재사용해 필수/선택·미입력 안내·주문 미전송을 확인한다. 기본 브라우저는 설치된 Edge이며 `SSALDDEL_PLAYWRIGHT_CHROMIUM`으로 설치 Chromium 실행 경로를 지정할 수 있다. 주소 변경은 루프백 전용 `SSALDDEL_USABILITY_PREVIEW_URL`을 사용한다. 원시는 `artifacts/local/usability-review-20261016/browser`에 보존하며 [검토 범위](../../docs/ProjectOverview/page-docs/first-use-usability-review-r1.md)를 따른다.
+
 예외 복구 책임 분리 r2는 `/exception-refactoring-preview/{scenario}`에서 실제 `FoodRoleActionForm`과 `보호지원관리Page`를 사용합니다. `orderer/restaurant-accept/restaurant-time/food-driver/operator/support-stored/support-retry`의 입력·확인·결과 조회·명시 재시도를 격리 메모리 자료로 확인합니다. 음식 업무의 실제 전송은 차단하며, 지원 사건의 쓰기는 메모리 fixture에만 적용됩니다. 운영 API·DB·알림·지급을 호출하지 않습니다.
 
 기존 실행 중인 호스트를 종료하지 않고 새 출력 폴더에 빌드합니다. 저장소 루트에서 `dotnet build eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj --no-restore -p:OutDir=C:/Users/user/source/repos/Hongdal/artifacts/local/exception-continuity-refactoring-r2-20261010/preview-runtime/`로 빌드한 뒤 `dotnet artifacts/local/exception-continuity-refactoring-r2-20261010/preview-runtime/RoleWorkspacePreview.dll --contentRoot eng/RoleWorkspacePreview --LifeFacilitationPreviewPort=5398`로 실행합니다. `node eng/RoleWorkspacePreview/verify-exception-refactoring.mjs`는 390×844에서 동작·가로 넘침·브라우저 오류·업무 및 외부 HTTP 시도 여부를 확인합니다. 원시는 `artifacts/local/exception-continuity-refactoring-r2-20261010/`에 기록합니다.

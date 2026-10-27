@@ -1,0 +1,5 @@
+/* The real account workspace hides its alternate cards by default too.
+   The linked MAUI layout owns the phone override; no duplicate desktop grid is introduced here. */
+.ssalddel-account-workspace__cards {
+    display: none;
+}

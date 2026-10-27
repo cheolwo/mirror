@@ -1,0 +1,52 @@
+@page "/operations-alerts"
+@page "/operations-alerts/{AlertId}"
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Contracts.Common.Community
+@inject CargoOperatingR21PreviewFixture Fixture
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:8px 16px;background:#F5F7FA;color:#586B78;font-size:12px">화면 검토 · 시험 자료 · 외부 알림·실지급 없음</aside>
+@if (model is not null)
+{
+    <OperationsAlertsView State="model" Authenticated="true" DetailId="@AlertId" Status="@status" ListReturnHref="@ListHref"
+        Retry="Load" SelectStatus="SelectStatus" Previous="Previous" Next="Next" Acknowledge="model.AcknowledgeAsync" />
+}
+<details style="padding:16px;color:#586B78;font-size:12px"><summary>검토 기록</summary>
+    <p>조회 @Fixture.ReadCount · 확인 요청 @Fixture.ConfirmCount</p>
+    <p>기존 공통 화면·서버 표시 정책을 사용한 메모리 내 예시입니다. 제품 HTTP·기기 검증과 구분합니다.</p>
+</details>
+
+@code {
+    [Parameter] public string? AlertId { get; set; }
+    [SupplyParameterFromQuery(Name = "scenario")] public string? Scenario { get; set; }
+    [SupplyParameterFromQuery(Name = "status")] public string? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public int? PageQuery { get; set; }
+    [SupplyParameterFromQuery(Name = PageNavigationQueryNames.ReturnPath)] public string? ReturnPath { get; set; }
+    private OperationsAlertsState? model;
+    private string status = "Unresolved";
+    private int page = 1;
+    private string ListHref => AlertId is null ? OperationsAlertWorkflowPresentation.ListHref(status, page)
+        : OperationsAlertWorkflowPresentation.ResolveListHref(ReturnPath);
+    protected override async Task OnParametersSetAsync()
+    {
+        Fixture.SelectScenario(Scenario);
+        model ??= CreateModel();
+        status = StatusQuery is "Open" or "Acknowledged" or "Resolved" ? StatusQuery : "Unresolved";
+        page = Math.Max(1, PageQuery ?? 1);
+        await Load();
+    }
+    private OperationsAlertsState CreateModel()
+    {
+        var value = new OperationsAlertsState(Fixture); value.SetOwner("preview-operator");
+        value.Changed += Changed; return value;
+    }
+    private Task Load() => model?.LoadAsync(AlertId, status, page) ?? Task.CompletedTask;
+    private Task SelectStatus(string value) { Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(value)); return Task.CompletedTask; }
+    private Task Previous() { Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(status, Math.Max(1, page - 1))); return Task.CompletedTask; }
+    private Task Next() { if (model?.Page?.HasMore == true) Navigation.NavigateTo(OperationsAlertWorkflowPresentation.ListHref(status, page + 1)); return Task.CompletedTask; }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { if (model is not null) { model.Changed -= Changed; model.Dispose(); } }
+}

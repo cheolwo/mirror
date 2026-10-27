@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Food;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverCurrentWork;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Client.RoleWorkspace;
@@ -16,6 +17,10 @@ public static class RoleWorkspaceRegistration
         services.AddScoped<RoleWorkspaceAccess>();
         services.AddScoped<IRoleWorkspaceAccess>(sp => sp.GetRequiredService<RoleWorkspaceAccess>());
         services.AddScoped<IRoleWorkspaceApi>(sp => sp.GetRequiredService<RoleWorkspaceAccess>());
+        services.AddScoped<IDriverCurrentWorkClient, DriverCurrentWorkClient>();
+        services.AddTransient<DriverCurrentWorkPageViewModel>();
+        services.AddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverNotifications.IDriverRecommendationSettingsClient, DriverRecommendationSettingsClient>();
+        services.AddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DriverPreferences.IDriverWorkParticipationClient, DriverWorkParticipationClient>();
         services.AddTransient<RoleWorkspaceViewModel>();
         services.AddScoped<RoleWorkspaceState>();
         services.AddScoped<I주문자앱인증Service, RoleOrdererAuthenticationBridge>();

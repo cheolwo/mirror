@@ -1,4 +1,4 @@
-function Get-MobileFieldTestApps {
+﻿function Get-MobileFieldTestApps {
     @(
         [pscustomobject]@{ Name = 'orderer'; Project = 'OrdererApp/OrdererApp.csproj'; PackageId = 'com.ssalddel.ordererapp' },
         [pscustomobject]@{ Name = 'restaurant'; Project = 'RestaurantDeskApp/RestaurantDeskApp.csproj'; PackageId = 'com.ssalddel.restaurantdeskapp' },
@@ -10,8 +10,94 @@ function Get-MobileFieldTestApps {
     )
 }
 
+# SDK input stays outside Git. Evidence records only package and hashes, never JSON/key values.
+function Resolve-MobileMemberFirebaseConfiguration {
+    param($App, [string]$RepositoryRoot, [string]$GoogleServicesJson, [string]$ExpectedProjectId)
+    if ($App.Name -ne 'shipper') {
+        return [pscustomobject]@{ Configured=$false; PackageId=$App.PackageId; FilePath=$null; Sha256=$null; ProjectIdSha256=$null; ProjectComparison='NotApplicable' }
+    }
+    $configurationPath = if ([string]::IsNullOrWhiteSpace($GoogleServicesJson)) {
+        [Environment]::GetEnvironmentVariable('SSALDDEL_MEMBER_FIREBASE_GOOGLE_SERVICES_JSON', 'Process')
+    } else { $GoogleServicesJson }
+    if ([string]::IsNullOrWhiteSpace($configurationPath)) {
+        if (-not [string]::IsNullOrWhiteSpace($ExpectedProjectId)) { throw 'Firebase project comparison requires an external member configuration file.' }
+        return [pscustomobject]@{ Configured=$false; PackageId=$App.PackageId; FilePath=$null; Sha256=$null; ProjectIdSha256=$null; ProjectComparison='NotConfigured' }
+    }
+    $configurationPath = [Environment]::ExpandEnvironmentVariables($configurationPath)
+    if (-not [IO.Path]::IsPathRooted($configurationPath)) { throw 'Member Firebase configuration must use an absolute external file path.' }
+    $resolvedFile = [IO.Path]::GetFullPath($configurationPath)
+    if ($resolvedFile -match '[;,%%"\r\n]' -or $resolvedFile.Contains('$(')) { throw 'Member Firebase configuration path contains unsupported MSBuild separators.' }
+    $resolvedRepo = [IO.Path]::GetFullPath($RepositoryRoot).TrimEnd([char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar))
+    if ($resolvedFile -eq $resolvedRepo -or $resolvedFile.StartsWith($resolvedRepo+[IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Member Firebase configuration must remain outside the repository.'
+    }
+    if (-not (Test-Path -LiteralPath $resolvedFile -PathType Leaf) -or [IO.Path]::GetExtension($resolvedFile) -ne '.json') {
+        throw 'Member Firebase configuration JSON file was not found.'
+    }
+    $ancestor = Get-Item -LiteralPath $resolvedFile -Force
+    while ($null -ne $ancestor) {
+        if (($ancestor.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Member Firebase configuration must not traverse a symbolic link or junction.' }
+        $ancestor = if ($ancestor -is [IO.FileInfo]) { $ancestor.Directory } else { $ancestor.Parent }
+    }
+    try {
+        $bytes = [IO.File]::ReadAllBytes($resolvedFile)
+        $document = [Text.Encoding]::UTF8.GetString($bytes).TrimStart([char]0xFEFF) | ConvertFrom-Json -ErrorAction Stop
+        $projectId = [string]$document.project_info.project_id
+        $packages = @($document.client | ForEach-Object { [string]$_.client_info.android_client_info.package_name })
+    } catch { throw 'Member Firebase configuration JSON or Android metadata is invalid.' }
+    if ([string]::IsNullOrWhiteSpace($projectId) -or $projectId -ne $projectId.Trim() -or $projectId -match '[\x00-\x20]') {
+        throw 'Member Firebase project metadata is missing or invalid.'
+    }
+    if (@($packages | Where-Object { $_ -ceq $App.PackageId }).Count -ne 1) {
+        throw 'Firebase Android package does not match the selected member app.'
+    }
+    $projectComparison = 'NotRequested'
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedProjectId)) {
+        if ($projectId -cne $ExpectedProjectId) { throw 'Member Firebase project does not match the explicitly expected project.' }
+        $projectComparison = 'MatchedExplicitProject'
+    }
+    [pscustomobject]@{
+        Configured=$true; PackageId=$App.PackageId; FilePath=$resolvedFile
+        Sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        ProjectIdSha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($projectId))).ToLowerInvariant()
+        ProjectComparison=$projectComparison
+    }
+}
+
+function Confirm-MobileMemberFirebaseConfigurationUnchanged {
+    param($App, [string]$RepositoryRoot, $Before, [string]$ExpectedProjectId)
+    if (-not $Before.Configured) { return }
+    $current = Resolve-MobileMemberFirebaseConfiguration -App $App -RepositoryRoot $RepositoryRoot -GoogleServicesJson $Before.FilePath -ExpectedProjectId $ExpectedProjectId
+    if (-not $current.Configured -or $current.PackageId -cne $Before.PackageId -or $current.Sha256 -cne $Before.Sha256 -or
+        $current.ProjectIdSha256 -cne $Before.ProjectIdSha256) {
+        throw 'Member Firebase configuration changed during packaging; no completed handoff may be created.'
+    }
+}
+
+function Get-MobileMemberFirebaseEvidence {
+    param($Configuration, [switch]$VerifiedUnchanged)
+    [pscustomobject]@{
+        scope='OrdinaryMemberFirebaseSdk'; applicable=$Configuration.ProjectComparison -ne 'NotApplicable'
+        configured=$(if ($Configuration.ProjectComparison -eq 'NotApplicable') { $null } else { [bool]$Configuration.Configured }); packageId=$Configuration.PackageId
+        googleServicesSha256Before=$Configuration.Sha256
+        googleServicesSha256After=$(if ($VerifiedUnchanged) { $Configuration.Sha256 } else { $null })
+        projectIdSha256=$Configuration.ProjectIdSha256; projectComparison=$Configuration.ProjectComparison
+        configurationUnchanged=$(if ($Configuration.ProjectComparison -eq 'NotApplicable') { $null } else { [bool]$VerifiedUnchanged }); actualPushReceived=$false
+    }
+}
+
 function Get-MobileFieldTestPublishArguments {
-    param($Project, $Destination, $Version, $VersionCode, $Server, $Keystore, $Alias)
+    param($Project, $Destination, $Version, $VersionCode, $Server, $Keystore, $Alias, $FirebaseConfiguration)
+    $mobileApp = Get-MobileFieldTestApps | Where-Object { [IO.Path]::GetFileName($_.Project) -eq [IO.Path]::GetFileName([string]$Project) } | Select-Object -First 1
+    $firebaseArguments = @()
+    if ($null -ne $mobileApp -and $mobileApp.Name -eq 'shipper') {
+        if ($null -eq $FirebaseConfiguration) {
+            $FirebaseConfiguration = Resolve-MobileMemberFirebaseConfiguration -App $mobileApp -RepositoryRoot (Join-Path $PSScriptRoot '../..')
+        }
+        if ($FirebaseConfiguration.PackageId -cne $mobileApp.PackageId) { throw 'Member Firebase configuration belongs to a different app.' }
+        # Freeze absence too: a changed process environment must not silently add SDK input mid-build.
+        $firebaseArguments += '-p:MemberFirebaseGoogleServicesJson='+$(if ($FirebaseConfiguration.Configured) { $FirebaseConfiguration.FilePath } else { '' })
+    }
     $portableReferences = Join-Path $PSScriptRoot 'MobileFieldTest.PortableReferences.targets'
     @(
         'publish', $Project, '-f', 'net10.0-android', '-c', 'Release', '-o', $Destination,
@@ -26,7 +112,7 @@ function Get-MobileFieldTestPublishArguments {
         '-p:AndroidKeyStore=true', "-p:AndroidSigningKeyStore=$Keystore", "-p:AndroidSigningKeyAlias=$Alias",
         '-p:AndroidSigningStorePass=env:SSALDDEL_ANDROID_KEYSTORE_PASSWORD',
         '-p:AndroidSigningKeyPass=env:SSALDDEL_ANDROID_KEY_PASSWORD'
-    )
+    ) + $firebaseArguments
 }
 
 function Resolve-MobileAndroidBuildTools {

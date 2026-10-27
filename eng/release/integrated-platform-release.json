@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "integrated-platform-release.r1",
+  "releaseRevision": "integrated-domestic.r105",
+  "releaseVersion": null,
+  "versionCode": null,
+  "decision": "PreparationOnly",
+  "roles": [
+    "community",
+    "orderer",
+    "restaurant",
+    "food-driver",
+    "shipper",
+    "cargo-driver",
+    "warehouse",
+    "seller",
+    "worker",
+    "operator"
+  ],
+  "domesticServices": [
+    "prepared-food",
+    "quick-cargo",
+    "distributed-storage",
+    "sale",
+    "picking-packing"
+  ],
+  "policy": {
+    "webAndIntegratedApk": true,
+    "targetExecutionMode": "Operational",
+    "availability": "24h",
+    "apiInstances": 1,
+    "workerInstances": 1,
+    "autoShutdown": false,
+    "monthlyBudgetKrw": 500000,
+    "goodsPaymentRoute": "PartyDirect",
+    "serviceCostCollection": "Platform",
+    "serviceCostKinds": [
+      "Delivery",
+      "Picking",
+      "Packing"
+    ],
+    "payoutSchedule": "Weekly",
+    "normalProcessing": "Automatic",
+    "exceptionHandling": "AssignedEmergencyReviewer",
+    "publicReleaseAuthorization": "SeparateReviewRequired"
+  },
+  "preparationProfile": "deploy/azure-vm/compose.integrated-platform-readiness.override.yaml",
+  "existingTools": {
+    "baseCompose": "deploy/azure-vm/compose.yaml",
+    "apkPublisher": "eng/release/publish-mobile-field-test.ps1",
+    "privateApkPreparation": "eng/release/prepare-private-apk-gcs.ps1",
+    "vmDeployment": "deploy/azure-vm/deploy-preview-profile.sh",
+    "encryptedBackup": "deploy/azure-vm/operations-alerts/backup.sh",
+    "isolatedRestore": "eng/staging/Invoke-StagingReadiness.ps1"
+  },
+  "sourceRoots": [
+    "Ssalddel",
+    "Ssalddel.Contracts",
+    "Ssalddel.Domain",
+    "Ssalddel.Infrastructure",
+    "Ssalddel.Ui.Common",
+    "SsalddelApp",
+    "OrdererApp",
+    "RestaurantDeskApp",
+    "FDriverApp",
+    "DriverApp",
+    "WarehouseManagerApp",
+    "SellerApp",
+    "HumanResourcesManagerApp",
+    "SsalddelAdminApp",
+    "eng/release"
+  ],
+  "additionalSourcePaths": [
+    "Directory.Build.props",
+    "Directory.Packages.props",
+    "Ssalddel.v3.5.slnx",
+    "deploy/azure-vm/compose.yaml"
+  ],
+  "requirements": [
+    {
+      "id": "local-release",
+      "kind": "local",
+      "modes": [
+        "NoExecution",
+        "Simulation",
+        "Operational"
+      ],
+      "dependsOn": null,
+      "artifacts": [
+        "build-report",
+        "signed-apk",
+        "web-bundle"
+      ],
+      "assertions": [
+        "sameReleaseBuilt",
+        "allRoleChecksPassed",
+        "signedApkChecked",
+        "webBundleChecked"
+      ]
+    },
+    {
+      "id": "https-domestic-flows",
+      "kind": "https",
+      "modes": [
+        "Operational"
+      ],
+      "dependsOn": "local-release",
+      "artifacts": [
+        "health-report",
+        "role-flow-report"
+      ],
+      "assertions": [
+        "publicTlsVerified",
+        "apiAndHubVerified",
+        "allDomesticLifecyclesVerified",
+        "singleWorkerVerified",
+        "noAutoShutdownVerified",
+        "privateStorageVerified",
+        "isolatedDatabasesVerified"
+      ]
+    },
+    {
+      "id": "device-domestic-flows",
+      "kind": "device",
+      "modes": [
+        "Operational"
+      ],
+      "dependsOn": "https-domestic-flows",
+      "artifacts": [
+        "device-flow-report",
+        "installed-apk-report"
+      ],
+      "assertions": [
+        "sameApkInstalled",
+        "allRoleChecksPassed",
+        "foregroundAndBackgroundVerified",
+        "retryAndRecoveryVerified"
+      ]
+    },
+    {
+      "id": "service-cost-collection",
+      "kind": "payment",
+      "modes": [
+        "Operational"
+      ],
+      "dependsOn": "device-domestic-flows",
+      "artifacts": [
+        "payment-report"
+      ],
+      "assertions": [
+        "realProviderReceiptVerified",
+        "deliveryPickingPackingCollected",
+        "goodsMoneyExcluded",
+        "duplicateAndUnknownResponseVerified"
+      ]
+    },
+    {
+      "id": "weekly-service-payout",
+      "kind": "payout",
+      "modes": [
+        "Operational"
+      ],
+      "dependsOn": "service-cost-collection",
+      "artifacts": [
+        "payout-report"
+      ],
+      "assertions": [
+        "realWeeklyPayoutReceiptVerified",
+        "deliveryPickingPackingIncluded",
+        "fundingAndHoldRechecked",
+        "duplicateAndUnknownResponseVerified"
+      ]
+    },
+    {
+      "id": "independent-recovery",
+      "kind": "restore",
+      "modes": [
+        "Operational"
+      ],
+      "dependsOn": "local-release",
+      "artifacts": [
+        "restore-report"
+      ],
+      "assertions": [
+        "offVmBackupRetrieved",
+        "isolatedRestoreVerified",
+        "protectedDataReadable",
+        "ledgerAndOutboxReconciled",
+        "privatePhotosReadable",
+        "payoutDeduplicationPreserved"
+      ]
+    }
+  ],
+  "evidencePolicy": {
+    "indexSchemaVersion": "integrated-release-evidence-index.r1",
+    "recordSchemaVersion": "integrated-release-evidence.r1",
+    "allRequiredRolesMustBeBound": true,
+    "booleansAreNotProof": true,
+    "finalPublicReleaseDecisionAlwaysSeparate": true,
+    "rawScreenshotsOrCustomerDataAccepted": false
+  }
+}

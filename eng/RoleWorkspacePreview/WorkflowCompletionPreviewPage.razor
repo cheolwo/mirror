@@ -1,0 +1,39 @@
+@page "/workflow-completion-preview"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion
+
+<Ssalddel.Ui.Common.Areas.App.Components.RoleAppProviders />
+<main style="max-width:640px;margin:auto;padding:24px 16px">
+    <h1>완료 안내 화면 확인</h1>
+    <p>화면 예시입니다. 실제 배달·운송·정산 기록을 변경하지 않습니다.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <MudButton Variant="Variant.Outlined" OnClick="Pickup">음식 픽업 예시</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="Loading">상차 완료 예시</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="Picking">피킹 완료 예시</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="Delivery">전달 완료 예시</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Duplicate">같은 결과 다시 확인</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Unknown">결과 미확정 예시</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Reset">다른 계정 예시</MudButton>
+    </div>
+    @if (unknown) { <MudAlert Severity="Severity.Warning">처리 결과를 확인하지 못했습니다. 다시 완료하지 말고 현재 상태를 확인해 주세요.</MudAlert> }
+    <WorkflowCompletionPanel State="feedback" ReturnHref="/workflow-completion-preview" ReturnLabel="업무 화면으로" />
+    <p role="status">확인한 결과 @feedback.History.Count 건</p>
+</main>
+
+@code {
+    private readonly WorkflowCompletionFeedback feedback = new();
+    private WorkflowCompletionNotice? last;
+    private int sequence;
+    private bool unknown;
+    private void Add(string title, string message, string next, bool final, string icon, string color)
+    {
+        unknown = false;
+        last = new($"preview:{++sequence}", title, message, next, final, icon, color); feedback.Record(last);
+    }
+    private void Pickup() => Add("음식을 픽업했습니다", "픽업 기록을 저장하고 확인했습니다.", "전달 장소를 확인해 주세요.", false, WorkflowCompletionVisuals.FoodIconPath, "#2563EB");
+    private void Loading() => Add("상차가 완료되었습니다", "상차 완료 상태를 확인했습니다.", "하차 장소와 다음 업무를 확인해 주세요.", false, WorkflowCompletionVisuals.CargoIconPath, "#DC2626");
+    private void Picking() => Add("피킹을 완료했습니다", "이번에 선택한 물품과 수량의 피킹 기록을 저장하고 확인했습니다.", "남은 피킹과 다음 방문지를 확인해 주세요.", false, WorkflowCompletionVisuals.PickingIconPath, "#0F766E");
+    private void Delivery() => Add("전달을 완료했습니다", "이번 전달 기록을 저장하고 확인했습니다.", "남은 업무를 확인해 주세요. 수령 확인·정산·입금은 별도입니다.", true, WorkflowCompletionVisuals.FoodIconPath, "#2563EB");
+    private void Duplicate() { unknown = false; if (last is not null) feedback.Record(last); }
+    private void Unknown() { feedback.Dismiss(); unknown = true; }
+    private void Reset() { feedback.Clear(); unknown = false; last = null; }
+}

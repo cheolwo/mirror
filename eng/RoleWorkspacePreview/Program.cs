@@ -15,14 +15,37 @@ var previewOrigin = $"http://127.0.0.1:{previewPort}";
 builder.WebHost.UseUrls(previewOrigin).UseStaticWebAssets();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddMudServices();
+builder.Services.AddScoped<CargoNoticePreviewFixture>();
+builder.Services.AddTransient(sp => new CargoNoticeListViewModel(sp.GetRequiredService<CargoNoticePreviewFixture>()));
+builder.Services.AddTransient(sp =>
+{
+    var fixture = sp.GetRequiredService<CargoNoticePreviewFixture>();
+    return new CargoNoticeManageViewModel(fixture, fixture, fixture, fixture.Store, fixture.Session);
+});
+builder.Services.AddScoped<CargoInputRefreshR77PreviewFixture>();
+builder.Services.AddScoped<CargoOperatingR21PreviewFixture>();
+builder.Services.AddScoped<CargoConditionsPreviewFixture>();
+builder.Services.AddScoped<SsalddelApp.Services.Localization.ShipperLocalizationService>();
+builder.Services.AddScoped<UsabilityPreviewFixture>();
+builder.Services.AddScoped<ShipperMobileContextPreviewFixture>();
+builder.Services.AddScoped<I마트페이지접근Service>(sp => sp.GetRequiredService<UsabilityPreviewFixture>());
+builder.Services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.마트페이지접근ViewModel>();
+builder.Services.AddScoped<SalesContinuityPreviewFixture>();
+builder.Services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.판매채널주문PageViewModel>(sp => sp.GetRequiredService<SalesContinuityPreviewFixture>().Model);
 builder.Services.AddScoped<I통신판매보호Client, CommerceProtectionPreview.CommercePreviewClient>();
 builder.Services.AddCommerceProtectionUi();
-builder.Services.AddScoped<IRoleWorkspaceAccess, PreviewAccess>();
+builder.Services.AddScoped<PreviewAccess>();
+builder.Services.AddScoped<QuickDriverControlsPreviewFixture>();
+builder.Services.AddScoped<IRoleWorkspaceAccess>(sp => IsQuickWorkflowPreview(sp)
+    ? sp.GetRequiredService<QuickDriverControlsPreviewFixture>() : sp.GetRequiredService<PreviewAccess>());
 builder.Services.AddScoped<PreviewActionApi>();
 builder.Services.AddScoped<PreviewInputApi>();
 builder.Services.AddScoped<RefactoringPreviewFixture>();
 builder.Services.AddScoped<Ssalddel.Ui.Common.Areas.BackOffice.Services.I보호지원관리Client>(sp => sp.GetRequiredService<RefactoringPreviewFixture>());
-builder.Services.AddScoped<IRoleWorkspaceApi>(sp => new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/exception-refactoring-preview/", StringComparison.Ordinal)
+builder.Services.AddScoped<IRoleWorkspaceApi>(sp => IsQuickWorkflowPreview(sp)
+    ? sp.GetRequiredService<QuickDriverControlsPreviewFixture>()
+    : IsCargoConditionsPreview(sp) ? sp.GetRequiredService<CargoConditionsPreviewFixture>()
+    : new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/exception-refactoring-preview/", StringComparison.Ordinal)
     ? sp.GetRequiredService<RefactoringPreviewFixture>()
     : sp.GetRequiredService<PreviewInputApi>());
 builder.Services.AddScoped<ISsalddel현재사용자Context, PreviewNeighborhoodUser>();
@@ -48,7 +71,10 @@ builder.Services.AddScoped<FoodDriverControlsPreviewFixture>();
 builder.Services.AddScoped<WarehouseWorkspaceApiClient>();
 builder.Services.AddScoped<CargoDriverWorkspaceApiClient>();
 builder.Services.AddScoped<RoleWorkspaceState>();
-builder.Services.AddTransient(sp => new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/delivery-cost-sharing-preview/role-", StringComparison.Ordinal)
+builder.Services.AddTransient(sp => IsQuickWorkflowPreview(sp)
+    ? sp.GetRequiredService<QuickDriverControlsPreviewFixture>().Model
+    : IsCargoConditionsPreview(sp) ? sp.GetRequiredService<CargoConditionsPreviewFixture>().Model
+    : new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/delivery-cost-sharing-preview/role-", StringComparison.Ordinal)
     ? sp.GetRequiredService<DeliveryCostSharingPreviewFixture>().RoleModel
     : new Uri(sp.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath.StartsWith("/delivery-experience-preview/", StringComparison.Ordinal)
         ? sp.GetRequiredService<DeliveryExperiencePreviewFixture>().Model
@@ -114,3 +140,17 @@ foreach (var module in new[] { "neighborhood-life-google-map.js", "community-wor
 }
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
+
+static bool IsQuickWorkflowPreview(IServiceProvider services)
+{
+    var path = new Uri(services.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath;
+    return path.StartsWith("/quick-driver-controls-preview/", StringComparison.Ordinal)
+        || path.StartsWith("/cargo-transport-action-preview/", StringComparison.Ordinal);
+}
+
+static bool IsCargoConditionsPreview(IServiceProvider services)
+{
+    var path = new Uri(services.GetRequiredService<Microsoft.AspNetCore.Components.NavigationManager>().Uri).AbsolutePath;
+    return path.StartsWith("/cargo-conditions-preview/", StringComparison.Ordinal)
+        || path.StartsWith("/workspace/cargo-driver/offers/demo-", StringComparison.Ordinal);
+}

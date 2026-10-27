@@ -2,10 +2,25 @@
   <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><DefineConstants>$(DefineConstants);ROLE_WORKSPACE_PREVIEW_HOST</DefineConstants><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../../SsalddelAdmin/Services/기사실차적재확인ViewModel.cs" Link="LinkedActual/기사실차적재확인ViewModel.cs" />
+    <Compile Include="../../SsalddelAdmin/Services/차량관리Service.cs" Link="LinkedActual/차량관리Service.cs" />
+    <Compile Include="../../SsalddelAdmin/Services/관리자인증세션Service.cs" Link="LinkedActual/관리자인증세션Service.cs" />
+    <Compile Include="../../SsalddelAdmin/Services/관리자인증Service.cs" Link="LinkedActual/관리자인증Service.cs" />
+    <Compile Include="../../SsalddelAdmin/Components/Shared/관리자화면Ui.cs" Link="LinkedActual/관리자화면Ui.cs" />
+    <Content Include="../../SsalddelAdmin/Components/Shared/ActualVehicleLoadingPanel.razor" Link="LinkedActual/ActualVehicleLoadingPanel.razor" />
+    <Content Include="../../SsalddelAdmin/Components/Shared/AdminInfoField.razor" Link="LinkedActual/AdminInfoField.razor" />
+    <Using Include="SsalddelAdmin.Services.기사실차적재확인ViewModel" Alias="기사실차적재확인ViewModel" />
+    <Using Include="SsalddelAdmin.Components.Shared" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../Ssalddel/Ssalddel.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup><Content Include="../../OrdererApp/Components/Orders/OrdererIndividualOrderLedgerDetail.razor" Link="LinkedOrderer/OrdererIndividualOrderLedgerDetail.razor" /></ItemGroup>
+  <ItemGroup>
+    <Content Include="../../DriverApp/Components/Pages/Driver/05_Settlement/계좌정보Page.razor" Link="LinkedDriver/계좌정보Page.razor" />
+    <Compile Include="../../DriverApp/Services/DriverRoutes.cs" Link="LinkedDriver/DriverRoutes.cs" />
+  </ItemGroup>
   <ItemGroup><Compile Include="../CommerceProtectionPreview/CommercePreviewClient.cs" Link="Commerce/CommercePreviewClient.cs" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../Ssalddel.WebApp/Services/NeighborhoodGoogleMapHost.cs" Link="Map/NeighborhoodGoogleMapHost.cs" />
@@ -22,5 +37,18 @@
     <Compile Include="../../FDriverApp/Services/FDriverAuthSession.cs" Link="HistoricalNative/FDriverAuthSession.cs" />
     <Compile Include="../../FDriverApp/Services/FDriverAuthApiService.cs" Link="HistoricalNative/FDriverAuthApiService.cs" />
     <Compile Include="../../FDriverApp/Services/FoodDeliveryDriverApiService.cs" Link="HistoricalNative/FoodDeliveryDriverApiService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../SsalddelApp/Components/Layout/ShipperMobileLayout.razor" Link="LinkedShipper/ShipperMobileLayout.razor" />
+    <Content Include="../../SsalddelApp/Components/Layout/ShipperMobileLayout.razor.css" Link="LinkedShipper/ShipperMobileLayout.razor.css" />
+    <Compile Include="../../SsalddelApp/Services/ShipperRoutes.cs" Link="LinkedShipper/ShipperRoutes.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../DriverApp/Components/Shared/DriverTransportIssuePanel.razor" Link="LinkedDriver/DriverTransportIssuePanel.razor" />
+    <Compile Include="../../DriverApp/ViewModels/Driver/Transport/기사운송예외신고ViewModel.cs" Link="LinkedDriver/기사운송예외신고ViewModel.cs" />
+    <Compile Include="../../DriverApp/ViewModels/Driver/Transport/기사운송작업상태ViewModel.cs" Link="LinkedDriver/기사운송작업상태ViewModel.cs" />
+    <Compile Include="../../DriverApp/Services/DriverTransportExceptionService.cs" Link="LinkedDriver/DriverTransportExceptionService.cs" />
+    <Compile Include="../../DriverApp/Services/DriverCargoExceptionRecovery.cs" Link="LinkedDriver/DriverCargoExceptionRecovery.cs" />
+    <Compile Include="../../DriverApp/Services/IDriverTransportApiService.cs" Link="LinkedDriver/IDriverTransportApiService.cs" />
   </ItemGroup>
 </Project>

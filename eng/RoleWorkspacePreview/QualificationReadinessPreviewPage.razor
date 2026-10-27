@@ -1,0 +1,58 @@
+@page "/qualification-readiness-preview/{Scenario}"
+@using Ssalddel.Contracts.Driver.Profile
+@using Ssalddel.Contracts.Common.Operations
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@implements IDisposable
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:8px 16px;background:#eaf5f3;font-size:13px">자료 검토 화면 예시 · 실제 자격·기관 등록·운영 변경 없음</aside>
+@if (qualification is not null) { <TransportQualificationPanel Model="qualification" /> }
+@if (platform is not null) { <FreightPlatformReadinessPanel Model="platform" /> }
+@code {
+    [Parameter] public string Scenario { get; set; } = "driver";
+    private 운송자격ViewModel? qualification;
+    private 플랫폼등록준비ViewModel? platform;
+    protected override async Task OnParametersSetAsync()
+    {
+        qualification?.Dispose(); platform?.Dispose(); qualification = null; platform = null;
+        if (Scenario == "platform")
+        {
+            platform = new(_ => Task.FromResult(new FreightPlatformReadinessDto { FreeConnectionConfigured = true,
+                PlannedInformationSubscription = new() {
+                    ModelCode = "MonthlyInformationSubscriptionDraft", CandidateMonthlyAmountsKrw = [5000m, 10000m],
+                    RealtimeRecommendationsPlanned = true, PartyFinalDecisionRequired = true,
+                    Notice = "월정액 5천원·1만원은 검토 후보입니다. 확정 요금·실제 청구·허가 면제를 뜻하지 않습니다." },
+                Requirements = [
+                    new() { Code = "business-plan", Title = "사업계획", StatusCode = "Prepared", HasEvidenceReference = true, NextAction = "확정되는 신청 기준에 맞춰 다시 확인해 주세요." },
+                    new() { Code = "office", Title = "사무실", NextAction = "사용 근거와 관할기관 기준을 확인해 주세요." },
+                    new() { Code = "platform-registration", Title = "플랫폼 등록", NextAction = "기관 등록·접수 상태를 확인해 주세요." },
+                    new() { Code = "terms", Title = "이용약관·이용요금 신고", NextAction = "현재 0원과 향후 월정액 계획의 적용 시기·신고 기준을 확인해 주세요." },
+                    new() { Code = "information-subscription-classification", Title = "월정액 정보추천의 법적 분류 확인", NextAction = "추천·수락 결과 전달의 경계와 월정액의 대가성을 기관에 서면 확인해 주세요." }] }));
+            await platform.LoadAsync();
+        }
+        else
+        {
+            qualification = new(new PreviewClient(Scenario), Scenario == "admin");
+            await qualification.LoadAsync();
+        }
+    }
+    public void Dispose() { qualification?.Dispose(); platform?.Dispose(); }
+    private sealed class PreviewClient(string scenario) : I운송자격Client
+    {
+        private 운송자격상세Dto state = new() { DriverId = "driver-example", Revision = 1,
+            Status = scenario == "admin" ? 운송자격Codes.Pending : 운송자격Codes.NotSubmitted,
+            VehicleKind = 운송자격Codes.Motorcycle, VehicleProfileValue = "오토바이",
+            ActualVehicleReference = "vehicle:10000000-0000-0000-0000-000000000001",
+            RequiredEvidenceCodes = 운송자격Codes.RequiredFor(운송자격Codes.Motorcycle),
+            Evidence = 운송자격Codes.RequiredFor(운송자격Codes.Motorcycle).Select((code, i) => new 운송자격근거Dto
+            { RequirementCode = code, PrivateEvidenceReference = $"private-evidence:20000000-0000-0000-0000-{i + 1:D12}", Summary = "수단과 보장 범위 확인 대기" }).ToArray() };
+        public Task<운송자격상세Dto> 조회Async(CancellationToken ct)
+            => scenario == "error" ? throw new HttpRequestException() : Task.FromResult(state);
+        public Task<운송자격상세Dto> 제출Async(운송자격제출요청 request, CancellationToken ct)
+        { state = state with { Revision = state.Revision + 1, Status = 운송자격Codes.Pending, Evidence = request.Evidence }; return Task.FromResult(state); }
+        public Task<운송자격상세Dto> 검토Async(운송자격검토요청 request, CancellationToken ct)
+        { state = state with { Revision = state.Revision + 1, Status = request.Decision, ReviewReason = request.ReviewReason }; return Task.FromResult(state); }
+    }
+}

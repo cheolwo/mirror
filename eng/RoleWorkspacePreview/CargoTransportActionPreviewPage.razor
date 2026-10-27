@@ -1,0 +1,18 @@
+@page "/cargo-transport-action-preview/{Scenario}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@inject QuickDriverControlsPreviewFixture Fixture
+@implements IDisposable
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="margin:0;padding:8px 16px;background:#eaf5f3;font-size:13px">퀵 상하차 화면 검토 · 메모리 예시 · 사진은 저장하지 않으며 실제 업무·지급 없음</aside>
+<CargoTransportActionScreen @key="Scenario" ItemId="1101" ActionKey="@ActionKey" />
+<output hidden data-quick-action-ready data-scenario="@Scenario" data-state="@Fixture.CurrentTransportState"
+        data-uploads="@Fixture.Uploads" data-completion-posts="@Fixture.CompletionPosts" data-transport-reads="@Fixture.TransportReads"></output>
+@code {
+    [Parameter] public string Scenario { get; set; } = "pickup-missing";
+    private string ActionKey => Scenario.StartsWith("dropoff", StringComparison.Ordinal) ? "dropoff" : "pickup";
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override void OnParametersSet() => Fixture.ConfigureAction(Scenario);
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

@@ -1,0 +1,51 @@
+@page "/shipper/request/{StepPath}"
+@using Ssalddel.Contracts.Shipper.Request
+@using Ssalddel.Ui.Common.Areas.App.Components.Transport
+@inject ShipperMobileContextPreviewFixture Fixture
+@inject NavigationManager Navigation
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<div style="@(Fixture.NestedScroll ? "height:100dvh;display:grid;grid-template-rows:56px minmax(0,1fr) 48px;overflow:hidden" : null)" data-nested-scroll-preview="@Fixture.NestedScroll.ToString().ToLowerInvariant()">
+<aside style="padding:8px 16px;background:#eaf5f3;font-size:13px">모바일 작성 화면 예시 · 현재 화면 연결 안에서만 입력 유지 · 실제 접수·API·DB·동의·결제 없음</aside>
+<main class="@(Fixture.NestedScroll ? "shipper-mobile-shell__content" : null)" style="@(Fixture.NestedScroll ? "min-height:0;overflow:auto;overscroll-behavior:contain" : null)">
+@if (CurrentStep is { } step)
+{
+    <div style="max-width:760px;padding:16px;margin:auto" data-mobile-context-preview="@step.ToString().ToLowerInvariant()" data-draft-id="@Fixture.DraftId">
+        @switch (step)
+        {
+            case ShipperRequestMobileStep.Cargo:
+            case ShipperRequestMobileStep.Package:
+                <ShipperRequestCargoScreen ViewModel="Fixture.Draft" NavigationContext="Context" MobileStep="step" RootBackHref="/mobile-context-preview/desktop" RootBackLabel="작성 방식으로" Changed="Fixture.ChangedAsync" />
+                break;
+            case ShipperRequestMobileStep.Pickup:
+            case ShipperRequestMobileStep.Dropoff:
+            case ShipperRequestMobileStep.Schedule:
+                <ShipperRequestTransportScreen ViewModel="Fixture.Draft" NavigationContext="Context" MobileStep="step" Changed="Fixture.ChangedAsync" />
+                break;
+            case ShipperRequestMobileStep.Vehicle:
+            case ShipperRequestMobileStep.Payment:
+                <ShipperRequestProcedureScreen ViewModel="Fixture.Draft" NavigationContext="Context" MobileStep="step" RecommendationRequested="Fixture.RecommendVehiclesAsync" Changed="Fixture.ChangedAsync" />
+                break;
+            case ShipperRequestMobileStep.Review:
+                <ShipperRequestReviewScreen ViewModel="Fixture.Draft" NavigationContext="Context" MobileStep="step" RegistrationEnabled="false" RegistrationBoundaryMessage="작성 화면 검토용 예시입니다. 실제 동의·접수는 연결하지 않았습니다." Changed="Fixture.ChangedAsync" />
+                break;
+        }
+    </div>
+}
+else { <p>작성 단계를 확인해 주세요.</p> }
+</main>
+@if (Fixture.NestedScroll) { <footer style="padding:12px 16px;background:#eaf5f3;font-size:12px">중첩 스크롤 화면 예시 · 실제 휴대폰 검증과 별도</footer> }
+</div>
+@code {
+    [Parameter] public string StepPath { get; set; } = "cargo";
+    private ShipperRequestMobileStep? CurrentStep => ShipperRequestMobileStepCatalog.Steps.FirstOrDefault(item => item.Path == "/shipper/request/" + StepPath)?.Step;
+    private ShipperRequestNavigationContext Context => ShipperRequestNavigationContext.Parse(Navigation.Uri);
+    protected override async Task OnParametersSetAsync()
+    {
+        if (new Uri(Navigation.Uri).Query.TrimStart('?').Split('&').Contains("nestedScroll=1", StringComparer.Ordinal))
+            Fixture.NestedScroll = true;
+        var scenario = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
+            .FirstOrDefault(x => x.StartsWith("recommendation=", StringComparison.Ordinal))?.Split('=', 2)[1];
+        await Fixture.PrepareRecommendationCaseAsync(scenario);
+    }
+}

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Ssalddel/Ssalddel.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <Compile Include="../Ssalddel.CargoJourneyVerification/CargoJourneyFactory.cs" Link="Reused/CargoJourneyFactory.cs" />
+    <Compile Include="../Ssalddel.CargoJourneyVerification/CargoJourneySeed.cs" Link="Reused/CargoJourneySeed.cs" />
+    <Compile Include="../../Ssalddel/Services/Development/MobileFieldTest/모바일현장검증자료Seeder.cs" Link="Reused/모바일현장검증자료Seeder.cs" />
+  </ItemGroup>
+</Project>

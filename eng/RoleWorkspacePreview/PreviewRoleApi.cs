@@ -3,8 +3,12 @@ using Ssalddel.Contracts.Admin.Dispatch;
 using Ssalddel.Contracts.Admin.Food;
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Warehouse;
+using Ssalddel.Contracts.Common.Dispatch;
+using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Common.Transport;
 using Ssalddel.Contracts.Driver.Recommendation;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Contracts.Driver.Work;
 using Ssalddel.Contracts.Food;
 using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
@@ -82,6 +86,14 @@ public sealed class PreviewRoleApi(string key, IRoleWorkspaceAccess access, Navi
         if (key == "warehouse" && path == WarehouseRoot + "work-entry/verify" && body is 창고작업진입확인요청 request)
             return Task.FromResult<T?>((T)(object)new 창고작업진입확인응답
             { IsAllowed = request.ProcessCode == "inbound" || scenario is "outbound-ready" or "outbound-wait", RoleName = "창고 담당자", OperatorName = "담당자 1" });
+        // 새 공통 화물 화면의 전경 위치 확인에 응답만 돌려준다. 위치를 저장하거나 근무·수신 상태를 변경하지 않는다.
+        if (key == "cargo-driver" && path == "api/v1/driver/work/location" && body is 기사위치갱신요청 location
+            && location.AppKey == 기사앱식별자.CargoYongdalDriverApp)
+            return Task.FromResult<T?>((T)(object)new 기사위치갱신응답
+            {
+                DriverId = access.GetIdentity(key).OwnerId ?? "", Status = scenario == "complete" ? "운행종료" : "운행중",
+                현재위도 = location.위도, 현재경도 = location.경도, 최근위치수신시각 = location.기록시각
+            });
         throw new InvalidOperationException("화면 배치 미리보기입니다. 실제 업무 요청은 실행하지 않습니다.");
     }
     public Task<T?> PutAsync<T>(string roleKey, string path, object body, CancellationToken cancellationToken)
@@ -180,6 +192,21 @@ public sealed class PreviewRoleApi(string key, IRoleWorkspaceAccess access, Navi
     private object ReadCargoDriver(string path)
     {
         var waiting = scenario is "waiting" or "expired";
+        var owner = access.GetIdentity(key).OwnerId ?? "";
+        if (path == "api/v1/driver/work/status")
+            return new 기사운행상태응답
+            {
+                DriverId = owner, Status = scenario == "complete" ? "운행종료" : "운행중",
+                ShiftId = scenario == "complete" ? null : 101,
+                운송실행유형 = 운송실행유형코드.화물운송, UpdatedAt = recordedAt
+            };
+        if (path == "api/v1/driver/operational-dispatch/availability")
+            return new 운영배차수신상태Dto
+            {
+                주체Id = owner, 수신의사Code = scenario == "complete" ? 운영배차수신의사Code.Off : 운영배차수신의사Code.On,
+                실효상태Code = scenario == "complete" ? 운영배차실효상태Code.조건부적합 : 운영배차실효상태Code.배차가능,
+                서버관측시각Utc = DateTimeOffset.UtcNow
+            };
         if (path == "api/v1/driver/transports/workspace")
         {
             var transport = scenario == "complete" || waiting ? null : Transport(scenario == "next" ? 102 : 101);

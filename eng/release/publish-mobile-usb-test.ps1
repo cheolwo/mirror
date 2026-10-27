@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$ServerBaseAddress = 'http://127.0.0.1:5363/',
     [string]$Version = '0.1.27',
@@ -6,9 +6,11 @@ param(
     [string]$KeystorePath,
     [string]$OutputRoot = 'artifacts/local/food-mobile-four-role-r27/apk',
     [ValidateNotNullOrEmpty()]
-    [ValidateSet('orderer','restaurant','driver','admin')]
+    [ValidateSet('orderer','restaurant','driver','admin','shipper','cargo-driver','warehouse')]
     [string[]]$AppNames = @('orderer','restaurant','driver','admin'),
     [string]$AndroidSdkDirectory,
+    [string]$MemberFirebaseGoogleServicesJson,
+    [string]$ExpectedMemberFirebaseProjectId,
     [switch]$UseRestaurantFoodTestFixture,
     [switch]$PlanOnly
 )
@@ -24,9 +26,14 @@ if(-not [Uri]::TryCreate($ServerBaseAddress,[UriKind]::Absolute,[ref]$taskServer
     throw 'USB test requires a loopback HTTP origin on port 5363 without credentials, path, query or fragment.'
 }
 if($Version -notmatch '^\d+\.\d+\.\d+$' -or $VersionCode -lt 1){throw 'Version must use x.y.z and VersionCode must be at least 1.'}
-if($AppNames.Count -eq 0 -or @($AppNames|Sort-Object -Unique).Count -ne $AppNames.Count){throw 'AppNames must contain distinct supported food roles.'}
+if($AppNames.Count -eq 0 -or @($AppNames|Sort-Object -Unique).Count -ne $AppNames.Count){throw 'AppNames must contain distinct supported roles.'}
 if($UseRestaurantFoodTestFixture -and 'restaurant' -notin $AppNames){throw 'Restaurant food-test fixture opt-in requires the restaurant role.'}
 $taskApps=@(Get-MobileFieldTestApps|Where-Object{$_.Name -in $AppNames})
+if((-not [string]::IsNullOrWhiteSpace($MemberFirebaseGoogleServicesJson) -or -not [string]::IsNullOrWhiteSpace($ExpectedMemberFirebaseProjectId)) -and 'shipper' -notin $AppNames){throw 'Member Firebase configuration requires the shipper app.'}
+$taskFirebaseBefore=@{}
+foreach($taskApp in $taskApps){
+    $taskFirebaseBefore[$taskApp.Name]=Resolve-MobileMemberFirebaseConfiguration -App $taskApp -RepositoryRoot $taskRepoRoot -GoogleServicesJson $MemberFirebaseGoogleServicesJson -ExpectedProjectId $ExpectedMemberFirebaseProjectId
+}
 $taskOutput=[IO.Path]::GetFullPath((Join-Path $taskRepoRoot $OutputRoot))
 $taskAllowedRoot=[IO.Path]::GetFullPath((Join-Path $taskRepoRoot 'artifacts/local'))+[IO.Path]::DirectorySeparatorChar
 if(-not $taskOutput.StartsWith($taskAllowedRoot,[StringComparison]::OrdinalIgnoreCase)){throw 'USB APK output must remain in the ignored artifacts/local directory.'}
@@ -40,7 +47,7 @@ if($taskKeystore.StartsWith($taskRepoRoot+[IO.Path]::DirectorySeparatorChar,[Str
 
 function Get-MobileUsbPublishArguments {
     param($App,$Destination)
-    $taskArguments=@(Get-MobileFieldTestPublishArguments (Join-Path $taskRepoRoot $App.Project) $Destination $Version $VersionCode $taskServer.AbsoluteUri $taskKeystore 'androiddebugkey')
+    $taskArguments=@(Get-MobileFieldTestPublishArguments (Join-Path $taskRepoRoot $App.Project) $Destination $Version $VersionCode $taskServer.AbsoluteUri $taskKeystore 'androiddebugkey' -FirebaseConfiguration $taskFirebaseBefore[$App.Name])
     $taskConfigurationIndex=[Array]::IndexOf($taskArguments,'Release')
     if($taskConfigurationIndex -lt 0){throw 'Reviewed common packaging configuration was not found.'}
     $taskArguments[$taskConfigurationIndex]='Debug'
@@ -57,13 +64,17 @@ function Get-MobileUsbPublishArguments {
         if($taskRunName -notmatch '^build-([a-f0-9]{32})$'){throw 'Reviewed per-run build directory required.'}
         # Android's native resource tools still require short Windows paths.
         # Keep unique intermediates in a shorter ignored sibling evidence root.
-        Join-Path $taskRepoRoot ('artifacts/local/r27-apk-builds/'+$Matches[1]+'/'+$App.Name)
+        $taskShortRole = @{ orderer='o'; restaurant='r'; driver='f'; admin='a'; shipper='s'; 'cargo-driver'='c'; warehouse='w' }[$App.Name]
+        if (-not $taskShortRole) { throw 'A reviewed intermediate role key is required.' }
+        # AAPT also prefixes long resource file names. Keep the full unique run ID,
+        # but shorten fixed directories/role labels to stay below native path limits.
+        Join-Path $taskRepoRoot ('artifacts/local/u/'+$Matches[1]+'/'+$taskShortRole)
     }
     $taskArguments+=@('-p:UseArtifactsOutput=true',"-p:ArtifactsPath=$taskIsolated","-p:DirectoryBuildPropsPath=$(Join-Path $taskRepoRoot 'Directory.Build.props')")
     $taskArguments
 }
 if($PlanOnly){
-    [pscustomobject]@{schemaVersion='mobile-usb-test-plan.r27';configuration='Debug';version=$Version;versionCode=$VersionCode;serverBaseAddress=$taskServer.AbsoluteUri;restaurantFoodTestFixtureEnabled=[bool]$UseRestaurantFoodTestFixture;apkOnly=$true;embeddedStandalone=$true;automaticInstall=$false;automaticUninstall=$false;cloudDeployment=$false;apps=@($taskApps|ForEach-Object{[pscustomobject]@{name=$_.Name;project=$_.Project;packageId=$_.PackageId;arguments=@(Get-MobileUsbPublishArguments $_ '<per-run-output>')}})}|ConvertTo-Json -Depth 6
+    [pscustomobject]@{schemaVersion='mobile-usb-test-plan.r27';configuration='Debug';version=$Version;versionCode=$VersionCode;serverBaseAddress=$taskServer.AbsoluteUri;restaurantFoodTestFixtureEnabled=[bool]$UseRestaurantFoodTestFixture;apkOnly=$true;embeddedStandalone=$true;automaticInstall=$false;automaticUninstall=$false;cloudDeployment=$false;apps=@($taskApps|ForEach-Object{[pscustomobject]@{name=$_.Name;project=$_.Project;packageId=$_.PackageId;memberFirebase=(Get-MobileMemberFirebaseEvidence $taskFirebaseBefore[$_.Name]);arguments=@(Get-MobileUsbPublishArguments $_ '<per-run-output>')}})}|ConvertTo-Json -Depth 6
     return
 }
 if(-not (Test-Path -LiteralPath $taskKeystore -PathType Leaf)){throw 'Existing external .android/debug.keystore required; this tool does not create or replace signing keys.'}
@@ -126,11 +137,13 @@ try{
     foreach($taskApp in $taskApps){
         $taskDestination=Join-Path $taskReleaseRoot ("build-$taskRunId/"+$taskApp.Name)
         [IO.Directory]::CreateDirectory($taskDestination)|Out-Null
+        Confirm-MobileMemberFirebaseConfigurationUnchanged -App $taskApp -RepositoryRoot $taskRepoRoot -Before $taskFirebaseBefore[$taskApp.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId
         $taskArguments=@(Get-MobileUsbPublishArguments $taskApp $taskDestination)
         & dotnet @taskArguments *> (Join-Path $taskReleaseRoot ("$($taskApp.Name)-$taskRunId-build.log"))
         if($LASTEXITCODE -ne 0){throw "USB Android build failed for $($taskApp.Name); inspect its local build log."}
         $taskPackages=@(Get-ChildItem -LiteralPath $taskDestination -Recurse -File|Where-Object{$_.Name -like '*-Signed.apk'})
         if($taskPackages.Count -ne 1){throw "Exactly one signed Debug APK is required for $($taskApp.Name)."}
+        Confirm-MobileMemberFirebaseConfigurationUnchanged -App $taskApp -RepositoryRoot $taskRepoRoot -Before $taskFirebaseBefore[$taskApp.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId
         $taskPackage=$taskPackages[0]
         $taskVerify=Confirm-MobileSignedApk -Path $taskPackage.FullName -ExpectedApp $taskApp -Version $Version -VersionCode $VersionCode -Tools $taskTools -ExpectedCertificateSha256 $taskCertificate -Configuration Debug
         $taskArchive=[IO.Compression.ZipFile]::OpenRead($taskPackage.FullName)
@@ -140,8 +153,9 @@ try{
                 if(-not $taskArchive.GetEntry("lib/$taskAbi/lib_$taskAssembly.dll.so") -and -not $taskArchive.GetEntry("assemblies/$taskAbi/$taskAssembly.dll") -and -not $taskArchive.GetEntry("assemblies/$taskAssembly.dll")){throw 'Final USB APK embedded app assembly is missing.'}
             }
         }finally{$taskArchive.Dispose()}
-        $taskApks+=[pscustomobject]@{app=$taskApp.Name;packageId=$taskApp.PackageId;version=$Version;versionCode=$VersionCode;server=$taskServer.AbsoluteUri;file=[IO.Path]::GetRelativePath($taskReleaseRoot,$taskPackage.FullName).Replace('\','/');sha256=(Get-FileHash -LiteralPath $taskPackage.FullName -Algorithm SHA256).Hash.ToLowerInvariant();bytes=$taskPackage.Length;embeddedStandaloneVerified=$true;verification=$taskVerify}
+        $taskApks+=[pscustomobject]@{app=$taskApp.Name;packageId=$taskApp.PackageId;version=$Version;versionCode=$VersionCode;server=$taskServer.AbsoluteUri;file=[IO.Path]::GetRelativePath($taskReleaseRoot,$taskPackage.FullName).Replace('\','/');sha256=(Get-FileHash -LiteralPath $taskPackage.FullName -Algorithm SHA256).Hash.ToLowerInvariant();bytes=$taskPackage.Length;embeddedStandaloneVerified=$true;verification=$taskVerify;memberFirebase=(Get-MobileMemberFirebaseEvidence $taskFirebaseBefore[$taskApp.Name] -VerifiedUnchanged)}
     }
+    foreach($taskApp in $taskApps){Confirm-MobileMemberFirebaseConfigurationUnchanged -App $taskApp -RepositoryRoot $taskRepoRoot -Before $taskFirebaseBefore[$taskApp.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId}
     $taskAfter=Get-MobileUsbSourceSnapshot
 [IO.File]::WriteAllText((Join-Path $taskReleaseRoot "$taskRunId-source-after.json"),($taskAfter|ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
     if($taskBefore.head -ne $taskAfter.head -or $taskBefore.fingerprint -ne $taskAfter.fingerprint){throw 'Selected source changed during APK builds; no completed handoff manifest was created.'}

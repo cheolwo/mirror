@@ -1,0 +1,34 @@
+@page "/usability-preview/{Scenario}"
+@using Ssalddel.Contracts.Common.Mart
+@using Ssalddel.Ui.Common.Areas.App.Components.Mart
+@using Ssalddel.Ui.Common.Areas.App.Theme
+@using RoleWorkspacePreview.LinkedDriver
+@inject UsabilityPreviewFixture Fixture
+
+<MudThemeProvider Theme="@RoleAppTheme.Create(역할앱시각역할.주문자)" /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:13px">화면 사용성 검토 · 격리 예시 · 실제 주문/계좌 연결 없음</aside>
+<section data-usability-scenario="@Scenario" style="padding:16px;max-width:760px;margin:auto;min-width:0">
+    @if (Scenario.StartsWith("mart-", StringComparison.Ordinal))
+    {
+        <MartProductAccessFrame @key="Scenario" Context="@(new MartProductNavigationContext())"
+                                CurrentScreen="MartProductScreenKind.Detail" ProductId="1"
+                                Eyebrow="상품 정보" Title="상품 상세" Description="상품과 재고를 확인하세요."
+                                HomeHref="/usability-preview/home" SamplePreview="@(Scenario == "mart-sample")">
+            <p data-product-body>검토용 상품 본문 · 실제 상품/주문 없음</p>
+        </MartProductAccessFrame>
+    }
+    else if (Scenario == "driver-bank")
+    {
+        <계좌정보Page />
+    }
+    else
+    {
+        <h1>화면 검토 시작</h1>
+        <p>상품 이용 준비·조회 실패·재시도와 기사 계좌 안내를 기존 컴포넌트로 확인합니다.</p>
+    }
+</section>
+
+@code {
+    [Parameter] public string Scenario { get; set; } = "home";
+    protected override void OnParametersSet() => Fixture.Reset(Scenario);
+}

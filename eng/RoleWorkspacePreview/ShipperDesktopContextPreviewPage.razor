@@ -1,0 +1,19 @@
+@page "/mobile-context-preview/desktop"
+@using Ssalddel.Contracts.Shipper.Request
+@using Ssalddel.Ui.Common.Areas.App.Components.Transport
+@inject ShipperMobileContextPreviewFixture Fixture
+@inject NavigationManager Navigation
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:8px 16px;background:#eaf5f3;font-size:13px">작성 방식 화면 예시 · 입력은 현재 화면 연결 안에서만 유지 · 실제 접수·API·DB 없음</aside>
+<div style="padding:16px" data-mobile-context-preview="desktop">
+    <ShipperRequestAuthoringScreen ViewModel="Fixture.Draft" NavigationContext="Context" RecommendationRequested="Fixture.RecommendVehiclesAsync" RegistrationEnabled="false" RegistrationBoundaryMessage="예시 화면은 실제 접수를 연결하지 않았습니다." Changed="Fixture.ChangedAsync" />
+</div>
+@code {
+    private ShipperRequestNavigationContext Context => ShipperRequestNavigationContext.Parse(Navigation.Uri);
+    protected override async Task OnParametersSetAsync()
+    {
+        var scenario = new Uri(Navigation.Uri).Query.TrimStart('?').Split('&')
+            .FirstOrDefault(x => x.StartsWith("recommendation=", StringComparison.Ordinal))?.Split('=', 2)[1];
+        await Fixture.PrepareRecommendationCaseAsync(scenario);
+    }
+}

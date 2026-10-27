@@ -40,6 +40,8 @@ internal sealed class CargoJourneySettings
             ["MongoDb:Database"] = DatabaseName,
             ["TransientState:Provider"] = "Memory",
             ["SsalddelExecution:Mode"] = "Simulation",
+            // Development·loopback·전용 DB 호스트의 합성 기사 시험만 우회하며 실제 자격 승인으로 저장하지 않는다.
+            ["TransportQualification:AllowSimulationBypass"] = "true",
             ["SsalddelExecution:DevelopmentReadOnly"] = "false",
             ["ObjectStorage:Provider"] = "Local",
             ["CargoCompletionRecovery:Enabled"] = "false",
@@ -98,6 +100,7 @@ internal sealed class CargoJourneySettings
     {
         if (!environment.IsDevelopment()
             || configuration["SsalddelExecution:Mode"] != "Simulation"
+            || !configuration.GetValue<bool>("TransportQualification:AllowSimulationBypass")
             || configuration["ObjectStorage:Provider"] != "Local"
             || configuration.GetValue<bool>("DatabaseInitialization:RunAtStartup")
             || configuration["MongoDb:ConnectionString"] != MongoConnection

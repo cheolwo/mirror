@@ -1,0 +1,22 @@
+@page "/quick-driver-controls-preview/{Scenario}"
+@inject QuickDriverControlsPreviewFixture Fixture
+@implements IDisposable
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="margin:0;padding:8px 16px;background:#eaf5f3;font-size:13px">퀵 기사 화면 검토 · 메모리 예시 · 실제 운행·배차·GPS·알림·지급 없음</aside>
+@if (ready)
+{
+    <RoleMapWorkspace @key="Scenario" RoleKey="cargo-driver" />
+    <output hidden data-quick-controls-ready data-scenario="@Scenario"
+            data-on-duty="@Fixture.OnDuty.ToString().ToLowerInvariant()" data-receiving="@Fixture.Receiving.ToString().ToLowerInvariant()"
+            data-start-posts="@Fixture.StartPosts" data-stop-posts="@Fixture.StopPosts" data-intent-writes="@Fixture.IntentWrites"
+            data-location-posts="@Fixture.LocationPosts" data-explicit-location="@Fixture.ExplicitLocationRequests"></output>
+}
+@code {
+    [Parameter] public string Scenario { get; set; } = "initial";
+    private bool ready;
+    protected override void OnInitialized() => Fixture.Changed += Changed;
+    protected override async Task OnParametersSetAsync() { ready = false; await Fixture.ConfigureControlsAsync(Scenario); ready = true; }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Fixture.Changed -= Changed;
+}

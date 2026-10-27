@@ -1,0 +1,33 @@
+@page "/cargo-conditions-preview/{RoleKey}"
+@page "/cargo-conditions-preview/{RoleKey}/offers/{ItemId}"
+@page "/workspace/cargo-driver/offers/{ItemId}"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Contracts.Admin.BusinessPackages
+@inject CargoConditionsPreviewFixture Fixture
+
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside class="cargo-conditions-preview-notice">화물 조건 비교 · 합성 예시 · 실제 접수·배차·지급 없음</aside>
+<nav class="cargo-conditions-preview-nav" aria-label="화물 역할 화면 비교">
+    <a href="/cargo-conditions-preview/cargo-driver">기사 추천</a>
+    <a href="/cargo-conditions-preview/shipper">화주 의뢰</a>
+    <a href="/cargo-conditions-preview/operator">운영자 운송</a>
+</nav>
+@if (EffectiveRole == RoleWorkspaceCatalog.CargoDriver && ItemId is not null)
+{
+    <CargoOfferActionScreen ItemId="@ItemId" />
+}
+else
+{
+    <RoleMapWorkspace RoleKey="@EffectiveRole" BusinessCode="@BusinessPackageCatalog.FreightDelivery" />
+}
+<output hidden data-cargo-conditions-preview data-accept-count="@Fixture.AcceptPosts"></output>
+<style>
+    .cargo-conditions-preview-notice{padding:10px 16px;background:#eaf5f3;color:#285a54;font-size:14px}
+    .cargo-conditions-preview-nav{display:flex;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #dce5e9;background:white}
+    .cargo-conditions-preview-nav a{color:#0f766e;min-height:32px;padding:4px 8px}
+</style>
+@code {
+    [Parameter] public string RoleKey { get; set; } = "cargo-driver";
+    [Parameter] public string? ItemId { get; set; }
+    private string EffectiveRole => string.IsNullOrWhiteSpace(RoleKey) ? RoleWorkspaceCatalog.CargoDriver : RoleKey;
+}

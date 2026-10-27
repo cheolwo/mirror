@@ -1,0 +1,33 @@
+@page "/sales-continuity-preview"
+@using Ssalddel.Ui.Common.Areas.App.Components.Sales
+@using Ssalddel.Ui.Common.Areas.App.Theme
+@inject SalesContinuityPreviewFixture Fixture
+
+<MudThemeProvider Theme="@RoleAppTheme.Create(역할앱시각역할.주문자)" /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<aside style="padding:8px 16px;background:#eaf5f3;color:#0f766e;font-size:13px">입력 지속 검토 · 격리 예시 · 실제 주문/계정 연결 없음</aside>
+<section style="padding:16px;max-width:960px;margin:auto;min-width:0" data-sales-continuity-ready data-sales-pending="@Fixture.Pending.ToString().ToLowerInvariant()" data-sales-read-count="@Fixture.ReadCount">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" aria-label="검토 시나리오">
+        <button data-check-start disabled="@Fixture.Pending" @onclick="BeginAsync">접근 재확인 시작</button>
+        <button data-check-success disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.Complete("success"))">허용으로 완료</button>
+        <button data-check-off disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.Complete("off"))">기능 OFF로 완료</button>
+        <button data-check-error disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.Complete("error"))">오류로 완료</button>
+        <button data-change-account disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.ChangeUser("account"))">계정 변경</button>
+        <button data-change-token disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.ChangeUser("token"))">같은 계정 토큰 갱신</button>
+        <button data-change-original disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.ChangeUser("original"))">원래 계정으로 변경</button>
+        <button data-change-role disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.ChangeUser("role"))">역할 변경</button>
+        <button data-change-logout disabled="@(!Fixture.Pending)" @onclick="@(() => Fixture.ChangeUser("logout"))">로그아웃</button>
+        <button data-read-error @onclick="Fixture.FailNextRead">다음 주문 조회 실패</button>
+    </div>
+    <ShipperSalesOrderWorkspace @ref="_workspace" />
+</section>
+
+@code {
+    private ShipperSalesOrderWorkspace? _workspace;
+
+    private async Task BeginAsync()
+    {
+        if (_workspace is null || Fixture.Pending) return;
+        Fixture.Begin();
+        await _workspace.RefreshAsync();
+    }
+}

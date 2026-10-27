@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$ServerBaseAddress,
@@ -19,6 +19,10 @@ param(
     [string[]]$AppNames = @("orderer", "restaurant", "driver", "admin", "shipper", "cargo-driver", "warehouse"),
 
     [string]$AndroidSdkDirectory,
+
+    [string]$MemberFirebaseGoogleServicesJson,
+
+    [string]$ExpectedMemberFirebaseProjectId,
 
     [switch]$PlanOnly,
 
@@ -51,8 +55,14 @@ if ($AppNames.Count -eq 0 -or @($AppNames | Sort-Object -Unique).Count -ne $AppN
 
 $apps = @(Get-MobileFieldTestApps | Where-Object { $_.Name -in $AppNames })
 
+if ((-not [string]::IsNullOrWhiteSpace($MemberFirebaseGoogleServicesJson) -or -not [string]::IsNullOrWhiteSpace($ExpectedMemberFirebaseProjectId)) -and 'shipper' -notin $AppNames) { throw 'Member Firebase configuration requires the shipper app.' }
+$firebaseBefore = @{}
+foreach ($app in $apps) {
+    $firebaseBefore[$app.Name] = Resolve-MobileMemberFirebaseConfiguration -App $app -RepositoryRoot $repoRoot -GoogleServicesJson $MemberFirebaseGoogleServicesJson -ExpectedProjectId $ExpectedMemberFirebaseProjectId
+}
+
 if ($PlanOnly) {
-    $apps | Select-Object Name, Project, PackageId
+    $apps | Select-Object Name, Project, PackageId, @{Name='MemberFirebase';Expression={Get-MobileMemberFirebaseEvidence $firebaseBefore[$_.Name]}}
     Write-Host "Release plan: version=$Version ($VersionCode), server=$($serverUri.AbsoluteUri), format=APK, signed APK verification required"
     exit 0
 }
@@ -114,7 +124,8 @@ foreach ($app in $apps) {
     $destination = Join-Path $releaseRoot ("build-$runId/" + $app.Name)
     New-Item -ItemType Directory -Path $destination -Force | Out-Null
     $argumentParameters = @{ Project = $project; Destination = $destination; Version = $Version; VersionCode = $VersionCode
-        Server = $serverUri.AbsoluteUri; Keystore = $resolvedKeystore; Alias = $KeyAlias }
+        Server = $serverUri.AbsoluteUri; Keystore = $resolvedKeystore; Alias = $KeyAlias; FirebaseConfiguration = $firebaseBefore[$app.Name] }
+    Confirm-MobileMemberFirebaseConfigurationUnchanged -App $app -RepositoryRoot $repoRoot -Before $firebaseBefore[$app.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId
     $arguments = @(Get-MobileFieldTestPublishArguments @argumentParameters)
     & dotnet @arguments
     $publishExitCode = $LASTEXITCODE
@@ -125,6 +136,7 @@ foreach ($app in $apps) {
         throw "Android publish failed for $($app.Name)."
     }
 
+    Confirm-MobileMemberFirebaseConfigurationUnchanged -App $app -RepositoryRoot $repoRoot -Before $firebaseBefore[$app.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId
     $packages = @(Get-ChildItem -LiteralPath $destination -Recurse -File |
         Where-Object { $_.Name -like '*-Signed.apk' })
     if ($packages.Count -ne 1) { throw "Exactly one final signed APK is required for $($app.Name)." }
@@ -145,11 +157,15 @@ foreach ($app in $apps) {
             sha256 = (Get-FileHash -LiteralPath $package.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             bytes = $package.Length
             verification = $verification
+            memberFirebase = Get-MobileMemberFirebaseEvidence $firebaseBefore[$app.Name] -VerifiedUnchanged
             downloadPath = "downloads/mobile/$Version-$VersionCode/$($app.Name).apk"
         }
     }
 }
 
+foreach ($app in $apps) {
+    Confirm-MobileMemberFirebaseConfigurationUnchanged -App $app -RepositoryRoot $repoRoot -Before $firebaseBefore[$app.Name] -ExpectedProjectId $ExpectedMemberFirebaseProjectId
+}
 $manifestPath = Join-Path $releaseRoot "release-manifest.json"
 # Only after all requested APKs pass do we expose a handoff directory/manifest.
 $handoff = Join-Path $releaseRoot "handoff/downloads/mobile/$Version-$VersionCode"

@@ -1,0 +1,34 @@
+@page "/cargo-input-refresh-r77/{Area}"
+@using Ssalddel.Contracts.Shipper.Request
+@using Ssalddel.Ui.Common.Areas.App.Components.Transport
+@using Ssalddel.Ui.Common.Areas.App.Components.Community.Exchange
+@using RoleWorkspacePreview.LinkedActual
+@inject CargoInputRefreshR77PreviewFixture Fixture
+
+<HeadContent><link rel="stylesheet" href="_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-exchange.css" /><link rel="stylesheet" href="_content/Ssalddel.Ui.Common/Areas/App/css/neighborhood-delivery.css" /></HeadContent>
+<MudThemeProvider /><MudPopoverProvider /><MudDialogProvider /><MudSnackbarProvider />
+<main style="max-width:1000px;min-width:0;margin:auto;padding:16px;display:grid;gap:16px" data-testid="cargo-input-refresh-r77">
+    <aside style="padding:12px;background:#eaf5f3">입력 화면 로컬 검토 · 가상 자료 · 실제 주문·차량 확인·운영 저장 없음</aside>
+    @if (Area == "shipper")
+    {
+        <ShipperRequestTransportScreen ViewModel="Fixture.Shipper" NavigationContext="new()" MobileStep="ShipperRequestMobileStep.Schedule" ShowNavigation="false" />
+    }
+    else if (Area == "package")
+    {
+        <div class="exchange-page">
+            <h1>생활배송 포장 정보</h1>
+            <NeighborhoodDeliveryPackageInput Value="Fixture.Package" />
+        </div>
+    }
+    else if (Area == "vehicle" && Fixture.Actual is { } model)
+    {
+        <h1>기사 실차 적재 확인</h1>
+        <ActualVehicleLoadingPanel Model="model" />
+    }
+    else { <p>검토할 입력 화면을 확인해 주세요.</p> }
+</main>
+@code {
+    [Parameter] public string Area { get; set; } = "shipper";
+    [SupplyParameterFromQuery(Name = "case")] public string Scenario { get; set; } = "valid";
+    protected override Task OnParametersSetAsync() => Fixture.PrepareAsync(Area, Scenario);
+}

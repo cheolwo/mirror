@@ -122,9 +122,16 @@ public sealed class RoleWorkspaceAccess : IRoleWorkspaceAccess, IRoleWorkspaceAp
             }
             catch (JsonException) { }
             if (identity != GetIdentity(key)) throw new OperationCanceledException("로그인 상태가 변경되었습니다.", ct);
+            Guid? rejectedStart = null;
+            if (key == RoleWorkspaceCatalog.CargoDriver && method == HttpMethod.Post && path == "api/v1/driver/work/start"
+                && response.Headers.TryGetValues("X-Mirror-Work-Start-Outcome", out var outcomes)
+                && outcomes.Take(2).SequenceEqual(["Rejected"])
+                && response.Headers.TryGetValues("X-Mirror-Work-Start-Request-Id", out var ids)
+                && ids.Take(2).ToArray() is [var rejectedId] && Guid.TryParse(rejectedId, out var parsed) && parsed != Guid.Empty)
+                rejectedStart = parsed;
             throw new RoleWorkspaceAccessException((int)response.StatusCode, response.StatusCode == HttpStatusCode.Conflict
                 ? "업무 상태가 변경되었습니다. 새로고침한 뒤 확인해 주세요."
-                : "업무를 처리하지 못했습니다. 연결과 입력을 확인한 뒤 다시 시도해 주세요.", errorCode, errorBody);
+                : "업무를 처리하지 못했습니다. 연결과 입력을 확인한 뒤 다시 시도해 주세요.", errorCode, errorBody, rejectedStart);
         }
         if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0) return default!;
         var result = await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);

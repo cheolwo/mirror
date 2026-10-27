@@ -1,0 +1,14 @@
+@page "/cargo-conditions-layout/{RoleKey}"
+<main style="padding:16px;background:#f5f7fa;min-height:100vh">
+    <h1>화물 조건 · 좁은 화면 확인</h1>
+    <p>실제 공통 화면을 390px와 320px 뷰포트에서 엽니다. 합성 자료이며 휴대폰 실기기 검증과 구분합니다.</p>
+    <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        @foreach (var width in new[] { 390, 320 })
+        {
+            <section><h2>@width px</h2><iframe title="@($"{width}px 화물 {RoleKey}")"
+                src="@($"/cargo-conditions-preview/{RoleKey}")" width="@width" height="1400"
+                style="@($"display:block;width:{width}px!important;height:1400px!important;max-width:none;box-sizing:content-box;border:1px solid #cbd5e1;background:white")"></iframe></section>
+        }
+    </div>
+</main>
+@code { [Parameter] public string RoleKey { get; set; } = "cargo-driver"; }
