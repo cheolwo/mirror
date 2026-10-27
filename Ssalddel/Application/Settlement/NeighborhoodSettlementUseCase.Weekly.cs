@@ -17,9 +17,7 @@ public sealed partial class NeighborhoodSettlementUseCase
         Gate(actor);
         var date = completionDateKst ?? DateOnly.FromDateTime(Now.AddHours(9));
         Require(date.Year is >= 2000 and <= 2100, "WorkerWeeklyDateInvalid", 400);
-        var week = date.AddDays(-(((int)date.DayOfWeek - (int)DayOfWeek.Wednesday + 7) % 7));
-        var start = DateTime.SpecifyKind(week.ToDateTime(TimeOnly.MinValue).AddHours(-9), DateTimeKind.Utc);
-        var end = start.AddDays(7);
+        var (week, start, end) = WorkerWeeklyStatementProjector.CompletionWeek(date);
         var lines = new List<WorkerWeeklyStatementLineDto>();
         var food = await db.음식주문기사정산.AsNoTracking().Where(x => x.기사Id == actor
             && x.전달완료시각Utc >= start && x.전달완료시각Utc < end).ToArrayAsync(ct);
@@ -49,7 +47,7 @@ public sealed partial class NeighborhoodSettlementUseCase
                 && 기사지급준비UseCase.저장합의조회(fare, request, transport) is null) amount = null;
             var held = await db.비정상운송사건.AsNoTracking().AnyAsync(x => x.운송의뢰Id == id
                 && (x.정산보류적용여부 || x.상태Code == "OperationsReviewPending"), ct);
-            var readiness = 기사지급준비UseCase.준비상태판정(request, amount, account is not null,
+            var readiness = Ssalddel.Application.Settlement.기사지급준비Policy.판정(request, amount, account is not null,
                 account?.확인상태 == 기사정산계좌확인상태.확인완료, held);
             var payout = await db.기사운송대금지급요청.AsNoTracking().Where(x => x.운송Id == transport.Id && x.기사Id == actor)
                 .OrderByDescending(x => x.Id).FirstOrDefaultAsync(ct);
@@ -112,17 +110,8 @@ public sealed partial class NeighborhoodSettlementUseCase
                 });
             }
         }
-        var unique = lines.DistinctBy(x => x.StableId, StringComparer.Ordinal).OrderBy(x => x.CompletedAtUtc).ThenBy(x => x.StableId, StringComparer.Ordinal).ToArray();
-        return new()
-        {
-            WorkerUserId = actor, CompletionWeekStartKst = week, PeriodStartUtc = start, PeriodEndUtc = end, Lines = unique,
-            KnownAccruedAmountKrw = unique.Sum(x => x.AccruedAmountKrw ?? 0m),
-            AccruedAmountKrw = unique.All(x => x.AccruedAmountKrw.HasValue) ? unique.Sum(x => x.AccruedAmountKrw!.Value) : null,
-            KnownPaymentConditionReadyAmountKrw = unique.Where(x => x.PaymentConditionReady).Sum(x => x.AccruedAmountKrw ?? 0m),
-            KnownHeldAmountKrw = unique.Where(x => !x.PaymentConditionReady).Sum(x => x.AccruedAmountKrw ?? 0m),
-            ReportedPaymentAmountKrw = unique.Sum(x => x.ReportedPaymentAmountKrw), RecipientConfirmedAmountKrw = unique.Sum(x => x.RecipientConfirmedAmountKrw),
-            UnknownAmountCount = unique.Count(x => !x.AccruedAmountKrw.HasValue), UnassignedCompletionTimeCount = unassigned,
-            ExcludedDeliveryReferenceCount = excluded, ActualBankVerifiedAmountKrw = null, IsActualBankVerified = false, ObservedAtUtc = Now
-        };
+        var statement = WorkerWeeklyStatementProjector.Project(actor, week, start, end, lines, unassigned, excluded);
+        statement.ObservedAtUtc = Now;
+        return statement;
     }
 }

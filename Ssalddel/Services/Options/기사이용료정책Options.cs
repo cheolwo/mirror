@@ -5,8 +5,8 @@ namespace 살뜰.Services.Options
         public const string SectionName = "DriverUsagePolicy";
 
         public bool 무료배차 { get; set; } = true;
-        public decimal 기본이용료 { get; set; } = 500m;
-        public decimal 월상한이용료 { get; set; } = 5000m;
+        public decimal 기본이용료 { get; set; } = 0m;
+        public decimal 월상한이용료 { get; set; } = 0m;
 
         public decimal 추가이용료
         {

@@ -32,18 +32,24 @@ public interface I배송료정산배치UseCase
 [SsalddelApiWorkflow(SsalddelWorkflow.DomesticTransport)]
 [SsalddelUseCase("배송료 정산 배치 준비", Summary = "승인된 운송별 지급 채무를 건별·주간 명세로 연결하고 현재 지급 조건을 재검사합니다. 실제 송금을 실행하지 않습니다.")]
 [SsalddelUseCaseActor(SsalddelActor.PlatformOperator)]
-public sealed class 배송료정산배치UseCase(
+public sealed partial class 배송료정산배치UseCase(
     SsalddelContext db,
     ICurrentUserAccessor currentUser,
     ISsalddelExecutionModePolicy executionMode,
     IOptions<DriverPayoutBatchOptions> options,
     TimeProvider timeProvider,
-    I화물분쟁지급보류Query? disputes = null) : I배송료정산배치UseCase
+    I화물분쟁지급보류Query? disputes = null) : I배송료정산배치UseCase, I배송료주간자동준비Service
 {
     public async Task<Result<배송료정산배치응답>> 준비Async(배송료정산배치준비요청 request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (!IsAdmin()) return Fail("서버관리자만 배송료 정산 명세를 준비할 수 있습니다.", 403);
+        return await PrepareCoreAsync(request, currentUser.UserId!, cancellationToken);
+    }
+
+    private async Task<Result<배송료정산배치응답>> PrepareCoreAsync(
+        배송료정산배치준비요청 request, string actorId, CancellationToken cancellationToken)
+    {
         if (!options.Value.Enabled) return Fail("배송료 정산 배치 준비가 비활성입니다. 기존 명세 조회는 가능합니다.", 409);
         var schedule = request.ScheduleCode?.Trim() ?? options.Value.DefaultScheduleCode;
         var error = Validate(request, schedule);
@@ -90,7 +96,7 @@ public sealed class 배송료정산배치UseCase(
                 기간시작Utc = request.PeriodStartUtc, 기간종료Utc = request.PeriodEndUtc,
                 기간기준Code = 배송료정산배치Codes.작업완료일, PayoutScheduledAtUtc = scheduledAt,
                 멱등키 = request.IdempotencyKey.Trim(), ContentDigest = digest,
-                승인합계금액 = approvedTotal, 생성관리자Id = currentUser.UserId!, CreatedAtUtc = now, UpdatedAtUtc = now,
+                승인합계금액 = approvedTotal, 생성관리자Id = actorId, CreatedAtUtc = now, UpdatedAtUtc = now,
                 행목록 = payouts.OrderBy(x => x.Id).Select(x => new 기사운송대금정산배치행
                 {
                     지급요청Id = x.Id, 운송Id = x.운송Id, 의뢰Id = x.의뢰Id, 동결금액 = x.지급예정금액
@@ -123,6 +129,12 @@ public sealed class 배송료정산배치UseCase(
     {
         ArgumentNullException.ThrowIfNull(request);
         if (!IsAdmin()) return Fail("서버관리자만 배송료 정산 명세를 재검증할 수 있습니다.", 403);
+        return await RevalidateCoreAsync(batchId, request, cancellationToken);
+    }
+
+    private async Task<Result<배송료정산배치응답>> RevalidateCoreAsync(long batchId,
+        배송료정산배치재검증요청 request, CancellationToken cancellationToken)
+    {
         if (!options.Value.Enabled) return Fail("배송료 정산 배치 준비가 비활성입니다. 기존 명세 조회는 가능합니다.", 409);
         if (request.ExpectedRevision <= 0) return Fail("확인한 정산 명세 판본이 필요합니다.", 400);
         try
@@ -196,7 +208,7 @@ public sealed class 배송료정산배치UseCase(
         var account = await db.Set<기사정산계좌>().AsNoTracking().SingleOrDefaultAsync(x => x.기사Id == batch.기사Id, ct);
         var incident = await db.비정상운송사건.AsNoTracking().AnyAsync(x => x.운송의뢰Id == line.의뢰Id
             && (x.정산보류적용여부 || x.상태Code == 비정상운송사건상태Codes.운영검토대기), ct);
-        var readiness = 기사지급준비UseCase.준비상태판정(source, fare?.기사지급예정운임, account is not null,
+        var readiness = Ssalddel.Application.Settlement.기사지급준비Policy.판정(source, fare?.기사지급예정운임, account is not null,
             account?.확인상태 == 기사정산계좌확인상태.확인완료, incident);
         if (!readiness.IsReady) return (readiness.Code, readiness.Message);
         var dispute = await 보호지원화물지급보류Query.확인Async(disputes, line.의뢰Id, ct);

@@ -46,6 +46,10 @@ public sealed class 음식주문기사정산Tests
         Assert.NotNull(saved.수령확인시각Utc);
         Assert.Equal(2, saved.Revision);
         Assert.Null(saved.수령액);
+        var readiness = 음식주문기사정산Recorder.ToDto(saved);
+        Assert.NotNull(readiness.ReceiptConfirmedAtUtc);
+        Assert.Equal("FundingEvidenceMissing", readiness.OperationalPayoutReadinessCode);
+        Assert.False(readiness.IsOperationalPayoutReady);
     }
 
     [Fact]
@@ -130,6 +134,8 @@ public sealed class 음식주문기사정산Tests
         Assert.Equal("Simulation", Assert.Single(dto.SimulationPayments).ExecutionModeCode);
         Assert.Equal(4620m, dto.NetAmount);
         Assert.False(dto.IsActualTransferCompleted);
+        Assert.False(dto.IsOperationalPayoutReady);
+        Assert.Equal("FundingEvidenceMissing", dto.OperationalPayoutReadinessCode);
         Assert.False(Assert.Single(dto.SimulationPayments).IsActualTransferCompleted);
         Assert.Equal("Simulation", (await fixture.Context.음식주문기사정산.AsNoTracking().SingleAsync()).실행모드Code);
     }

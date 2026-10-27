@@ -163,7 +163,7 @@ public sealed class 기사지급승인UseCase : I기사지급승인UseCase
                      && (x.정산보류적용여부
                          || x.상태Code == 비정상운송사건상태Codes.운영검토대기),
                 cancellationToken);
-        var readiness = 기사지급준비UseCase.준비상태판정(
+        var readiness = Ssalddel.Application.Settlement.기사지급준비Policy.판정(
             sourceRequest,
             fare?.기사지급예정운임,
             account is not null,

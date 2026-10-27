@@ -4,6 +4,7 @@ using MediatR;
 using Ssalddel.Application.Admin.Settlement;
 using Ssalddel.Contracts.Admin.Settlement;
 using Ssalddel.ApiMetadata;
+using 살뜰.Services.Versioning;
 
 namespace Ssalddel.Controllers.Admin.Settlement05;
 
@@ -21,6 +22,7 @@ public sealed class 기사월정산관리Controller : ControllerBase
     }
 
     [HttpGet]
+    [SsalddelApiFeature(VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     public async Task<IActionResult> 목록조회([FromQuery] int? year, [FromQuery] int? month, [FromQuery] string? driverId)
     {
         var items = await _sender.Send(new 기사월정산관리목록조회Query(year, month, driverId));

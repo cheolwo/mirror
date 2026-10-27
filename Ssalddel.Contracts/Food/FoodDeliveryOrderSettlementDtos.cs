@@ -18,6 +18,9 @@ public sealed class FoodDeliveryOrderSettlementDto
     public string SettlementStatusCode { get; set; } = string.Empty;
     public string PayoutStatusCode { get; set; } = "NotRequested";
     public string HoldReason { get; set; } = string.Empty;
+    /// <summary>현재 사용 가능한 지급 재원은 과거 결제 승인·현장결제 메모에서 추론하지 않습니다.</summary>
+    public string OperationalPayoutReadinessCode { get; set; } = "FundingEvidenceMissing";
+    public bool IsOperationalPayoutReady { get; set; }
     public string DeductionEvidenceReference { get; set; } = string.Empty;
     public string DeductionEvidenceScopeCode { get; set; } = "Unknown";
     /// <summary>저장된 지급 증빙의 실행 모드입니다. 현재 서버의 작업 허용 모드와 구별합니다.</summary>

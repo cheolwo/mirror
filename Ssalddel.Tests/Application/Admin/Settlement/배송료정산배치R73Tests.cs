@@ -18,7 +18,7 @@ using 살뜰.도메인.화주;
 
 namespace Ssalddel.Tests.Application.Admin.Settlement;
 
-public sealed class 배송료정산배치R73Tests
+public sealed partial class 배송료정산배치R73Tests
 {
     // 한국 시간 2026-10-07 수요일 00:00입니다.
     private static readonly DateTime Start = new(2026, 10, 6, 15, 0, 0, DateTimeKind.Utc);
@@ -346,9 +346,11 @@ public sealed class 배송료정산배치R73Tests
         public SsalddelContext Db { get; } = db;
         public SsalddelContext OpenDb() => new(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connectionString).Options, new Encryption());
         public 배송료정산배치UseCase Use(SsalddelContext? context = null, bool enabled = true, string role = 역할명.서버관리자,
-            SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string policy = "transport-payout-r73", DayOfWeek payoutDay = DayOfWeek.Thursday)
+            SsalddelExecutionMode mode = SsalddelExecutionMode.Simulation, string policy = "transport-payout-r73", DayOfWeek payoutDay = DayOfWeek.Thursday,
+            bool automatic = false, int take = 500, TimeProvider? clock = null)
             => new(context ?? Db, new Current("actor", role), new ExecutionPolicy(mode),
-                Options.Create(new DriverPayoutBatchOptions { Enabled = enabled, PolicyRevision = policy, PayoutDay = payoutDay }), TimeProvider.System,
+                Options.Create(new DriverPayoutBatchOptions { Enabled = enabled, PolicyRevision = policy, PayoutDay = payoutDay,
+                    AutomaticPreparationEnabled = automatic, AutomaticPreparationTake = take }), clock ?? TimeProvider.System,
                 Ssalddel.Tests.Services.Payments.CargoPayoutDisputeQueryStub.Clear);
         public static async Task<Fixture> Create()
         {
