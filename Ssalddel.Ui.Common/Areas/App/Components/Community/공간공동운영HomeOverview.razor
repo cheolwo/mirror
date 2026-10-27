@@ -1,0 +1,69 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+@using Microsoft.Extensions.DependencyInjection
+@implements IDisposable
+@inject IServiceProvider Services
+
+<section class="shared-space-home" aria-labelledby="shared-space-home-title" aria-busy="@_loading.ToString().ToLowerInvariant()">
+    <div class="shared-space-home__heading"><h2 id="shared-space-home-title">함께할 수 있는 사람과 공간</h2><a href="@DetailsHref">동네 공동운영 보기 →</a></div>
+    @if (_loading)
+    { <p role="status">함께 준비 중인 일을 확인하고 있습니다.</p> }
+    else if (_error)
+    { <p role="status">공개 참여 현황을 확인하지 못했습니다.</p><button type="button" @onclick="LoadAsync">다시 확인</button> }
+    else if (_summary is { } summary)
+    {
+        @if (summary.ExecutionMode == "Simulation")
+        { <p class="shared-space-home__note">시험 제안 · 실제 실적 집계 제외</p> }
+        else
+        {
+        <dl class="shared-space-home__metrics">
+            <div><dt>소개에 동의한 사람</dt><dd>@summary.PublicParticipantCount.ToString("N0")명</dd></div>
+            <div><dt>공간 제공 제안</dt><dd>@summary.SpaceCount.ToString("N0")건</dd></div>
+            <div><dt>진행 중인 모집</dt><dd>@summary.RecruitmentCount.ToString("N0")건</dd></div>
+        </dl>
+        @if (summary.CountsArePartial) { <p class="shared-space-home__note">일부 공개 자료의 집계입니다.</p> }
+        }
+        @if (summary.Items.Count == 0)
+        { <p>아직 공개된 공동운영 제안이 없습니다. 필요한 공간이나 함께할 일을 제안해 보세요.</p> }
+        else
+        {
+            <div class="shared-space-home__proposals">
+                @foreach (var item in summary.Items.Take(3))
+                {
+                    <article><h3><a href="@ProposalHref(item.LedgerId)">@item.Title</a></h3><p>@item.NeighborhoodLabel</p>
+                        @if (item.ExecutionMode == "Simulation") { <p class="shared-space-home__note">시험 제안</p> }
+                        @if (item.MissingRoleCodes.Count > 0) { <p>함께할 역할: @string.Join(" · ", item.MissingRoleCodes.Select(공간공동운영Presentation.Role))</p> }
+                        @if (item.Introductions.Count > 0) { <p class="shared-space-home__note">@string.Join(" · ", item.Introductions.Take(3).Select(person => person.DisplayName + "(" + 공간공동운영Presentation.Role(person.RoleCode) + ")"))</p> }
+                    </article>
+                }
+            </div>
+        }
+        <p class="shared-space-home__note">공개에 동의한 소개만 표시합니다. 관심 참여와 실제 공간 사용·업무 수행은 별도로 확인합니다.</p>
+    }
+</section>
+
+@code {
+    [Parameter] public string DetailsHref { get; set; } = 공간공동운영Routes.Home;
+    private 공간공동운영공개Response? _summary;
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _loading = true, _error, _disposed, _inFlight;
+    protected override Task OnInitializedAsync() => LoadAsync();
+    private string ProposalHref(string id) => DetailsHref.TrimEnd('/') + "/" + Uri.EscapeDataString(id);
+    private async Task LoadAsync()
+    {
+        if (_disposed || _inFlight) return;
+        _inFlight = true; _loading = true; _error = false; _summary = null;
+        try
+        {
+            var client = Services.GetService<I공간공동운영Client>();
+            if (client is null) { _error = true; return; }
+            using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+            request.CancelAfter(TimeSpan.FromSeconds(10));
+            var value = await client.PublicAsync(null, 1, request.Token);
+            if (!_disposed) _summary = value;
+        }
+        catch (Exception) { if (!_disposed) _error = true; }
+        finally { _inFlight = false; if (!_disposed) _loading = false; }
+    }
+    public void Dispose()
+    { if (_disposed) return; _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); }
+}

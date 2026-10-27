@@ -1,0 +1,18 @@
+.hub-orders { margin: 0 0 24px; padding: 20px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 16px; background: var(--ss-surface, #fff); color: var(--ss-ink, #172b36); }
+.hub-orders-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+h2 { margin: 0; font-size: 18px; line-height: 1.5; } h3 { font-size: 16px; line-height: 1.5; }
+p { line-height: 1.5; overflow-wrap: anywhere; }
+article { padding: 16px 0; border-bottom: 1px solid var(--ss-border, #dce5e9); }
+dl { display: grid; grid-template-columns: minmax(84px, 1fr) minmax(0, 3fr); gap: 8px 12px; }
+dt { color: var(--ss-muted, #586b78); font-size: 14px; } dd { margin: 0; overflow-wrap: anywhere; }
+button { min-height: 48px; padding: 10px 16px; border: 1px solid var(--ss-accent, #0f766e); border-radius: 12px; color: var(--ss-accent, #0f766e); background: var(--ss-surface, #fff); font: inherit; cursor: pointer; }
+button:disabled { opacity: .58; cursor: default; }
+label { display: flex; align-items: start; gap: 12px; min-height: 44px; margin: 12px 0 6px; line-height: 1.5; }
+input[type=checkbox] { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ss-accent, #0f766e); }
+input:not([type=checkbox]), select { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #788c97; border-radius: 12px; background: var(--ss-surface, #fff); color: inherit; font: inherit; box-sizing: border-box; }
+fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.hub-orders-note { padding: 12px 16px; background: var(--ss-canvas, #f5f7fa); border-radius: 12px; }
+.hub-orders-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+details { margin-top: 16px; } summary { min-height: 44px; cursor: pointer; line-height: 1.5; font-weight: 600; }
+:is(input, select, summary, button):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+@media (max-width: 650px) { .hub-orders { padding: 16px; } .hub-orders-actions > button { flex: 1 1 auto; } }

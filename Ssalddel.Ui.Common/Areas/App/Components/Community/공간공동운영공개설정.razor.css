@@ -1,0 +1,6 @@
+h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.5; font-weight: 600; }
+p { margin: 8px 0; line-height: 1.5; }
+button { min-height: 48px; padding: 10px 16px; color: var(--ss-ink, #172b36); background: var(--ss-surface, #fff); border: 1px solid var(--ss-border, #dce5e9); border-radius: 12px; font: inherit; cursor: pointer; }
+button:disabled { opacity: .58; cursor: default; }
+button:focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+.cooperation-visibility-note { color: var(--ss-muted, #586b78); font-size: 14px; }

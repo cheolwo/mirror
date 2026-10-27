@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using MySqlConnector;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Domain.Community;
@@ -113,8 +114,28 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase(
     private async Task SaveAsync(CancellationToken ct)
     {
         try { await db.SaveChangesAsync(ct); }
+        catch (DbUpdateException ex) when (HasTransientMySqlCause(ex)) { throw; }
         catch (DbUpdateException) { throw new NeighborhoodMemberDeliveryException("MemberRevisionConflict", "동시 변경이 먼저 저장되었습니다. 같은 요청으로 결과를 다시 확인해 주세요."); }
     }
+    private static bool HasTransientMySqlCause(Exception error)
+    {
+        for (var cause = error.InnerException; cause is not null; cause = cause.InnerException)
+            if (cause is MySqlException { IsTransient: true }) return true;
+        return false;
+    }
+    private Task<T> ExecuteDatabaseMutationAsync<T>(Func<Task<T>> mutation, CancellationToken ct = default)
+    {
+        var firstAttempt = true;
+        return db.Database.CreateExecutionStrategy().ExecuteAsync(async _ =>
+        {
+            // 성공 여부가 불명확한 재실행도 같은 요청 증적과 현재 판본을 다시 읽는다.
+            if (!firstAttempt) db.ChangeTracker.Clear();
+            firstAttempt = false;
+            return await mutation();
+        }, ct);
+    }
+    private Task ExecuteDatabaseMutationAsync(Func<Task> mutation, CancellationToken ct = default)
+        => ExecuteDatabaseMutationAsync(async () => { await mutation(); return true; }, ct);
     public async Task<NeighborhoodMemberParticipationResponse> ParticipationAsync(CancellationToken ct = default)
     {
         var row = await Participants.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == Actor(), ct);
@@ -131,16 +152,19 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase(
             && request.MaxWeightKg is > 0 and <= 1000 && RouteOption(request.VehicleType) != "",
             "MemberParticipationInvalid", "활동 이름·반경·이동 수단·운반 한도를 확인해 주세요.", 400);
         if (request.ReceiveOffers) { Gate(); Require(Coordinates(request.Latitude, request.Longitude), "MemberActivityPointRequired", "활동 위치를 선택해 주세요.", 400); await AdultAsync(actor, ct); }
-        await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
-        if (await ReplayAsync(actor, request.ClientRequestId, "Participation", actor, digest, ct)) return await ParticipationAsync(ct);
-        var row = await Participants.SingleOrDefaultAsync(x => x.UserId == actor, ct);
-        Require((row?.Revision ?? 0) == request.ExpectedRevision, "MemberRevisionConflict", "참여 설정이 바뀌었습니다. 다시 확인해 주세요.");
-        if (row is null) { row = new() { UserId = actor }; db.Add(row); }
-        row.ReceiveOffers = request.ReceiveOffers; row.Revision++; row.UpdatedAtUtc = Now;
-        row.PrivatePayload = Seal(new ActivityPoint(request.ActivityLabel.Trim(), request.Latitude, request.Longitude,
-            request.RadiusKm, request.VehicleType, request.MaxWeightKg));
-        Receipt(actor, request.ClientRequestId, "Participation", actor, digest); await SaveAsync(ct);
-        if (tx is not null) await tx.CommitAsync(ct); return await ParticipationAsync(ct);
+        return await ExecuteDatabaseMutationAsync(async () =>
+        {
+            await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
+            if (await ReplayAsync(actor, request.ClientRequestId, "Participation", actor, digest, ct)) return await ParticipationAsync(ct);
+            var row = await Participants.SingleOrDefaultAsync(x => x.UserId == actor, ct);
+            Require((row?.Revision ?? 0) == request.ExpectedRevision, "MemberRevisionConflict", "참여 설정이 바뀌었습니다. 다시 확인해 주세요.");
+            if (row is null) { row = new() { UserId = actor }; db.Add(row); }
+            row.ReceiveOffers = request.ReceiveOffers; row.Revision++; row.UpdatedAtUtc = Now;
+            row.PrivatePayload = Seal(new ActivityPoint(request.ActivityLabel.Trim(), request.Latitude, request.Longitude,
+                request.RadiusKm, request.VehicleType, request.MaxWeightKg));
+            Receipt(actor, request.ClientRequestId, "Participation", actor, digest); await SaveAsync(ct);
+            if (tx is not null) await tx.CommitAsync(ct); return await ParticipationAsync(ct);
+        }, ct);
     }
     private async Task RequireApplicationConsentAsync(NeighborhoodMemberDelivery row, CancellationToken ct)
     {

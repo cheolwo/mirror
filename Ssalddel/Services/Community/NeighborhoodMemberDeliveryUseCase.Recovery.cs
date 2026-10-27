@@ -13,16 +13,20 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
     public async Task CancelAsync(string requestId, NeighborhoodMemberCommandRequest request, CancellationToken ct = default)
     {
         var actor = Actor(); var digest = Digest(request);
-        await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (await ReplayAsync(actor, request.ClientRequestId, "Cancel", requestId, digest, ct)) return;
-        var row = await Deliveries.SingleOrDefaultAsync(x => x.RequestId == requestId && x.OwnerUserId == actor, ct);
-        Require(row is not null, "MemberDeliveryNotFound", "본인의 배송 의뢰를 찾을 수 없습니다.", 404);
-        Require(row!.Revision == request.ExpectedRevision && row.StateCode is "Pending" or "Assigned",
-            "MemberPickupRecoveryRequired", "픽업 이후 또는 문제 검토 중에는 지원 사건에서 물품 반환·재전달을 확인해 주세요.");
-        if (row.AssignedMemberUserId is { } member)
-            await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, member, ct);
-        await CancelRowsAsync(row, ct);
-        Receipt(actor, request.ClientRequestId, "Cancel", requestId, digest); await SaveAsync(ct); await tx.CommitAsync(ct); await SyncLedgerAsync(requestId, actor, ct);
+        await ExecuteDatabaseMutationAsync(async () =>
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await ReplayAsync(actor, request.ClientRequestId, "Cancel", requestId, digest, ct)) return;
+            var row = await Deliveries.SingleOrDefaultAsync(x => x.RequestId == requestId && x.OwnerUserId == actor, ct);
+            Require(row is not null, "MemberDeliveryNotFound", "본인의 배송 의뢰를 찾을 수 없습니다.", 404);
+            Require(row!.Revision == request.ExpectedRevision && row.StateCode is "Pending" or "Assigned",
+                "MemberPickupRecoveryRequired", "픽업 이후 또는 문제 검토 중에는 지원 사건에서 물품 반환·재전달을 확인해 주세요.");
+            if (row.AssignedMemberUserId is { } member)
+                await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, member, ct);
+            await CancelRowsAsync(row, ct);
+            Receipt(actor, request.ClientRequestId, "Cancel", requestId, digest); await SaveAsync(ct); await tx.CommitAsync(ct);
+        }, ct);
+        await SyncLedgerAsync(requestId, actor, ct);
     }
     private async Task CancelRowsAsync(NeighborhoodMemberDelivery row, CancellationToken ct)
     {
@@ -46,37 +50,42 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
     {
         Gate(); var actor = Actor(); var digest = Digest(request);
         Require(request.ResolutionCode is "Resume" or "CancelBeforePickup", "MemberRecoveryInvalid", "재개 또는 픽업 전 취소를 선택해 주세요.", 400);
-        await RequireRecoveryEvidenceAsync(requestId, request.SupportCaseId, cases, ct);
-        await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (await ReplayAsync(actor, request.ClientRequestId, "Recovery", requestId, digest, ct))
+        var result = await ExecuteDatabaseMutationAsync(async () =>
         {
-            var saved = await Deliveries.AsNoTracking().SingleAsync(x => x.RequestId == requestId, ct);
-            return new() { RequestId = requestId, Revision = saved.Revision, StateCode = saved.StateCode };
-        }
-        var row = await Deliveries.SingleOrDefaultAsync(x => x.RequestId == requestId, ct);
-        Require(row is not null && row.StateCode == "Issue" && row.Revision == request.ExpectedRevision && row.SupportCaseId == request.SupportCaseId,
-            "MemberRecoveryChanged", "업무 또는 지원 사건이 바뀌었습니다.");
-        await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, row!.AssignedMemberUserId!, ct);
-        if (request.ResolutionCode == "CancelBeforePickup")
-        {
-            Require(row.IssueCode == "BeforePickupReviewRequired", "MemberPickupRecoveryRequired", "물품 인수 이후에는 픽업 전 취소로 처리할 수 없습니다.");
-            await CancelRowsAsync(row, ct);
-        }
-        else
-        {
-            Require(row.AssignedAtUtc > Now.AddHours(-72), "MemberDisclosureExpired", "정보 제공 동의 기한을 다시 확인해 주세요.");
-            await RequireApplicationConsentAsync(row, ct);
-            row.StateCode = row.IssueCode == "BeforePickupReviewRequired" ? "Assigned" : "PickedUp";
-            row.Revision++; row.UpdatedAtUtc = Now;
-            // 이전 사진의 판본은 재개된 명령을 인증하지 않는다. 해당 단계에서 새 사진을 촬영한다.
-            if (row.StateCode == "Assigned") row.PickupEvidenceId = null; else row.DeliveryEvidenceId = null;
-        }
-        Receipt(actor, request.ClientRequestId, "Recovery", requestId, digest);
-        db.운송이벤트.Add(new() { 의뢰Id = requestId, 이벤트타입 = "NeighborhoodMemberRecovered",
-            메타데이터 = System.Text.Json.JsonSerializer.Serialize(new { row.Revision, request.ResolutionCode, request.SupportCaseId }) });
-        await SaveAsync(ct); await tx.CommitAsync(ct);
+            // 지원 정본은 읽기만 재확인한다. 사건 처리·통지는 SQL 재시도에 포함하지 않는다.
+            await RequireRecoveryEvidenceAsync(requestId, request.SupportCaseId, cases, ct);
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await ReplayAsync(actor, request.ClientRequestId, "Recovery", requestId, digest, ct))
+            {
+                var saved = await Deliveries.AsNoTracking().SingleAsync(x => x.RequestId == requestId, ct);
+                return new NeighborhoodMemberRecoveryResponse { RequestId = requestId, Revision = saved.Revision, StateCode = saved.StateCode };
+            }
+            var row = await Deliveries.SingleOrDefaultAsync(x => x.RequestId == requestId, ct);
+            Require(row is not null && row.StateCode == "Issue" && row.Revision == request.ExpectedRevision && row.SupportCaseId == request.SupportCaseId,
+                "MemberRecoveryChanged", "업무 또는 지원 사건이 바뀌었습니다.");
+            await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, row!.AssignedMemberUserId!, ct);
+            if (request.ResolutionCode == "CancelBeforePickup")
+            {
+                Require(row.IssueCode == "BeforePickupReviewRequired", "MemberPickupRecoveryRequired", "물품 인수 이후에는 픽업 전 취소로 처리할 수 없습니다.");
+                await CancelRowsAsync(row, ct);
+            }
+            else
+            {
+                Require(row.AssignedAtUtc > Now.AddHours(-72), "MemberDisclosureExpired", "정보 제공 동의 기한을 다시 확인해 주세요.");
+                await RequireApplicationConsentAsync(row, ct);
+                row.StateCode = row.IssueCode == "BeforePickupReviewRequired" ? "Assigned" : "PickedUp";
+                row.Revision++; row.UpdatedAtUtc = Now;
+                // 이전 사진의 판본은 재개된 명령을 인증하지 않는다. 해당 단계에서 새 사진을 촬영한다.
+                if (row.StateCode == "Assigned") row.PickupEvidenceId = null; else row.DeliveryEvidenceId = null;
+            }
+            Receipt(actor, request.ClientRequestId, "Recovery", requestId, digest);
+            db.운송이벤트.Add(new() { 의뢰Id = requestId, 이벤트타입 = "NeighborhoodMemberRecovered",
+                메타데이터 = System.Text.Json.JsonSerializer.Serialize(new { row.Revision, request.ResolutionCode, request.SupportCaseId }) });
+            await SaveAsync(ct); await tx.CommitAsync(ct);
+            return new NeighborhoodMemberRecoveryResponse { RequestId = requestId, Revision = row.Revision, StateCode = row.StateCode };
+        }, ct);
         await SyncLedgerAsync(requestId, actor, ct);
-        return new() { RequestId = requestId, Revision = row.Revision, StateCode = row.StateCode };
+        return result;
     }
 
     /// <summary>관리자 Controller에서만 소비하며 실제 복구와 지급은 실행하지 않는 정본 조회입니다.</summary>

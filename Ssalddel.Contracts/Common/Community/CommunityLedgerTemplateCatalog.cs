@@ -17,6 +17,40 @@ public static class CommunityLedgerTemplateCatalog
     [
         new()
         {
+            Key = CommunityLedgerTemplateKeys.SpaceCooperation,
+            DisplayName = "공간 공동운영 제안 원장", Category = "생활 협업", WorkflowTag = "비구속 공간 공동운영",
+            TargetOperatingSystemCode = CommunityLedgerOperatingSystemCodes.CommunityTrust,
+            TargetOperatingSystemName = "커뮤니티 신뢰 OS",
+            Summary = "공간 제공자·공급자·기사·주민이 관심과 조건 판본, 운영담당 수락 및 회차별 전문 원장 참조를 모읍니다. 참여는 근무·계약·공간 사용 허가나 재고·배차 권한을 만들지 않습니다.",
+            UiSectionHints = ["동네", "운영 조건", "관심과 역할", "공개 소개 동의", "운영 담당", "조건 재동의", "회차", "전문 원장 확인"],
+            ActionHints = ["제안", "관심 참여", "역할 수락", "공개 소개 철회", "조건 동의", "회차 준비", "전문 원장 연결", "결과 확인", "다음 회차"],
+            CompositionRules =
+            [
+                Rule(
+                    CommunityLedgerCompositionRuleCodes.RequestAndParticipantBeforeProgress,
+                    "공간 제안과 참여자의 현재 조건 합의를 먼저 확인합니다.",
+                    "역할별 본인 수락, 공간 제공자의 운영 담당 수락 또는 쌍방 인계, 현재 조건 판본의 동의를 확인합니다. 회차의 실제 입고·주문·배송·수령 결과는 권한이 확인된 기존 전문 원장을 조회하며 관심 참여나 일반 원장 편집을 실행 권한으로 승격하지 않습니다.",
+                    requiredUiSectionHints: ["운영 조건", "관심과 역할", "운영 담당", "조건 재동의", "회차", "전문 원장 확인"],
+                    gatedActionHints: ["전문 원장 연결", "결과 확인"])
+            ],
+            ProcessingSurfaces =
+            [
+                ApiEndpoint("POST", "공간공동운영Controller", "생성", "비구속 공간 공동운영 제안을 보호 블록에 보존합니다.", "I공간공동운영UseCase.생성Async"),
+                ApiEndpoint("POST", "공간공동운영Controller", "변경", "명시적 역할·동의·회차 명령을 현재 판본에 적용합니다.", "I공간공동운영UseCase.변경Async")
+            ],
+            PersistencePolicy = MongoPolicy(),
+            BestLedgerPatternTitle = "작은 공간의 합의와 회차별 전문 업무를 구분한 공동운영",
+            BestLedgerPatternSummary = "제안·관심·역할 수락·공개 소개 동의·운영 조건을 보호 원장에 기록하고, 회차마다 기존 보관 합의·입고·주문·배송·수령 원천을 연결합니다. 다음 회차는 남은 재고의 출처를 재사용할 수 있지만 새 주문과 명시적 실행 확인을 요구하며 실제 지급과 물품 수령을 같은 완료로 합치지 않습니다.",
+            CommunityDiscussionPrompts = ["어떤 공간을 언제, 어떤 물품에 활용하고 싶은가요?", "공간 제공자·공급자·기사·주민은 어떤 역할을 본인이 수락했나요?", "운영 비용과 보수, 중단 후 남은 물품 반환은 누가 맡나요?", "이번 회차의 실제 입고·주문·수령을 어느 전문 원장에서 확인할 수 있나요?"],
+            Roles =
+            [
+                Role("제안자", "공간 활용 제안과 운영 조건을 정리합니다.", CommunityLedgerPermissionCodes.InviteParticipant),
+                Role("공간 제공자", "자발적으로 운영 담당을 수락하고 실제 공간 권한을 별도로 확인합니다.", CommunityLedgerPermissionCodes.ConfirmCompletion),
+                Role("참여자", "본인의 관심·역할·현재 조건 동의·공개 소개를 선택하거나 철회합니다.", CommunityLedgerPermissionCodes.ConfirmCompletion)
+            ]
+        },
+        new()
+        {
             Key = CommunityLedgerTemplateKeys.IndividualDemand,
             DisplayName = "개별 원함 원장",
             Category = "개인 원본 원장",

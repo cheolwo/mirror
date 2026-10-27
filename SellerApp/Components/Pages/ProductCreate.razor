@@ -56,6 +56,20 @@ else
             </MudStack>
         </MudPaper>
     }
+    else
+    {
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2">
+            <MudButton Href="@SellerRoutes.Inventory" Variant="Variant.Filled" Color="Color.Primary">
+                판매할 재고 선택
+            </MudButton>
+            @if (InventoryItemId is > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@ViewModel.IsBusy" OnClick="ReloadAsync">
+                    재고 다시 조회
+                </MudButton>
+            }
+        </MudStack>
+    }
 }
 
 @code {
@@ -63,17 +77,20 @@ else
     public long? InventoryItemId { get; set; }
 
     private long? loadedInventoryId;
+    private bool parametersLoaded;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (loadedInventoryId == InventoryItemId)
+        if (parametersLoaded && loadedInventoryId == InventoryItemId)
         {
             return;
         }
 
+        parametersLoaded = true;
         loadedInventoryId = InventoryItemId;
         await ViewModel.LoadAsync(InventoryItemId);
     }
 
     private Task CreateAsync() => ViewModel.CreateAsync();
+    private Task ReloadAsync() => ViewModel.LoadAsync(InventoryItemId);
 }

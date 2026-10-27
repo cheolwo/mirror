@@ -29,13 +29,14 @@ public sealed partial class NeighborhoodDeliveryAssignmentPersistenceTests
         f.Db.ChangeTracker.Clear();
         var request = await f.Db.화주운송의뢰.SingleAsync();
         var queue = await f.Db.운송원장.SingleAsync();
-        var evidence = Assert.Single(await f.Db.운송이벤트.ToListAsync());
+        var evidence = Assert.Single(await f.Db.운송이벤트.Where(x => x.이벤트타입 == NeighborhoodDeliveryLocationPolicy.AssignmentEventType).ToListAsync());
         Assert.Equal("driver-1", queue.확정기사Id);
         Assert.NotNull(NeighborhoodDeliveryLocationPolicy.CurrentAssignmentAt(request, queue, evidence, DateTime.UtcNow));
         Assert.DoesNotContain("비공개 주소", evidence.메타데이터);
         Assert.DoesNotContain("010-1234-5678", evidence.메타데이터);
         Assert.True((await f.Handler.Handle(new 배차수락Command("driver-1", "delivery-1", 3), CancellationToken.None)).IsSuccess);
-        Assert.Equal(1, await f.Db.운송이벤트.CountAsync());
+        Assert.Equal(1, await f.Db.운송이벤트.CountAsync(x => x.이벤트타입 == NeighborhoodDeliveryLocationPolicy.AssignmentEventType));
+        Assert.Equal(1, await f.Db.운송이벤트.CountAsync(x => x.이벤트타입 == CargoAcceptanceRecoveryMarker.EventType));
     }
 
     [Fact]
@@ -55,7 +56,8 @@ public sealed partial class NeighborhoodDeliveryAssignmentPersistenceTests
     {
         await using var f = await Fixture.Create(neighborhood: false);
         Assert.True((await f.Handler.Handle(new 배차수락Command("driver-1", "delivery-1", 3), CancellationToken.None)).IsSuccess);
-        Assert.Empty(await f.Db.운송이벤트.ToListAsync());
+        Assert.Empty(await f.Db.운송이벤트.Where(x => x.이벤트타입 == NeighborhoodDeliveryLocationPolicy.AssignmentEventType).ToListAsync());
+        Assert.Single(await f.Db.운송이벤트.Where(x => x.이벤트타입 == CargoAcceptanceRecoveryMarker.EventType).ToListAsync());
     }
 
     private sealed class Fixture : IAsyncDisposable
@@ -65,7 +67,8 @@ public sealed partial class NeighborhoodDeliveryAssignmentPersistenceTests
         public Continuity Continuity { get; } = new();
         public 배차수락CommandHandler Handler => new(Db, new FailedPublisher(), new Current(), new 참여자실행권한검사(),
             new WorkRelationshipSnapshotCollector(), new Eligibility(), Continuity, NullLogger<배차수락CommandHandler>.Instance,
-            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용);
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         public static async Task<Fixture> Create(bool neighborhood = true)
         {
             var f = new Fixture();

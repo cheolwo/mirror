@@ -10,17 +10,19 @@
     <p>서버에 영속된 판매채널 출고 후보와 창고·운송 인계 상태를 30초 보완 조회로 확인합니다.</p>
 </header>
 
-<div @key="_refreshVersion">
-    <ShipperSalesOrderWorkspace Mode="ShipperSalesOrderWorkspaceMode.List"
-                                InitialSearch="@Context.Search"
-                                InitialSyncScope="@Context.SyncScope"
-                                InitialStatus="@Context.Status"
-                                InitialPage="@Context.Page" />
-</div>
+<ShipperSalesOrderWorkspace @ref="workspace"
+                            Mode="ShipperSalesOrderWorkspaceMode.List"
+                            HomeHref="@SellerRoutes.Home" HomeLabel="판매자 홈으로"
+                            PublicHref="@SellerRoutes.Home" PublicLabel="판매자 홈으로"
+                            InitialSearch="@Context.Search"
+                            InitialSyncScope="@Context.SyncScope"
+                            InitialStatus="@Context.Status"
+                            InitialPage="@Context.Page" />
 
 @code {
     private readonly CancellationTokenSource monitorCancellation = new();
-    private int _refreshVersion;
+    private ShipperSalesOrderWorkspace? workspace;
+    private bool disposed;
     private SalesOrderNavigationContext Context
         => SalesOrderNavigationContext.Parse(Navigation.Uri);
 
@@ -34,22 +36,31 @@
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                await InvokeAsync(() =>
+                await InvokeAsync(async () =>
                 {
-                    _refreshVersion++;
-                    StateHasChanged();
+                    if (!disposed && !cancellationToken.IsCancellationRequested && workspace is not null)
+                    {
+                        await workspace.RefreshAsync(cancellationToken);
+                    }
                 });
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
+        catch (ObjectDisposedException) when (disposed)
+        {
+        }
     }
 
     public ValueTask DisposeAsync()
     {
-        monitorCancellation.Cancel();
-        monitorCancellation.Dispose();
+        if (!disposed)
+        {
+            disposed = true;
+            monitorCancellation.Cancel();
+            monitorCancellation.Dispose();
+        }
         return ValueTask.CompletedTask;
     }
 }

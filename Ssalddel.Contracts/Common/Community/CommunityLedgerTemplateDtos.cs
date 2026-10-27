@@ -450,6 +450,7 @@ public static class CommunityLedgerTemplateKeys
     public const string MeatImportReadiness = "meat-import-readiness";
     public const string Errand = "errand";
     public const string EducationFieldExperience = "education-field-experience";
+    public const string SpaceCooperation = "space-cooperation";
 
     public static IReadOnlyList<string> All { get; } =
     [
@@ -471,7 +472,8 @@ public static class CommunityLedgerTemplateKeys
         ForeignFoodFacilityProfile,
         MeatImportReadiness,
         Errand,
-        EducationFieldExperience
+        EducationFieldExperience,
+        SpaceCooperation
     ];
 }
 

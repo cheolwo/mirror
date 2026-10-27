@@ -38,11 +38,29 @@ public sealed class NeighborhoodDeliveryRequest
     public long? ExpectedTermsRevision { get; set; }
     public Guid ClientRequestId { get; set; }
     public string CargoName { get; set; } = string.Empty;
+    /// <summary>같은 규격의 외포장 개수입니다. 치수로 계산한 한 개의 부피에만 곱합니다.</summary>
     public int Quantity { get; set; } = 1;
+    /// <summary>포장·팔레트를 포함한 전량의 총중량입니다. 수량을 다시 곱하지 않습니다.</summary>
     public decimal WeightKg { get; set; }
     /// <summary>우리 앱의 선택적 포장 크기 분류입니다. 특정 배송 업체의 실제 규격을 뜻하지 않습니다.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public string? PackageSizeCode { get; set; }
+    /// <summary>같은 외포장 한 개의 실측 치수(mm)입니다. 수량은 같은 규격의 포장 개수입니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? PackageLengthMm { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? PackageWidthMm { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? PackageHeightMm { get; set; }
+    /// <summary>전체 물량의 입력 부피입니다. 생략하면 확인된 치수·수량으로만 계산합니다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? VolumeCbm { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? PalletCount { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? FloorRotationAllowed { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? StackingAllowed { get; set; }
     public string VehicleType { get; set; } = "오토바이";
     [IsmsPProtectedData(PersonalDataFieldKey.DetailedAddress, "생활 배송 픽업 주소 처리")]
     [IsmsPProtectedData(PersonalDataFieldKey.PhoneNumber, "생활 배송 픽업 연락처 처리")]

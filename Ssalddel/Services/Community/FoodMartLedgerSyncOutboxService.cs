@@ -1,4 +1,4 @@
-using Ssalddel.Contracts.Common.Metadata;
+﻿using Ssalddel.Contracts.Common.Metadata;
 
 using System.Text.Json;
 using Ssalddel.Contracts.Food;
@@ -11,11 +11,6 @@ using Ssalddel.Services.PrivacyRetention;
 using Ssalddel.Contracts.Common.PrivacyRetention;
 using Ssalddel.Services.Food;
 using MediatR;
-using Ssalddel.Application.Food.Events;
-using 살뜰.Services.Dispatch.Engine;
-using 살뜰.도메인.공통;
-using 살뜰.도메인.마트;
-using Ssalddel.Contracts.Common.Community;
 
 namespace Ssalddel.Services.Community;
 
@@ -75,6 +70,11 @@ public sealed class 음식마트원장동기화OutboxService(
     : I음식마트원장동기화OutboxService, I음식마트원장동기화복구Service, I음식기사후속OutboxService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly 음식주문원장동기화PayloadHandler _음식주문PayloadHandler = new(ledgerSync, foodOrderStore);
+    private readonly 창고출고원장동기화PayloadHandler _창고출고PayloadHandler = new(db, ledgerSync);
+    private readonly 음식합의취소투영PayloadHandler _합의취소PayloadHandler = new(db, ledgerSync, foodOrderStore, transportLedgerSync);
+    private readonly 음식기사후속PayloadHandler _기사후속PayloadHandler = new(db, ledgerSync, foodOrderStore,
+        transportLedgerSync, restaurantNotification, publisher);
 
     public async Task 예약Async(음식기사후속의도 intent, CancellationToken cancellationToken = default)
     {
@@ -142,7 +142,7 @@ public sealed class 음식마트원장동기화OutboxService(
             return;
         }
 
-        var payload = new WarehouseOutboundPayload
+        var payload = new 창고출고원장동기화Payload
         {
             OutboundIds = outbounds.Select(x => x.Id).Distinct().ToArray(),
             InboundIds = inbounds.Select(x => x.Id).Distinct().ToArray(),
@@ -332,26 +332,21 @@ public sealed class 음식마트원장동기화OutboxService(
                 return;
             }
             using var payloadDocument = JsonDocument.Parse(item.PayloadJson);
+            if (payloadDocument.RootElement.TryGetProperty("agreedCancellation", out var cancellationNode))
+            {
+                var intent = cancellationNode.Deserialize<음식합의취소투영의도>(JsonOptions)
+                    ?? throw new InvalidOperationException("FoodAgreedCancellationIntentUnavailable");
+                await _합의취소PayloadHandler.처리Async(item, intent, cancellationToken);
+                return;
+            }
             if (payloadDocument.RootElement.TryGetProperty("driverFollowup", out var followupNode))
             {
                 var followup = followupNode.Deserialize<음식기사후속Payload>(JsonOptions)
                     ?? throw new InvalidOperationException("FoodDriverFollowupUnavailable");
-                await ProcessDriverFollowupAsync(item, followup, cancellationToken);
+                await _기사후속PayloadHandler.처리Async(item, followup, cancellationToken);
                 return;
             }
-            var snapshot = JsonSerializer.Deserialize<음식주문응답>(item.PayloadJson, JsonOptions)
-                        ?? throw new InvalidOperationException("음식 주문 원장 동기화 payload가 비어 있습니다.");
-            if (!string.Equals(snapshot.주문번호, item.원천Id, StringComparison.Ordinal))
-                throw new InvalidOperationException("FoodOutboxSourceMismatch");
-            // Operational DI supplies the authoritative store. The outbox only retains a minimal intent copy.
-            var order = foodOrderStore is null ? snapshot : foodOrderStore.GetOrder(item.원천Id)
-                ?? throw new InvalidOperationException("FoodOutboxSourceUnavailable");
-            var ledger = await ledgerSync.음식주문동기화Async(order, item.변경자, cancellationToken);
-            if (ledger is null)
-            {
-                throw new InvalidOperationException("음식 주문 Mongo 원장 동기화 결과가 없습니다.");
-            }
-
+            await _음식주문PayloadHandler.처리Async(item, JsonOptions, cancellationToken);
             return;
         }
 
@@ -360,109 +355,14 @@ public sealed class 음식마트원장동기화OutboxService(
             throw new InvalidOperationException($"지원하지 않는 원장 동기화 유형입니다: {item.동기화유형}");
         }
 
-        var payload = JsonSerializer.Deserialize<WarehouseOutboundPayload>(item.PayloadJson, JsonOptions)
-                      ?? throw new InvalidOperationException("창고 출고 원장 동기화 payload가 비어 있습니다.");
-        var outboundIds = payload.OutboundIds.ToList();
-        var outbounds = await db.출고예정.AsNoTracking()
-            .Where(x => outboundIds.Contains(x.Id))
-            .ToListAsync(cancellationToken);
-        if (outbounds.Count == 0)
-        {
-            throw new InvalidOperationException("원장 동기화 대상 출고예정을 찾을 수 없습니다.");
-        }
-
-        var inboundIds = payload.InboundIds.ToList();
-        var inbounds = inboundIds.Count == 0
-            ? []
-            : await db.입고요청.AsNoTracking()
-                .Where(x => inboundIds.Contains(x.Id))
-                .ToListAsync(cancellationToken);
-        var driverAttempt = await db.Set<마트배송시도>().AsNoTracking()
-            .SingleOrDefaultAsync(x => x.주문참조번호 == item.원천Id, cancellationToken);
-        var stage = payload.CurrentStageKey;
-        var template = payload.LedgerTemplateKey;
-        if (driverAttempt is not null)
-        {
-            if (outbounds.Any(x => x.주문참조번호 != item.원천Id || x.운송의뢰Id != driverAttempt.배차의뢰Id))
-                throw new InvalidOperationException("MartDriverLedgerSourceMismatch");
-            // 예전 Pending child의 포장 단계/추정 템플릿을 최신 기사 업무에 덮어쓰지 않습니다.
-            stage = driverAttempt.상태Code switch
-            {
-                "Accepted" => "픽업대기", "PickedUp" => "배송중", "Delivered" => "전달완료",
-                _ => throw new InvalidOperationException("MartDriverLedgerStageUnavailable")
-            };
-            template = CommunityLedgerTemplateKeys.SsalddelMart;
-        }
-        var ledgerResult = await ledgerSync.출고원장동기화Async(
-            outbounds,
-            inbounds,
-            item.변경자,
-            stage,
-            template,
-            cancellationToken);
-        if (ledgerResult is null)
-        {
-            throw new InvalidOperationException("마트/창고 Mongo 원장 동기화 결과가 없습니다.");
-        }
-    }
-
-    private async Task ProcessDriverFollowupAsync(음식마트원장동기화Outbox item,
-        음식기사후속Payload payload, CancellationToken cancellationToken)
-    {
-        var intent = payload.Intent;
-        if (intent.주문번호 != item.원천Id || intent.처리기사Id != item.변경자
-            || 음식기사후속Kinds.Key(intent, payload.Kind) != item.멱등키
-            || !음식기사후속Kinds.For(intent).Contains(payload.Kind))
-            throw new InvalidOperationException("FoodDriverFollowupSourceMismatch");
-        // 저장 당시의 고객 정보나 상태 사본으로 후속 업무를 확정하지 않습니다.
-        var order = foodOrderStore?.GetOrder(item.원천Id)
-            ?? throw new InvalidOperationException("FoodOutboxSourceUnavailable");
-        switch (payload.Kind)
-        {
-            case 음식기사후속Kinds.FoodLedger:
-                if (await ledgerSync.음식주문동기화Async(order, item.변경자, cancellationToken) is null)
-                    throw new InvalidOperationException("FoodDriverFollowupLedgerUnavailable");
-                break;
-            case 음식기사후속Kinds.TransportLedger:
-                var queue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.Id == intent.운송Id, cancellationToken);
-                if (queue is null || queue.의뢰Id != intent.배차의뢰Id || queue.원본의뢰Id != intent.주문번호
-                    || queue.배차업무유형 != 상태값.배차업무유형.음식배달
-                    || !운송의뢰배차원천유형.Is음식점주문(queue.원본의뢰유형))
-                    throw new InvalidOperationException("FoodDriverFollowupTransportMismatch");
-                if (transportLedgerSync is null || await transportLedgerSync.운송실행투영동기화Async(queue, item.변경자, cancellationToken) is null)
-                    throw new InvalidOperationException("FoodDriverFollowupTransportUnavailable");
-                break;
-            case 음식기사후속Kinds.RestaurantNotification:
-                if (restaurantNotification is null) throw new InvalidOperationException("FoodDriverFollowupNotificationUnavailable");
-                await restaurantNotification.주문상태변경알림발송Async(order, intent.음식점알림사유!, cancellationToken);
-                break;
-            case 음식기사후속Kinds.CommunityActivity:
-                if (publisher is null) throw new InvalidOperationException("FoodDriverFollowupPublisherUnavailable");
-                await publisher.Publish(new 음식배달인계상태변경됨Event(intent.배차의뢰Id, intent.주문번호,
-                    intent.상태, intent.발생시각Utc, intent.EventId), cancellationToken);
-                break;
-            default:
-                throw new InvalidOperationException("FoodDriverFollowupKindUnsupported");
-        }
+        await _창고출고PayloadHandler.처리Async(item, JsonOptions, cancellationToken);
     }
 
     private static string Require(string? value, string name)
         => string.IsNullOrWhiteSpace(value)
             ? throw new ArgumentException("값이 필요합니다.", name)
             : value.Trim();
-
-    private sealed class WarehouseOutboundPayload
-    {
-        public WarehouseOutboundPayload()
-        {
-        }
-
-        public long[] OutboundIds { get; set; } = [];
-
-        public long[] InboundIds { get; set; } = [];
-
-        public string? CurrentStageKey { get; set; }
-
-        public string? LedgerTemplateKey { get; set; }
-    }
 }
+
+/// <summary>같은 SQL 취소 transaction에 저장하는 최소 투영 의도이며 고객 정보·비용 사본을 보관하지 않는다.</summary>
+internal sealed record 음식합의취소투영의도(string OrderNo, string AgreementId, long? QueueId);

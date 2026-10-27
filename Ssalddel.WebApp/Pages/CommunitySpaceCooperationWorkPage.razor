@@ -1,0 +1,15 @@
+@page "/community/space-cooperations/{LedgerId}/work/{StageKey}"
+@inject NavigationManager Navigation
+<PageTitle>함께하는 업무 · Mirror</PageTitle>
+<Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영업무상세 @key="(LedgerId, StageKey, CycleId)" @ref="_page" LedgerId="@LedgerId" StageKey="@StageKey" CycleId="@CycleId" LoginHref="@LoginHref" />
+</Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string LedgerId { get; set; } = "";
+    [Parameter] public string StageKey { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "cycle")] public string? CycleId { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영업무상세? _page;
+    private string LoginHref => Navigation.ToAbsoluteUri("login?returnUrl=" + Uri.EscapeDataString(
+        NeighborhoodExchangeAuthenticationRoutes.ReturnRoute(new Uri(Navigation.Uri).PathAndQuery))).ToString();
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

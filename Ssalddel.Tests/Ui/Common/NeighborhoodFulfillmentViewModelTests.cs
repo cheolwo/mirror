@@ -9,6 +9,21 @@ namespace Ssalddel.Tests.Ui.Common;
 public sealed class NeighborhoodFulfillmentViewModelTests
 {
     [Fact]
+    public async Task 외부처리처선택은_누락된내부기사규격과작업시간을_임의로채우거나필수화하지않는다()
+    {
+        var client = new Client(); using var vm = await Ready(client);
+        vm.Draft.PackageLengthMm = null; vm.Draft.PackageWidthMm = null; vm.Draft.PackageHeightMm = null;
+        vm.Draft.PalletCount = null; vm.Draft.FloorRotationAllowed = null; vm.Draft.StackingAllowed = null;
+        vm.Draft.Pickup.작업시간분 = null; vm.Draft.Dropoff.작업시간분 = null;
+        await vm.QuoteAsync(); vm.SelectFulfillment("mock-quote");
+        vm.DispatchRequested = vm.FulfillmentCostAgreed = vm.ProviderInformationSharingAgreed = true;
+        Assert.Empty(vm.InternalCourierMissing); Assert.Equal("request", await vm.SubmitAsync());
+        var sent = Assert.Single(client.Created);
+        Assert.Null(sent.PackageLengthMm); Assert.Null(sent.VolumeCbm); Assert.Null(sent.PalletCount);
+        Assert.Null(sent.FloorRotationAllowed); Assert.Null(sent.Pickup.작업시간분); Assert.Null(sent.Dropoff.작업시간분);
+    }
+
+    [Fact]
     public async Task 추천은_자동선택하지않고_처리처별_비용과_동의후에만_접수한다()
     {
         var client = new Client(); using var vm = await Ready(client);
@@ -166,6 +181,10 @@ public sealed class NeighborhoodFulfillmentViewModelTests
         var vm = new NeighborhoodDeliveryAuthoringViewModel(client, new User()); vm.Initialize(null);
         vm.CollectionConsent = true; vm.AgeConfirmed = true; await vm.AcceptConsentAsync();
         vm.Draft.CargoName = "시험 물품"; vm.Draft.WeightKg = 1;
+        // 내부 기사 경로를 검증하는 시험의 명시 합성 포장·작업시간입니다.
+        vm.Draft.PackageLengthMm = 300; vm.Draft.PackageWidthMm = 200; vm.Draft.PackageHeightMm = 200;
+        vm.Draft.PalletCount = 0; vm.Draft.FloorRotationAllowed = true; vm.Draft.StackingAllowed = true;
+        vm.Draft.Pickup.작업시간분 = 2m; vm.Draft.Dropoff.작업시간분 = 1m;
         foreach (var place in new[] { vm.Draft.Pickup, vm.Draft.Dropoff })
         { place.주소.도로명주소 = "검토용 장소"; place.연락처.이름 = "검토 이용자"; place.연락처.전화번호 = "01000000000"; }
         return vm;

@@ -223,23 +223,23 @@ else
 @code {
     private bool _authenticationMode;
     private bool _authenticationRequired;
-    private string? _currentProductId;
-    private string _groupScopeKey = string.Empty;
-    private string _groupScopeName = string.Empty;
+    private readonly GroupPurchaseDemandSession _demand = new();
+    private string _groupScopeKey => _demand.GroupScopeKey;
+    private string _groupScopeName => _demand.GroupScopeName;
     private string _operatingMarketCode = OperatingMarketCodes.Korea;
     private string _deliveryAddressQuery = string.Empty;
-    private OperatingMarketDeliveryScopePlan? _deliveryScopePlan;
-    private bool _isDeliveryScopeLoading;
-    private string? _deliveryScopeMessage;
-    private Severity _deliveryScopeSeverity = Severity.Info;
-    private bool _deliveryScopeConfirmed;
-    private 공동구매자동집단요약응답? _registeredGroup;
-    private string _registeredDemandSourceKey = string.Empty;
+    private OperatingMarketDeliveryScopePlan? _deliveryScopePlan => _demand.DeliveryScopePlan;
+    private bool _isDeliveryScopeLoading => _demand.IsDeliveryScopeLoading;
+    private string? _deliveryScopeMessage => _demand.DeliveryScopeMessage;
+    private Severity _deliveryScopeSeverity => _demand.DeliveryScopeSeverity;
+    private bool _deliveryScopeConfirmed { get => _demand.DeliveryScopeConfirmed; set => _demand.DeliveryScopeConfirmed = value; }
+    private 공동구매자동집단요약응답? _registeredGroup => _demand.RegisteredGroup;
+    private string _registeredDemandSourceKey => _demand.RegisteredDemandSourceKey;
     private string _requestMemo = "같은 지역 주문자들과 함께 먼저 수요를 모아보고 싶습니다.";
     private bool _nonBindingAgreementAccepted;
-    private bool _isSubmitting;
-    private string? _statusMessage;
-    private Severity _statusSeverity = Severity.Info;
+    private bool _isSubmitting => _demand.IsSubmitting;
+    private string? _statusMessage { get => _demand.StatusMessage; set => _demand.StatusMessage = value; }
+    private Severity _statusSeverity { get => _demand.StatusSeverity; set => _demand.StatusSeverity = value; }
 
     [Parameter, EditorRequired]
     public HS먹거리공동구매상품카드 Product { get; set; } = default!;
@@ -293,15 +293,7 @@ else
     private Severity AuthenticationSeverity
         => Authentication.오류발생 ? Severity.Error : Severity.Info;
 
-    protected override void OnParametersSet()
-    {
-        if (!string.Equals(_currentProductId, Product.상품카드Id, StringComparison.Ordinal))
-        {
-            _currentProductId = Product.상품카드Id;
-            _registeredGroup = null;
-            _statusMessage = null;
-        }
-    }
+    protected override void OnParametersSet() => _demand.ChangeProduct(Product.상품카드Id);
 
     protected override async Task OnInitializedAsync()
     {
@@ -321,68 +313,12 @@ else
         }
     }
 
-    private async Task ResolveDeliveryScopesAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_deliveryAddressQuery))
-        {
-            _deliveryScopeSeverity = Severity.Warning;
-            _deliveryScopeMessage = "모집권을 확인할 주소를 입력해 주세요.";
-            return;
-        }
-
-        _isDeliveryScopeLoading = true;
-        _deliveryScopeMessage = null;
-        _deliveryScopePlan = null;
-        _groupScopeKey = string.Empty;
-        _groupScopeName = string.Empty;
-        _deliveryScopeConfirmed = false;
-        _registeredGroup = null;
-
-        try
-        {
-            _deliveryScopePlan = await ShipmentTrackingService.ResolveDeliveryScopesAsync(
-                new OperatingMarketDeliveryScopeResolveRequest
-                {
-                    MarketCode = _operatingMarketCode,
-                    Address = _deliveryAddressQuery,
-                    ParticipantCount = 1
-                });
-
-            if (_deliveryScopePlan is null)
-            {
-                _deliveryScopeSeverity = Severity.Error;
-                _deliveryScopeMessage = "주소 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-                return;
-            }
-
-            if (!_deliveryScopePlan.Success || _deliveryScopePlan.Items.Count == 0)
-            {
-                _deliveryScopeSeverity = Severity.Warning;
-                _deliveryScopeMessage = _deliveryScopePlan.ErrorMessage
-                    ?? "이 주소에서 사용할 모집권 후보를 찾지 못했습니다.";
-                return;
-            }
-
-            var recommended = _deliveryScopePlan.Items.FirstOrDefault(scope =>
-                                  scope.IsRecommendedRecruitmentScope)
-                              ?? _deliveryScopePlan.Items[0];
-            SelectDeliveryScope(recommended);
-            _deliveryScopeSeverity = Severity.Success;
-            _deliveryScopeMessage = $"{recommended.DisplayName}을 권장 모집권으로 찾았습니다. 사용자가 최종 확인해야 등록됩니다.";
-        }
-        finally
-        {
-            _isDeliveryScopeLoading = false;
-        }
-    }
+    private Task ResolveDeliveryScopesAsync()
+        => _demand.ResolveDeliveryScopesAsync(_operatingMarketCode, _deliveryAddressQuery,
+            request => ShipmentTrackingService.ResolveDeliveryScopesAsync(request));
 
     private void SelectDeliveryScope(OperatingMarketDeliveryScopeCandidate scope)
-    {
-        _groupScopeKey = scope.ScopeKey;
-        _groupScopeName = scope.DisplayName;
-        _deliveryScopeConfirmed = false;
-        _registeredGroup = null;
-    }
+        => _demand.SelectDeliveryScope(scope);
 
     private Task UpdateDesiredQuantityAsync(decimal quantityKg)
         => DesiredQuantityKgChanged.InvokeAsync(quantityKg);
@@ -414,8 +350,7 @@ else
     private async Task LogoutAsync()
     {
         await Authentication.로그아웃Async();
-        _registeredGroup = null;
-        _statusMessage = null;
+        _demand.ClearResult();
     }
 
     private async Task SubmitDemandAsync()
@@ -451,11 +386,8 @@ else
             return;
         }
 
-        _isSubmitting = true;
-        _registeredGroup = null;
-        try
-        {
-            var group = await ShipmentTrackingService.RegisterDemandAsync(new 공동구매자동수요등록Command
+        await _demand.RegisterDemandAsync(demandSourceKey,
+            () => new 공동구매자동수요등록Command
             {
                 수요출처키 = demandSourceKey,
                 상품키 = Product.상품카드Id,
@@ -472,52 +404,11 @@ else
                 결제상태 = 공동구매자동결제상태코드.미결제,
                 메모 = _requestMemo,
                 목표수량 = Product.SuggestedTargetQuantityKg
-            });
-
-            if (group is null)
-            {
-                _statusSeverity = Severity.Error;
-                _statusMessage = "공동 주문 수요를 서버에 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-                return;
-            }
-
-            _registeredDemandSourceKey = demandSourceKey;
-
-            var groups = await ShipmentTrackingService.ListGroupsAsync(Product.상품카드Id, _groupScopeKey);
-            _registeredGroup = groups?.FirstOrDefault(item =>
-                string.Equals(item.자동집단Id, group.자동집단Id, StringComparison.Ordinal));
-
-            if (_registeredGroup is null)
-            {
-                _statusSeverity = Severity.Warning;
-                _statusMessage = $"{Product.상품명} 수요는 등록되었지만 자동집단을 다시 읽지 못했습니다. 새로고침 후 확인해 주세요.";
-                return;
-            }
-
-            _statusSeverity = Severity.Success;
-            _statusMessage = $"수요 등록 후 서버 원장을 다시 확인했습니다. 현재 {_registeredGroup.수요건수:N0}건, {_registeredGroup.총희망수량:N0}{_registeredGroup.수량단위}이 같은 상품·모집권에 모였습니다.";
-        }
-        catch (SsalddelApiException ex)
-        {
-            _statusSeverity = Severity.Error;
-            _statusMessage = ex.StatusCode == 401
-                ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
-                : "공동주문 수요 원장을 저장하거나 다시 읽지 못했습니다. 잠시 후 다시 시도해 주세요.";
-            if (ex.StatusCode == 401)
-            {
-                _authenticationRequired = true;
-                await OpenAuthenticationAsync();
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            _statusSeverity = Severity.Error;
-            _statusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
-        }
-        finally
-        {
-            _isSubmitting = false;
-        }
+            },
+            request => ShipmentTrackingService.RegisterDemandAsync(request),
+            (productKey, scopeKey) => ShipmentTrackingService.ListGroupsAsync(productKey, scopeKey),
+            () => Product,
+            RequireAuthenticationAsync);
     }
 
     private async Task WithdrawDemandAsync()
@@ -533,75 +424,24 @@ else
             return;
         }
 
-        _isSubmitting = true;
-        try
-        {
-            var response = await ShipmentTrackingService.WithdrawDemandAsync(
-                _registeredDemandSourceKey,
-                "주문자 앱에서 철회");
-            if (response is null || !response.철회완료)
-            {
-                _statusSeverity = Severity.Error;
-                _statusMessage = response?.안내 ?? "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-                return;
-            }
+        await _demand.WithdrawDemandAsync(
+            (sourceKey, reason) => ShipmentTrackingService.WithdrawDemandAsync(sourceKey, reason),
+            (productKey, scopeKey) => ShipmentTrackingService.ListGroupsAsync(productKey, scopeKey),
+            () => Product,
+            RequireAuthenticationAsync);
+    }
 
-            var withdrawnGroupId = !string.IsNullOrWhiteSpace(response.자동집단Id)
-                ? response.자동집단Id
-                : _registeredGroup?.자동집단Id;
-            _registeredDemandSourceKey = string.Empty;
-            _registeredGroup = null;
-
-            try
-            {
-                var groups = await ShipmentTrackingService.ListGroupsAsync(
-                    Product.상품카드Id,
-                    _groupScopeKey);
-                _registeredGroup = groups?.FirstOrDefault(item =>
-                    string.Equals(item.자동집단Id, withdrawnGroupId, StringComparison.Ordinal));
-
-                _statusSeverity = Severity.Success;
-                _statusMessage = _registeredGroup is null
-                    ? "비구속 수요를 철회하고 서버 원장을 다시 확인했습니다. 이 상품·배송권에는 현재 공개할 자동집단이 없습니다."
-                    : $"비구속 수요를 철회한 뒤 서버 원장을 다시 확인했습니다. 남은 수요 {_registeredGroup.수요건수:N0}건, {_registeredGroup.총희망수량:N0}{_registeredGroup.수량단위}입니다.";
-            }
-            catch (Exception ex) when (ex is SsalddelApiException or InvalidOperationException)
-            {
-                _statusSeverity = Severity.Warning;
-                _statusMessage = "비구속 수요 철회는 완료됐지만 최신 자동집단 원장을 다시 읽지 못했습니다. 새로고침 후 모집 현황을 확인해 주세요.";
-            }
-        }
-        catch (SsalddelApiException ex)
-        {
-            _statusSeverity = Severity.Error;
-            _statusMessage = ex.StatusCode == 401
-                ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
-                : "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-            if (ex.StatusCode == 401)
-            {
-                _authenticationRequired = true;
-                await OpenAuthenticationAsync();
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            _statusSeverity = Severity.Error;
-            _statusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
-        }
-        finally
-        {
-            _isSubmitting = false;
-        }
+    private async Task RequireAuthenticationAsync()
+    {
+        _authenticationRequired = true;
+        await OpenAuthenticationAsync();
     }
 
     private string CreateDemandSourceKey()
     {
         var userId = Authentication.세션.UserId
             ?? throw new InvalidOperationException("로그인 사용자 식별자를 찾을 수 없습니다.");
-        var material = System.Text.Encoding.UTF8.GetBytes($"{userId.Trim()}|{Product.상품카드Id}");
-        var digest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(material))
-            .ToLowerInvariant();
-        return $"orderer-app:{digest[..32]}";
+        return GroupPurchaseDemandSession.CreateDemandSourceKey(userId, Product.상품카드Id);
     }
 
     private 주문자집단개설신청초안 CreateApplicationDraft()

@@ -1,0 +1,124 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+@inherits MvvmComponentBase<공간공동운영PageViewModel>
+@inject NavigationManager Navigation
+
+<PageTitle>동네 공간 공동운영</PageTitle>
+<main class="shared-hub">
+    <header><div><a href="@Href(CreateMode || LedgerId is not null ? 공간공동운영Routes.Home : "/")">← @(CreateMode || LedgerId is not null ? "동네 공동운영" : "홈")</a><h1>@(CreateMode ? "함께할 일 제안하기" : "동네 공간 공동운영")</h1><p class="shared-hub-muted">사람과 공간을 모아, 한 번의 운영부터 함께 준비해요.</p></div><button disabled="@ViewModel.IsSending" @onclick="ReloadAsync">새로고침</button></header>
+    <ol class="shared-hub-flow" aria-label="공동운영 흐름"><li>제안</li><li>함께할 사람</li><li>조건 확인</li><li>운영 회차</li><li>결과와 다음 회차</li></ol>
+    @if (ViewModel.IsLoading) { <p role="status">공동운영 내용을 확인하고 있습니다.</p> }
+    @if (ViewModel.Error is { } error) { <div class="shared-hub-note shared-hub-error" role="alert">@error</div> }
+    @if (ViewModel.PublicError is { } publicErrorNotice) { <div class="shared-hub-note" role="alert">@publicErrorNotice</div> }
+    @if (ViewModel.Notice is { } notice) { <p class="shared-hub-note" role="status">@notice</p> }
+    @if (ViewModel.HasPending && ViewModel.IsAuthenticated)
+    {
+        <section class="shared-hub-surface"><h2>이전 요청의 결과 확인</h2><p>내용과 요청 번호를 보존하고 있습니다. 결과를 확인하기 전에는 다른 변경을 보내지 않습니다.</p><div class="shared-hub-actions"><button disabled="@ViewModel.IsSending" @onclick="RecoverAsync">처리 결과 확인</button>@if (ViewModel.CanRetryPending) { <button disabled="@ViewModel.IsSending" @onclick="RetryAsync">원래 요청 직접 다시 보내기</button> }</div></section>
+    }
+    @if (CreateMode)
+    {
+        @if (!ViewModel.IsAuthenticated) { <section class="shared-hub-surface"><h2>로그인 후 제안할 수 있어요</h2><p>입력 중인 내용은 같은 계정으로 돌아오면 이어서 확인할 수 있습니다.</p><a class="shared-hub-link shared-hub-primary" href="@LoginHref">로그인하기</a></section> }
+        else
+        {
+            <form @onsubmit="CreateAsync" @onsubmit:preventDefault><fieldset disabled="@(ViewModel.IsLoading || ViewModel.IsSending || ViewModel.HasPending)"><section class="shared-hub-surface"><h2>어떤 일을 함께할까요?</h2>
+                @if (ViewModel.RegionError is { } regionError) { <p class="shared-hub-note" role="alert">@regionError</p> }
+                <공간공동운영조건Fields Value="ViewModel.Form.Terms" Regions="ViewModel.Regions" IdPrefix="create-space" />
+                <label for="create-role">내가 먼저 참여할 역할</label><select id="create-role" @bind="ViewModel.Form.RoleCode">@foreach (var role in 공간공동운영역할Codes.All) { <option value="@role">@공간공동운영Presentation.Role(role)</option> }</select>
+                <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.Form.PublishProposal" /><span>이 제안을 동네 공개 모집에 표시합니다. 상세주소나 연락처는 적지 않습니다.</span></label>
+                <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.Form.IntroductionConsented" /><span>내 역할과 표시 이름을 공개 소개하는 데 동의합니다. 나중에 철회할 수 있습니다.</span></label>
+                @if (ViewModel.Form.IntroductionConsented) { <label for="create-display-name">공개할 표시 이름</label><input id="create-display-name" @bind="ViewModel.Form.PublicDisplayName" maxlength="40" required /> }
+                <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.Form.ConfirmNonBinding" /><span>제안과 관심 참여만으로 공간 사용·계약·업무 배정이 확정되지 않음을 확인합니다.</span></label>
+                <div class="shared-hub-actions"><button class="shared-hub-primary" type="submit" disabled="@(!ViewModel.Form.ConfirmNonBinding || ViewModel.Regions.Count == 0)">함께할 일 제안하기</button><a href="@Href(공간공동운영Routes.Home)">목록으로</a></div>
+            </section></fieldset></form>
+        }
+    }
+    else if (ViewModel.Detail is { } detail)
+    {
+        <section class="shared-hub-surface"><span class="shared-hub-status">@공간공동운영Presentation.Stage(detail.StatusCode)</span><h2>@detail.Terms.Title</h2><p>@detail.Terms.Purpose</p><p class="shared-hub-muted">@ViewModel.RegionLabel(detail.Terms.PublicNeighborhoodRegionKey)</p>
+            @if (detail.ExecutionMode == "Simulation") { <p class="shared-hub-note">운영 준비를 위한 시험 자료입니다. 실제 계약·배차·송금이 실행된 것은 아닙니다.</p> }
+            <p>운영 담당: @(detail.IsOperator ? "내가 맡고 있습니다" : detail.OperatorUserId is null ? "수락 대기" : "담당자 수락 완료")</p>
+            @if (detail.MissingRoleCodes.Count > 0) { <p>함께할 역할: @string.Join(" · ", detail.MissingRoleCodes.Select(공간공동운영Presentation.Role))</p> }
+            @if (detail.Readiness.Blockers.Count > 0) { <details><summary>시작 전 확인할 내용 (@detail.Readiness.Blockers.Count)</summary><ul class="shared-hub-hold">@foreach (var blocker in detail.Readiness.Blockers) { <li>@blocker</li> }</ul></details> }
+        </section>
+        <공간공동운영통합Panel Detail="detail" ReloadRequested="ReloadAsync" InitialCycleId="@InitialCycleId" />
+        <section class="shared-hub-surface"><h2>내 참여</h2><p class="shared-hub-muted">공간 제공자를 기본 운영 담당으로 제안합니다. 실제로 맡는 것은 본인의 별도 수락이 필요합니다.</p>
+            <label for="my-role">역할</label><select id="my-role" @bind="ViewModel.SelectedRoleCode" disabled="@ViewModel.IsSending">@foreach (var role in 공간공동운영역할Codes.All) { <option value="@role">@공간공동운영Presentation.Role(role)</option> }</select>
+            @foreach (var person in detail.Participants.Where(value => value.IsMe)) { <p>@공간공동운영Presentation.Role(person.RoleCode) · @공간공동운영Presentation.Participation(person.ParticipationStateCode) · @(person.AgreedTermsRevision == detail.TermsRevision ? "현재 조건 동의" : "조건 확인 필요")</p> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.Join) && !detail.Participants.Any(value => value.IsMe && value.RoleCode == ViewModel.SelectedRoleCode && value.ParticipationStateCode != "withdrawn")) { <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.ParticipationConfirmed" /><span>선택한 역할의 관심 참여를 추가합니다. 역할 수락과 조건 동의는 별도로 확인합니다.</span></label><button disabled="@(!ViewModel.ParticipationConfirmed || ViewModel.IsSending)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.Join, ViewModel.SelectedRoleCode)">선택한 역할 관심 참여</button> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.AcceptRole) && detail.Participants.Any(value => value.IsMe && value.RoleCode == ViewModel.SelectedRoleCode && value.ParticipationStateCode == "interested")) { <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.ParticipationConfirmed" /><span>선택한 역할의 업무와 책임을 확인하고 수락합니다. 기사 피킹은 별도로 선택합니다.</span></label><button disabled="@(!ViewModel.ParticipationConfirmed || ViewModel.IsSending)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.AcceptRole, ViewModel.SelectedRoleCode)">선택한 역할 맡기</button> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.AcceptOperator)) { <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.OperatorConfirmed" /><span>공간 사용 조건과 참여자 확인을 조율하는 운영 담당을 맡겠습니다.</span></label><button disabled="@(!ViewModel.OperatorConfirmed || ViewModel.IsSending)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.AcceptOperator)">운영 담당 맡기</button> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.Withdraw)) { <div class="shared-hub-actions"><button disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(공간공동운영명령Codes.Withdraw, ViewModel.SelectedRoleCode)">선택한 역할 참여 철회</button></div><p class="shared-hub-muted">참여를 철회해도 진행 중인 보관·배송과 잔여 물품 정리는 따로 확인합니다.</p> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.IntroductionConsent)) { <details><summary>내 소개 공개 설정</summary><p>선택한 역할과 표시 이름·동네만 소개합니다. 연락처와 상세주소는 공개하지 않습니다.</p><label for="public-display-name">공개할 표시 이름</label><input id="public-display-name" @bind="ViewModel.PublicDisplayName" maxlength="40" /><div class="shared-hub-actions"><button disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(공간공동운영명령Codes.IntroductionConsent, ViewModel.SelectedRoleCode, true)">내 소개 공개에 동의</button><button disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(공간공동운영명령Codes.IntroductionConsent, ViewModel.SelectedRoleCode, false)">소개 공개 철회</button></div></details> }
+        </section>
+        <section class="shared-hub-surface"><h2>함께 확인한 운영 조건</h2><dl class="shared-hub-facts"><dt>공간 범위</dt><dd>@Value(detail.Terms.SpaceUse)</dd><dt>품목</dt><dd>@Value(detail.Terms.AllowedGoods)</dd><dt>가능한 양</dt><dd>@Value(detail.Terms.Capacity)</dd><dt>운영 시간</dt><dd>@Value(detail.Terms.OperatingHours)</dd><dt>비용·보수</dt><dd>@Value(detail.Terms.CostAndCompensation)</dd><dt>업무·책임</dt><dd>@Value(detail.Terms.Responsibilities)</dd><dt>중단·회수</dt><dd>@Value(detail.Terms.StopAndReturnPlan)</dd></dl>
+            @if (ViewModel.Allows(공간공동운영명령Codes.AgreeTerms)) { <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.TermsConfirmed" /><span>현재 운영 조건을 확인했습니다. 조건이 바뀌면 다시 동의합니다.</span></label><button class="shared-hub-primary" disabled="@(!ViewModel.TermsConfirmed || ViewModel.IsSending)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.AgreeTerms, ViewModel.SelectedRoleCode)">현재 운영 조건에 동의</button> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.UpdateTerms)) { <details><summary>운영 조건 수정</summary><p>변경하면 기존 조건 동의를 다시 받아야 합니다.</p><fieldset disabled="@ViewModel.IsSending"><공간공동운영조건Fields Value="ViewModel.TermsDraft" Regions="ViewModel.Regions" IdPrefix="edit-space" /><div class="shared-hub-actions"><button @onclick="() => ExecuteAsync(공간공동운영명령Codes.UpdateTerms)">조건 수정 요청</button></div></fieldset></details> }
+        </section>
+        <section class="shared-hub-surface"><h2>@(ViewModel.CurrentCycle is { } current ? $"{current.Number}번째 운영 회차" : "첫 운영 회차")</h2>
+            @if (ViewModel.CurrentCycle is { } cycle) { <p>@공간공동운영Presentation.Stage(cycle.StatusCode)</p>@if (!string.IsNullOrWhiteSpace(cycle.ResultNote)) { <p>@cycle.ResultNote</p> } }
+            @if (detail.Readiness.Sources.Count > 0) { <div class="shared-hub-list">@foreach (var source in detail.Readiness.Sources) { <article><h3>@source.Label</h3><p>@(source.Verified ? source.Completed ? "원 업무에서 완료 확인" : "진행 중" : "현재 상태 확인 필요")</p>@if (공간공동운영Presentation.SafeWorkHref(source.Href) is { } workHref) { <a class="shared-hub-link" href="@Href(workHref)">@(string.IsNullOrWhiteSpace(source.NextActionLabel) ? "업무에서 이어서 확인" : source.NextActionLabel)</a> }</article> }</div> }
+            else { <p class="shared-hub-muted">공간 합의·입고·주문·배송을 연결하면 준비와 진행 상황을 함께 확인할 수 있습니다.</p> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.CompleteCycle)) { <label for="cycle-result">이번 회차에서 함께 확인할 결과</label><textarea id="cycle-result" @bind="ViewModel.ResultNote" rows="3" maxlength="1000"></textarea> }
+            <div class="shared-hub-actions">
+                @if (ViewModel.Allows(공간공동운영명령Codes.CreateCycle)) { <button class="shared-hub-primary" disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(공간공동운영명령Codes.CreateCycle)">@(detail.Cycles.Count == 0 ? "첫 운영 회차 준비" : "다음 운영 회차 준비")</button> }
+                @if (ViewModel.Allows(공간공동운영명령Codes.StartCycle)) { <button class="shared-hub-primary" disabled="@(ViewModel.IsSending || !detail.Readiness.CanStart)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.StartCycle)">운영 회차 시작</button> }
+                @if (ViewModel.Allows(공간공동운영명령Codes.CompleteCycle)) { <button class="shared-hub-primary" disabled="@(ViewModel.IsSending || !detail.Readiness.CanComplete)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.CompleteCycle)">결과 확인 후 회차 마치기</button> }
+            </div><p class="shared-hub-muted">회차 마침은 정산금 입금을 뜻하지 않습니다. 보수 발생·지급 준비·실제 지급은 각각 확인합니다.</p>
+            @if (ViewModel.Allows(공간공동운영명령Codes.LinkReference)) { <details><summary>기존 업무 연결</summary><p>해당 업무의 당사자만 연결할 수 있습니다. 실제 물품과 주문은 기존 업무 화면에서 관리합니다.</p>@if (ViewModel.CandidateError is { } candidateError) { <p role="alert">@candidateError</p> } else if (ViewModel.ReferenceCandidates.Count == 0) { <p>이 회차에 연결할 수 있는 내 업무가 아직 없습니다.</p> } else { <label for="reference-choice">연결할 업무</label><select id="reference-choice" @bind="ViewModel.SelectedReferenceIndex"><option value="-1">내 업무 선택</option>@for (var index = 0; index < ViewModel.ReferenceCandidates.Count; index++) { <option value="@index">@ViewModel.ReferenceCandidates[index].Label</option> }</select><div class="shared-hub-actions"><button disabled="@(ViewModel.IsSending || ViewModel.SelectedReferenceIndex < 0)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.LinkReference)">업무 연결 확인</button></div> }</details> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.UnlinkReference) && ViewModel.CurrentCycle is { References.Count: > 0 } linkedCycle) { <details><summary>연결된 업무 수정</summary><p>준비 중인 회차에서 연결만 해제합니다. 원래 업무 기록은 삭제하지 않습니다.</p>@foreach (var reference in linkedCycle.References) { <div class="shared-hub-actions"><span>@(detail.Readiness.Sources.FirstOrDefault(value => value.KindCode == reference.KindCode && value.ReferenceId == reference.ReferenceId)?.Label ?? "연결한 업무")</span><button disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(공간공동운영명령Codes.UnlinkReference, reference: reference)">이 연결 해제</button></div> }</details> }
+        </section>
+        <공간공동운영변화Panel Detail="detail" />
+        <공간공동운영주문Panel LedgerId="@detail.LedgerId" CycleId="@(ViewModel.CurrentCycle?.CycleId ?? "")" />
+        <details class="shared-hub-surface"><summary>참여·지난 회차·운영 관리</summary>
+            @if (ViewModel.Allows(공간공동운영명령Codes.ProposalVisibility)) { <공간공동운영공개설정 Detail="detail" IsSending="ViewModel.IsSending" Changed="consent => ExecuteAsync(공간공동운영명령Codes.ProposalVisibility, consent: consent)" /> }
+            @foreach (var person in detail.Participants.Where(value => !value.IsMe)) { <p>@(string.IsNullOrWhiteSpace(person.PublicDisplayName) ? "함께하는 사람" : person.PublicDisplayName) · @공간공동운영Presentation.Role(person.RoleCode) · @공간공동운영Presentation.Participation(person.ParticipationStateCode)</p> }
+            @foreach (var previous in detail.Cycles.OrderByDescending(value => value.Number).Skip(1)) { <h3>@(previous.Number)번째 회차 · @공간공동운영Presentation.Stage(previous.StatusCode)</h3><p>@previous.ResultNote</p> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.ProposeOperatorHandover)) { <label for="operator-next">인계를 제안할 참여자</label><select id="operator-next" @bind="ViewModel.TargetOperatorUserId"><option value="">참여자 선택</option>@foreach (var participant in detail.Participants.Where(value => !value.IsMe && value.ParticipationStateCode == "accepted" && value.RoleCode is 공간공동운영역할Codes.SpaceProvider or 공간공동운영역할Codes.Coordinator).GroupBy(value => value.UserId).Select(group => group.First())) { <option value="@participant.UserId">@(string.IsNullOrWhiteSpace(participant.PublicDisplayName) ? "참여자" : participant.PublicDisplayName) · @공간공동운영Presentation.Role(participant.RoleCode)</option> }</select><label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.OperatorHandoverConfirmed" /><span>진행 중인 업무와 책임을 함께 확인한 뒤 운영 담당 인계를 제안합니다.</span></label><button disabled="@(ViewModel.IsSending || !ViewModel.OperatorHandoverConfirmed || string.IsNullOrWhiteSpace(ViewModel.TargetOperatorUserId))" @onclick="() => ExecuteAsync(공간공동운영명령Codes.ProposeOperatorHandover)">운영 담당 인계 제안</button><p class="shared-hub-muted">상대가 수락하기 전까지 기존 운영 담당이 유지됩니다.</p> }
+            @if (ViewModel.Allows(공간공동운영명령Codes.AcceptOperatorHandover)) { <label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.OperatorHandoverConfirmed" /><span>진행 중인 업무와 책임을 확인하고 운영 담당을 이어받겠습니다.</span></label><button disabled="@(ViewModel.IsSending || !ViewModel.OperatorHandoverConfirmed)" @onclick="() => ExecuteAsync(공간공동운영명령Codes.AcceptOperatorHandover)">운영 담당 인계 수락</button> }
+            <div class="shared-hub-actions">@foreach (var action in new[] { 공간공동운영명령Codes.Pause, 공간공동운영명령Codes.Resume, 공간공동운영명령Codes.Close }.Where(ViewModel.Allows)) { <button disabled="@ViewModel.IsSending" @onclick="() => ExecuteAsync(action)">@공간공동운영Presentation.Action(action)</button> }</div>
+        </details>
+    }
+    else if (ViewModel.SelectedPublic is { } proposal)
+    {
+        <section class="shared-hub-surface"><span class="shared-hub-status">@공간공동운영Presentation.Stage(proposal.StatusCode)</span><h2>@proposal.Title</h2><p>@proposal.Purpose</p><p>@proposal.NeighborhoodLabel</p>@if (proposal.ExecutionMode == "Simulation") { <p class="shared-hub-note">시험 제안 · 실제 실적 집계 제외</p> }<p>함께할 역할: @string.Join(" · ", proposal.MissingRoleCodes.Select(공간공동운영Presentation.Role))</p>
+            @foreach (var intro in proposal.Introductions) { <p>@intro.DisplayName · @공간공동운영Presentation.Role(intro.RoleCode)</p> }
+            @if (!ViewModel.IsAuthenticated) { <a class="shared-hub-link shared-hub-primary" href="@LoginHref">로그인 후 참여하기</a> }
+            else { <label for="join-role">가능한 역할</label><select id="join-role" @bind="ViewModel.SelectedRoleCode">@foreach (var role in 공간공동운영역할Codes.All) { <option value="@role">@공간공동운영Presentation.Role(role)</option> }</select><label class="shared-hub-check"><input type="checkbox" @bind="ViewModel.ParticipationConfirmed" /><span>관심 참여를 신청합니다. 공간 사용·계약·실제 업무는 조건 확인과 별도 수락 후 진행합니다.</span></label><button class="shared-hub-primary" disabled="@(!ViewModel.ParticipationConfirmed || ViewModel.IsSending || ViewModel.HasPending)" @onclick="() => JoinAsync(proposal)">관심 참여하기</button> }
+        </section>
+    }
+    else if (!ViewModel.IsLoading && LedgerId is null)
+    {
+        <section class="shared-hub-surface"><h2>동네에서 준비 중인 일</h2><div class="shared-hub-actions"><a class="shared-hub-link shared-hub-primary" href="@Href(공간공동운영Routes.Home + "/new")">함께할 일 제안하기</a><select aria-label="동네 선택" @bind="ViewModel.RegionKey"><option value="">모든 동네</option>@foreach (var region in ViewModel.Regions) { <option value="@region.RegionKey">@region.DisplayName</option> }</select><button @onclick="() => ViewModel.LoadAsync(null, 1)">선택한 동네 보기</button></div>
+            @if (ViewModel.Public is { } publicList)
+            {
+                @if (publicList.ExecutionMode == "Simulation") { <p class="shared-hub-note">시험 제안 · 실제 실적 집계 제외</p> }
+                @if (publicList.CountsArePartial) { <p class="shared-hub-muted">현재 확인한 일부 공개 자료입니다.</p> }
+                @if (publicList.Items.Count == 0) { <p>아직 공개된 모집이 없습니다. 필요한 공간과 함께할 일을 먼저 제안해 보세요.</p> }
+                <div class="shared-hub-list">@foreach (var item in publicList.Items) { <article><h3><a href="@Href(공간공동운영Presentation.DetailRoute(item.LedgerId))">@item.Title</a></h3><p>@item.Purpose</p><p class="shared-hub-muted">@item.NeighborhoodLabel · @공간공동운영Presentation.Stage(item.StatusCode)</p><p>함께할 역할: @string.Join(" · ", item.MissingRoleCodes.Select(공간공동운영Presentation.Role))</p></article> }</div>
+                <div class="shared-hub-actions">@if (ViewModel.Page > 1) { <button @onclick="() => ViewModel.LoadAsync(null, ViewModel.Page - 1)">이전 모집</button> }@if (publicList.HasMore) { <button @onclick="() => ViewModel.LoadAsync(null, ViewModel.Page + 1)">다음 모집</button> }</div>
+            }
+        </section>
+        @if (ViewModel.IsAuthenticated) { <section class="shared-hub-surface"><h2>내가 함께하는 일</h2>@if (!ViewModel.MineLoaded) { <p>내 참여 목록을 확인하지 못했습니다. 새로고침으로 다시 확인해 주세요.</p> } else if (ViewModel.Mine.Count == 0) { <p>아직 참여 중인 공동운영이 없습니다.</p> }<div class="shared-hub-list">@foreach (var mine in ViewModel.Mine) { <article><h3><a href="@Href(공간공동운영Presentation.DetailRoute(mine.LedgerId))">@mine.Terms.Title</a></h3><p>@공간공동운영Presentation.Stage(mine.StatusCode) · @(mine.IsOperator ? "내가 운영 조율 중" : "참여 중")</p></article> }</div></section> }
+    }
+</main>
+
+@code {
+    [Parameter] public string? LedgerId { get; set; }
+    [Parameter] public string? InitialCycleId { get; set; }
+    [Parameter] public bool CreateMode { get; set; }
+    [Parameter] public string LoginHref { get; set; } = "/login";
+    private string? _loadedKey;
+    protected override Task OnParametersSetAsync()
+    { var key = (CreateMode ? "create:" : "view:") + LedgerId; if (_loadedKey == key) return Task.CompletedTask; _loadedKey = key; return ReloadAsync(); }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    { if (ViewModel.NeedsReload && !ViewModel.IsLoading && !ViewModel.IsSending) await ReloadAsync(); }
+    public Task NotifyAuthenticationChangedAsync() { ViewModel.NotifyAuthenticationChanged(); return InvokeAsync(StateHasChanged); }
+    private Task ReloadAsync() => ViewModel.LoadAsync(LedgerId, ViewModel.Page);
+    private string Href(string route) => Navigation.ToAbsoluteUri(route.TrimStart('/')).ToString();
+    private static string Value(string? value) => string.IsNullOrWhiteSpace(value) ? "함께 정할 내용" : value;
+    private async Task CreateAsync() => GoToResult(await ViewModel.CreateAsync());
+    private async Task JoinAsync(공간공동운영공개제안Dto proposal) => GoToResult(await ViewModel.JoinAsync(proposal));
+    private async Task RecoverAsync() => GoToResult(await ViewModel.RecoverAsync());
+    private async Task RetryAsync() => GoToResult(await ViewModel.RetryPendingAsync());
+    private async Task ExecuteAsync(string action, string? role = null, bool? consent = null, 공간공동운영전문참조Dto? reference = null) => GoToResult(await ViewModel.ExecuteAsync(action, role, consent, reference));
+    private void GoToResult(string? id) { if (id is not null && (CreateMode || id != LedgerId)) Navigation.NavigateTo(Href(공간공동운영Presentation.DetailRoute(id))); }
+}

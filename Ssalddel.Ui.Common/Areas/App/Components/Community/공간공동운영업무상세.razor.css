@@ -1,0 +1,29 @@
+.work-detail { max-width: 760px; margin: 0 auto; padding: 16px 16px 112px; color: var(--ss-ink, #172b36); line-height: 1.5; overflow-wrap: anywhere; }
+.work-detail h1 { margin: 8px 0 16px; font-size: 24px; line-height: 1.35; font-weight: 600; }
+.work-detail h2 { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
+.work-detail h3 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.work-detail p { margin: 8px 0; font-size: 16px; }
+.work-detail .work-detail-muted { color: var(--ss-muted, #586b78); font-size: 14px; }
+.work-detail-heading { display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap; }
+.work-detail-heading > div { flex: 1 1 240px; }
+.work-detail-section { padding: 24px 0; border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.work-detail-record { padding: 16px 0; border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.work-detail-record:last-child { border-bottom: 0; }
+.work-detail-note { background: var(--ss-canvas, #f5f7fa); padding: 12px 16px; border-radius: 12px; }
+.work-detail-blocked { margin: 16px 0; padding: 16px; border: 2px solid #a94c25; border-radius: 12px; background: #fff5ed; color: #76391d; }
+.work-detail-blocked ul { margin: 0; padding-left: 22px; }
+.work-detail-blocked li { padding: 4px 0; }
+.work-detail button, .work-detail a { font: inherit; min-height: 48px; box-sizing: border-box; }
+.work-detail button { padding: 10px 16px; border: 1px solid #788c97; border-radius: 12px; background: var(--ss-surface, #fff); color: var(--ss-ink, #172b36); cursor: pointer; }
+.work-detail button:disabled { opacity: .6; cursor: default; }
+.work-detail-back, .work-detail-link { display: inline-flex; align-items: center; padding: 8px 0; color: var(--ss-accent, #0f766e); text-underline-offset: 3px; }
+.work-detail-primary { display: inline-flex; align-items: center; justify-content: center; padding: 12px 16px; border-radius: 12px; text-decoration: none; }
+.work-detail .work-detail-primary { background: var(--ss-accent, #0f766e); color: #fff; border-color: var(--ss-accent, #0f766e); }
+.work-detail-number { font-variant-numeric: tabular-nums; }
+.work-detail dl { margin: 16px 0; }
+.work-detail dl div { margin: 12px 0; }
+.work-detail dt { font-size: 14px; font-weight: 600; }
+.work-detail dd { margin: 4px 0 0; font-size: 16px; }
+.work-detail-neighbours { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.work-detail :is(button, a):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+@media (max-width: 700px) { .work-detail-record .work-detail-primary { width: 100%; } }

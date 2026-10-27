@@ -31,11 +31,24 @@ public static class NeighborhoodExchangeAuthenticationRoutes
             return NeighborhoodExchange.Home;
         }
 
+        if (TrySpaceCooperationRoute(candidate, path, decodedPath, out var spaceRoute)) return spaceRoute;
+
         return string.Equals(decodedPath, "/community/map", StringComparison.Ordinal)
                || string.Equals(decodedPath, "/workspace/community", StringComparison.Ordinal)
                || string.Equals(decodedPath, NeighborhoodExchange.Home, StringComparison.Ordinal)
                || decodedPath.StartsWith(NeighborhoodExchange.Home + "/", StringComparison.Ordinal)
             ? candidate
             : NeighborhoodExchange.Home;
+    }
+
+    private static bool TrySpaceCooperationRoute(string candidate, string path, string decodedPath, out string route)
+    {
+        route = NeighborhoodExchange.Home;
+        var home = 공간공동운영Routes.Home;
+        // 목록·작성은 기존 경로만 유지하고, 상세에서는 단일 회차 query만 전달합니다.
+        if (candidate == path && (path == home || path == home + "/new")) { route = path; return true; }
+        if (!path.StartsWith(home + "/", StringComparison.Ordinal)
+            || !decodedPath.StartsWith(home + "/", StringComparison.Ordinal)) return false;
+        return 공간공동운영업무Routes.TryCanonical(candidate, out route);
     }
 }

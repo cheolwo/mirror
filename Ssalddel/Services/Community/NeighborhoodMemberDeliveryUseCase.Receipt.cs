@@ -28,45 +28,49 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         Require(intent is { StateCode: "pending" } && intent.ActorUserId == actor,
             "MemberReceiptIntentRequired", "같은 수령 확인 요청의 결과를 확인해 주세요.");
         Require(memberCollaborations is not null, "MemberCollaborationUnavailable", "협업 저장소 연결을 확인할 수 없습니다.", 503);
-        var stored = await memberCollaborations!.조회Async(collaboration.StableId, ct);
-        Require(stored is not null && stored.Revision == collaboration.Revision && stored.TermsRevision == intent!.TermsRevision
-            && stored.LinkedDeliveryRequestId == intent.RequestId && stored.ReceiptConfirmationIntent?.StateCode == "pending"
-            && stored.ReceiptConfirmationIntent.ClientRequestId == intent.ClientRequestId
-            && stored.ReceiptConfirmationIntent.ActorUserId == actor && stored.ReceiptConfirmationIntent.Fingerprint == intent.Fingerprint,
-            "MemberReceiptIntentChanged", "협업 수령 판본이 변경되었습니다. 같은 요청 결과를 확인해 주세요.");
         var digest = Digest(new { collaboration.StableId, intent!.TermsRevision, intent.RequestId, intent.WorkRevision,
             intent.DeliveryEvidenceId, intent.Fingerprint });
         db.ChangeTracker.Clear();
-        await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (await ReplayAsync(actor, intent.ClientRequestId, "ReceiptConfirmation", intent.RequestId, digest, ct))
+        return await ExecuteDatabaseMutationAsync(async () =>
         {
-            var prior = await Receipts.AsNoTracking().SingleAsync(x => x.ActorUserId == actor && x.ClientRequestId == intent.ClientRequestId, ct);
-            await tx.CommitAsync(ct); return prior.RecordedAtUtc;
-        }
-        Require(!await Receipts.AnyAsync(x => x.AggregateId == intent.RequestId && x.Kind == "ReceiptConfirmation", ct),
-            "MemberReceiptAlreadyConfirmed", "이미 수령 확인된 배송입니다.");
-        Require(await db.운송원장.Where(x => x.의뢰Id == intent.RequestId && x.일반회원배송전용 && x.확정기사Id == null
-            && x.생활배송협업Id == collaboration.StableId && x.생활배송조건판본 == intent.TermsRevision
-            && x.배차큐단계 == 상태값.배차큐단계.종료)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.생활배송선택판본, x => x.생활배송선택판본), ct) == 1,
-            "MemberReceiptBindingChanged", "현재 회원 배송과 협업 연결을 확인해 주세요.");
-        var work = await ValidateReceiptWorkAsync(stored!, actor, ct);
-        Require(work.Revision == intent.WorkRevision && work.DeliveryEvidenceId == intent.DeliveryEvidenceId,
-            "MemberRevisionConflict", "전달 증빙과 업무 판본이 변경되었습니다.");
-        Require(await Deliveries.Where(x => x.RequestId == intent.RequestId && x.Revision == intent.WorkRevision && x.StateCode == "Delivered")
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, x => x.Revision + 1).SetProperty(x => x.UpdatedAtUtc, Now), ct) == 1,
-            "MemberRevisionConflict", "다른 수령 확인이 먼저 처리되었습니다.");
-        var source = await SourceAsync(intent.RequestId, ct);
-        var queue = await db.운송원장.SingleAsync(x => x.의뢰Id == intent.RequestId, ct);
-        source.배차상태 = 상태값.배차상태.인수완료; source.인수증등록일시 = Now; source.UpdatedAt = Now;
-        queue.생활배송선택판본++; queue.UpdatedAt = Now;
-        Receipt(actor, intent.ClientRequestId, "ReceiptConfirmation", intent.RequestId, digest);
-        db.운송이벤트.Add(new() { 의뢰Id = intent.RequestId, 이벤트타입 = "NeighborhoodMemberReceiptConfirmed",
-            메타데이터 = JsonSerializer.Serialize(new { CollaborationId = collaboration.StableId, intent.TermsRevision,
-                intent.ClientRequestId, ActorUserId = actor, WorkRevision = intent.WorkRevision + 1, intent.DeliveryEvidenceId }) });
-        await SaveAsync(ct); await tx.CommitAsync(ct);
-        // 결제·정산 상태와 담당 회원의 Delivered 상태는 수령 사실로 덮어쓰지 않습니다.
-        return source.인수증등록일시!.Value;
+            // 매 시도에서 Mongo intent 정본을 SQL transaction 전에 읽는다. Mongo 변경은 실행하지 않는다.
+            var stored = await memberCollaborations!.조회Async(collaboration.StableId, ct);
+            Require(stored is not null && stored.Revision == collaboration.Revision && stored.TermsRevision == intent!.TermsRevision
+                && stored.LinkedDeliveryRequestId == intent.RequestId && stored.ReceiptConfirmationIntent?.StateCode == "pending"
+                && stored.ReceiptConfirmationIntent.ClientRequestId == intent.ClientRequestId
+                && stored.ReceiptConfirmationIntent.ActorUserId == actor && stored.ReceiptConfirmationIntent.Fingerprint == intent.Fingerprint,
+                "MemberReceiptIntentChanged", "협업 수령 판본이 변경되었습니다. 같은 요청 결과를 확인해 주세요.");
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await ReplayAsync(actor, intent.ClientRequestId, "ReceiptConfirmation", intent.RequestId, digest, ct))
+            {
+                var prior = await Receipts.AsNoTracking().SingleAsync(x => x.ActorUserId == actor && x.ClientRequestId == intent.ClientRequestId, ct);
+                await tx.CommitAsync(ct); return prior.RecordedAtUtc;
+            }
+            Require(!await Receipts.AnyAsync(x => x.AggregateId == intent.RequestId && x.Kind == "ReceiptConfirmation", ct),
+                "MemberReceiptAlreadyConfirmed", "이미 수령 확인된 배송입니다.");
+            Require(await db.운송원장.Where(x => x.의뢰Id == intent.RequestId && x.일반회원배송전용 && x.확정기사Id == null
+                && x.생활배송협업Id == collaboration.StableId && x.생활배송조건판본 == intent.TermsRevision
+                && x.배차큐단계 == 상태값.배차큐단계.종료)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.생활배송선택판본, x => x.생활배송선택판본), ct) == 1,
+                "MemberReceiptBindingChanged", "현재 회원 배송과 협업 연결을 확인해 주세요.");
+            var work = await ValidateReceiptWorkAsync(stored!, actor, ct);
+            Require(work.Revision == intent.WorkRevision && work.DeliveryEvidenceId == intent.DeliveryEvidenceId,
+                "MemberRevisionConflict", "전달 증빙과 업무 판본이 변경되었습니다.");
+            Require(await Deliveries.Where(x => x.RequestId == intent.RequestId && x.Revision == intent.WorkRevision && x.StateCode == "Delivered")
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Revision, x => x.Revision + 1).SetProperty(x => x.UpdatedAtUtc, Now), ct) == 1,
+                "MemberRevisionConflict", "다른 수령 확인이 먼저 처리되었습니다.");
+            var source = await SourceAsync(intent.RequestId, ct);
+            var queue = await db.운송원장.SingleAsync(x => x.의뢰Id == intent.RequestId, ct);
+            source.배차상태 = 상태값.배차상태.인수완료; source.인수증등록일시 = Now; source.UpdatedAt = Now;
+            queue.생활배송선택판본++; queue.UpdatedAt = Now;
+            Receipt(actor, intent.ClientRequestId, "ReceiptConfirmation", intent.RequestId, digest);
+            db.운송이벤트.Add(new() { 의뢰Id = intent.RequestId, 이벤트타입 = "NeighborhoodMemberReceiptConfirmed",
+                메타데이터 = JsonSerializer.Serialize(new { CollaborationId = collaboration.StableId, intent.TermsRevision,
+                    intent.ClientRequestId, ActorUserId = actor, WorkRevision = intent.WorkRevision + 1, intent.DeliveryEvidenceId }) });
+            await SaveAsync(ct); await tx.CommitAsync(ct);
+            // 결제·정산 상태와 담당 회원의 Delivered 상태는 수령 사실로 덮어쓰지 않습니다.
+            return source.인수증등록일시!.Value;
+        }, ct);
     }
 
     public async Task SyncReceiptLedgerAsync(string requestId, string actor, CancellationToken ct = default)

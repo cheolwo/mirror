@@ -1,0 +1,27 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+
+<label for="@(IdPrefix + "-title")">제안 이름</label><input id="@(IdPrefix + "-title")" @bind="Value.Title" @bind:event="oninput" maxlength="100" required />
+<label for="@(IdPrefix + "-region")">함께할 동네</label><select id="@(IdPrefix + "-region")" @bind="Value.PublicNeighborhoodRegionKey" required><option value="">동네 선택</option>@foreach (var region in Regions) { <option value="@region.RegionKey">@region.DisplayName</option> }</select>
+<label for="@(IdPrefix + "-purpose")">함께하려는 일</label><textarea id="@(IdPrefix + "-purpose")" @bind="Value.Purpose" @bind:event="oninput" rows="3" maxlength="300" required></textarea>
+<details><summary>필요한 역할과 운영 조건</summary>
+    <p class="shared-hub-muted">공간이 아직 없어도 제안할 수 있습니다. 미정인 조건은 모인 뒤 함께 정하세요.</p>
+    <p>함께할 역할</p>
+    @foreach (var role in 공간공동운영역할Codes.All)
+    { <label class="shared-hub-check"><input type="checkbox" checked="@Value.RequiredRoleCodes.Contains(role)" disabled="@(role == 공간공동운영역할Codes.SpaceProvider)" @onchange="args => ChangeRole(role, args.Value is true)" /><span>@공간공동운영Presentation.Role(role)</span></label> }
+    <label for="@(IdPrefix + "-use")">공간 사용 범위</label><textarea id="@(IdPrefix + "-use")" @bind="Value.SpaceUse" rows="2" maxlength="1000"></textarea>
+    <label for="@(IdPrefix + "-goods")">함께 다룰 상품·품목</label><input id="@(IdPrefix + "-goods")" @bind="Value.AllowedGoods" maxlength="500" />
+    <label for="@(IdPrefix + "-capacity")">보관·처리할 수 있는 양</label><input id="@(IdPrefix + "-capacity")" @bind="Value.Capacity" maxlength="500" />
+    <label for="@(IdPrefix + "-hours")">가능한 시간</label><input id="@(IdPrefix + "-hours")" @bind="Value.OperatingHours" maxlength="500" />
+    <label for="@(IdPrefix + "-cost")">비용과 작업 보수</label><textarea id="@(IdPrefix + "-cost")" @bind="Value.CostAndCompensation" rows="2" maxlength="1000"></textarea>
+    <label for="@(IdPrefix + "-responsibility")">담당 업무와 책임</label><textarea id="@(IdPrefix + "-responsibility")" @bind="Value.Responsibilities" rows="2" maxlength="1000"></textarea>
+    <label for="@(IdPrefix + "-return")">중단·잔여 물품 회수 방법</label><textarea id="@(IdPrefix + "-return")" @bind="Value.StopAndReturnPlan" rows="2" maxlength="1000"></textarea>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public 공간공동운영조건Dto Value { get; set; } = new();
+    [Parameter] public IReadOnlyList<NeighborhoodPublicRegionDto> Regions { get; set; } = [];
+    [Parameter] public string IdPrefix { get; set; } = "shared-space";
+    private void ChangeRole(string role, bool selected) => Value.RequiredRoleCodes = selected
+        ? Value.RequiredRoleCodes.Append(role).Distinct(StringComparer.Ordinal).ToArray()
+        : Value.RequiredRoleCodes.Where(value => value != role).ToArray();
+}

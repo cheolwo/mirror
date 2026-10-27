@@ -207,11 +207,45 @@ public sealed partial class NeighborhoodDeliveryViewModelTests
         public Task<IReadOnlyList<NeighborhoodCollaborationPublicHistoryResponse>> PublicHistoryAsync(long postId, CancellationToken ct) => throw new NotSupportedException();
     }
 
+    [Fact]
+    public async Task 내부기사배송은_견적을먼저확인해도_실제포장과작업시간누락을_제출전에안내한다()
+    {
+        var client = new FakeClient(); using var vm = await Ready(client);
+        vm.Draft.PackageLengthMm = null; vm.Draft.PalletCount = null; vm.Draft.FloorRotationAllowed = null;
+        vm.Draft.StackingAllowed = null; vm.Draft.Pickup.작업시간분 = null; vm.Draft.Dropoff.작업시간분 = null;
+        vm.SimpleInput.DropoffTimeUnspecified = true;
+        await vm.QuoteAsync(); Assert.True(vm.HasCurrentQuote);
+        vm.DispatchRequested = vm.DirectPaymentAgreed = true;
+        Assert.Null(await vm.SubmitAsync()); Assert.Empty(client.Created);
+        Assert.Contains("포장", vm.Error); Assert.Contains("작업시간", vm.Error);
+        Assert.Contains(vm.InternalCourierMissing, x => x.Contains("마감"));
+        CompleteLoading(vm); vm.SimpleInput.DropoffTimeUnspecified = false;
+        await vm.QuoteAsync(); vm.DispatchRequested = vm.DirectPaymentAgreed = true;
+        Assert.Equal("request", await vm.SubmitAsync()); Assert.Single(client.Created);
+    }
+
+    [Fact]
+    public async Task 포장규격이나작업시간변경은_이전견적확인을무효화한다()
+    {
+        var client = new FakeClient(); using var vm = await Ready(client); await vm.QuoteAsync();
+        vm.Draft.PackageLengthMm = 301; vm.InputChanged(); Assert.False(vm.HasCurrentQuote);
+        await vm.QuoteAsync(); vm.Draft.Pickup.작업시간분 = 2.5m; vm.InputChanged(); Assert.False(vm.HasCurrentQuote);
+        vm.DispatchRequested = vm.DirectPaymentAgreed = true; Assert.Null(await vm.SubmitAsync()); Assert.Empty(client.Created);
+    }
+
+    private static void CompleteLoading(NeighborhoodDeliveryAuthoringViewModel vm)
+    {
+        vm.Draft.PackageLengthMm = 300; vm.Draft.PackageWidthMm = 200; vm.Draft.PackageHeightMm = 200;
+        vm.Draft.PalletCount = 0; vm.Draft.FloorRotationAllowed = true; vm.Draft.StackingAllowed = true;
+        vm.Draft.Pickup.작업시간분 = 2m; vm.Draft.Dropoff.작업시간분 = 1m;
+    }
+
     private static async Task<NeighborhoodDeliveryAuthoringViewModel> Ready(FakeClient client, INeighborhoodCollaborationClient? collaboration = null)
     {
         var vm = new NeighborhoodDeliveryAuthoringViewModel(client, new User("owner"), collaboration);
         vm.Initialize(null); vm.CollectionConsent = true; vm.AgeConfirmed = true; await vm.AcceptConsentAsync();
         vm.Draft.CargoName = "시험 물건"; vm.Draft.WeightKg = 1;
+        CompleteLoading(vm);
         foreach (var location in new[] { vm.Draft.Pickup, vm.Draft.Dropoff })
         { location.주소.도로명주소 = "시험로 10"; location.연락처.이름 = "시험 이용자"; location.연락처.전화번호 = "01000000000"; }
         return vm;

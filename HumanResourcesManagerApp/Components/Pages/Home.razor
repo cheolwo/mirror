@@ -13,7 +13,7 @@
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h4">인력 역할 검토</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        서버에 영속된 역할 지원·철회와 역할 배정·해제 이력을 같은 검토 흐름에서 확인합니다.
+                        역할 지원·철회와 역할 배정·해제 내역을 함께 확인합니다.
                     </MudText>
                 </MudStack>
                 @if (ViewModel.기능사용가능 && ViewModel.인증.역할검토접근가능)
@@ -22,12 +22,12 @@
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.VerifiedUser">
                             @ViewModel.인증.현재사용자표시
                         </MudChip>
-                        <MudTooltip Text="역할 지원·배정 원장 다시 조회">
+                        <MudTooltip Text="지원·배정 내역 다시 조회">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Color="Color.Default"
                                            Disabled="@ViewModel.처리중"
                                            OnClick="RefreshAsync"
-                                           aria-label="역할 지원·배정 원장 다시 조회" />
+                                           aria-label="지원·배정 내역 다시 조회" />
                         </MudTooltip>
                         <MudButton Variant="Variant.Text"
                                    Color="Color.Default"
@@ -45,7 +45,7 @@
                     <MudStack AlignItems="AlignItems.Center" Spacing="2">
                         <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
                         <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            HR 기능, 인력 관리자 권한과 역할 지원·배정 원장을 확인하고 있습니다.
+                            인력 관리 권한과 지원·배정 내역을 확인하고 있습니다.
                         </MudText>
                     </MudStack>
                 </MudPaper>
@@ -65,10 +65,10 @@
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
                     <MudStack Spacing="1">
-                        <MudText Typo="Typo.subtitle1">HR 역할 검토 조회가 비활성입니다.</MudText>
+                        <MudText Typo="Typo.subtitle1">현재 인력 지원·배정 내역을 조회할 수 없습니다.</MudText>
                         <MudText Typo="Typo.body2">@ViewModel.기능안내</MudText>
                         <MudText Typo="Typo.caption">
-                            <code>HrParticipationWorkflow</code>가 활성화된 환경에서만 서버 역할 원장을 조회합니다.
+                            이 환경에서 인력 관리 기능을 사용할 수 있는지 관리자에게 확인해 주세요.
                         </MudText>
                     </MudStack>
                 </MudAlert>

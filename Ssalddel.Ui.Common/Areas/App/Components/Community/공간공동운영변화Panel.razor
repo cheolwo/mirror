@@ -1,0 +1,130 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+@using Ssalddel.Contracts.Common.Community
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+
+@if (Detail is { } detail)
+{
+    <section class="shared-outcomes" aria-labelledby="shared-outcomes-title" data-testid="space-shared-outcomes">
+        <header class="shared-outcomes-heading">
+            <h2 id="shared-outcomes-title">이번 회차에서 함께 만든 변화</h2>
+            <p>동네에서 함께 일하고, 함께 만든 가치를 확인해요.</p>
+        </header>
+        @if (detail.SharedOutcomes is not { } outcomes)
+        {
+            <p class="shared-outcomes-note" role="status" data-testid="outcomes-unavailable">현재 변화 정보를 확인하지 못했어요. 다시 불러온 뒤 확인해 주세요.</p>
+        }
+        else
+        {
+            @if (outcomes.ExecutionMode == "Simulation")
+            {
+                <p class="shared-outcomes-note">시험 자료 · 실제 실적 집계 제외</p>
+            }
+            @if (!outcomes.MatchesCurrentExecutionMode)
+            {
+                <p class="shared-outcomes-note" role="status">현재 실행 모드와 다른 기록이에요. 원 업무에서 다시 확인해 주세요.</p>
+            }
+            <section class="shared-outcomes-participation" aria-label="현재 참여와 조건 확인" data-testid="current-participation">
+                <h3>현재 함께하는 사람</h3>
+                <dl class="shared-outcomes-counts">
+                    <div><dt>관심 참여</dt><dd>@outcomes.InterestedParticipantCount.ToString("N0")<span>명</span></dd></div>
+                    <div><dt>역할 수락</dt><dd>@outcomes.AcceptedParticipantCount.ToString("N0")<span>명</span></dd></div>
+                </dl>
+                <p class="shared-outcomes-muted">현재 참여 인원이며, 과거 실제 근무 인원이 아니에요.</p>
+                <dl class="shared-outcomes-facts">
+                    <dt>수락한 역할</dt><dd>@Roles(outcomes.AcceptedRoleCodes, "아직 없음")</dd>
+                    <dt>현재 조건 동의</dt><dd>@Roles(outcomes.CurrentTermsAgreedRoleCodes, "아직 없음")</dd>
+                    <dt>조건 재확인</dt><dd>@Roles(outcomes.PendingTermsAgreementRoleCodes, "없음")</dd>
+                    <dt>필요한 역할</dt><dd>@Roles(outcomes.MissingRoleCodes, "없음")</dd>
+                </dl>
+                <p class="shared-outcomes-muted">@(outcomes.TermsRevision > 0 ? $"현재 운영 조건 {outcomes.TermsRevision}차 기준" : "현재 운영 조건 확인 필요")</p>
+            </section>
+
+            <section class="shared-outcomes-cycles" aria-label="회차별 연결 자료 확인">
+                <h3>회차별로 확인한 기록</h3>
+                @if (outcomes.Cycles.Count == 0)
+                {
+                    <p class="shared-outcomes-muted">아직 준비한 회차가 없어요.</p>
+                }
+                else
+                {
+                    var latest = outcomes.Cycles.OrderByDescending(item => item.Number).First().CycleId;
+                    @foreach (var cycle in outcomes.Cycles.OrderByDescending(item => item.Number))
+                    {
+                        <details class="shared-outcomes-cycle" open="@(cycle.CycleId == latest)" @key="cycle.CycleId" data-testid="cycle-outcomes" data-cycle-id="@cycle.CycleId" data-cycle-number="@cycle.Number" aria-label="@(cycle.Number + "번째 회차")">
+                            <summary><span>@(cycle.Number)번째 회차</span><span class="shared-outcomes-stage">@공간공동운영Presentation.Stage(cycle.StatusCode)</span></summary>
+                            <p class="shared-outcomes-muted">운영 조건 @cycle.TermsRevision 차 · 연결 자료 @cycle.LinkedSourceCount.ToString("N0")건</p>
+                            @if (cycle.StartedAtUtc is { } started) { <p class="shared-outcomes-muted">회차 시작 @KoreanTime(started)</p> }
+                            @if (cycle.CompletedAtUtc is { } completed) { <p class="shared-outcomes-muted">회차 마침 @KoreanTime(completed)</p> }
+                            @if (cycle.SourceCompletionRecorded)
+                            {
+                                <p class="shared-outcomes-note">회차 결과 확인 기록이 있어요. 현재 상태는 아래 연결 자료에서 다시 확인해요.</p>
+                            }
+                            @if (cycle.UnverifiedSourceCount > 0 || cycle.AttentionSourceCount > 0 || cycle.DuplicateReferenceCount > 0)
+                            {
+                                <ul class="shared-outcomes-checks">
+                                    @if (cycle.UnverifiedSourceCount > 0) { <li>현재 상태를 확인할 자료 @cycle.UnverifiedSourceCount.ToString("N0")건</li> }
+                                    @if (cycle.AttentionSourceCount > 0) { <li>문제를 살펴볼 자료 @cycle.AttentionSourceCount.ToString("N0")건</li> }
+                                    @if (cycle.DuplicateReferenceCount > 0) { <li>중복 참조 @cycle.DuplicateReferenceCount.ToString("N0")개 · 실적으로 더하지 않아요.</li> }
+                                </ul>
+                            }
+                            @if (cycle.Sources.Count == 0)
+                            {
+                                <p class="shared-outcomes-muted">아직 연결한 업무가 없어요.</p>
+                            }
+                            else
+                            {
+                                <ul class="shared-outcomes-sources">
+                                    @foreach (var source in cycle.Sources)
+                                    {
+                                        <li>
+                                            <h4>@source.Label</h4>
+                                            <p class="shared-outcomes-source-status" data-testid="source-status">@SourceStatus(source)</p>
+                                            @if (source.KindCode == "Settlement" && source.Verified && source.Completed)
+                                            {
+                                                <p class="shared-outcomes-muted">실제 지급이나 입금 확인과는 달라요.</p>
+                                            }
+                                            @if (공간공동운영Presentation.SafeWorkHref(source.Href) is { } href)
+                                            {
+                                                <a class="shared-outcomes-link" href="@href">@(string.IsNullOrWhiteSpace(source.NextActionLabel) ? "원 업무에서 확인" : source.NextActionLabel)</a>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            @if (detail.Cycles.FirstOrDefault(item => item.CycleId == cycle.CycleId)?.ResultNote is { Length: > 0 } note)
+                            {
+                                <div class="shared-outcomes-memo"><h4>함께 남긴 개선 메모</h4><p>@note</p></div>
+                            }
+                        </details>
+                    }
+                }
+                <p class="shared-outcomes-muted">연결 자료의 확인 상태이며, 실제 작업 건수나 실근무 인원을 뜻하지 않아요.</p>
+            </section>
+
+            <section class="shared-outcomes-evidence" aria-label="아직 연결되지 않은 변화 근거" data-testid="evidence-unconnected">
+                <h3>더 확인할 변화</h3>
+                <dl class="shared-outcomes-facts"><dt>실수령액</dt><dd>확인 근거 없음</dd><dt>이동·대기 시간</dt><dd>확인 근거 없음</dd><dt>비용 절감</dt><dd>확인 근거 없음</dd></dl>
+                <p class="shared-outcomes-muted">관련 기록이 연결되면 확인할 수 있어요.</p>
+            </section>
+            <footer class="shared-outcomes-footer">
+                <p>조건 확인 → 작업 인계 → 문제 알리기 → 당사자 확인</p>
+                <p class="shared-outcomes-muted">문제는 당사자가 함께 확인해요. 자동으로 감점하지 않아요.</p>
+                @if (outcomes.AsOfUtc != default) { <p class="shared-outcomes-muted">확인 시각 @KoreanTime(outcomes.AsOfUtc)</p> }
+            </footer>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public 공간공동운영상세Response? Detail { get; set; }
+
+    private static string Roles(IReadOnlyList<string>? codes, string empty)
+        => codes is null ? "확인 필요" : codes.Count == 0 ? empty
+            : string.Join(" · ", codes.Distinct(StringComparer.Ordinal).Select(공간공동운영Presentation.Role));
+    private static string SourceStatus(공간공동운영원천상태Dto source)
+        => !source.Verified ? "현재 상태 확인 필요" : source.RequiresAttention ? "문제 확인 필요"
+            : source.Completed ? source.KindCode == "Settlement" ? "지급 준비 확인" : "원 업무에서 완료 확인"
+            : "진행 중";
+    private static string KoreanTime(DateTimeOffset value)
+        => value.ToOffset(TimeSpan.FromHours(9)).ToString("MM.dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) + " (한국)";
+}

@@ -43,6 +43,9 @@ public sealed class NeighborhoodDeliverySimpleInputTests
         row.Draft.CommerceProtection = new() { NoticeAccepted = true }; row.Draft.AutoFulfillment = new() { AutomaticSubmissionAgreed = true };
         row.Draft.FulfillmentSelection = new() { ProviderId = "foreign", ConfirmedCostKrw = 99 }; row.Draft.CollaborationId = "foreign";
         row.Draft.Pickup.주소.위도 = 37; row.Draft.Pickup.주소.경도 = 127;
+        row.Draft.PackageLengthMm = 293; row.Draft.PackageWidthMm = 350; row.Draft.PackageHeightMm = 200;
+        row.Draft.VolumeCbm = .02051m; row.Draft.PalletCount = 0; row.Draft.FloorRotationAllowed = false; row.Draft.StackingAllowed = false;
+        row.Draft.Pickup.작업시간분 = 0m; row.Draft.Dropoff.작업시간분 = 2.5m;
         var client = ClientWith(row); using var vm = await Ready(client); vm.Initialize(41); var consent = vm.ConsentEvidenceId;
         await vm.QuoteAsync(); vm.DirectPaymentAgreed = true; vm.DispatchRequested = true;
         await vm.ImportInputAsync("양식.xlsx", [1]); Assert.True(vm.SimpleInput.ApplyRow(row));
@@ -50,6 +53,9 @@ public sealed class NeighborhoodDeliverySimpleInputTests
         Assert.Equal(consent, vm.CurrentInputSnapshot().PrivacyConsentEvidenceId); Assert.Null(vm.Draft.PrivacyConsentEvidenceId);
         Assert.Null(vm.Draft.CommerceProtection); Assert.Null(vm.Draft.AutoFulfillment); Assert.Null(vm.Draft.FulfillmentSelection); Assert.Null(vm.Draft.AgreedFareKrw);
         Assert.Null(vm.Draft.Pickup.주소.위도); Assert.Null(vm.Draft.Pickup.주소.경도); Assert.False(vm.DirectPaymentAgreed); Assert.False(vm.DispatchRequested); Assert.Null(vm.Quote);
+        Assert.Equal(293, vm.Draft.PackageLengthMm); Assert.Equal(.02051m, vm.Draft.VolumeCbm); Assert.Equal(0, vm.Draft.PalletCount);
+        Assert.False(vm.Draft.FloorRotationAllowed); Assert.False(vm.Draft.StackingAllowed);
+        Assert.Equal(0m, vm.Draft.Pickup.작업시간분); Assert.Equal(2.5m, vm.Draft.Dropoff.작업시간분);
     }
 
     [Fact]
@@ -104,6 +110,7 @@ public sealed class NeighborhoodDeliverySimpleInputTests
     {
         var row = Row(); var client = ClientWith(row); client.Create = _ => Task.FromResult<NeighborhoodDeliveryResponse?>(null);
         using var vm = await Ready(client); await vm.ImportInputAsync("a.xlsx", [1]); vm.SimpleInput.ApplyRow(row);
+        FillLoading(vm.Draft); // 이 시험의 명시 보완값이며 엑셀 v1에서 수집됐다는 뜻이 아닙니다.
         vm.SimpleInput.TimeReviewed = true; await vm.QuoteAsync(); vm.DirectPaymentAgreed = true; vm.DispatchRequested = true;
         await vm.SubmitAsync(); Assert.True(vm.NeedsSubmissionReview); var original = JsonSerializer.Serialize(client.Created[0]);
         Assert.False(vm.SimpleInput.ApplyRow(row)); await vm.ImportInputAsync("b.xlsx", [2]); Assert.Single(client.Uploaded);
@@ -167,14 +174,15 @@ public sealed class NeighborhoodDeliverySimpleInputTests
     }
 
     [Fact]
-    public async Task Blank_optional_dropoff_window_stays_unspecified_through_review_quote_and_submission()
+    public async Task Blank_optional_dropoff_stays_unknown_and_internal_courier_submission_requires_completion()
     {
         var row = Row(); row.Draft.Dropoff.시간창 = null; var client = ClientWith(row); using var vm = await Ready(client);
         vm.SimpleInput.IsActive = true; await vm.ImportInputAsync("a.xlsx", [1]); Assert.True(vm.SimpleInput.ApplyRow(row));
         Assert.True(vm.SimpleInput.DropoffTimeUnspecified); Assert.False(vm.SimpleInput.HasMissingTimes);
         Assert.Null(vm.CurrentInputSnapshot().Dropoff.시간창); vm.SimpleInput.TimeReviewed = true;
         await vm.QuoteAsync(); Assert.Equal(1, client.QuoteCalls); vm.DirectPaymentAgreed = true; vm.DispatchRequested = true;
-        await vm.SubmitAsync(); Assert.Null(Assert.Single(client.Created).Dropoff.시간창);
+        await vm.SubmitAsync(); Assert.Empty(client.Created); Assert.Contains("마감", vm.Error);
+        Assert.Null(vm.CurrentInputSnapshot().Dropoff.시간창); Assert.Null(vm.Draft.PackageLengthMm);
     }
 
     [Fact]
@@ -209,6 +217,40 @@ public sealed class NeighborhoodDeliverySimpleInputTests
         FillPlaces(row.Draft); row.Draft.Pickup.시간창 = new() { 시작일시 = start, 종료일시 = start.AddHours(1) };
         row.Draft.Dropoff.시간창 = new() { 시작일시 = start, 종료일시 = start.AddHours(2) }; return row;
     }
+    [Fact]
+    public async Task Native_package_and_handling_inputs_survive_review_submission_and_decimal_precision()
+    {
+        var client = new Client(); using var vm = await Ready(client); vm.SimpleInput.IsActive = true;
+        vm.Draft.Quantity = 3; vm.Draft.WeightKg = 12.5m;
+        vm.Draft.PackageLengthMm = 293; vm.Draft.PackageWidthMm = 350; vm.Draft.PackageHeightMm = 200;
+        vm.Draft.VolumeCbm = .05m; vm.Draft.PalletCount = 0; vm.Draft.FloorRotationAllowed = false; vm.Draft.StackingAllowed = false;
+        vm.Draft.Pickup.작업시간분 = 0m; vm.Draft.Dropoff.작업시간분 = 2.5m;
+        vm.SimpleInput.TimeReviewed = true; var review = vm.CurrentInputSnapshot();
+        Assert.Equal(.06153m, vm.LoadingInput.유효부피Cbm); Assert.Equal(.05m, vm.LoadingInput.입력.입력부피Cbm);
+        await vm.QuoteAsync(); vm.DirectPaymentAgreed = true; vm.DispatchRequested = true; await vm.SubmitAsync();
+        var sent = Assert.Single(client.Created);
+        Assert.Equal(JsonSerializer.Serialize(review.Pickup), JsonSerializer.Serialize(sent.Pickup));
+        Assert.Equal(JsonSerializer.Serialize(review.Dropoff), JsonSerializer.Serialize(sent.Dropoff));
+        Assert.Equal(NeighborhoodDeliveryLoadingInput.Calculate(review).입력지문, NeighborhoodDeliveryLoadingInput.Calculate(sent).입력지문);
+        Assert.Equal(12.5m, sent.WeightKg); Assert.False(sent.FloorRotationAllowed); Assert.False(sent.StackingAllowed);
+    }
+
+    [Fact]
+    public async Task Imported_missing_package_values_stay_unknown_until_explicitly_completed()
+    {
+        var row = Row(); var client = ClientWith(row); using var vm = await Ready(client);
+        await vm.ImportInputAsync("v1.xlsx", [1]); Assert.True(vm.SimpleInput.ApplyRow(row));
+        Assert.Null(vm.Draft.PackageLengthMm); Assert.Null(vm.Draft.VolumeCbm); Assert.Null(vm.Draft.FloorRotationAllowed);
+        Assert.Null(vm.Draft.Pickup.작업시간분); Assert.Contains(vm.InternalCourierMissing, x => x.Contains("포장"));
+        Assert.Null(NeighborhoodDeliveryLoadingInput.Calculate(vm.CurrentInputSnapshot()).유효부피Cbm);
+    }
+
+    private static void FillLoading(NeighborhoodDeliveryRequest request)
+    {
+        request.PackageLengthMm = 300; request.PackageWidthMm = 200; request.PackageHeightMm = 200;
+        request.PalletCount = 0; request.FloorRotationAllowed = true; request.StackingAllowed = true;
+        request.Pickup.작업시간분 = 2m; request.Dropoff.작업시간분 = 1m;
+    }
     private static void FillPlaces(NeighborhoodDeliveryRequest request)
     {
         foreach (var place in new[] { request.Pickup, request.Dropoff })
@@ -218,7 +260,7 @@ public sealed class NeighborhoodDeliverySimpleInputTests
     {
         var vm = new NeighborhoodDeliveryAuthoringViewModel(client, user ?? new User()); vm.Initialize(null);
         vm.CollectionConsent = true; vm.AgeConfirmed = true; await vm.AcceptConsentAsync();
-        if (fill) { vm.Draft.CargoName = "책"; vm.Draft.WeightKg = 2; FillPlaces(vm.Draft); } return vm;
+        if (fill) { vm.Draft.CargoName = "책"; vm.Draft.WeightKg = 2; FillPlaces(vm.Draft); FillLoading(vm.Draft); } return vm;
     }
     private sealed class User : ISsalddel현재사용자Context
     {

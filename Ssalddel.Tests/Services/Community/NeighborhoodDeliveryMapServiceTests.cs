@@ -5,6 +5,7 @@ using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Application.Driver.DispatchAction;
 using Ssalddel.Application.Shipper.Request;
 using Ssalddel.Contracts.Common.Community;
+using Ssalddel.Contracts.Common.Transport;
 using Ssalddel.Services.Community;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
@@ -277,6 +278,7 @@ public sealed class NeighborhoodDeliveryMapServiceTests
     [Theory]
     [InlineData(-2, true)]
     [InlineData(-60, false)]
+    [InlineData(2, false)]
     public async Task 일반화물은_생활배송전용배정증거없이_현재수락후최근10분GPS만반환한다(int measuredMinutesAgo, bool visible)
     {
         await using var f = await Fixture.Create();
@@ -284,6 +286,9 @@ public sealed class NeighborhoodDeliveryMapServiceTests
         // 일반화물은 생활배송 전용 배정 사건을 요구하지 않는다. 실제 화물 수락의 기존 근거를 사용한다.
         f.Db.운송이벤트.RemoveRange(f.Db.운송이벤트);
         var measured = f.Clock.Now.AddMinutes(measuredMinutesAgo);
+        f.Db.용달기사.Add(new 용달기사 { 기사Id = "driver-1", 운행상태 = 상태값.기사운행상태.운행중 });
+        f.Db.기사근무.Add(new 기사근무 { 기사Id = "driver-1", ActiveDriverId = "driver-1",
+            시작시각 = measured.AddMinutes(-2), 운송실행유형 = 운송실행유형코드.화물운송 });
         f.Db.운송이벤트.Add(CargoAcceptanceRecoveryMarker.Create(f.Queue, measured.AddMinutes(-1)));
         await f.AddLocation(measured, measured.AddSeconds(10));
         var detail = await f.Deliveries.내상세Async("delivery-1");
@@ -296,6 +301,24 @@ public sealed class NeighborhoodDeliveryMapServiceTests
             Assert.Null(detail.Request.기사최근위치시각Utc);
         }
         Assert.Null(await f.Service.내지도Async("delivery-1")); // 생활배송 전용 지도에는 여전히 노출하지 않는다.
+    }
+
+    [Fact]
+    public async Task 일반화물은_수락과최근GPS가있어도_현재화물근무없이는_노출하지않는다()
+    {
+        await using var f = await Fixture.Create();
+        f.Request.클라이언트요청Id = "legacy:1";
+        f.Db.운송이벤트.RemoveRange(f.Db.운송이벤트);
+        f.Db.용달기사.Add(new 용달기사 { 기사Id = "driver-1", 운행상태 = 상태값.기사운행상태.운행중 });
+        f.Db.운송이벤트.Add(CargoAcceptanceRecoveryMarker.Create(f.Queue, f.Clock.Now.AddMinutes(-3)));
+        await f.AddLocation(f.Clock.Now.AddMinutes(-2), f.Clock.Now.AddMinutes(-2).AddSeconds(10));
+
+        var detail = await f.Deliveries.내상세Async("delivery-1");
+
+        Assert.NotNull(detail);
+        Assert.Null(detail.Request.기사최근위도);
+        Assert.Null(detail.Request.기사최근경도);
+        Assert.Null(detail.Request.기사최근위치시각Utc);
     }
 
     private sealed class Fixture : IAsyncDisposable

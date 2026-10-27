@@ -18,26 +18,36 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         var removed = 0;
         foreach (var id in ids)
         {
-            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-            // 같은 SQL 행을 잠가 불명확한 upload 재시도와 파기가 교차하지 않도록 한다.
-            if (await Photos.Where(x => x.EvidenceId == id && x.StateCode != "Deleted")
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.StateCode, x => x.StateCode), ct) != 1) continue;
-            var photo = await Photos.SingleAsync(x => x.EvidenceId == id, ct);
-            var work = await Deliveries.AsNoTracking().SingleAsync(x => x.RequestId == photo.RequestId, ct);
-            var terminal = work.StateCode is "Delivered" or "Cancelled";
-            var orphan = photo.StateCode is "Uploading" or "Uploaded" && photo.EvidenceId != work.PickupEvidenceId && photo.EvidenceId != work.DeliveryEvidenceId;
-            if ((!terminal || work.UpdatedAtUtc > Now.AddDays(-30)) && !orphan) continue;
-            if (await db.Set<살뜰.도메인.창고.분산사진보존정지Record>().AsNoTracking().AnyAsync(x => x.SourceKind == 보호지원출처Codes.생활배송
-                && x.SourceId == photo.RequestId && x.Active, ct)) continue;
-            // null은 Mongo 지원 색인의 상태 미확인이다. 보존 여부를 추정하지 않는다.
-            if (await cases.HasOpenCaseAsync(보호지원출처Codes.생활배송, photo.RequestId, ct) != false) continue;
-            var pointer = Open<PhotoPointer>(photo.PrivatePayload);
-            var prefix = "neighborhood-member-proof/" + Stable("", photo.ActorUserId);
-            var result = await storage.DeleteAsync(pointer.Container, pointer.ObjectName, prefix, ct);
-            if (!result.ActiveObjectAbsent) continue;
-            photo.StateCode = result.HistoricalCopiesVerifiedAbsent ? "Deleted" : "ActiveDeleted";
-            if (result.HistoricalCopiesVerifiedAbsent) { photo.PrivatePayload = ""; removed++; }
-            await SaveAsync(ct); await tx.CommitAsync(ct);
+            // 잠금을 풀어 업로드/파기가 교차하게 하지 않는다. 같은 호출에서 SQL만
+            // 재시도해도 이미 보낸 물리 삭제는 다시 전송하지 않는다.
+            Task<ObjectStorageDeleteResult>? deletionTask = null;
+            async Task<ObjectStorageDeleteResult> DeleteOnceAsync(PhotoPointer pointer, string prefix)
+                => await storage.DeleteAsync(pointer.Container, pointer.ObjectName, prefix, ct);
+            removed += await ExecuteDatabaseMutationAsync(async () =>
+            {
+                await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+                // 같은 SQL 행을 잠가 불명확한 upload 재시도와 파기가 교차하지 않도록 한다.
+                if (await Photos.Where(x => x.EvidenceId == id && x.StateCode != "Deleted")
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.StateCode, x => x.StateCode), ct) != 1)
+                    return deletionTask is { IsCompletedSuccessfully: true } && deletionTask.Result.HistoricalCopiesVerifiedAbsent ? 1 : 0;
+                var photo = await Photos.SingleAsync(x => x.EvidenceId == id, ct);
+                var work = await Deliveries.AsNoTracking().SingleAsync(x => x.RequestId == photo.RequestId, ct);
+                var terminal = work.StateCode is "Delivered" or "Cancelled";
+                var orphan = photo.StateCode is "Uploading" or "Uploaded" && photo.EvidenceId != work.PickupEvidenceId && photo.EvidenceId != work.DeliveryEvidenceId;
+                if ((!terminal || work.UpdatedAtUtc > Now.AddDays(-30)) && !orphan) return 0;
+                if (await db.Set<살뜰.도메인.창고.분산사진보존정지Record>().AsNoTracking().AnyAsync(x => x.SourceKind == 보호지원출처Codes.생활배송
+                    && x.SourceId == photo.RequestId && x.Active, ct)) return 0;
+                // null은 Mongo 지원 색인의 상태 미확인이다. 보존 여부를 추정하지 않는다.
+                if (await cases.HasOpenCaseAsync(보호지원출처Codes.생활배송, photo.RequestId, ct) != false) return 0;
+                var pointer = Open<PhotoPointer>(photo.PrivatePayload);
+                var prefix = "neighborhood-member-proof/" + Stable("", photo.ActorUserId);
+                var result = await (deletionTask ??= DeleteOnceAsync(pointer, prefix));
+                if (!result.ActiveObjectAbsent) return 0;
+                photo.StateCode = result.HistoricalCopiesVerifiedAbsent ? "Deleted" : "ActiveDeleted";
+                if (result.HistoricalCopiesVerifiedAbsent) photo.PrivatePayload = "";
+                await SaveAsync(ct); await tx.CommitAsync(ct);
+                return result.HistoricalCopiesVerifiedAbsent ? 1 : 0;
+            }, ct);
         }
         return removed;
     }

@@ -1,0 +1,204 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+@using System.ComponentModel
+@using Microsoft.Extensions.DependencyInjection
+@using Ssalddel.Contracts.Common.Community
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@implements IDisposable
+@inject IServiceProvider Services
+
+@if (Detail is { } detail)
+{
+    <section class="integrated-cooperation" aria-labelledby="integrated-cooperation-title" data-testid="integrated-cooperation">
+        <header class="integrated-heading"><div><h2 id="integrated-cooperation-title">함께할 일과 약속</h2><p>회차와 주문, 연결된 업무를 함께 확인해요.</p></div><button type="button" disabled="@(model is null || Model.IsLoading || Model.IsSending)" @onclick="ReloadAsync">다시 불러오기</button></header>
+        @if (model is null)
+        {
+            <p class="integrated-note" role="status" data-testid="integrated-unavailable">통합 원장 조회 기능을 확인하지 못했어요. 기존 업무는 아래에서 계속 확인할 수 있어요.</p>
+        }
+        else
+        {
+            @if (Model.IsLoading) { <p role="status">회차와 내 약속을 확인하고 있어요.</p> }
+            @if (Model.Error is { } error) { <p class="integrated-note" role="alert">@error</p> }
+            @if (Model.Notice is { } notice) { <p class="integrated-note" role="status">@notice</p> }
+            @if (Model.HasPending)
+            {
+                <section class="integrated-pending" aria-label="이전 약속 요청 확인"><h3>이전 요청의 결과 확인</h3><p>원래 요청 번호와 조건을 보존하고 있어요. 다른 변경을 보내기 전에 결과를 확인해 주세요.</p>
+                    @if (Model.PendingBelongsHere)
+                    {
+                        <div class="integrated-actions"><button type="button" disabled="@Model.IsSending" @onclick="RecoverAsync">처리 결과 확인</button>@if (Model.CanRetryPending) { <button type="button" disabled="@Model.IsSending" @onclick="RetryAsync">같은 요청 직접 다시 보내기</button> }</div>
+                    }
+                    else if (Model.PendingReturnHref is { } pendingHref) { <a class="integrated-link" href="@pendingHref">원래 공동운영에서 확인하기</a> }
+                </section>
+            }
+            @if (Model.Integrated is { } integrated)
+            {
+                @if (integrated.ExecutionMode == "Simulation") { <p class="integrated-note">시험 자료 · 실제 작업·입금·운영 실적이 아니에요.</p> }
+                <공간공동운영업무연결 Detail="detail" Snapshot="integrated" InitialCycleId="@InitialCycleId" />
+                <section class="integrated-tree" aria-label="회차와 주문의 관계" data-testid="integrated-hierarchy">
+                    <h3>@detail.Terms.Title</h3><p class="integrated-muted">공동운영 아래의 회차와 당사자 주문을 보여요. 공유 자료는 여러 회차에 연결되어도 실제 작업 건수로 더하지 않아요.</p>
+                    @if (integrated.HasIncompleteVisibility || integrated.OrdersReadStatusCode != "current") { <p class="integrated-note" role="status">@OrderReadStatus(integrated.OrdersReadStatusCode)</p> }
+                    @if (integrated.Cycles.Count == 0) { <p>아직 준비한 회차가 없어요.</p> }
+                    else
+                    {
+                        var latest = integrated.Cycles.OrderByDescending(c => c.Number).First().CycleId;
+                        @foreach (var cycle in integrated.Cycles.OrderByDescending(c => c.Number))
+                        {
+                            <details class="integrated-cycle" open="@(cycle.CycleId == latest)" @key="cycle.CycleId" data-testid="integrated-cycle" data-cycle-number="@cycle.Number">
+                                <summary>@(cycle.Number)번째 회차 <span>@공간공동운영Presentation.Stage(cycle.StatusCode)</span></summary>
+                                @if (cycle.Orders.Count == 0)
+                                {
+                                    <p class="integrated-muted">@(integrated.OrdersReadStatusCode == "current" ? "이 회차에 연결한 당사자 주문이 없어요." : "이 회차의 당사자 주문 연결은 현재 확인이 필요해요.")</p>
+                                }
+                                @foreach (var order in cycle.Orders)
+                                {
+                                    <article class="integrated-order" data-testid="integrated-order"><h4>@order.ProductName</h4><p>@OrderStatus(order.AgreementStatusCode)</p><p class="integrated-muted">@RootStatus(order.RootReadStatusCode)</p>
+                                        @if (order.Children.Count == 0) { <p class="integrated-muted">현재 확인한 하위 업무 연결이 없어요.</p> }
+                                        else
+                                        {
+                                            <ul class="integrated-sources">
+                                                @foreach (var source in order.Children)
+                                                {
+                                                    <li><strong>@source.Label</strong><p data-testid="integrated-source-status">@SourceStatus(source)</p>@if (공간공동운영Presentation.SafeWorkHref(source.Href) is { } workHref) { <a class="integrated-link" href="@workHref">원 업무에서 확인</a> }</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </article>
+                                }
+                                @if (cycle.SharedSourceKeys.Count > 0)
+                                {
+                                    <div class="integrated-shared-links"><h4>함께 사용하는 업무</h4><ul>
+                                        @foreach (var key in cycle.SharedSourceKeys.Distinct(StringComparer.Ordinal))
+                                        {
+                                            var shared = integrated.SharedSources.FirstOrDefault(s => s.NodeKey == key);
+                                            <li>@(shared?.Label ?? "공유 업무 연결 확인 필요") <span class="integrated-muted">@(shared is null ? "현재 상태 확인 필요" : SourceStatus(shared))</span></li>
+                                        }
+                                    </ul></div>
+                                }
+                            </details>
+                        }
+                    }
+                    @if (integrated.SharedSources.Count > 0)
+                    {
+                        <details class="integrated-shared"><summary>회차가 함께 사용하는 자료 확인</summary><ul class="integrated-sources">@foreach (var source in integrated.SharedSources) { <li><strong>@source.Label</strong><p>@SourceStatus(source)</p>@if (공간공동운영Presentation.SafeWorkHref(source.Href) is { } sourceHref) { <a class="integrated-link" href="@sourceHref">원 업무에서 확인</a> }</li> }</ul></details>
+                    }
+                </section>
+            }
+            <details class="integrated-bookings"><summary>내 약속과 받은 제안</summary>
+                <p>당사자의 시간 약속이에요. 실제 근무·재고 예약·배차 권한은 원 업무에서 다시 확인해요.</p>
+                @if (Model.ReservationError is { } reservationError) { <p class="integrated-note" role="alert">@reservationError</p> }
+                @if (Model.Reservations is { } reservations)
+                {
+                    @if (!reservations.ExternalSchedulesVerified) { <p class="integrated-note">다른 공동운영이나 외부 일정은 아직 확인하지 않았어요. 이 공동운영 안의 일정만 확인해요.</p> }
+                    <p class="integrated-muted">보수·금액은 원 업무의 약정을 따로 확인해요. 약속 수락이 지급이나 실제 작업 완료를 뜻하지 않아요.</p>
+                    @if (reservations.Items.Count == 0) { <p>현재 나와 관련된 약속이 없어요.</p> }
+                    @foreach (var booking in reservations.Items.OrderBy(b => b.Terms.StartsAtUtc))
+                    {
+                        <article class="integrated-booking" @key="booking.BookingId" data-testid="work-reservation"><h4>@Kind(booking.Terms.KindCode)</h4><p class="integrated-state">@BookingStatus(booking.StatusCode) · @(booking.Terms.RequiredForCycle ? "회차 필수 약속" : "참여자 시간 약속")</p><p>@KoreanTime(booking.Terms.StartsAtUtc) → @KoreanTime(booking.Terms.EndsAtUtc)</p>
+                            <ul class="integrated-parties">@foreach (var party in booking.Parties) { <li>@(party.IsMe ? "나" : string.IsNullOrWhiteSpace(party.DisplayName) ? "참여자" : party.DisplayName) · @공간공동운영Presentation.Role(party.RoleCode) <span>@PartyStatus(party.PartyStateCode)</span></li> }</ul>
+                            @if (booking.ReadinessBlockers.Count > 0) { <ul class="integrated-blockers">@foreach (var blocker in booking.ReadinessBlockers) { <li>@blocker</li> }</ul> }
+                            @if (booking.ProfessionalReviewReady) { <p class="integrated-muted">원 업무에서 시작 조건을 확인할 준비가 됐어요. 작업은 자동으로 시작하지 않아요.</p> }
+                            @if (booking.AllowedActions.Any(a => a is "accept" or "decline"))
+                            {
+                                <label class="integrated-check"><input type="checkbox" checked="@(Model.ConfirmedBookingId == booking.BookingId)" disabled="@(!Model.CanAct)" @onchange="args => Model.ConfirmBooking(booking.BookingId, args.Value is true)" /><span>이 약속의 당사자·한국 시간·조건을 확인했어요.</span></label>
+                                <div class="integrated-decision" aria-label="약속 거절 또는 수락"><div>@if (booking.AllowedActions.Contains("decline")) { <button type="button" disabled="@(!Model.CanAct || Model.ConfirmedBookingId != booking.BookingId)" @onclick='() => ExecuteAsync(booking.BookingId, "decline")'>거절</button> }</div><div>@if (booking.AllowedActions.Contains("accept")) { <button class="integrated-primary" type="button" disabled="@(!Model.CanAct || Model.ConfirmedBookingId != booking.BookingId)" @onclick='() => ExecuteAsync(booking.BookingId, "accept")'>수락</button> }</div></div>
+                            }
+                            @if (booking.AllowedActions.Contains("cancel")) { <button type="button" disabled="@(!Model.CanAct)" @onclick="() => PreviewAsync(booking.BookingId)">취소 영향 먼저 보기</button> }
+                            @if (Model.Impact is { } impact && impact.BookingId == booking.BookingId)
+                            {
+                                <section class="integrated-impact" data-testid="cancellation-impact"><h4>이 약속을 취소하면 어떤 영향이 있나요?</h4>
+                                    @foreach (var warning in impact.Warnings) { <p>@warning</p> }
+                                    @if (impact.ProfessionalCleanupRequired) { <p class="integrated-note">이미 진행한 보관·주문·배송은 원 업무에서 인계와 정리를 따로 확인해요.</p> }
+                                    @if (impact.Sources.Count == 0) { <p class="integrated-muted">현재 확인한 연결 자료가 없어요. 외부 영향이 없다는 뜻은 아니에요.</p> }
+                                    else { <ul class="integrated-sources">@foreach (var source in impact.Sources) { <li>@source.Label <span>@(!source.Verified ? "현재 상태 확인 필요" : source.RequiresAttention ? "문제 확인 필요" : source.Completed ? source.KindCode == "Settlement" ? "지급 준비 확인" : "원 업무에서 완료 확인" : "진행 중")</span></li> }</ul> }
+                                    <p class="integrated-muted">추가 비용·기대 손실·금전 부담은 확인되지 않았어요. 자동 공제나 감점은 하지 않아요.</p>
+                                    @if (impact.CanCancel)
+                                    {
+                                        <label>취소 사유 <span class="integrated-muted">선택</span><textarea rows="2" maxlength="300" @bind="Model.CancelReason" disabled="@(!Model.CanAct)"></textarea></label>
+                                        <label class="integrated-check"><input type="checkbox" @bind="Model.CancelConfirmed" disabled="@(!Model.CanAct)" /><span>현재 영향을 확인하고 이 시간 약속을 취소할게요. 원 업무는 자동 취소되지 않아요.</span></label>
+                                        <div class="integrated-actions"><button type="button" disabled="@(!Model.CanAct || !Model.CancelConfirmed)" @onclick='() => ExecuteAsync(booking.BookingId, "cancel")'>확인 후 약속 취소</button><button type="button" disabled="@Model.IsSending" @onclick="Model.DismissImpact">약속 유지</button></div>
+                                    }
+                                </section>
+                            }
+                        </article>
+                    }
+                    @if (Model.IsLoadingImpact) { <p role="status">이 약속의 현재 영향을 확인하고 있어요.</p> }
+                    @if (Model.ImpactError is { } impactError) { <p class="integrated-note" role="alert">@impactError</p> }
+                    <details class="integrated-notices"><summary>앱 안의 약속 변경 기록</summary><p class="integrated-muted">휴대폰 외부 알림 발송·도착을 확인한 기록은 아니에요.</p>@if (reservations.Notices.Count == 0) { <p>현재 확인한 변경 기록이 없어요.</p> } else { <ul>@foreach (var item in reservations.Notices.OrderByDescending(n => n.OccurredAtUtc)) { <li>@item.Message <span class="integrated-muted">@KoreanTime(item.OccurredAtUtc)</span></li> }</ul> }</details>
+                }
+                else if (!Model.IsLoading && Model.ReservationError is null) { <p class="integrated-note">내 약속 목록을 확인하지 못했어요. 다시 불러와 주세요.</p> }
+            </details>
+            <details class="integrated-propose"><summary>새 시간 약속 제안</summary>
+                @if (Model.CandidateError is { } candidateError) { <p class="integrated-note" role="alert">@candidateError</p> }
+                @if (Model.CanPropose && Model.Candidates is { } candidates)
+                {
+                    <form @onsubmit="ProposeAsync" @onsubmit:preventDefault><fieldset disabled="@(Model.IsLoading || Model.IsSending || Model.HasPending)">
+                        <label for="integrated-cycle">회차</label><select id="integrated-cycle" value="@Model.Draft.CycleId" @onchange='args => Model.SelectCycle(args.Value?.ToString() ?? "")'>@foreach (var cycle in candidates.Cycles) { <option value="@cycle.CycleId">@(cycle.Number)번째 회차 · @공간공동운영Presentation.Stage(cycle.StatusCode)</option> }</select>
+                        <label for="integrated-kind">함께할 일</label><select id="integrated-kind" @bind="Model.Draft.KindCode" @bind:after="Model.DraftChanged">@foreach (var kind in 공간공동운영예약종류Codes.All) { <option value="@kind">@Kind(kind)</option> }</select>
+                        @if (Model.IsOperator) { <label class="integrated-check"><input type="checkbox" @bind="Model.Draft.RequiredForCycle" @bind:after="Model.DraftChanged" disabled="@(Model.Draft.ReplacesBookingId is not null)" /><span>이 회차 시작에 필요한 약속으로 지정</span></label><p class="integrated-muted">본인도 당사자로 참여해요. 필수 약속은 모두 수락하고 원 업무의 준비를 확인해야 회차를 시작할 수 있어요.</p> }
+                        else { <p class="integrated-muted">참여자 사이의 시간 약속이에요. 다른 사람의 제안이나 거절만으로 전체 회차 시작을 막지 않아요.</p> }
+                        <div class="integrated-dates"><div><label for="integrated-start">시작 · 한국 시간 (UTC+9)</label><input id="integrated-start" type="datetime-local" @bind="Model.Draft.StartsAtKst" @bind:after="Model.DraftChanged" /></div><div><label for="integrated-end">종료 · 한국 시간 (UTC+9)</label><input id="integrated-end" type="datetime-local" @bind="Model.Draft.EndsAtKst" @bind:after="Model.DraftChanged" /></div></div>
+                        <label for="integrated-replacement">대체할 약속 <span class="integrated-muted">선택</span></label><select id="integrated-replacement" value="@(Model.Draft.ReplacesBookingId?.ToString("D") ?? "")" @onchange="args => Model.SelectReplacement(args.Value?.ToString())"><option value="">새로운 약속이에요</option>@foreach (var previous in Model.ReplacementChoices) { <option value="@previous.BookingId">@Kind(previous.Terms.KindCode) · @KoreanTime(previous.Terms.StartsAtUtc) · @BookingStatus(previous.StatusCode)</option> }</select><p class="integrated-muted">취소·거절 기록은 남아요. 대체 약속의 당사자가 모두 수락해야 다시 준비할 수 있어요.</p>
+                        <fieldset class="integrated-party-picker"><legend>현재 조건을 확인한 당사자</legend><p class="integrated-muted">본인을 포함해 두 명 이상을 선택해요. 한 사람의 역할은 하나씩 선택해 주세요.</p>@foreach (var party in candidates.Participants) { <label class="integrated-check"><input type="checkbox" checked="@Model.Draft.PartyKeys.Contains(공간공동운영통합ViewModel.PartyKey(party))" @onchange="args => Model.SelectParty(party, args.Value is true)" /><span>@(party.IsMe ? "나" : string.IsNullOrWhiteSpace(party.DisplayName) ? "참여자" : party.DisplayName) · @공간공동운영Presentation.Role(party.RoleCode)</span></label> }</fieldset>
+                        @if (Model.DraftCycle is { } selectedCycle)
+                        {
+                            <fieldset class="integrated-source-picker"><legend>이 회차에서 연결한 업무</legend>@if (selectedCycle.References.Count == 0) { <p class="integrated-muted">아직 연결한 업무가 없어요.</p> }@foreach (var source in selectedCycle.References) { <label class="integrated-check"><input type="checkbox" checked="@Model.Draft.ReferenceKeys.Contains(공간공동운영통합ViewModel.ReferenceKey(source.Reference))" @onchange="args => Model.SelectReference(source, args.Value is true)" /><span>@source.Label</span></label> }@if (Model.Draft.ReferenceKeys.Count == 0) { <p class="integrated-note">연결 업무가 없는 제안은 시간 합의만 해요. 전문 업무의 준비와 시작 조건은 아직 확인하지 않았어요.</p> }</fieldset>
+                        }
+                        <label class="integrated-check"><input type="checkbox" @bind="Model.Draft.ConfirmNonBinding" /><span>당사자·시간·연결 조건을 확인했어요. 상대의 수락 전에는 약속이 확정되지 않고, 실제 작업·지급 권한은 별도로 확인해요.</span></label><button class="integrated-primary" type="submit" disabled="@(!Model.Draft.ConfirmNonBinding)">이 조건으로 약속 제안</button>
+                    </fieldset></form>
+                }
+                else if (Model.CandidateError is null) { <p>제안할 수 있는 현재 참여자와 회차를 먼저 확인해 주세요. 조건 동의와 운영 담당 준비가 필요해요.</p> }
+            </details>
+        }
+    </section>
+}
+
+@code {
+    [Parameter] public 공간공동운영상세Response? Detail { get; set; }
+    [Parameter] public string? InitialCycleId { get; set; }
+    [Parameter] public EventCallback ReloadRequested { get; set; }
+    private 공간공동운영통합ViewModel? model;
+    private 공간공동운영통합ViewModel Model => model!;
+    private string? loadedKey;
+    private long notifiedRevision;
+    private bool disposed;
+    protected override void OnInitialized()
+    { model = Services.GetService<공간공동운영통합ViewModel>(); if (model is not null) model.PropertyChanged += ModelChanged; }
+    protected override Task OnParametersSetAsync() => SynchronizeParametersAsync();
+    private async Task SynchronizeParametersAsync(bool force = false)
+    {
+        if (model is null) return;
+        var key = Detail is null ? null : Detail.LedgerId + ":" + Detail.Revision;
+        if (Model.IsSending && Detail?.LedgerId == Model.LedgerId) return;
+        if (!force && key == loadedKey) { await NotifyParentAsync(); return; }
+        if (Detail?.LedgerId != Model.LedgerId) notifiedRevision = 0;
+        loadedKey = key;
+        // 전송 중 보류된 최신 부모 판본을 확인합니다. 이미 더 최신인 정규 조회를 마쳤다면 중복 조회하지 않습니다.
+        var alreadyCurrent = Detail is { } detail && Model.Loaded && Model.IsAuthenticated && !Model.HasPending && Model.IsOperator == detail.IsOperator
+            && Model.SnapshotConsistent && Model.Integrated is { } integrated
+            && integrated.LedgerId == detail.LedgerId && integrated.Revision >= detail.Revision;
+        if (force || !alreadyCurrent) await Model.LoadAsync(Detail);
+        await NotifyParentAsync();
+    }
+    private void ModelChanged(object? sender, PropertyChangedEventArgs args) { if (!disposed) _ = InvokeAsync(StateHasChanged); }
+    private Task ReloadAsync() => SynchronizeParametersAsync(force: true);
+    private async Task ProposeAsync() { await Model.ProposeAsync(); await SynchronizeParametersAsync(); }
+    private async Task ExecuteAsync(Guid id, string action) { await Model.ExecuteAsync(id, action); await SynchronizeParametersAsync(); }
+    private Task PreviewAsync(Guid id) => Model.PreviewCancelAsync(id);
+    private async Task RecoverAsync() { await Model.RecoverAsync(); await SynchronizeParametersAsync(); }
+    private async Task RetryAsync() { await Model.RetryPendingAsync(); await SynchronizeParametersAsync(); }
+    private async Task NotifyParentAsync()
+    {
+        if (Detail is { } detail && model?.Integrated is { } integrated && integrated.LedgerId == detail.LedgerId
+            && integrated.Revision > detail.Revision && integrated.Revision > notifiedRevision && ReloadRequested.HasDelegate)
+        { notifiedRevision = integrated.Revision; await ReloadRequested.InvokeAsync(); }
+    }
+    private static string Kind(string? kind) => kind switch { "supply" => "공급 약속", "purchase" => "구매·수령 약속", "inbound" => "입고 약속", "picking" => "피킹 약속", "handoff" => "인계 약속", _ => "약속 종류 확인 필요" };
+    private static string BookingStatus(string? state) => state switch { "proposed" => "당사자 확인 중", "confirmed" => "시간 약속 확인", "declined" => "제안 거절", "cancelled" => "약속 취소", _ => "약속 상태 확인 필요" };
+    private static string PartyStatus(string? state) => state switch { "invited" => "수락 대기", "accepted" => "수락 확인", "declined" => "거절", "cancelled" => "취소", _ => "현재 확인 필요" };
+    private static string OrderStatus(string? state) => state switch { "proposed" => "주문 조건 협의 중", "handoff-pending" => "전문 업무 연결 확인 중", "confirmed" => "전문 주문으로 인계", _ => "현재 주문 조건 확인 필요" };
+    private static string RootStatus(string? state) => state switch { "not-created" => "원 주문을 아직 준비하지 않았어요.", "not-visible" => "내 권한으로 원 주문을 확인할 수 없어요.", "lineage-unverified" => "원 주문과의 연결 관계를 다시 확인해야 해요.", "verified-link" => "원 주문 연결을 확인했어요.", "temporarily-unavailable" => "원 주문 연결을 잠시 확인하지 못했어요.", _ => "원 주문의 현재 연결을 확인해야 해요." };
+    private static string OrderReadStatus(string? state) => state switch { "feature-disabled" or "workflow-disabled" => "주문 연결 기능이 현재 열려 있지 않아요. 주문이 없다고 확인한 것은 아니에요.", "execution-mode-mismatch" => "현재 실행 모드와 다른 주문 기록이에요.", "revision-changed" => "기록이 먼저 바뀌었어요. 다시 불러와 주세요.", "source-unverified" => "중복 또는 다른 회차의 연결이 있어 주문 관계를 다시 확인해야 해요.", "current" => "현재 권한으로 확인하지 못한 연결이 있어요.", _ => "현재 주문 연결을 모두 확인하지 못했어요. 다시 불러와 주세요." };
+    private static string SourceStatus(공간공동운영통합원천Dto source) => !source.Verified ? "현재 상태 확인 필요" : source.RequiresAttention ? "문제 확인 필요" : source.Completed ? source.KindCode == "Settlement" ? "지급 준비 확인 · 실제 지급 확인 별도" : "원 업무에서 완료 확인" : "진행 중";
+    private static string KoreanTime(DateTimeOffset time) => time.ToOffset(TimeSpan.FromHours(9)).ToString("MM.dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) + " (한국)";
+    public void Dispose() { if (disposed) return; disposed = true; if (model is not null) { model.PropertyChanged -= ModelChanged; model.Dispose(); } }
+}

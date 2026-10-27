@@ -360,6 +360,8 @@ public sealed class 생활배송의뢰UseCase(
             return Fail("InvalidDeliveryRequest", "물품명·수량·중량과 차량을 확인해 주세요.");
         if (!LocationValid(request.Pickup, pickup: true) || !LocationValid(request.Dropoff, pickup: false))
             return Fail("InvalidDeliveryLocation", "픽업·전달 주소와 담당자 연락처, 픽업 시간창을 확인해 주세요.");
+        if (NeighborhoodDeliveryLoadingInput.InputErrors(request) is { Count: > 0 } loadingErrors)
+            return Fail("InvalidDeliveryLoadingInput", string.Join(" ", loadingErrors));
         if (request.PrivacyConsentSourceCode != NeighborhoodDeliveryRoutes.PrivacyConsentSourceCode
             || request.PrivacyConsentEvidenceId is null || request.PrivacyConsentEvidenceId == Guid.Empty)
             return Fail("PrivacyConsentRequired", "생활 배송 신청의 개인정보 수집·이용 동의가 필요합니다.");
@@ -422,7 +424,7 @@ public sealed class 생활배송의뢰UseCase(
             SimulationAutomaticFulfillment = request.AutoFulfillment is not null,
             SimulationDesiredCompletionUtc = request.AutoFulfillment?.DesiredCompletionUtc ?? (request.FulfillmentSelection is not null ? request.DesiredCompletionUtc : null),
             신청개인정보동의증적Id = request.PrivacyConsentEvidenceId, 신청출처Code = NeighborhoodDeliveryRoutes.PrivacyConsentSourceCode,
-            화물 = new CargoDTO { 화물종류 = request.CargoName.Trim(), 수량 = request.Quantity, 중량Kg = request.WeightKg, 온도조건 = "상온" },
+            화물 = NeighborhoodDeliveryLoadingInput.ToCargo(request),
             픽업 = resolved.Pickup, 하차 = resolved.Dropoff,
             결제수단 = 결제수단.현금.ToString(), 결제상태 = 상태값.결제상태.결제대기,
             정산조건 = new 화주운송정산조건DTO { 정산시점 = 정산시점.현장지급, 결제수단 = 결제수단.현금, 수납주체 = 수납주체.기사, 정산메모 = marker },

@@ -1,0 +1,12 @@
+@page "/community/space-cooperations/new"
+@layout CommunityMobileLayout
+@inject NavigationManager Navigation
+<PageTitle>함께할 일 제안하기 · Mirror</PageTitle>
+<SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영Workspace @ref="_page" CreateMode="true" LoginHref="@LoginHref" />
+</SsalddelApp.Components.Shared.NeighborhoodAuthenticationBoundary>
+@code {
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영Workspace? _page;
+    private string LoginHref => NeighborhoodExchangeAuthenticationRoutes.LoginHref(new Uri(Navigation.Uri).PathAndQuery);
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

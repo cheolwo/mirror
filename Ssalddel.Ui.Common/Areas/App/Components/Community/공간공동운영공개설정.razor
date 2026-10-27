@@ -1,0 +1,15 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+
+<section class="cooperation-visibility"><h3>공개 모집</h3>
+    @if (Detail.StatusCode == "closed")
+    { <p>모집이 종료되어 공개 목록에 표시하지 않습니다.</p><button type="button" disabled>다시 공개할 수 없음</button> }
+    else
+    { <p>@(Detail.PublishProposal ? "동네 공개 모집에 표시 중입니다." : "현재 공개 모집에 표시하지 않습니다.")</p><button type="button" disabled="@IsSending" @onclick="() => Changed.InvokeAsync(!Detail.PublishProposal)">@(Detail.PublishProposal ? "공개 모집 철회" : "동네 모집에 공개")</button> }
+    <p class="cooperation-visibility-note">개인 소개 공개 동의와는 별도입니다.</p>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 공간공동운영상세Response Detail { get; set; } = new();
+    [Parameter] public bool IsSending { get; set; }
+    [Parameter] public EventCallback<bool> Changed { get; set; }
+}

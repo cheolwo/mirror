@@ -31,18 +31,6 @@ public sealed record CommunityPostComposerSaveResult(
     Boundary = "글쓰기는 참여 의사를 공개하는 시작점이며 계약·배차·정산을 자동 확정하지 않습니다.")]
 public sealed class CommunityPostComposerViewModel : 조립ViewModelBase
 {
-    private const long MaxImageUploadBytes = 5 * 1024 * 1024;
-    private const long MaxVideoUploadBytes = 15 * 1024 * 1024;
-    private const int MaxUploadFileCount = 5;
-    private static readonly HashSet<string> AllowedUploadContentTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "video/mp4",
-        "video/webm"
-    };
     private readonly ICommunityPostClient _communityService;
     private readonly ICommunityPostComposerDraftStore _draftStore;
     private readonly SemaphoreSlim _draftStoreGate = new(1, 1);
@@ -226,21 +214,15 @@ public sealed class CommunityPostComposerViewModel : 조립ViewModelBase
     public void SetFiles(IEnumerable<IBrowserFile> files)
     {
         ArgumentNullException.ThrowIfNull(files);
-        var candidates = files.ToArray();
-        var accepted = candidates
-            .Where(file => file.Size <= MaxUploadBytes(file.ContentType)
-                           && AllowedUploadContentTypes.Contains(file.ContentType))
-            .Take(MaxUploadFileCount)
-            .ToArray();
+        var selection = CommunityComposerAttachmentPolicy.Select(files);
         SelectedFiles.Clear();
-        SelectedFiles.AddRange(accepted);
+        SelectedFiles.AddRange(selection.AcceptedFiles);
         OnPropertyChanged(nameof(SelectedFiles));
 
-        var rejectedCount = candidates.Length - accepted.Length;
-        if (rejectedCount > 0)
+        if (selection.RejectedCount > 0)
         {
             SetStatus(
-                $"미디어 {accepted.Length}개를 선택했습니다. {rejectedCount}개는 5개 제한, 이미지 5MB·동영상 15MB 크기 또는 지원 형식(JPG·PNG·WebP·GIF·MP4·WebM)을 확인해 주세요.",
+                $"미디어 {selection.AcceptedFiles.Length}개를 선택했습니다. {selection.RejectedCount}개는 5개 제한, 이미지 5MB·동영상 15MB 크기 또는 지원 형식(JPG·PNG·WebP·GIF·MP4·WebM)을 확인해 주세요.",
                 CommunityComposerMessageKind.Warning);
         }
     }
@@ -470,33 +452,16 @@ public sealed class CommunityPostComposerViewModel : 조립ViewModelBase
             }
 
             var selectedFiles = SelectedFiles.ToArray();
-            var uploadedFileCount = 0;
-            var failedFileNames = new List<string>();
-            for (var fileIndex = 0; fileIndex < selectedFiles.Length; fileIndex++)
-            {
-                var file = selectedFiles[fileIndex];
-                try
-                {
-                    await _communityService.UploadAttachmentAsync(
-                        saved.Id,
-                        Draft.Password,
-                        file,
-                        MaxUploadBytes(file.ContentType),
-                        cancellationToken);
-                    uploadedFileCount++;
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    failedFileNames.AddRange(selectedFiles
-                        .Skip(fileIndex)
-                        .Select(pending => pending.Name));
-                    break;
-                }
-                catch (Exception)
-                {
-                    failedFileNames.Add(file.Name);
-                }
-            }
+            var uploadResult = await CommunityComposerAttachmentUploader.UploadAsync(
+                selectedFiles,
+                (file, token) => _communityService.UploadAttachmentAsync(
+                    saved.Id,
+                    Draft.Password,
+                    file,
+                    CommunityComposerAttachmentPolicy.MaxUploadBytes(file.ContentType),
+                    token),
+                cancellationToken);
+            var failedFileNames = uploadResult.FailedFileNames;
 
             await ClearLocalDraftAsync(CancellationToken.None);
             Reset();
@@ -521,7 +486,7 @@ public sealed class CommunityPostComposerViewModel : 조립ViewModelBase
                 ScheduledPublishAtUtc = scheduledPublishAtUtc,
                 MessageKind = messageKind,
                 AttachmentUploadAttemptedCount = selectedFiles.Length,
-                AttachmentUploadSucceededCount = uploadedFileCount,
+                AttachmentUploadSucceededCount = uploadResult.SucceededCount,
                 AttachmentUploadFailedFileNames = failedFileNames
             };
         }
@@ -682,8 +647,4 @@ public sealed class CommunityPostComposerViewModel : 조립ViewModelBase
         }
     }
 
-    private static long MaxUploadBytes(string contentType)
-        => contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
-            ? MaxVideoUploadBytes
-            : MaxImageUploadBytes;
 }

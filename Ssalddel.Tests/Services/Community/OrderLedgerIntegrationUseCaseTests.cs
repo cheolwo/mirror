@@ -277,9 +277,10 @@ public sealed class OrderLedgerIntegrationUseCaseTests
                 표시순서 = 0
             }
         ];
-        var store = new FakeLedgerStore(
-            root,
-            Ledger("delivery-1", CommunityLedgerTemplateKeys.FoodDelivery, state: 커뮤니티원장상태.완료));
+        var child = Ledger("delivery-1", CommunityLedgerTemplateKeys.FoodDelivery, state: 커뮤니티원장상태.완료);
+        var rootState = root.상태;
+        var rootRevision = root.Revision;
+        var store = new FakeLedgerStore(root, child);
         var useCase = new 주문원장통합UseCase(store);
 
         var result = await useCase.조회Async("order-1");
@@ -288,6 +289,16 @@ public sealed class OrderLedgerIntegrationUseCaseTests
         Assert.Equal(1, result.Value.완료하위원장수);
         Assert.True(result.Value.필수하위원장완료여부);
         Assert.Equal(커뮤니티원장상태.완료, result.Value.포함원장목록.Single().원장!.상태);
+
+        // A query must not promote the root or retain a copied child completion.
+        child.상태 = "진행중";
+        var current = await useCase.조회Async("order-1");
+        Assert.True(current.IsSuccess);
+        Assert.Equal(0, current.Value.완료하위원장수);
+        Assert.False(current.Value.필수하위원장완료여부);
+        Assert.Equal(rootState, root.상태);
+        Assert.Equal(rootRevision, root.Revision);
+        Assert.Null(store.LastUpdatedBy);
     }
 
     [Fact]

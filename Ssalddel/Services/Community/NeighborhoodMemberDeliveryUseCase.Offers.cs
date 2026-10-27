@@ -14,6 +14,17 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
     public async Task RegisterAsync(string requestId, NeighborhoodDeliveryRequest request, CancellationToken ct)
     {
         if (!request.MemberDeliveryRequested) return;
+        var pending = await ExecuteDatabaseMutationAsync(() => RegisterCoreAsync(requestId, request, ct), ct);
+        // 원 등록 transaction을 폐기한 뒤 별도 멱등 fanout을 실행한다.
+        if (pending)
+        {
+            db.ChangeTracker.Clear(); // Commit 뒤 다른 요청이 바꾼 정본을 별도 fanout에서 다시 읽는다.
+            await FanoutAsync(requestId, ct);
+        }
+    }
+
+    private async Task<bool> RegisterCoreAsync(string requestId, NeighborhoodDeliveryRequest request, CancellationToken ct)
+    {
         Gate(); var actor = Actor();
         Require(request.MemberDeliveryDisclosureAgreed && request.MemberDeliveryNoticeVersion == NeighborhoodMemberDeliveryRoutes.NoticeVersion
             && request.PrivacyConsentEvidenceId is not null && request.DirectPaymentAgreed,
@@ -33,7 +44,7 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         {
             Require(row.OwnerUserId == actor && row.ConsentEvidenceId == request.PrivacyConsentEvidenceId && row.FareKrw == request.AgreedFareKrw,
                 "IdempotencyConflict", "원 배송 의뢰의 조건이 다릅니다.");
-            if (row.StateCode != "Pending") { await tx.CommitAsync(ct); return; }
+            if (row.StateCode != "Pending") { await tx.CommitAsync(ct); return false; }
             Require(source.상태 == 상태값.의뢰상태.생성됨 && queue.상태 == 상태값.배차대기상태.대기
                 && queue.배차큐단계 != 상태값.배차큐단계.종료 && queue.일반회원수행자UserId is null,
                 "MemberDeliverySourceConflict", "이미 변경된 배송의 대기 상태를 복원할 수 없습니다.");
@@ -45,8 +56,7 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
                 await SaveAsync(ct);
             }
             await tx.CommitAsync(ct);
-            await FanoutAsync(requestId, ct);
-            return;
+            return true;
         }
         Require(source.주문자UserId == actor && source.상태 == 상태값.의뢰상태.생성됨 && !source.모의처리처수행 && !source.자동처리처수행,
             "MemberDeliverySourceConflict", "본인의 대기 중인 생활 물품 배송만 요청할 수 있습니다.");
@@ -68,10 +78,13 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         Require(cost is null || cost == row.FareKrw, "QuoteChanged", "운송 원장 운임이 바뀌었습니다.");
         queue!.생활배송수락준비완료 = true; queue.생활배송선택판본++; queue.UpdatedAt = Now;
         db.Add(row); await RequireApplicationConsentAsync(row, ct); await SaveAsync(ct); await tx.CommitAsync(ct);
-        await FanoutAsync(requestId, ct);
+        return true;
     }
 
-    public async Task FanoutAsync(string requestId, CancellationToken ct)
+    public Task FanoutAsync(string requestId, CancellationToken ct)
+        => ExecuteDatabaseMutationAsync(() => FanoutCoreAsync(requestId, ct), ct);
+
+    private async Task FanoutCoreAsync(string requestId, CancellationToken ct)
     {
         if (!Enabled) return;
         Gate(); await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
@@ -142,14 +155,18 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
     public async Task<NeighborhoodMemberOfferResponse> DeclineAsync(string offerId, NeighborhoodMemberCommandRequest request, CancellationToken ct = default)
     {
         var actor = Actor(); var digest = Digest(request);
-        await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (await ReplayAsync(actor, request.ClientRequestId, "Decline", offerId, digest, ct)) return (await OfferAsync(offerId, ct))!;
-        var offer = await Offers.SingleOrDefaultAsync(x => x.OfferId == offerId && x.MemberUserId == actor, ct);
-        Require(offer is not null, "MemberOfferNotFound", "본인의 배송 제안을 찾을 수 없습니다.", 404);
-        Require(offer!.StateCode == "Pending" && offer.Revision == request.ExpectedRevision,
-            "MemberRevisionConflict", "제안 상태가 바뀌었습니다.");
-        offer.StateCode = "Declined"; offer.Revision++; Receipt(actor, request.ClientRequestId, "Decline", offerId, digest);
-        await SaveAsync(ct); await tx.CommitAsync(ct); return (await OfferAsync(offerId, ct))!;
+        await ExecuteDatabaseMutationAsync(async () =>
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await ReplayAsync(actor, request.ClientRequestId, "Decline", offerId, digest, ct)) return;
+            var offer = await Offers.SingleOrDefaultAsync(x => x.OfferId == offerId && x.MemberUserId == actor, ct);
+            Require(offer is not null, "MemberOfferNotFound", "본인의 배송 제안을 찾을 수 없습니다.", 404);
+            Require(offer!.StateCode == "Pending" && offer.Revision == request.ExpectedRevision,
+                "MemberRevisionConflict", "제안 상태가 바뀌었습니다.");
+            offer.StateCode = "Declined"; offer.Revision++; Receipt(actor, request.ClientRequestId, "Decline", offerId, digest);
+            await SaveAsync(ct); await tx.CommitAsync(ct);
+        }, ct);
+        return (await OfferAsync(offerId, ct))!;
     }
 
     private async Task<bool> HasExistingDriverWorkAsync(string actor, CancellationToken ct)
@@ -188,58 +205,64 @@ public sealed partial class NeighborhoodMemberDeliveryUseCase
         var second = await routes.EstimateRouteAsync(pickup, dropoff, routeOption, ct);
         Require(Actual(first, routeOption) && Actual(second, routeOption), "MemberActualRouteRequired", "현재 이동 수단의 실제 경로와 소요 시간을 확인한 뒤 수락할 수 있습니다.");
         db.ChangeTracker.Clear(); // 외부 경로 조회 전 읽은 원 의뢰를 권위 있는 현재 SQL 상태로 다시 읽는다.
-        await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        if (await ReplayAsync(actor, request.ClientRequestId, "Accept", offerId, digest, ct)) return (await WorkAsync(initial.RequestId, ct))!;
-        Require(!await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, actor, ct),
-            "MemberWorkCapacityChanged", "이미 수락한 배송을 마친 뒤 다음 제안을 수락할 수 있습니다.");
-        RequireFreshGps(request);
-        var offer = await Offers.SingleAsync(x => x.OfferId == offerId && x.MemberUserId == actor, ct);
-        var delivery = await Deliveries.SingleAsync(x => x.RequestId == offer.RequestId, ct);
-        var source = await SourceAsync(offer.RequestId, ct);
-        var currentQueue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == offer.RequestId, ct);
-        Require(currentQueue is { 일반회원배송전용: true, 생활배송수락준비완료: true }
-            && await 회원협업연결확인Async(source, currentQueue, ct),
-            "MemberCollaborationPending", "협업의 배송 연결이 바뀌었습니다. 최신 결과를 확인해 주세요.");
-        var participant = await Participants.SingleOrDefaultAsync(x => x.UserId == actor, ct);
-        Require(offer.StateCode == "Pending" && offer.ExpiresAtUtc > Now && offer.Revision == request.ExpectedRevision
-            && delivery.StateCode == "Pending" && delivery.Revision == offer.DeliveryRevision && source.상태 == 상태값.의뢰상태.생성됨,
-            "MemberOfferChanged", "제안이 만료되거나 다른 사람이 먼저 수락했습니다.");
-        Require(participant is not null && participant.ReceiveOffers && participant.Revision == offer.ParticipationRevision
-            && participant.ActiveRequestId is null && !await HasExistingDriverWorkAsync(actor, ct),
-            "MemberWorkCapacityChanged", "참여 설정 또는 수행 중인 업무가 바뀌었습니다.");
-        var activity = Open<ActivityPoint>(participant!.PrivatePayload);
-        Require(activity.VehicleType == source.차량종류 && source.화물중량Kg is > 0 && activity.MaxWeightKg >= source.화물중량Kg,
-            "MemberWorkCapacityChanged", "이동 수단과 운반 한도를 다시 확인해 주세요.");
-        Require(source.픽업_위도 == pickup.Latitude && source.픽업_경도 == pickup.Longitude && source.하차_위도 == dropoff.Latitude
-            && source.하차_경도 == dropoff.Longitude && source.최종운임 == delivery.FareKrw,
-            "MemberOfferChanged", "배송 위치 또는 원장 금액이 바뀌었습니다.");
-        var arrival = Now + first!.Duration!.Value;
-        var departure = arrival < source.픽업_시간창_시작일시 ? source.픽업_시간창_시작일시 : arrival;
-        var finish = departure.AddMinutes(3) + second!.Duration!.Value;
-        if (source.하차_시간창_시작일시 is { } dropStart && finish < dropStart) finish = dropStart;
-        Require(arrival <= source.픽업_시간창_종료일시 && finish <= delivery.WindowEndUtc,
-            "MemberDeliveryWindowUnavailable", "현재 위치에서 배송 시간창 안에 수행할 수 없습니다.");
-        await RequireApplicationConsentAsync(delivery, ct);
-        var slot = await Participants.Where(x => x.UserId == actor && x.Revision == offer.ParticipationRevision && x.ReceiveOffers && x.ActiveRequestId == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.ActiveRequestId, offer.RequestId), ct);
-        Require(slot == 1, "MemberWorkCapacityChanged", "다른 업무 수락이 먼저 완료되었습니다.");
-        var changed = await db.운송원장.Where(x => x.의뢰Id == offer.RequestId && x.일반회원배송전용
-            && x.상태 == 상태값.배차대기상태.대기 && x.확정기사Id == null && x.일반회원수행자UserId == null && x.생활배송수락준비완료)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.상태, 상태값.배차대기상태.확정)
-                .SetProperty(x => x.일반회원수행자UserId, actor).SetProperty(x => x.수행자종류, "CommunityMember")
-                .SetProperty(x => x.배차큐단계, 상태값.배차큐단계.확정).SetProperty(x => x.배차노출상태, 상태값.배차노출상태.확정)
-                .SetProperty(x => x.생활배송선택판본, x => x.생활배송선택판본 + 1).SetProperty(x => x.UpdatedAt, Now), ct);
-        Require(changed == 1, "MemberOfferChanged", "다른 배차 확정이 먼저 저장되었습니다.");
-        delivery.AssignedMemberUserId = actor; delivery.StateCode = "Assigned"; delivery.AssignedAtUtc = Now;
-        delivery.DistanceKm = second.DistanceKm; delivery.Revision++; delivery.UpdatedAtUtc = Now;
-        source.배차상태 = 상태값.배차상태.배차확정; source.UpdatedAt = Now;
-        offer.StateCode = "Accepted"; offer.Revision++;
-        Receipt(actor, request.ClientRequestId, "Accept", offerId, digest);
-        db.운송이벤트.Add(new() { 의뢰Id = source.의뢰Id, 이벤트타입 = "NeighborhoodMemberAssigned",
-            메타데이터 = System.Text.Json.JsonSerializer.Serialize(new { ActorUserId = actor, delivery.Revision, delivery.FareKrw }) });
-        await SaveAsync(ct); await tx.CommitAsync(ct); db.ChangeTracker.Clear();
-        await SyncLedgerAsync(offer.RequestId, actor, ct);
-        return (await WorkAsync(offer.RequestId, ct))!;
+        // 외부 경로 견적은 재발송하지 않고 SQL 명령만 같은 요청 증적으로 회복한다.
+        var assignedRequestId = await ExecuteDatabaseMutationAsync(async () =>
+        {
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            if (await ReplayAsync(actor, request.ClientRequestId, "Accept", offerId, digest, ct)) return initial.RequestId;
+            Require(!await NeighborhoodMemberWorkExclusion.LockAndHasMemberWorkAsync(db, actor, ct),
+                "MemberWorkCapacityChanged", "이미 수락한 배송을 마친 뒤 다음 제안을 수락할 수 있습니다.");
+            RequireFreshGps(request);
+            var offer = await Offers.SingleAsync(x => x.OfferId == offerId && x.MemberUserId == actor, ct);
+            var delivery = await Deliveries.SingleAsync(x => x.RequestId == offer.RequestId, ct);
+            var source = await SourceAsync(offer.RequestId, ct);
+            var currentQueue = await db.운송원장.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == offer.RequestId, ct);
+            Require(currentQueue is { 일반회원배송전용: true, 생활배송수락준비완료: true }
+                && await 회원협업연결확인Async(source, currentQueue, ct),
+                "MemberCollaborationPending", "협업의 배송 연결이 바뀌었습니다. 최신 결과를 확인해 주세요.");
+            var participant = await Participants.SingleOrDefaultAsync(x => x.UserId == actor, ct);
+            Require(offer.StateCode == "Pending" && offer.ExpiresAtUtc > Now && offer.Revision == request.ExpectedRevision
+                && delivery.StateCode == "Pending" && delivery.Revision == offer.DeliveryRevision && source.상태 == 상태값.의뢰상태.생성됨,
+                "MemberOfferChanged", "제안이 만료되거나 다른 사람이 먼저 수락했습니다.");
+            Require(participant is not null && participant.ReceiveOffers && participant.Revision == offer.ParticipationRevision
+                && participant.ActiveRequestId is null && !await HasExistingDriverWorkAsync(actor, ct),
+                "MemberWorkCapacityChanged", "참여 설정 또는 수행 중인 업무가 바뀌었습니다.");
+            var activity = Open<ActivityPoint>(participant!.PrivatePayload);
+            Require(activity.VehicleType == source.차량종류 && source.화물중량Kg is > 0 && activity.MaxWeightKg >= source.화물중량Kg,
+                "MemberWorkCapacityChanged", "이동 수단과 운반 한도를 다시 확인해 주세요.");
+            Require(source.픽업_위도 == pickup.Latitude && source.픽업_경도 == pickup.Longitude && source.하차_위도 == dropoff.Latitude
+                && source.하차_경도 == dropoff.Longitude && source.최종운임 == delivery.FareKrw,
+                "MemberOfferChanged", "배송 위치 또는 원장 금액이 바뀌었습니다.");
+            var arrival = Now + first!.Duration!.Value;
+            var departure = arrival < source.픽업_시간창_시작일시 ? source.픽업_시간창_시작일시 : arrival;
+            var finish = departure.AddMinutes(3) + second!.Duration!.Value;
+            if (source.하차_시간창_시작일시 is { } dropStart && finish < dropStart) finish = dropStart;
+            Require(arrival <= source.픽업_시간창_종료일시 && finish <= delivery.WindowEndUtc,
+                "MemberDeliveryWindowUnavailable", "현재 위치에서 배송 시간창 안에 수행할 수 없습니다.");
+            await RequireApplicationConsentAsync(delivery, ct);
+            var slot = await Participants.Where(x => x.UserId == actor && x.Revision == offer.ParticipationRevision && x.ReceiveOffers && x.ActiveRequestId == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.ActiveRequestId, offer.RequestId), ct);
+            Require(slot == 1, "MemberWorkCapacityChanged", "다른 업무 수락이 먼저 완료되었습니다.");
+            var changed = await db.운송원장.Where(x => x.의뢰Id == offer.RequestId && x.일반회원배송전용
+                && x.상태 == 상태값.배차대기상태.대기 && x.확정기사Id == null && x.일반회원수행자UserId == null && x.생활배송수락준비완료)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.상태, 상태값.배차대기상태.확정)
+                    .SetProperty(x => x.일반회원수행자UserId, actor).SetProperty(x => x.수행자종류, "CommunityMember")
+                    .SetProperty(x => x.배차큐단계, 상태값.배차큐단계.확정).SetProperty(x => x.배차노출상태, 상태값.배차노출상태.확정)
+                    .SetProperty(x => x.생활배송선택판본, x => x.생활배송선택판본 + 1).SetProperty(x => x.UpdatedAt, Now), ct);
+            Require(changed == 1, "MemberOfferChanged", "다른 배차 확정이 먼저 저장되었습니다.");
+            delivery.AssignedMemberUserId = actor; delivery.StateCode = "Assigned"; delivery.AssignedAtUtc = Now;
+            delivery.DistanceKm = second.DistanceKm; delivery.Revision++; delivery.UpdatedAtUtc = Now;
+            source.배차상태 = 상태값.배차상태.배차확정; source.UpdatedAt = Now;
+            offer.StateCode = "Accepted"; offer.Revision++;
+            Receipt(actor, request.ClientRequestId, "Accept", offerId, digest);
+            db.운송이벤트.Add(new() { 의뢰Id = source.의뢰Id, 이벤트타입 = "NeighborhoodMemberAssigned",
+                메타데이터 = System.Text.Json.JsonSerializer.Serialize(new { ActorUserId = actor, delivery.Revision, delivery.FareKrw }) });
+            await SaveAsync(ct); await tx.CommitAsync(ct);
+            return offer.RequestId;
+        }, ct);
+        db.ChangeTracker.Clear();
+        await SyncLedgerAsync(assignedRequestId, actor, ct);
+        return (await WorkAsync(assignedRequestId, ct))!;
     }
     private static bool Actual(배차경로예상결과? route, string option)
         => route is { 실제경로여부: true, DistanceKm: >= 0, Duration: not null } && route.Duration >= TimeSpan.Zero && route.RouteOption == option;

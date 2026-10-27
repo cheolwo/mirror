@@ -1,0 +1,99 @@
+.work-flow { margin: 24px 0; padding: 20px 0; border-block: 1px solid var(--ss-border, #dce5e9); color: var(--ss-ink, #172b36); overflow-wrap: anywhere; }
+.work-flow h3 { font-size: 18px; margin: 0 0 8px; }
+.work-flow h4 { font-size: 18px; margin: 0 0 12px; }
+.work-flow h5 { font-size: 16px; margin: 20px 0 8px; }
+.work-flow p { margin: 8px 0; line-height: 1.5; }
+.work-flow-heading p, .work-flow-muted, .work-flow-legend, .work-flow-related { font-size: 14px; color: var(--ss-muted, #586b78); }
+.work-flow-cycle { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0; }
+.work-flow select { font: inherit; min-height: 48px; padding: 8px 12px; border: 1px solid #788c97; border-radius: 12px; background: var(--ss-surface, #fff); color: inherit; max-width: 100%; }
+.work-flow-layout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(110px, 1fr)); gap: 32px 24px; position: relative; margin: 20px 0; }
+.work-flow-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.work-flow-guide-path { stroke: #788c97; stroke-width: 2; stroke-dasharray: 4 4; fill: none; vector-effect: non-scaling-stroke; }
+.work-flow-lines marker path { fill: #788c97; }
+.work-flow-node { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; min-height: 110px; padding: 12px; font: inherit; text-align: left; text-decoration: none; border: 1px solid #788c97; border-radius: 12px; background: var(--ss-surface, #fff); color: var(--ss-ink, #172b36); cursor: pointer; box-sizing: border-box; }
+.work-flow-node-summary { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.work-flow-node .work-flow-node-open { font-size: 26px; color: var(--ss-accent, #0f766e); flex: 0 0 auto; }
+.work-flow-node strong { font-size: 16px; font-weight: 600; }
+.work-flow-node span, .work-flow-node small { font-size: 14px; line-height: 1.45; color: var(--ss-muted, #586b78); }
+.work-flow-node:hover { border-color: var(--ss-accent, #0f766e); background: var(--ss-canvas, #f5f7fa); }
+.work-flow-production { grid-area: 1 / 1; }
+.work-flow-inbound { grid-area: 1 / 2; }
+.work-flow-storage { grid-area: 1 / 3; }
+.work-flow-order { grid-area: 2 / 1; }
+.work-flow-outbound { grid-area: 2 / 3; }
+.work-flow-delivery { grid-area: 2 / 4; }
+.work-flow-settlement { grid-area: 3 / 4; }
+.work-flow-mobile-next, .work-flow-mobile-branch, .work-flow-mobile-caption { display: none; }
+.work-flow-detail { padding-top: 16px; border-top: 1px solid var(--ss-border, #dce5e9); }
+.work-flow-guide { margin: 16px 0; }
+.work-flow-guide div { margin: 12px 0; }
+.work-flow-guide dt { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.work-flow-guide dd { margin: 0; font-size: 16px; line-height: 1.5; }
+.work-flow-note { padding: 12px 16px; background: var(--ss-canvas, #f5f7fa); border-radius: 12px; }
+.work-flow-record { padding: 12px 0; border-bottom: 1px solid var(--ss-border, #dce5e9); }
+.work-flow-record strong { font-size: 16px; font-weight: 600; }
+.work-flow-record a { display: inline-flex; align-items: center; min-height: 48px; color: var(--ss-accent, #0f766e); text-underline-offset: 3px; }
+.work-flow-evidence { margin: 12px 0; border-left: 2px solid var(--ss-border, #dce5e9); padding-left: 12px; }
+.work-flow-evidence p { display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+.work-flow-evidence-line { font-weight: 700; }
+.work-flow-other { margin-top: 16px; }
+.work-flow-other summary { min-height: 48px; padding: 12px 0; box-sizing: border-box; cursor: pointer; }
+.work-flow-ledger { margin-top: 16px; border: 1px solid #cadad7; border-radius: 16px; padding: 16px; background: #f7faf9; }
+.work-flow-ledger-heading h4 { margin: 4px 0; }
+.work-flow-ledger-heading p, .work-flow-scope-heading span { font-size: 14px; color: #586b78; }
+.work-flow-eyebrow { display: block; font-size: 13px; font-weight: 700; color: #39665f; letter-spacing: .02em; }
+.work-flow-cycle-scope { padding: 16px; border: 1px solid #d5e1df; border-radius: 12px; background: #fff; }
+.work-flow-scope-heading { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.work-flow-gate { border: 1px solid #a6b8bc; border-radius: 12px; padding: 16px; background: #f3f6f8; }
+.work-flow-gate-title { display: flex; align-items: center; gap: 10px; }
+.work-flow-gate-icon { display: inline-flex; flex: 0 0 28px; height: 28px; align-items: center; justify-content: center; border: 2px solid currentColor; border-radius: 50%; font-size: 16px; font-weight: 800; }
+.work-flow-gate.tone-blocked { border: 2px solid #a94c25; background: #fff5ed; color: #76391d; }
+.work-flow-gate.tone-ready { border-color: #36796a; background: #eef7f3; color: #235e51; }
+.work-flow-reasons summary { cursor: pointer; min-height: 48px; padding: 12px 0; box-sizing: border-box; font-weight: 600; }
+.work-flow-reasons ul { margin: 0; padding-left: 22px; }
+.work-flow-reasons li { padding: 4px 0; line-height: 1.5; }
+.work-flow-missing { font-weight: 600; }
+.work-flow-node.tone-blocked { border: 2px solid #b8582e; background: #fff8f2; }
+.work-flow-node.tone-attention { border-color: #9d7929; background: #fffcf3; }
+.work-flow-node.tone-linked { border-color: #638b81; }
+.work-flow-node.tone-neutral { border-style: dashed; }
+.work-flow-node .work-flow-badge { align-self: flex-start; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 3px 7px; background: #edf2f3; color: #455f69; }
+.work-flow-node.tone-blocked .work-flow-badge { color: #843c1b; background: #ffe6d5; }
+.work-flow-node.tone-attention .work-flow-badge { color: #70521b; background: #fff0bf; }
+.work-flow-node.tone-linked .work-flow-badge { color: #2d6658; background: #edf6f2; }
+.work-flow-node .work-flow-node-reason { color: #843c1b; font-size: 13px; }
+.work-flow-node .work-flow-source-labels { font-size: 12px; color: #526871; }
+.work-flow-node .work-flow-stop { position: absolute; z-index: 1; top: -13px; left: 10px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #b8582e; color: #843c1b; background: #fff8f2; font-size: 13px; font-weight: 800; }
+.work-flow-result { margin-top: 24px; padding: 16px; border-radius: 12px; background: #f1f7f5; border: 1px solid #b8cec7; }
+.work-flow-result h4 { margin: 4px 0 12px; }
+.work-flow-result-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0; }
+.work-flow-result-steps div { padding: 10px; background: #fff; border: 1px solid #d7e3df; border-radius: 8px; }
+.work-flow-result-steps dt { font-size: 13px; font-weight: 700; }
+.work-flow-result-steps dd { font-size: 13px; margin: 6px 0 0; line-height: 1.5; color: #526871; }
+.work-flow-result a { display: inline-flex; align-items: center; min-height: 48px; color: #19675b; text-underline-offset: 3px; }
+.work-flow-next-cycle { border: 1px dashed #95b7af; border-radius: 12px; padding: 12px 16px; margin-top: 16px; text-align: center; }
+.work-flow-next-cycle > span { display: block; margin-top: -20px; color: #638780; font-size: 24px; }
+.work-flow-next-cycle p { font-size: 14px; color: #586b78; }
+.work-flow :is(button, select, a, summary):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+@media (max-width: 700px) {
+    .work-flow-ledger, .work-flow-cycle-scope { padding: 12px; }
+    .work-flow-scope-heading { flex-direction: column; }
+    .work-flow-result-steps { grid-template-columns: minmax(0, 1fr); }
+    .work-flow-result-steps div { display: flex; gap: 12px; align-items: baseline; }
+    .work-flow-result-steps dt { flex: 0 0 auto; min-width: 5em; white-space: nowrap; }
+    .work-flow-result-steps dd { margin: 0; min-width: 0; }
+    .work-flow-mobile-caption { display: block; font-size: 14px; color: var(--ss-muted, #586b78); }
+    .work-flow-layout { --work-flow-gap: 24px; --work-flow-line: #638780; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: var(--work-flow-gap); padding-left: 30px; }
+    .work-flow-lines { display: none; }
+    .work-flow-node { grid-area: auto; min-height: 84px; padding: 14px 16px; }
+    .work-flow-node::before, .work-flow-node::after, .work-flow-mobile-branch { position: absolute; pointer-events: none; box-sizing: border-box; }
+    .work-flow-node::before { content: ""; left: -25px; top: 50%; width: 25px; border-top: 2px solid var(--work-flow-line); }
+    .work-flow-node.tone-blocked .work-flow-stop { top: calc(50% - 13px); left: -37px; }
+    .work-flow-node::after { content: ""; left: -25px; top: calc(var(--work-flow-gap) / -2 - 1px); bottom: calc(var(--work-flow-gap) / -2 - 1px); border-left: 2px solid var(--work-flow-line); }
+    .work-flow-production::after { top: 50%; }
+    .work-flow-settlement::after { bottom: 50%; }
+    /* 주문은 보관 줄기에 붙이지 않고 별도 가지로 출고에 합류합니다. */
+    .work-flow-order::before { left: -13px; width: 13px; }
+    .work-flow-order .work-flow-mobile-branch { display: block; left: -13px; top: 50%; bottom: calc(var(--work-flow-gap) / -2 - 1px); border-left: 2px solid var(--work-flow-line); }
+    .work-flow-outbound .work-flow-mobile-branch { display: block; left: -13px; top: calc(var(--work-flow-gap) / -2 - 1px); bottom: 50%; border-left: 2px solid var(--work-flow-line); }
+}

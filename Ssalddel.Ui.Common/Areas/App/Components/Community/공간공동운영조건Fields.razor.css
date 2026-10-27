@@ -1,0 +1,9 @@
+label { display: block; margin: 16px 0 6px; line-height: 1.5; }
+input:not([type=checkbox]), select, textarea { width: 100%; min-height: 48px; padding: 10px 12px; font: inherit; color: var(--ss-ink, #172b36); background: var(--ss-surface, #fff); border: 1px solid #788c97; border-radius: 12px; box-sizing: border-box; }
+textarea { resize: vertical; }
+.shared-hub-check { display: flex; align-items: start; gap: 12px; min-height: 44px; margin: 6px 0; padding: 8px 0; }
+.shared-hub-check input { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ss-accent, #0f766e); }
+.shared-hub-muted { color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
+details { margin-top: 16px; }
+summary { min-height: 44px; cursor: pointer; line-height: 1.5; font-weight: 600; }
+:is(input, select, textarea, summary):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }

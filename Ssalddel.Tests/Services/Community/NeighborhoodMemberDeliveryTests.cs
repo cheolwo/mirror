@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Ssalddel.Application.CommandProcessing;
 using Ssalddel.Contracts.Common.Community;
@@ -272,6 +273,12 @@ public sealed class NeighborhoodMemberDeliveryTests
 
     public sealed class Fixture : IAsyncDisposable
     {
+        // Converter는 protector를 모델에 캡처하므로 다른 시험의 pass-through 모델과 캐시를 공유하지 않는다.
+        private static readonly ServiceProvider MemberSqliteProvider = new ServiceCollection()
+            .AddEntityFrameworkSqlite().BuildServiceProvider(validateScopes: true);
+        private static DbContextOptions<SsalddelContext> SqliteOptions(string connection)
+            => new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection)
+                .UseInternalServiceProvider(MemberSqliteProvider).Options;
         private readonly SqliteConnection keeper; private readonly string cs;
         public SsalddelContext Db { get; } public Actor Actor { get; }=new(); public Clock Clock { get; }=new();
         public Route Routes { get; }=new(); public Storage Storage { get; }=new(); public Consent Consent { get; }=new();
@@ -280,10 +287,10 @@ public sealed class NeighborhoodMemberDeliveryTests
         {
             var cs="Data Source=member-"+Guid.NewGuid().ToString("N")+";Mode=Memory;Cache=Shared;Default Timeout=2";
             var connection=new SqliteConnection(cs);await connection.OpenAsync();
-            var db=new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(cs).Options,new Encryption());
+            var db=new SsalddelContext(SqliteOptions(cs),new Encryption());
             await db.Database.EnsureCreatedAsync(); return new(connection,cs,db);
         }
-        public SsalddelContext OpenDb()=>new(new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(cs).Options,new Encryption());
+        public SsalddelContext OpenDb()=>new(SqliteOptions(cs),new Encryption());
         public NeighborhoodMemberDeliveryUseCase Service(SsalddelContext? db=null,Actor? actor=null,bool enabled=true,SsalddelExecutionMode mode=SsalddelExecutionMode.Simulation,bool activation=true,bool readOnly=false,보호지원UseCase? support=null)
             =>new(db??Db,actor??Actor,Options.Create(new NeighborhoodMemberDeliveryOptions { Enabled=enabled,OperationalEnabled=true }),
                 new SsalddelExecutionModePolicy(Options.Create(new SsalddelExecutionOptions { Mode=mode })),Clock,new Encryption(),Consent,Routes,Storage,

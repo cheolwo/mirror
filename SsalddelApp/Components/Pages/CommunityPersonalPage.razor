@@ -1,5 +1,10 @@
 @page "/community/me"
 @layout CommunityMobileLayout
+@implements IDisposable
+@using Ssalddel.Ui.Common.Areas.App.Services
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@inject IAuthSession AuthSession
+@inject ISsalddel현재사용자Context CurrentUser
 
 <PageTitle>@(ShowsPosts ? "내 글" : "내 정보") · 살뜰</PageTitle>
 
@@ -7,9 +12,7 @@
     <header>
         <span>공개 커뮤니티 · 개인 공간</span>
         <h1>@(ShowsPosts ? "내 글" : "내 정보")</h1>
-        <p>@(ShowsPosts
-            ? "로그인한 뒤 내가 작성한 글과 임시저장을 같은 공간에서 확인합니다."
-            : "현재는 방문자 상태입니다. 공개 커뮤니티는 로그인 없이 둘러볼 수 있습니다.")</p>
+        <p>@SessionDescription</p>
     </header>
 
     <nav aria-label="개인 공간 선택">
@@ -21,21 +24,36 @@
         <a href="@NeighborhoodMemberDeliveryRoutes.Home"><MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" /> 배송 참여 설정</a>
     </nav>
 
-    @if (ShowsPosts)
+    @if (Identity.State == CommunityPersonalIdentityState.Restoring)
+    {
+        <section class="community-personal__empty" role="status">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            <strong>로그인 상태를 확인하고 있습니다.</strong>
+        </section>
+    }
+    else if (Identity.State == CommunityPersonalIdentityState.Failed)
+    {
+        <section class="community-personal__empty" role="alert">
+            <strong>로그인 상태를 확인하지 못했습니다.</strong>
+            <p>저장된 로그인 정보를 다시 확인해 주세요.</p>
+            <MudButton OnClick="Retry" Variant="Variant.Outlined">다시 확인</MudButton>
+        </section>
+    }
+    else if (ShowsPosts)
     {
         <section class="community-personal__empty">
             <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Large" />
-            <strong>로그인하면 내 글을 모아 볼 수 있습니다.</strong>
-            <p>공개 게시판의 글은 지금도 읽을 수 있고, 작성할 때 로그인 또는 익명 작성 조건을 확인합니다.</p>
+            <strong>@(IsAuthenticated ? "내 글은 게시판에서 확인해 주세요." : "로그인하면 내 글을 확인할 수 있습니다.")</strong>
+            <p>@(IsAuthenticated ? "로그인한 계정으로 게시판 글과 작성 화면을 이용할 수 있습니다." : "공개 게시판의 글은 지금도 읽을 수 있고, 작성할 때 로그인 또는 익명 작성 조건을 확인합니다.")</p>
             <a href="@CommunityPageRoutes.Boards">게시판 글 보기</a>
         </section>
     }
     else
     {
         <section class="community-personal__profile">
-            <span class="community-personal__avatar">방</span>
-            <span><strong>방문자</strong><small>로그인하지 않은 공개 커뮤니티 이용자</small></span>
-            <em>로그인 선택</em>
+            <span class="community-personal__avatar">@(IsAuthenticated ? "나" : "방")</span>
+            <span><strong>@(IsAuthenticated ? Identity.DisplayName : "방문자")</strong><small>@(IsAuthenticated ? "로그인한 커뮤니티 이용자" : "로그인하지 않은 공개 커뮤니티 이용자")</small></span>
+            <em>@(IsAuthenticated ? "로그인됨" : "로그인 선택")</em>
         </section>
         <section class="community-personal__notice">
             <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" />
@@ -54,4 +72,30 @@
 
     private bool ShowsPosts
         => string.Equals(Tab, "posts", StringComparison.OrdinalIgnoreCase);
+
+    private CommunityPersonalIdentityViewModel? model;
+    private bool disposed;
+    private CommunityPersonalIdentitySnapshot Identity => model?.Snapshot ?? new(CommunityPersonalIdentityState.Restoring);
+    private bool IsAuthenticated => Identity.State == CommunityPersonalIdentityState.Authenticated;
+    private string SessionDescription => Identity.State switch
+    {
+        CommunityPersonalIdentityState.Restoring => "저장된 로그인 상태를 확인하고 있습니다.",
+        CommunityPersonalIdentityState.Failed => "로그인 상태를 확인한 뒤 내 정보를 표시합니다.",
+        CommunityPersonalIdentityState.Authenticated => "로그인한 계정의 개인 공간입니다. 정보 공개와 업무 참여 조건은 각각 확인합니다.",
+        _ => "현재는 방문자 상태입니다. 공개 커뮤니티는 로그인 없이 둘러볼 수 있습니다."
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = new(CurrentUser, AuthSession, ct => AuthSession.RestoreAsync(ct));
+        model.Changed += Refresh;
+        await model.RestoreAsync();
+    }
+    private Task Retry() => model?.RestoreAsync() ?? Task.CompletedTask;
+    private void Refresh() { if (!disposed) _ = InvokeAsync(StateHasChanged); }
+    public void Dispose()
+    {
+        disposed = true;
+        if (model is not null) { model.Changed -= Refresh; model.Dispose(); }
+    }
 }

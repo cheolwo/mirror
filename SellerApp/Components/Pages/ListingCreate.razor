@@ -24,11 +24,28 @@ else
         </MudAlert>
     }
 
-    @if (ViewModel.Products.Count == 0 || ViewModel.Accounts.Count == 0)
+    @if (ViewModel.HasError)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@ViewModel.IsBusy" OnClick="ReloadAsync">
+            출품 준비 다시 확인
+        </MudButton>
+    }
+    else if (ViewModel.Products.Count == 0 || ViewModel.Accounts.Count == 0)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
             판매상품과 판매채널 계정이 모두 있어야 출품 준비 원장을 만들 수 있습니다.
         </MudAlert>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="mt-3">
+            @if (ViewModel.Products.Count == 0)
+            {
+                <MudButton Href="@SellerRoutes.Products" Variant="Variant.Outlined" Color="Color.Primary">판매상품 준비</MudButton>
+            }
+            @if (ViewModel.Accounts.Count == 0)
+            {
+                <MudButton Href="@SellerRoutes.SalesChannels" Variant="Variant.Outlined" Color="Color.Primary">판매채널 연결</MudButton>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@ViewModel.IsBusy" OnClick="ReloadAsync">준비 상태 다시 확인</MudButton>
+        </MudStack>
     }
     else
     {
@@ -78,4 +95,5 @@ else
     }
 
     private Task CreateAsync() => ViewModel.CreateAsync();
+    private Task ReloadAsync() => ViewModel.LoadAsync(ProductId);
 }

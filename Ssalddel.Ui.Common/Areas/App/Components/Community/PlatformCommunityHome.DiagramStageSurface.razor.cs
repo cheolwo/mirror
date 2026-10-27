@@ -21,7 +21,7 @@ public partial class PlatformCommunityHome
 
         public PlatformCommunityDiagramCanvasViewModel Canvas => owner.DiagramCanvas;
 
-        public IReadOnlyList<다이어그램레이어정의> Layers => 다이어그램레이어정의s;
+        public IReadOnlyList<다이어그램레이어정의> Layers => PlatformCommunityDiagramCatalog.All;
 
         public IReadOnlyList<PlatformDiagramPaletteBlock> FormNodes => DiagramFormPaletteBlocks;
 

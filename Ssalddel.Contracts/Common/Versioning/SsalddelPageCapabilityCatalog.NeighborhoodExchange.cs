@@ -9,6 +9,7 @@ public static partial class SsalddelPageCapabilityCatalog
         [
             .. CreateNeighborhoodCollaborationItems(),
             .. CreateNeighborhoodMemberDeliveryItems(),
+            .. CreateSpaceCooperationItems(),
             Exact("community-neighborhood-map", SsalddelPageAppCodes.IntegratedWeb, "/community/map",
                 PageCapabilityStage.Live, PageInteractionBoundary.ReadOnly, false, "0.0",
                 "공개 동네의 제공·필요 글을 지도 또는 목록으로 탐색합니다. 본인 생활 배송은 기존 인증·운송 기능 경계를 통과한 경우만 조회합니다.",
@@ -70,6 +71,39 @@ public static partial class SsalddelPageCapabilityCatalog
                 "같은 의뢰 ID의 서버 상태·운임·배차 진행을 다시 조회하며 기사 수락·수금·지급을 대신 확정하지 않습니다.",
                 featureKeys: [DomesticTransport], workflowCodes: ["DomesticTransport"])
         ];
+
+    private static IEnumerable<SsalddelPageCapabilityRule> CreateSpaceCooperationItems()
+    {
+        foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
+        {
+            var key = app == SsalddelPageAppCodes.Shipper ? "shipper-space-cooperation" : "community-space-cooperation";
+            yield return Exact(key + "-list", app, 공간공동운영Routes.Home,
+                PageCapabilityStage.Beta, PageInteractionBoundary.ReadOnly, false, "0.0",
+                "동의한 공개 소개와 동네 모집을 조회합니다. 본인 참여 목록과 비공개 운영 원장은 기존 인증·관계자 권한을 따릅니다.",
+                featureKeys: [Community], workflowCodes: ["CommunityTrust"]);
+            yield return Exact(key + "-create", app, 공간공동운영Routes.Home + "/new",
+                PageCapabilityStage.Beta, PageInteractionBoundary.PlatformPersistence, true, "0.0",
+                "로그인한 본인이 공동운영 제안을 저장합니다. 제안만으로 공간 사용·계약·입고·배송·정산을 확정하지 않습니다.",
+                featureKeys: [Community], workflowCodes: ["CommunityTrust"]);
+            yield return Exact(key + "-work", app, 공간공동운영Routes.Home + "/{LedgerId}/work/{StageKey}",
+                PageCapabilityStage.Beta, PageInteractionBoundary.ReadOnly, true, "0.0",
+                "로그인한 관계자가 같은 원장·회차에 연결된 업무의 상태와 허용 연락처만 조회합니다. 업무 명령·전화를 자동 실행하지 않습니다.",
+                featureKeys: [Community], workflowCodes: ["CommunityTrust"]);
+            yield return Prefix(key + "-detail", app, 공간공동운영Routes.Home,
+                PageCapabilityStage.Beta, PageInteractionBoundary.PlatformPersistence, false, "0.0",
+                "공개 소개는 인증 없이 조회하고 참여·조건 합의·원장 연결 명령은 로그인한 관계자에게만 허용합니다. 원 업무의 실행·지급 권한을 부여하지 않습니다.",
+                featureKeys: [Community], workflowCodes: ["CommunityTrust"]);
+        }
+    }
+
+    private static bool MatchesSpaceCooperationWorkRoute(string route)
+    {
+        var prefix = 공간공동운영Routes.Home + "/";
+        if (!route.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
+        var parts = route[prefix.Length..].Split('/');
+        return parts.Length == 3 && parts[0].Length > 0
+            && parts[1].Equals("work", StringComparison.OrdinalIgnoreCase) && parts[2].Length > 0;
+    }
 
     private static IEnumerable<SsalddelPageCapabilityRule> CreateNeighborhoodCollaborationItems()
     {

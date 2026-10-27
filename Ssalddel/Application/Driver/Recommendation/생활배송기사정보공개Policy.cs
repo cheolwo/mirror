@@ -47,6 +47,8 @@ public static class 생활배송기사정보공개Policy
     {
         value.픽업지 = PickupPending; value.하차지 = DropoffPending;
         value.픽업_위도 = null; value.픽업_경도 = null; value.하차_위도 = null; value.하차_경도 = null;
+        value.상차시간창시작일시 = null; value.상차시간창종료일시 = null;
+        value.하차시간창시작일시 = null; value.하차시간창종료일시 = null;
     }
 
     public static void 의뢰상세가림(기사운송의뢰상세응답 value)
@@ -55,6 +57,8 @@ public static class 생활배송기사정보공개Policy
         value.하차지 = DropoffPending; value.하차상세지 = string.Empty;
         value.픽업위도 = null; value.픽업경도 = null; value.하차위도 = null; value.하차경도 = null;
         value.정산메모 = null; value.화물설명 = string.Empty;
+        value.상차시간창시작일시 = null; value.상차시간창종료일시 = null;
+        value.하차시간창시작일시 = null; value.하차시간창종료일시 = null;
     }
 
     public static void 의뢰내부정보가림(기사운송의뢰상세응답 value)
@@ -71,6 +75,8 @@ public static class 생활배송기사정보공개Policy
         value.출발지 = PickupPending; value.도착지 = DropoffPending;
         value.상차담당자명 = string.Empty; value.상차연락처 = string.Empty;
         value.수령자명 = string.Empty; value.수령자연락처 = string.Empty; value.전달요청 = string.Empty;
+        value.상차시간창시작일시 = null; value.상차시간창종료일시 = null;
+        value.하차시간창시작일시 = null; value.하차시간창종료일시 = null;
         value.최근예외메시지 = string.Empty;
         value.예외검토목록 = [];
         value.가능한행동 = [];

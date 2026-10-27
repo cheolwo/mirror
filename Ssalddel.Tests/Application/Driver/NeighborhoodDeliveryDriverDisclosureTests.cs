@@ -210,8 +210,8 @@ public sealed class NeighborhoodDeliveryDriverDisclosureTests
         await db.SaveChangesAsync();
 
         var items = scope == "public"
-            ? await new 공개배차Service(db).GetPublicDispatchesAsync("driver-2")
-            : await new NationalDispatchRequestService(db, new Rejections()).GetNationwideRequestsAsync("driver-2");
+            ? await new 공개배차Service(db, 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetPublicDispatchesAsync("driver-2")
+            : await new NationalDispatchRequestService(db, new Rejections(), 신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance).GetNationwideRequestsAsync("driver-2");
         var response = Assert.Single(items);
         Assert.Equal(생활배송기사정보공개Policy.PickupPending, response.픽업지);
         Assert.Equal(생활배송기사정보공개Policy.DropoffPending, response.하차지);

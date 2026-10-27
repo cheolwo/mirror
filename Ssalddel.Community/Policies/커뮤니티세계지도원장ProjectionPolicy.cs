@@ -123,7 +123,10 @@ public static class 커뮤니티세계지도원장ProjectionPolicy
         Aggregate(CommunityLedgerTemplateKeys.ForeignFoodFacilityProfile, 커뮤니티세계지도원장위치공개ModeCodes.Country, 공개집계상태),
         Aggregate(CommunityLedgerTemplateKeys.MeatImportReadiness, 커뮤니티세계지도원장위치공개ModeCodes.Country, 공개집계상태),
         Private(CommunityLedgerTemplateKeys.Errand),
-        Private(CommunityLedgerTemplateKeys.EducationFieldExperience)
+        Private(CommunityLedgerTemplateKeys.EducationFieldExperience),
+        // 공개 모집·소개 동의는 별도 전용 조회의 범위입니다. 보호된 조건·참여·회차 원장을
+        // 일반 지도 집계 대상으로 자동 공개하지 않습니다.
+        Private(CommunityLedgerTemplateKeys.SpaceCooperation)
     ];
 
     private static readonly IReadOnlyDictionary<string, 커뮤니티세계지도원장ProjectionPolicyRule> ByTemplate =

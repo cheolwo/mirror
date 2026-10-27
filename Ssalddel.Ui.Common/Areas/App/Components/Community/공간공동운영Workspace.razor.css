@@ -1,0 +1,39 @@
+.shared-hub { max-width: 1040px; margin: 0 auto; padding: 24px 16px 40px; color: var(--ss-ink, #172b36); }
+.shared-hub header { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.shared-hub h1 { margin: 8px 0; font-size: 24px; line-height: 1.35; font-weight: 600; }
+.shared-hub h2 { margin: 0 0 12px; font-size: 18px; line-height: 1.45; font-weight: 600; }
+.shared-hub h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.5; font-weight: 600; }
+.shared-hub p { margin: 8px 0; line-height: 1.5; overflow-wrap: anywhere; }
+.shared-hub a { color: var(--ss-accent, #0f766e); text-decoration: none; }
+.shared-hub a:hover { text-decoration: underline; }
+.shared-hub button, .shared-hub input, .shared-hub select, .shared-hub textarea { font: inherit; }
+.shared-hub button, .shared-hub .shared-hub-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 10px 16px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 12px; background: var(--ss-surface, #fff); color: var(--ss-ink, #172b36); cursor: pointer; line-height: 1.45; }
+.shared-hub button:disabled { opacity: .58; cursor: default; }
+.shared-hub .shared-hub-primary { background: var(--ss-accent, #0f766e); border-color: var(--ss-accent, #0f766e); color: #fff; }
+.shared-hub :is(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--ss-accent-strong, #0b5c56); outline-offset: 3px; }
+.shared-hub-surface { margin: 0 0 24px; padding: 20px; border: 1px solid var(--ss-border, #dce5e9); border-radius: 16px; background: var(--ss-surface, #fff); }
+.shared-hub-muted { color: var(--ss-muted, #586b78); font-size: 14px; }
+.shared-hub-status { display: inline-block; margin-bottom: 8px; color: var(--ss-accent, #0f766e); font-size: 14px; font-weight: 600; }
+.shared-hub-note { padding: 12px 16px; margin: 0 0 16px; background: var(--ss-canvas, #f5f7fa); border-radius: 12px; }
+.shared-hub-error { border-left: 3px solid var(--ss-warning, #92400e); }
+.shared-hub-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.shared-hub-grid > * { min-width: 0; }
+.shared-hub-list { display: grid; gap: 16px; }
+.shared-hub-list > article { border-bottom: 1px solid var(--ss-border, #dce5e9); padding-bottom: 16px; }
+.shared-hub-list > article:last-child { border-bottom: 0; padding-bottom: 0; }
+.shared-hub-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+.shared-hub label { display: block; margin: 16px 0 6px; line-height: 1.5; }
+.shared-hub input:not([type=checkbox]), .shared-hub select, .shared-hub textarea { width: 100%; min-height: 48px; padding: 10px 12px; color: var(--ss-ink, #172b36); background: var(--ss-surface, #fff); border: 1px solid #788c97; border-radius: 12px; box-sizing: border-box; }
+.shared-hub textarea { resize: vertical; }
+.shared-hub-check { display: flex !important; align-items: start; gap: 12px; min-height: 44px; margin: 6px 0 !important; padding: 8px 0; }
+.shared-hub-check input { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ss-accent, #0f766e); }
+.shared-hub fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
+.shared-hub-facts { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(0, 3fr); gap: 10px 16px; margin: 0; }
+.shared-hub-facts dt { color: var(--ss-muted, #586b78); font-size: 14px; }
+.shared-hub-facts dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.shared-hub details > summary { min-height: 44px; cursor: pointer; line-height: 1.5; font-weight: 600; }
+.shared-hub-flow { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 24px; list-style: none; }
+.shared-hub-flow li { font-size: 14px; color: var(--ss-muted, #586b78); }
+.shared-hub-flow li:not(:last-child)::after { content: ' →'; margin-left: 8px; }
+.shared-hub-hold { padding: 0 0 0 20px; line-height: 1.6; }
+@media (max-width: 650px) { .shared-hub-grid { grid-template-columns: minmax(0, 1fr); } .shared-hub-surface { padding: 16px; } .shared-hub-actions > button, .shared-hub-actions > a { flex: 1 1 auto; } }

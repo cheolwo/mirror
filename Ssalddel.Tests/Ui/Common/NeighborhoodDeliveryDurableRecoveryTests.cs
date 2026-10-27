@@ -7,6 +7,40 @@ namespace Ssalddel.Tests.Ui.Common;
 public sealed partial class NeighborhoodDeliveryViewModelTests
 {
     [Fact]
+    public async Task 포장원입력과명시0분은_접수응답유실뒤_수정없이복구된다()
+    {
+        var store = new VolatileWorkflowRecoveryStore(); var client = new FakeClient { Create = _ => throw new IOException("lost") };
+        using var first = await DurableReady(client, store);
+        first.Draft.VolumeCbm = .02051m; first.Draft.FloorRotationAllowed = false; first.Draft.Pickup.작업시간분 = 0m;
+        first.InputChanged(); await first.QuoteAsync(); first.DispatchRequested = first.DirectPaymentAgreed = true;
+        await first.SubmitAsync(); var original = System.Text.Json.JsonSerializer.Serialize(Assert.Single(client.Created));
+        using var restored = new NeighborhoodDeliveryAuthoringViewModel(client, new User("owner"), recoveryStore: store);
+        Assert.True(await restored.RestoreAsync());
+        Assert.Equal(.02051m, restored.Draft.VolumeCbm); Assert.False(restored.Draft.FloorRotationAllowed); Assert.Equal(0m, restored.Draft.Pickup.작업시간분);
+        client.Create = _ => Task.FromResult<NeighborhoodDeliveryResponse?>(new() { RequestId = "request" });
+        Assert.Equal("request", await restored.SubmitAsync()); Assert.Equal(original, System.Text.Json.JsonSerializer.Serialize(client.Created[1]));
+    }
+
+    [Fact]
+    public async Task 과거복구원문의_누락포장과작업시간은_임의로채우지않고_같은요청으로재확인한다()
+    {
+        var client = new FakeClient(); var store = new VolatileWorkflowRecoveryStore();
+        using var author = await Ready(client); var request = author.CurrentInputSnapshot();
+        request.PackageLengthMm = null; request.PackageWidthMm = null; request.PackageHeightMm = null;
+        request.PalletCount = null; request.FloorRotationAllowed = null; request.StackingAllowed = null;
+        request.Pickup.작업시간분 = null; request.Dropoff.작업시간분 = null;
+        request.DispatchRequested = request.DirectPaymentAgreed = true; request.AgreedFareKrw = 4000m;
+        var original = System.Text.Json.JsonSerializer.Serialize(request);
+        await store.SaveAsync(new("owner", "neighborhood-delivery-create.v1", request.ClientRequestId,
+            System.Text.Json.JsonSerializer.Serialize(new { Request = request, CollaborationId = (string?)null, LinkCommand = (object?)null }), DateTime.UtcNow), default);
+        using var restored = new NeighborhoodDeliveryAuthoringViewModel(client, new User("owner"), recoveryStore: store);
+        Assert.True(await restored.RestoreAsync()); Assert.True(restored.NeedsSubmissionReview); Assert.Empty(restored.InternalCourierMissing);
+        Assert.Null(restored.Draft.PackageLengthMm); Assert.Null(restored.Draft.Pickup.작업시간분);
+        Assert.Equal("request", await restored.SubmitAsync());
+        Assert.Equal(original, System.Text.Json.JsonSerializer.Serialize(Assert.Single(client.Created)));
+    }
+
+    [Fact]
     public async Task 작성페이지종료후_미확정원문과번호를복원하고_GET후에만_명시재전송한다()
     {
         var store = new VolatileWorkflowRecoveryStore(); var client = new FakeClient { Create = _ => throw new IOException("lost response") };
@@ -115,6 +149,7 @@ public sealed partial class NeighborhoodDeliveryViewModelTests
         var model = new NeighborhoodDeliveryAuthoringViewModel(client, new User("owner"), recoveryStore: store);
         model.Initialize(null); await model.RestoreAsync(); model.CollectionConsent = model.AgeConfirmed = true; await model.AcceptConsentAsync();
         model.Draft.CargoName = "시험 물건"; model.Draft.WeightKg = 1;
+        CompleteLoading(model);
         foreach (var location in new[] { model.Draft.Pickup, model.Draft.Dropoff })
         { location.주소.도로명주소 = "시험로 10"; location.연락처.이름 = "시험 이용자"; location.연락처.전화번호 = "01000000000"; }
         await model.QuoteAsync(); model.DispatchRequested = model.DirectPaymentAgreed = true; return model;

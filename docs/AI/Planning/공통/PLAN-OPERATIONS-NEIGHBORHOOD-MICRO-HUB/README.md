@@ -1,5 +1,51 @@
 # [기획 · 생활 교류·생활권 물류 · PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB · r103]
 
+## 최신 구현: 휴대폰 업무 상세·등록 연락처 r117
+
+[r117](mobile-work-detail-contacts.implementation.r117.md)은 r116 요약 노드에서 같은 회차의 독립 업무 상세로 이동하고 기존 업무의 등록 연락처만 권한에 따라 확인한다. 전화 앱에는 번호만 입력하며 실제 발신은 사용자가 선택한다. 관련386시험·격리HTTP21검사·실제 별도 휴대폰 APK를 검증했다. 초기 실행 안정성은 미해결이다. [화면과 검증 범위](../../../../Changes/2026-10-24-mobile-work-detail-contacts-r117.md)를 따른다.
+
+## 이전 구현: 생산부터 출고까지 업무 연결도 r116
+
+[r116](work-procedure-graph.implementation.r116.md)은 기존 통합 원장·업무 인계 카탈로그를 활용한 읽기 전용 절차 노드다. 생산·입고·보관·주문·출고·배송·정산을 살펴보고 이번 회차의 참고 자료를 확인한다. 안내 연결과 실제 인계·완료를 구분한다. 관련235시험·브라우저·실제 휴대폰 기능을 확인했고 초기 실행 종료 문제는 별도로 남겼다.
+
+## 최신 구현: 통합 협업 원장·참여 약속 r115
+
+[r115](integrated-cooperation-ledger.implementation.r115.md)는 사용자가 승인한 첫 보완이다. 상위 공동운영 원장·회차·당사자 주문·실제 계보가 확인된 하위 업무를 연결하고, 일반 시간 제안과 운영 담당의 필수 약속을 구분한다. 수락·거절·취소 전 영향과 명시 대체를 기존 보호 원장 안에 기록한다. 관련219시험·격리HTTP32검사·실제 휴대폰 기능을 확인했고 초기 실행 안정성 미해결과 실제 운영은 별도로 기록한다. 아래 r113/r114는 당시의 제안 상태이며 이 구현으로 이어진다.
+
+## 최신 보강: 사전 참여·약속 영향·성과 환류 r114
+
+[r114](advance-participation-and-promise-impact.design.r114.md)는 생산자·주문자의 사전 의향과 예약을 연결하고 취소 전 영향·대안, 변경 후 당사자 알림, 이행 기대 편익과 실제 확인 성과를 보여주는 제안이다. 비용/기대 손실/책임·정산을 나누며 자동 제재·금전 효과를 확정하지 않는다. 새 범용 예약/영향 조회·알림은 구현 전이다.
+
+## 최신 제안: 통합 앱 모바일 예약·상호 수락 r113
+
+[r113](mobile-work-appointments.design.r113.md)은 현장 업무를 특정일의 제안·상호 수락·예약 확정·시작 준비로 연결하는 추가 제안이다. 기사 실시간 배차와 전문 권위는 유지하며 실제 통합 앱 휴대폰 검증을 우선한다. 새 예약 기능은 구현 전이다.
+
+[r112 변화 조회](shared-outcomes.implementation.r112.md)는 r111의 첫 보완으로 코드와 관련93시험을 확인했다. 새 판본 모바일 실앱 검증은 아직이며 개인 보수/실지급·효율을 추정하지 않는다.
+
+## 최신 제안: 협업 비전과 객관적 성과 r111
+
+[기획 r111](cooperation-vision-and-shared-outcomes.design.r111.md)은 `VisionAndCooperationDirectionAccepted / ProposedDesign / DensityIncomeEffectUnverified / ImplementationNotAuthorized`다. HR 참여와 공동운영의 비전·실제 수행·대기/비용·보수와 다음 개선을 연결해 보여주는 선순환을 제안한다. 밀집도와 수입 증가를 보장하지 않고 신고/의견차이를 자동 감점·감액에 연결하지 않는다. 기존 홈·성과금·지원 사건의 실제 한계와 모의/예정/실지급을 구분하며 제품·운영 변경은 없다.
+
+## 최신 구체화: HR 등록·업무 숙지·일정 신청 r110
+
+[기획 r110](hr-onboarding-work-schedule.design.r110.md)은 `HrDirectionAccepted / OnboardingBeforeApplicationAccepted / ProposedDesign / CompensationDetailsPending / ImplementationNotAuthorized`다. 고정/현장 인력은 HR 등록→물류 절차 숙지→날짜 있는 업무 신청으로 연결하고 기사는 기존 배차를 유지한다. 실제 처리량의 작업 보수와 별도 판매 성과 조건을 사전 표시한다. 현재 HR·입고·정산 코드의 기반과 미연결을 구분하며 단가·계약/지급 정책과 구현은 확정하지 않는다.
+
+## 최신 정정: 사람 중심 협업 매칭 r109
+
+[기획 r109](people-matching.design.r109.md)은 `PeopleMatchingPriorityAccepted / ProposedDesign / ImplementationNotAuthorized`다. 사용자가 공간/선반 전산화보다 사람 연결을 우선하도록 정정했다. 함께 운영할 사람과 회차별 작업 담당자의 모집·추천·가능 시간·수락·업무 인계를 제안하며 r108의 용량 매칭을 첫 구현 범위에서 내린다. 이번에는 문서만 보완한다.
+
+## 최신 제안: 공간·공급·작업·배송의 매칭 r108
+
+[기획 r108](resource-work-matching.design.r108.md)은 `Proposed / SourceReviewed / ImplementationNotAuthorized / OperationalDeferred`다. 기존 전문 원장의 권위를 유지하면서 부족한 일·가능 자원·시간/수량 예약을 공동운영 회차 위에서 연결하는 방안을 제안한다. r104의 역할 수락·자유문구 조건과 기존 작업 배치/배차의 한계를 소스로 확인했다. 새 매칭 코드·DB·앱·실제 계약/배정/지급은 변경하지 않았다.
+
+## 최신 로컬 구현: 동네 공간 공동운영 순환 r104
+
+[구현 r104](community-space-cooperation.implementation.r104.md) · [변경·검증](../../../../Changes/2026-10-24-community-space-cooperation-r104.md). 공개 모집과 선택 소개, 역할별 수락·조건 동의·운영 담당 인계, 기존 입고·주문·배송의 회차 연결을 구현했다. 관련537개·격리 Mongo28검사·실제 HTTP/공용 화면·Web/Android 빌드를 확인했다. 전문 실행 OFF·Simulation 경계를 유지하며 실제 운영·단말·지급·Figma 쓰기 미확인을 구분한다. 아래 기획의 미정과 이전 구현을 보존한다.
+
+## 최신 기획: 직접 거래와 산을 통한 신뢰 표현 r107
+
+[기획 r107](trust-elevation.design.r107.md)은 `PairWeeklyThreeDirectionAccepted / OffPlatformTradeRecognitionAccepted / MirrorRecognitionIdentityAccepted / TopicDeferredForDispatch / ImplementationNotStarted`다. 미러의 수납/정산을 거치지 않은 거래도 상호 확인과 증빙으로 신뢰에 반영하되, 동일 두 사람 사이 인정은 상품/수량 차이와 관계없이 일주일 총3회 정도로 제한하는 방향이다. 이전 상품/수량별 계속 가산은 이력으로 보존한다. 하루1~2회의 정확한 상한·주간 경계·증빙 필수 여부·점수는 미정 보류하고 AI 배차 기획을 먼저 진행한다. 실제 거래 횟수·금융·전문 원장·공개 동의·산 자료·제품은 변경하지 않았다.
+
 ## 최신 검토: 생활 퀵의 개별 업무 흐름 r103
 
 [검토 r103](quick-delivery-review.r103.md)은 `Reviewed / GapsIdentified / ImplementationNotAuthorized`다. 일반 생활 퀵·동네 회원 배송의 접수/수락/수령과 예외 마감을 따로 대조했다. 현재 퀵은 기사 직접 지급이며 주간 업무 명세 표시를 플랫폼 주간 지급 완료로 볼 수 없다. 수정·취소/희망 시각 보존, 수락 보수/적재 정보, 부재·반송/신고·수령 확인의 공백을 구분했고 관련 기존 시험 358개가 통과했다. 기존 변경의 커밋 정리와 신규 퀵 구현 승인은 별개이며 r102 구현·운영 게이트·금융 분리를 보존한다.

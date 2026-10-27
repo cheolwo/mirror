@@ -1,0 +1,38 @@
+@namespace Ssalddel.Ui.Common.Areas.App.Components.Community
+@inherits MvvmComponentBase<공간공동운영주문ViewModel>
+
+<section class="hub-orders" aria-labelledby="hub-orders-title">
+    <div class="hub-orders-heading"><h2 id="hub-orders-title">상품과 주문 확인</h2><button disabled="@ViewModel.IsSending" @onclick="LoadAsync">주문 새로고침</button></div>
+    @if (ViewModel.IsLoading) { <p role="status">나와 관련된 주문을 확인하고 있습니다.</p> }
+    @if (ViewModel.Error is { } error) { <p role="alert" class="hub-orders-note">@error</p> }
+    @if (ViewModel.Notice is { } notice) { <p role="status" class="hub-orders-note">@notice</p> }
+    @if (ViewModel.HasPending) { <div class="hub-orders-note"><h3>원 주문 요청 결과 확인</h3><p>수량과 조건을 보존하고 있습니다. 결과 확인 전에는 새 요청을 보내지 않습니다.</p><button disabled="@ViewModel.IsSending" @onclick="ViewModel.RecoverAsync">처리 결과 확인</button>@if (ViewModel.CanRetry) { <button disabled="@ViewModel.IsSending" @onclick="ViewModel.RetryAsync">원래 요청 직접 다시 보내기</button> }</div> }
+    @if (ViewModel.Loaded && ViewModel.Items.Count == 0) { <p>아직 나와 관련된 확정 주문 준비가 없습니다.</p> }
+    @foreach (var order in ViewModel.Items)
+    {
+        <article><h3>@order.ProductName</h3><dl><dt>수량</dt><dd>@(order.Terms.Quantity)개</dd><dt>개당 가격</dt><dd>@(order.Terms.UnitPriceKrw.ToString("N0"))원</dd><dt>상품 금액</dt><dd>@(order.TotalKrw.ToString("N0"))원</dd><dt>수령 기한</dt><dd>@KoreanTime(order.Terms.DeadlineUtc)</dd><dt>조건 동의</dt><dd>주문자 @(order.BuyerConsented ? "완료" : "대기") · 공급자 @(order.SellerConsented ? "완료" : "대기")</dd><dt>재고 예약</dt><dd>@(order.InventoryReserved ? "확인" : "미확인")</dd><dt>지급</dt><dd>@(order.PaymentConfirmed ? "원 업무에서 확인" : "입금 미확인")</dd></dl>
+            @if (!string.IsNullOrWhiteSpace(order.HoldCode)) { <p class="hub-orders-note">원 주문·재고·배송의 진행 확인이 필요합니다. 아래 가능한 행동으로 같은 주문을 이어서 확인해 주세요.</p> }
+            @if (order.AllowedActions.Any(action => action is "agree" or "handoff" or "resume")) { <label><input type="checkbox" checked="@(ViewModel.ConfirmedOrderId == order.OrderRequestId)" @onchange="args => ViewModel.ConfirmOrder(order.OrderRequestId, args.Value is true)" disabled="@(ViewModel.IsSending || ViewModel.HasPending)" /><span>이 주문의 상품·수량·가격·수령 방식과 기한을 확인했습니다.</span></label><div class="hub-orders-actions">@foreach (var action in order.AllowedActions.Where(action => action is "agree" or "handoff" or "resume")) { <button disabled="@(ViewModel.IsSending || ViewModel.HasPending || ViewModel.ConfirmedOrderId != order.OrderRequestId)" @onclick="() => ViewModel.ExecuteAsync(order, action)">@ActionLabel(action)</button> }</div> }
+        </article>
+    }
+    <details><summary>내 수요를 주문 조건으로 제안</summary><p>이미 입력한 내 수요와 이 회차의 거점·상품·배송이 연결된 후보를 선택합니다. 양쪽 조건 확인 후 공급자가 기존 주문 업무로 인계합니다.</p>
+        @if (ViewModel.CandidatesError is { } candidateError) { <p role="alert">@candidateError</p> }
+        else if (ViewModel.Candidates.Count == 0) { <p>연결 가능한 내 수요가 아직 없습니다. 먼저 상품 수요와 거점·입고·배송 준비를 확인해 주세요.</p> }
+        else
+        {
+            <fieldset disabled="@(ViewModel.IsSending || ViewModel.HasPending)"><label for="order-candidate">내 수요 선택</label><select id="order-candidate" @bind="ViewModel.CandidateValue"><option value="-1">준비된 내 수요 선택</option>@for (var i = 0; i < ViewModel.Candidates.Count; i++) { <option value="@i">@ViewModel.Candidates[i].Label</option> }</select>
+                @if (ViewModel.Draft is { } draft) { <h3>@ViewModel.Candidates[ViewModel.CandidateIndex].ProductName</h3><label for="order-quantity">수량</label><input id="order-quantity" type="number" @bind="draft.Quantity" min="1" /><label for="order-price">개당 가격(원)</label><input id="order-price" type="number" @bind="draft.UnitPriceKrw" min="0" /><label for="order-deadline">수령 기한</label><input id="order-deadline" type="datetime-local" @bind="ViewModel.DeadlineLocal" /><p>수령 방식: 기사 배송</p><p>상품 금액: @((draft.Quantity * draft.UnitPriceKrw).ToString("N0"))원 · 배송비와 실제 입금은 원 업무에서 확인합니다.</p><label><input type="checkbox" @bind="ViewModel.ConfirmTerms" /><span>위 상품·수량·가격·수령 기한으로 조건 확인을 제안합니다.</span></label><button disabled="@(!ViewModel.ConfirmTerms)" @onclick="ViewModel.ProposeAsync">주문 조건 제안</button> }
+            </fieldset>
+        }
+    </details>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string LedgerId { get; set; } = "";
+    [Parameter] public string CycleId { get; set; } = "";
+    private string? loadedKey;
+    protected override Task OnParametersSetAsync() { var key = LedgerId + ":" + CycleId; if (loadedKey == key) return Task.CompletedTask; loadedKey = key; return LoadAsync(); }
+    private Task LoadAsync() => ViewModel.LoadAsync(LedgerId, CycleId);
+    private static string ActionLabel(string action) => action switch { "agree" => "이 주문 조건에 동의", "handoff" => "기존 주문·배송으로 인계", "resume" => "같은 주문 인계 이어서 확인", _ => "확인" };
+    private static string KoreanTime(DateTime utc) => DateTime.SpecifyKind(utc, DateTimeKind.Utc).AddHours(9).ToString("MM.dd HH:mm") + " (한국)";
+}

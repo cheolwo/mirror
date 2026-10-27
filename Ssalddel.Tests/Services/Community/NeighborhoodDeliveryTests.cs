@@ -321,6 +321,76 @@ public sealed class NeighborhoodDeliveryTests
         Assert.Single(fixture.Db.화주운송의뢰);
     }
 
+    [Fact]
+    public async Task 생활배송의_실제입력경로는_포장원입력과_작업시간을_정본과응답에보존한다()
+    {
+        await using var fixture = new Fixture(); var request = Input();
+        request.Quantity = 3; request.WeightKg = 12.5m;
+        request.PackageLengthMm = 293; request.PackageWidthMm = 350; request.PackageHeightMm = 200;
+        request.VolumeCbm = .05m; request.PalletCount = 0; request.FloorRotationAllowed = false; request.StackingAllowed = false;
+        request.Pickup.작업시간분 = 2.5m; request.Dropoff.작업시간분 = 0m;
+        request.Dropoff.시간창 = new() { 시작일시 = DateTime.UtcNow.AddHours(1), 종료일시 = DateTime.UtcNow.AddHours(3) };
+        var expected = NeighborhoodDeliveryLoadingInput.Calculate(request);
+        var result = await fixture.UseCase().등록Async(request);
+        Assert.True(result.IsSuccess, string.Join(";", result.Errors));
+        var stored = await fixture.Db.화주운송의뢰.SingleAsync();
+        Assert.Equal(12.5m, stored.화물중량Kg); Assert.Equal(3, stored.화물수량);
+        Assert.Equal(293, stored.화물길이Mm); Assert.Equal(350, stored.화물폭Mm); Assert.Equal(200, stored.화물높이Mm);
+        Assert.Equal(.05m, stored.화물입력부피Cbm); Assert.Equal(.06153m, stored.화물부피Cbm);
+        Assert.Equal(0, stored.화물팔레트개수); Assert.False(stored.화물바닥회전가능여부); Assert.False(stored.화물적층가능여부);
+        Assert.Equal(2.5m, stored.픽업_작업시간분); Assert.Equal(0m, stored.하차_작업시간분);
+        Assert.Equal(expected.부피근거Code, stored.화물부피근거Code);
+        var observed = (await fixture.UseCase().내상세Async(result.Value.RequestId))!.Request;
+        Assert.Equal(expected.입력지문, observed.적재조건!.입력지문);
+        Assert.Equal(.05m, observed.적재조건.입력.입력부피Cbm);
+        Assert.Equal(.06153m, observed.화물!.부피Cbm); Assert.Equal(12.5m, observed.화물.중량Kg);
+        Assert.Equal(2.5m, observed.픽업!.작업시간분); Assert.Equal(0m, observed.하차!.작업시간분);
+    }
+
+    [Theory]
+    [InlineData("length")]
+    [InlineData("volume")]
+    [InlineData("pallet")]
+    [InlineData("pickup-time")]
+    [InlineData("dropoff-time")]
+    public async Task 명시한_잘못된포장값이나음수작업시간은_견적과접수를만들지않는다(string field)
+    {
+        await using var fixture = new Fixture(); var request = Input();
+        switch (field)
+        {
+            case "length": request.PackageLengthMm = 0; break;
+            case "volume": request.VolumeCbm = -.001m; break;
+            case "pallet": request.PalletCount = -1; break;
+            case "pickup-time": request.Pickup.작업시간분 = -.1m; break;
+            default: request.Dropoff.작업시간분 = -.1m; break;
+        }
+        var quote = await fixture.UseCase().견적Async(request); var submitted = await fixture.UseCase().등록Async(request);
+        Assert.True(quote.IsFailed); Assert.True(submitted.IsFailed);
+        Assert.Equal("InvalidDeliveryLoadingInput", Assert.Single(submitted.Errors).Metadata["ErrorCode"]);
+        Assert.Empty(fixture.Db.화주운송의뢰); Assert.Empty(fixture.Db.운송원장);
+    }
+
+    [Fact]
+    public async Task 구형_분류명과누락입력은_실측규격이나확인된0분으로승격하지않는다()
+    {
+        await using var fixture = new Fixture(); var request = Input(); request.PackageSizeCode = NeighborhoodPackageSizes.Small;
+        var result = await fixture.UseCase().등록Async(request); Assert.True(result.IsSuccess);
+        var source = await fixture.Db.화주운송의뢰.SingleAsync();
+        Assert.Null(source.화물길이Mm); Assert.Null(source.화물부피Cbm); Assert.Null(source.화물입력부피Cbm);
+        Assert.Null(source.화물팔레트개수); Assert.Null(source.화물바닥회전가능여부); Assert.Null(source.화물적층가능여부);
+        Assert.Null(source.픽업_작업시간분); Assert.Null(source.하차_작업시간분);
+        var json = System.Text.Json.JsonSerializer.Serialize(request);
+        Assert.DoesNotContain("PackageLengthMm", json); Assert.DoesNotContain("VolumeCbm", json);
+        Assert.DoesNotContain("PalletCount", json); Assert.DoesNotContain("FloorRotationAllowed", json);
+        using var legacyJson = System.Text.Json.JsonDocument.Parse(json);
+        Assert.False(legacyJson.RootElement.GetProperty("Pickup").TryGetProperty("작업시간분", out _));
+        Assert.False(legacyJson.RootElement.GetProperty("Dropoff").TryGetProperty("작업시간분", out _));
+        request.PalletCount = 0; request.FloorRotationAllowed = false; request.Pickup.작업시간분 = 0m;
+        json = System.Text.Json.JsonSerializer.Serialize(request);
+        Assert.Contains("\"PalletCount\":0", json); Assert.Contains("\"FloorRotationAllowed\":false", json);
+        Assert.Equal(0m, System.Text.Json.JsonSerializer.Deserialize<NeighborhoodDeliveryRequest>(json)!.Pickup.작업시간분);
+    }
+
     private static NeighborhoodDeliveryRequest Input() => new()
     {
         ClientRequestId = Guid.NewGuid(), CargoName = "생활 소포", Quantity = 1, WeightKg = 1m,
@@ -352,7 +422,9 @@ public sealed class NeighborhoodDeliveryTests
             var operators = new 화주운송업무담당자UseCase(Db, Current, TimeProvider.System);
             var sync = new ProjectionBridge(Db);
             var sender = new Sender(
-                new 의뢰생성CommandHandler(Db, Geo, Current, sync, new FreightPolicy(), new Handoff()),
+                new 의뢰생성CommandHandler(Db, Geo, Current, sync, new FreightPolicy(), new Handoff(),
+                    execution: new 살뜰.Services.Options.SsalddelExecutionModePolicy(Microsoft.Extensions.Options.Options.Create(
+                        new 살뜰.Services.Options.SsalddelExecutionOptions { Mode = 살뜰.Services.Options.SsalddelExecutionMode.Simulation }))),
                 new 화주운송의뢰현장지급처리CommandHandler(Db, Current, failQueueOnce ? new FailOnceQueue(queue) : queue, sync, operators),
                 new 의뢰단건조회QueryHandler(Db, operators));
             Transport = new 화주운송의뢰UseCase(sender, null!, null!, Fare, new 화주운송요금정책검토Service(), operators, null!);

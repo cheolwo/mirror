@@ -1,0 +1,16 @@
+@page "/community/space-cooperations"
+@page "/community/space-cooperations/{LedgerId}"
+@inject NavigationManager Navigation
+<PageTitle>동네 공간 함께 운영하기 · Mirror</PageTitle>
+<Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary AuthenticationChanged="@AuthenticationChanged">
+    <Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영Workspace @ref="_page" LedgerId="@EffectiveLedgerId" InitialCycleId="@CycleId" LoginHref="@LoginHref" />
+</Ssalddel.WebApp.Components.Community.NeighborhoodAuthenticationBoundary>
+@code {
+    [Parameter] public string? LedgerId { get; set; }
+    [SupplyParameterFromQuery(Name = "cycle")] public string? CycleId { get; set; }
+    private Ssalddel.Ui.Common.Areas.App.Components.Community.공간공동운영Workspace? _page;
+    private string? EffectiveLedgerId => new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/').EndsWith("/space-cooperations", StringComparison.Ordinal) ? null : LedgerId;
+    private string LoginHref => Navigation.ToAbsoluteUri("login?returnUrl=" + Uri.EscapeDataString(
+        NeighborhoodExchangeAuthenticationRoutes.ReturnRoute(new Uri(Navigation.Uri).PathAndQuery))).ToString();
+    private Task AuthenticationChanged() => _page?.NotifyAuthenticationChangedAsync() ?? Task.CompletedTask;
+}

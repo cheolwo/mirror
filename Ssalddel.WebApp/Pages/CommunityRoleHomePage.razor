@@ -1187,27 +1187,22 @@
     private string? _requestedSnapshotRevision;
     private string? _requestedSourceVersion;
     private string? _selectedLedgerId;
-    private IReadOnlyList<지도신청가원장Response> _myMapLedgers = [];
-    private bool _myMapLedgersLoading;
-    private bool _pendingMyMapLedgersRefresh;
-    private string? _myMapLedgersError;
+    private IReadOnlyList<지도신청가원장Response> _myMapLedgers { get => OwnLedgerSession.Ledgers; set => OwnLedgerSession.Ledgers = value; }
+    private bool _myMapLedgersLoading => OwnLedgerSession.Loading;
+    private bool _pendingMyMapLedgersRefresh { get => OwnLedgerSession.PendingRefresh; set => OwnLedgerSession.PendingRefresh = value; }
+    private string? _myMapLedgersError { get => OwnLedgerSession.Error; set => OwnLedgerSession.Error = value; }
     private MapDatasetMode _datasetMode = MapDatasetMode.DayWork;
-    private GoogleMapState _googleMapState = GoogleMapState.Loading;
-    private IJSObjectReference? _googleMapModule;
-    private DotNetObjectReference<CommunityRoleHomePage>? _googleMapCallback;
+    private GoogleMapState _googleMapState => GoogleSdk.State;
     private bool _pendingGoogleMapUpdate = true;
     private bool _preserveGoogleMapViewport;
     private string? _pendingFocusElementId;
     private bool _isPriceMarketCatalogOpen;
     private bool _isDiagramPanelExpanded;
     private readonly HashSet<string> _selectedLayerCodes = new(StringComparer.Ordinal);
-    private readonly SemaphoreSlim _snapshotRefreshGate = new(1, 1);
-    private 커뮤니티세계지도SnapshotDto? _appliedSnapshot;
-    private CancellationTokenSource? _pollingCts;
-    private Task? _pollingTask;
-    private DateTimeOffset? _lastSnapshotCheckedAt;
-    private string? _snapshotConnectionMessage;
-    private string? _simulationOverlayMessage;
+    private 커뮤니티세계지도SnapshotDto? _appliedSnapshot => SnapshotSession.AppliedSnapshot;
+    private DateTimeOffset? _lastSnapshotCheckedAt => SnapshotSession.LastCheckedAt;
+    private string? _snapshotConnectionMessage => SnapshotSession.ConnectionMessage;
+    private string? _simulationOverlayMessage => GoogleSdk.SimulationOverlayMessage;
     private bool _simulationAnimationEnabled = true;
     private readonly HashSet<string> _enabledSimulationModeCodes = new(
         SimulationModeCodes,
@@ -1216,20 +1211,53 @@
     private bool _regionImagesLoading = true;
     private string? _regionImagesError;
     private bool _layersCustomized;
-    private bool _questionDraftLoading;
-    private bool _questionPublishing;
-    private 커뮤니티세계지도질문초안Response? _questionDraft;
-    private 커뮤니티세계지도질문게시Response? _publishedQuestion;
-    private QuestionPurpose _questionPurpose;
-    private string _questionTitle = string.Empty;
-    private string _questionBody = string.Empty;
-    private string _questionNickname = string.Empty;
-    private string _questionPassword = string.Empty;
-    private bool _confirmSourceReference;
-    private string? _questionComposerError;
+    private bool _questionDraftLoading => QuestionSession.DraftLoading;
+    private bool _questionPublishing => QuestionSession.Publishing;
+    private 커뮤니티세계지도질문초안Response? _questionDraft => QuestionSession.Draft;
+    private 커뮤니티세계지도질문게시Response? _publishedQuestion => QuestionSession.Published;
+    private string _questionTitle { get => QuestionSession.Title; set => QuestionSession.Title = value; }
+    private string _questionBody { get => QuestionSession.Body; set => QuestionSession.Body = value; }
+    private string _questionNickname { get => QuestionSession.Nickname; set => QuestionSession.Nickname = value; }
+    private string _questionPassword { get => QuestionSession.Password; set => QuestionSession.Password = value; }
+    private bool _confirmSourceReference { get => QuestionSession.ConfirmSourceReference; set => QuestionSession.ConfirmSourceReference = value; }
+    private string? _questionComposerError => QuestionSession.Error;
     private bool _newsCandidatesLoading;
     private 커뮤니티세계지도뉴스후보Response? _newsCandidates;
     private string? _newsCandidatesError;
+
+    private 커뮤니티지도SnapshotSession? _snapshotSession;
+    private 커뮤니티지도내원장Session? _ownLedgerSession;
+    private 커뮤니티지도질문작성Session? _questionSession;
+    private 커뮤니티지도GoogleSdkAdapter? _googleSdk;
+
+    private 커뮤니티지도SnapshotSession SnapshotSession => _snapshotSession ??= new(
+        WorldMapClient.조회Async,
+        () => DatasetCode,
+        action => InvokeAsync(action),
+        ApplySnapshot,
+        StateHasChanged);
+
+    private 커뮤니티지도내원장Session OwnLedgerSession => _ownLedgerSession ??= new(
+        MapApplicationLedgerClient.FindByMapMarkerAsync,
+        () => SelectedMarkerId,
+        () => _selectedLedgerId,
+        () =>
+        {
+            _selectedLedgerId = null;
+            SyncDeepLinkToUrl(replace: true);
+        },
+        () => InvokeAsync(StateHasChanged));
+
+    private 커뮤니티지도질문작성Session QuestionSession => _questionSession ??= new(
+        WorldMapClient.질문초안생성Async,
+        WorldMapClient.질문게시Async);
+
+    private 커뮤니티지도GoogleSdkAdapter GoogleSdk => _googleSdk ??= new(
+        JS,
+        GoogleMapsRuntimeClient,
+        SelectMapFeatureFromGoogleMap,
+        OpenMapApplicationsFromGoogleMap,
+        OpenSelectedMapApplicationsFromKeyboard);
 
     private const string RegionalCultureImagePackId = "regional-culture-one-each-v1";
 
@@ -1608,48 +1636,37 @@
     {
         if (firstRender)
         {
-            _googleMapModule = await JS.InvokeAsync<IJSObjectReference>(
-                "import",
-                "./js/community-world-google-map.js");
-            if (await _googleMapModule.InvokeAsync<bool>("prefersReducedMotion"))
-            {
-                _simulationAnimationEnabled = false;
-            }
-            _googleMapCallback = DotNetObjectReference.Create(this);
-            var runtimeSettings = await GoogleMapsRuntimeClient.TryGetAsync();
-            var status = await _googleMapModule.InvokeAsync<string>(
-                "initialize",
-                "community-world-google-map",
-                CurrentMapMarkers,
-                DatasetCode,
-                _selectedCountryCode,
-                SelectedMarkerId,
-                _googleMapCallback,
-                runtimeSettings);
-
-            _googleMapState = status switch
-            {
-                "ready" => GoogleMapState.Ready,
-                "failed" => GoogleMapState.Failed,
-                "blocked-origin" => GoogleMapState.BlockedOrigin,
-                _ => GoogleMapState.Unconfigured
-            };
+            await GoogleSdk.InitializeAsync(
+                () => CurrentMapMarkers,
+                () => DatasetCode,
+                () => _selectedCountryCode,
+                () => SelectedMarkerId,
+                reducedMotion =>
+                {
+                    if (reducedMotion)
+                    {
+                        _simulationAnimationEnabled = false;
+                    }
+                });
             await UpdateTransportSimulationLayerAsync();
             _pendingGoogleMapUpdate = false;
-            _pollingCts = new CancellationTokenSource();
-            _pollingTask = PollMapSnapshotsAsync(_pollingCts.Token);
+            SnapshotSession.StartPolling(async cancellationToken =>
+            {
+                if (_pendingMyMapLedgersRefresh)
+                {
+                    await RefreshMyMapLedgersAsync(cancellationToken);
+                }
+            });
             StateHasChanged();
             return;
         }
 
-        if (_googleMapState == GoogleMapState.Ready && _pendingGoogleMapUpdate && _googleMapModule is not null)
+        if (_googleMapState == GoogleMapState.Ready && _pendingGoogleMapUpdate && GoogleSdk.HasModule)
         {
             _pendingGoogleMapUpdate = false;
             var preserveViewport = _preserveGoogleMapViewport;
             _preserveGoogleMapViewport = false;
-            await _googleMapModule.InvokeVoidAsync(
-                "updateDataset",
-                "community-world-google-map",
+            await GoogleSdk.UpdateDatasetAsync(
                 CurrentMapMarkers,
                 DatasetCode,
                 _selectedCountryCode,
@@ -1658,11 +1675,11 @@
             await UpdateTransportSimulationLayerAsync();
         }
 
-        if (_pendingFocusElementId is not null && _googleMapModule is not null)
+        if (_pendingFocusElementId is not null && GoogleSdk.HasModule)
         {
             var elementId = _pendingFocusElementId;
             _pendingFocusElementId = null;
-            await _googleMapModule.InvokeVoidAsync("focusElement", elementId);
+            await GoogleSdk.FocusElementAsync(elementId);
         }
     }
 
@@ -1748,33 +1765,8 @@
         await UpdateTransportSimulationLayerAsync();
     }
 
-    private async Task UpdateTransportSimulationLayerAsync()
-    {
-        if (_googleMapState != GoogleMapState.Ready || _googleMapModule is null)
-        {
-            return;
-        }
-
-        try
-        {
-            await _googleMapModule.InvokeVoidAsync(
-                "updateTransportSimulationLayer",
-                "community-world-google-map",
-                VisibleSimulationRoutes,
-                new
-                {
-                    animationEnabled = _simulationAnimationEnabled,
-                    maxVisibleObjects = 12,
-                    rendererKind = "google-overlay-canvas"
-                });
-            _simulationOverlayMessage = null;
-        }
-        catch (JSException exception)
-        {
-            Console.Error.WriteLine($"Transport simulation overlay failed: {exception.Message}");
-            _simulationOverlayMessage = "Google 지도 시뮬레이션 overlay를 표시하지 못했습니다. 고정 예시 정보는 계속 확인할 수 있습니다.";
-        }
-    }
+    private Task UpdateTransportSimulationLayerAsync()
+        => GoogleSdk.UpdateTransportSimulationLayerAsync(VisibleSimulationRoutes, _simulationAnimationEnabled);
 
     private void ToggleDiagramPanel()
         => _isDiagramPanelExpanded = !_isDiagramPanelExpanded;
@@ -2050,7 +2042,7 @@
 
     private void ResetSnapshotForDataset()
     {
-        _appliedSnapshot = null;
+        SnapshotSession.ResetForDataset();
         _selectedMarkerId = null;
         _selectedObservationId = null;
         _selectedLedgerId = null;
@@ -2059,27 +2051,6 @@
         ResetQuestionComposer();
         _selectedLayerCodes.Clear();
         _layersCustomized = false;
-        _snapshotConnectionMessage = null;
-    }
-
-    private async Task PollMapSnapshotsAsync(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            await RefreshMapSnapshotAsync(applyImmediately: false, cancellationToken);
-            if (_pendingMyMapLedgersRefresh)
-            {
-                await RefreshMyMapLedgersAsync(cancellationToken);
-            }
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
-        }
     }
 
     private async Task RefreshSelectedMapLedgersAsync()
@@ -2088,114 +2059,14 @@
         await RefreshMyMapLedgersAsync(CancellationToken.None);
     }
 
-    private async Task RefreshMyMapLedgersAsync(CancellationToken cancellationToken)
-    {
-        var markerId = SelectedMarkerId;
-        if (string.IsNullOrWhiteSpace(markerId))
-        {
-            _myMapLedgers = [];
-            _myMapLedgersLoading = false;
-            _myMapLedgersError = null;
-            _pendingMyMapLedgersRefresh = false;
-            return;
-        }
+    private Task RefreshMyMapLedgersAsync(CancellationToken cancellationToken)
+        => OwnLedgerSession.RefreshAsync(cancellationToken);
 
-        _myMapLedgersLoading = true;
-        _myMapLedgersError = null;
-        await InvokeAsync(StateHasChanged);
-        try
-        {
-            var ledgers = await MapApplicationLedgerClient.FindByMapMarkerAsync(
-                markerId,
-                _selectedLedgerId,
-                cancellationToken);
-            if (!string.Equals(markerId, SelectedMarkerId, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            _myMapLedgers = ledgers;
-            if (!string.IsNullOrWhiteSpace(_selectedLedgerId)
-                && ledgers.All(ledger => !string.Equals(ledger.원장Id, _selectedLedgerId, StringComparison.Ordinal)))
-            {
-                _selectedLedgerId = null;
-                SyncDeepLinkToUrl(replace: true);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (Exception exception)
-        {
-            _myMapLedgers = [];
-            _myMapLedgersError = exception.Message;
-        }
-        finally
-        {
-            _myMapLedgersLoading = false;
-            _pendingMyMapLedgersRefresh = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task RefreshMapSnapshotAsync(bool applyImmediately, CancellationToken cancellationToken)
-    {
-        var requestedDataset = DatasetCode;
-        try
-        {
-            await _snapshotRefreshGate.WaitAsync(cancellationToken);
-            try
-            {
-                var snapshot = await WorldMapClient.조회Async(requestedDataset, cancellationToken);
-                if (!string.Equals(requestedDataset, DatasetCode, StringComparison.Ordinal))
-                {
-                    return;
-                }
-
-                await InvokeAsync(() =>
-                {
-                    _lastSnapshotCheckedAt = DateTimeOffset.Now;
-                    _snapshotConnectionMessage = null;
-                    if (applyImmediately || _appliedSnapshot is null)
-                    {
-                        ApplySnapshot(snapshot);
-                    }
-                    else if (!string.Equals(_appliedSnapshot.Revision, snapshot.Revision, StringComparison.Ordinal))
-                    {
-                        ApplySnapshot(snapshot, preserveViewport: true);
-                    }
-
-                    StateHasChanged();
-                });
-            }
-            finally
-            {
-                _snapshotRefreshGate.Release();
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (Exception)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-
-            await InvokeAsync(() =>
-            {
-                _snapshotConnectionMessage = _appliedSnapshot is null
-                    ? "서버 snapshot을 가져오지 못해 현재 내장 공개 카탈로그를 표시합니다."
-                    : "서버 snapshot을 다시 확인하지 못해 마지막으로 연결된 자료를 유지합니다.";
-                StateHasChanged();
-            });
-        }
-    }
+    private Task RefreshMapSnapshotAsync(bool applyImmediately, CancellationToken cancellationToken)
+        => SnapshotSession.RefreshAsync(applyImmediately, cancellationToken);
 
     private void ApplySnapshot(커뮤니티세계지도SnapshotDto snapshot, bool preserveViewport = false)
     {
-        _appliedSnapshot = snapshot;
         var selectionChanged = false;
         var selectedObservation = _selectedObservationId is null
             ? null
@@ -2374,106 +2245,27 @@
             return;
         }
 
-        _questionDraftLoading = true;
-        _questionComposerError = null;
-        _publishedQuestion = null;
-        _questionPurpose = purpose;
-        try
-        {
-            var draft = await WorldMapClient.질문초안생성Async(
-                observation.StableId,
-                new 커뮤니티세계지도질문초안Request
-                {
-                    DatasetCode = DatasetCode,
-                    QuestionFocus = QuestionFocus(observation.Title, purpose)
-                });
-            _questionDraft = draft;
-            _questionTitle = draft.SuggestedPost.Title;
-            _questionBody = draft.SuggestedPost.Body;
-            _questionNickname = AuthSession.UserName ?? string.Empty;
-            _questionPassword = string.Empty;
-            _confirmSourceReference = false;
-        }
-        catch (Exception exception)
-        {
-            _questionDraft = null;
-            _questionComposerError = exception.Message;
-        }
-        finally
-        {
-            _questionDraftLoading = false;
-        }
+        await QuestionSession.OpenAsync(observation, DatasetCode, purpose, () => AuthSession.UserName);
     }
 
     private async Task PublishQuestionAsync()
     {
         if (!CanPublishQuestion
             || SelectedObservation is not { } observation
-            || _questionDraft is not { } draft
+            || _questionDraft is null
             || AuthSession.AccessToken is not { Length: > 0 } accessToken)
         {
             return;
         }
 
-        _questionPublishing = true;
-        _questionComposerError = null;
-        try
-        {
-            _publishedQuestion = await WorldMapClient.질문게시Async(
-                observation.StableId,
-                new 커뮤니티세계지도질문게시Request
-                {
-                    DatasetCode = DatasetCode,
-                    Title = _questionTitle.Trim(),
-                    Body = _questionBody.Trim(),
-                    OriginalLanguageCode = draft.SuggestedPost.OriginalLanguageCode,
-                    IsInterestGatheringEnabled = _questionPurpose == QuestionPurpose.Gathering,
-                    Nickname = _questionNickname.Trim(),
-                    Password = _questionPassword,
-                    ConfirmSourceReference = _confirmSourceReference
-                },
-                accessToken);
-            _questionDraft = null;
-            _questionPassword = string.Empty;
-            _confirmSourceReference = false;
-        }
-        catch (Exception exception)
-        {
-            _questionComposerError = exception.Message;
-        }
-        finally
-        {
-            _questionPublishing = false;
-        }
+        await QuestionSession.PublishAsync(observation.StableId, DatasetCode, accessToken);
     }
 
     private void CloseQuestionComposer()
         => ResetQuestionComposer(clearPublished: false);
 
     private void ResetQuestionComposer(bool clearPublished = true)
-    {
-        _questionDraft = null;
-        _questionDraftLoading = false;
-        _questionPublishing = false;
-        _questionTitle = string.Empty;
-        _questionBody = string.Empty;
-        _questionNickname = string.Empty;
-        _questionPassword = string.Empty;
-        _confirmSourceReference = false;
-        _questionComposerError = null;
-        if (clearPublished)
-        {
-            _publishedQuestion = null;
-        }
-    }
-
-    private static string QuestionFocus(string observationTitle, QuestionPurpose purpose)
-        => purpose switch
-        {
-            QuestionPurpose.Proposal => $"{observationTitle} 자료를 바탕으로 아이디어를 나눠요",
-            QuestionPurpose.Gathering => $"{observationTitle} 공개 근거를 함께 확인할 분을 찾습니다",
-            _ => $"{observationTitle}에 대해 궁금한 점이 있어요"
-        };
+        => QuestionSession.Reset(clearPublished);
 
     private void OpenLedgerDiagramForMapFeature(string observationId)
     {
@@ -2616,17 +2408,8 @@
         _pendingMyMapLedgersRefresh = true;
     }
 
-    private async Task UpdateGoogleMapSelectionAsync()
-    {
-        if (_googleMapState == GoogleMapState.Ready && _googleMapModule is not null)
-        {
-            await _googleMapModule.InvokeVoidAsync(
-                "updateSelection",
-                "community-world-google-map",
-                _selectedCountryCode,
-                SelectedMarkerId);
-        }
-    }
+    private Task UpdateGoogleMapSelectionAsync()
+        => GoogleSdk.UpdateSelectionAsync(_selectedCountryCode, SelectedMarkerId);
 
     private string? SelectedMarkerId
         => _selectedMarkerId ?? _selectedObservationId;
@@ -2962,14 +2745,7 @@
             : CommunityPageRoutes.WorldMapDayWorkDataset;
 
     private bool CanPublishQuestion
-        => AuthSession.IsLoggedIn
-           && !_questionPublishing
-           && _questionDraft is not null
-           && !string.IsNullOrWhiteSpace(_questionTitle)
-           && !string.IsNullOrWhiteSpace(_questionBody)
-           && !string.IsNullOrWhiteSpace(_questionNickname)
-           && _questionPassword.Trim().Length is >= 4 and <= 100
-           && _confirmSourceReference;
+        => QuestionSession.CanPublish(AuthSession.IsLoggedIn);
 
     private string LoginHref
     {
@@ -3167,53 +2943,16 @@
         NightLearning
     }
 
-    private enum QuestionPurpose
-    {
-        Question,
-        Proposal,
-        Gathering
-    }
-
-    private enum GoogleMapState
-    {
-        Loading,
-        Ready,
-        Unconfigured,
-        BlockedOrigin,
-        Failed
-    }
-
     public async ValueTask DisposeAsync()
     {
-        if (_pollingCts is not null)
+        if (_snapshotSession is not null)
         {
-            await _pollingCts.CancelAsync();
-            if (_pollingTask is not null)
-            {
-                try
-                {
-                    await _pollingTask;
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            }
-
-            _pollingCts.Dispose();
+            await _snapshotSession.DisposeAsync();
         }
 
-        if (_googleMapModule is not null)
+        if (_googleSdk is not null)
         {
-            try
-            {
-                await _googleMapModule.InvokeVoidAsync("dispose", "community-world-google-map");
-                await _googleMapModule.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-            }
+            await _googleSdk.DisposeAsync();
         }
-
-        _googleMapCallback?.Dispose();
     }
 }
