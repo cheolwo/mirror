@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "cargo-operating-refactor-r21.visual-evidence.v1",
+  "syntheticMemoryPreview": true,
+  "productHttpVerifiedByThisPreview": false,
+  "deviceVerified": false,
+  "viewport": {
+    "width": 781,
+    "height": 884
+  },
+  "checks": [
+    {
+      "id": "unresolved-includes-acknowledged",
+      "passed": true
+    },
+    {
+      "id": "urgent-then-oldest-visible",
+      "passed": true
+    },
+    {
+      "id": "acknowledged-is-not-resolved",
+      "passed": true
+    },
+    {
+      "id": "list-return-context",
+      "passed": true
+    },
+    {
+      "id": "read-dialog-then-successful-get",
+      "passed": true
+    },
+    {
+      "id": "lost-response-one-confirm-two-reads",
+      "passed": true
+    },
+    {
+      "id": "empty-list",
+      "passed": true
+    },
+    {
+      "id": "stale-confirm-disabled",
+      "passed": true
+    },
+    {
+      "id": "acknowledged-page2-return",
+      "passed": true
+    },
+    {
+      "id": "no-horizontal-overflow",
+      "passed": true
+    },
+    {
+      "id": "final-source-action-gap16",
+      "passed": true
+    }
+  ],
+  "captures": [
+    {
+      "file": "01-unresolved-list.png",
+      "sha256": "c131be6c3c12a45acef38c7ee4a5aa4332b30b14d4f1eca9a701a838f23e0270",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "02-acknowledged-unresolved.png",
+      "sha256": "4b4e6ac4c1688ff636566abd3fa4146052c18f43f54fa5dcd36baca96fb761c6",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "03-read-recovery-dialog.png",
+      "sha256": "9a44ee7cfa0857bc50a4dc64b521620e379dd687180fe0cf58ce3da9d65b4b05",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "04-unknown-confirmation.png",
+      "sha256": "f61a11ab714bafcc574802d5af608cf8b5bf09c689da8f7c4ee9eb62efa2c668",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "05-empty-list.png",
+      "sha256": "81e38f7f6d896863190d14c20fd833e48f7af405b2f36556d3427286bdb065e8",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "06-stale-source.png",
+      "sha256": "c6582d940fcac897c606b9182ad8df17832bb9b40296fd7a0d140823053bad45",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "07-cargo-response.png",
+      "sha256": "2a452fc1e38780275a7e37200a43f2e636b1947aa3f0d63188115bd53490d285",
+      "edition": "interaction-review-before-final-16px-spacing"
+    },
+    {
+      "file": "08-cargo-response-final.png",
+      "sha256": "24cbbbd4c4cac5d59491f717af7b68597ce911d076ea2a505a8ed106bd5358fd",
+      "edition": "final-spacing"
+    }
+  ],
+  "finalCaptureSourceHashes": {
+    "Ssalddel.Ui.Common/Areas/BackOffice/Components/Operations/OperationsAlertsView.razor": "e3a4b190545da1cc9428743b33c4d401ec4e4cd076d41bffaf039b0ded5fef7a",
+    "Ssalddel.Ui.Common/Areas/BackOffice/Components/Operations/OperationsAlertsView.razor.css": "7f9c47172d3ab983896d6d5f5b781e63838f66dd84968ec5e47ecd3ee18edc0b",
+    "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/OperationsAlertsState.cs": "a9cbad7f83290cb7f874b6e371941c6ae3d0c7b93b57178a2d4188234dc3cb99",
+    "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/OperationsAlertWorkflowPresentation.cs": "d8b21b2db3452f79b172d3e2ab1e9b317c3ea2078cb5418be38e2cd68ba571ab",
+    "eng/RoleWorkspacePreview/CargoOperatingR21PreviewFixture.cs": "e9ef57fa0aa4400d0ce65697a590489dbd96c780e8695013b6ae1a7852fa873b",
+    "eng/RoleWorkspacePreview/CargoOperatingR21PreviewPage.razor": "467bada5443801c9cf51c0b188b037075bfabb66cc52bdcdb9af8c6c588681e3"
+  },
+  "earlierCaptureExactSourceHashesRecorded": false,
+  "actualMobileViewportVerified": false,
+  "notes": [
+    "Final image08 and final consumer build include the spacing change after Task.",
+    "Other captures preserve the earlier interaction review.",
+    "Source preview uses actual shared UI and pure server presentation policy, without product DB/API."
+  ]
+}

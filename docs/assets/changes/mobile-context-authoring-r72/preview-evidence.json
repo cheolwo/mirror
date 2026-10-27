@@ -1,0 +1,113 @@
+{
+  "schema": "ssalddel-mobile-context-preview-evidence-v1",
+  "kind": "local-common-ui-preview",
+  "deviceValidation": false,
+  "apiValidation": false,
+  "realConsentOrSubmission": false,
+  "rawResult": "artifacts/local/mobile-context-r72-final-20261019-141730/result.json",
+  "validationStartedAtUtc": "2026-10-19T05:17:30.535Z",
+  "validationCompletedAtUtc": "2026-10-19T05:17:55.393Z",
+  "inputHashes": {
+    "RoleWorkspacePreview.dll": "5daa1429cd729ea54b1203a4358fa12e949b28a1cfe8f13f9bc6599203e99b3a",
+    "Ssalddel.Ui.Common.dll": "a971671c783729549d83bd23b9b38f64cd23e45f2429819c9b3e2a9a5f09c6f5"
+  },
+  "scriptSha256": "6e333bbf10af2f2b1f7bad64469b469d67f0d9353e854cb110f66e4855339523",
+  "viewportWidths": [
+    320,
+    390,
+    1280
+  ],
+  "checksPassed": 6,
+  "automatedCaptures": 25,
+  "javascriptErrors": 0,
+  "externalOrApiRequests": 0,
+  "representativeImages": [
+    {
+      "width": 390,
+      "step": "cargo",
+      "file": "cargo-390.png",
+      "imageWidth": 390,
+      "imageHeight": 917,
+      "sha256": "d51541d43cd60811038142b4df828e8d926f5faa85166fc4fe28351eede57ffb"
+    },
+    {
+      "width": 390,
+      "step": "package",
+      "file": "package-390.png",
+      "imageWidth": 390,
+      "imageHeight": 978,
+      "sha256": "27a8de848d6a5693164ad08d8b9c749ae92bd9198a79dc5902a61ef4bedf2d54"
+    },
+    {
+      "width": 390,
+      "step": "pickup",
+      "file": "pickup-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "42fc887af9423f186433b018d0c5b5d44841419f8ecd093cfacdff00a7449c44"
+    },
+    {
+      "width": 390,
+      "step": "dropoff",
+      "file": "dropoff-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "624e139afd318e0405b1218116bc03af51c4a3347d6c1a852701ba7ae0b87eb9"
+    },
+    {
+      "width": 390,
+      "step": "schedule",
+      "file": "schedule-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "4bdfaf0210c66b868bbb5fb4f3fac74ffb99c37c7918924f5acf225d2b552b96"
+    },
+    {
+      "width": 390,
+      "step": "vehicle",
+      "file": "vehicle-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1603,
+      "sha256": "eb0058eb61ee79f1697a3d38b04689c60c8c0e4d1636cd88adfa001a45d94ea2"
+    },
+    {
+      "width": 390,
+      "step": "payment",
+      "file": "payment-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1896,
+      "sha256": "70da80d6c328b68df9d5ba5340c9304da6d7dc44aecc86067c40350ac156e3c3"
+    },
+    {
+      "width": 390,
+      "step": "review",
+      "file": "review-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1483,
+      "sha256": "38cbc78dee2f3e655e60362de6fd8837715a9d1443852028ef4962837979a2b2"
+    },
+    {
+      "width": 1280,
+      "step": "desktop",
+      "file": "desktop-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 6097,
+      "sha256": "b976ba06e2d9d9f806208cf21953a7959ddbab1f0f16f1ef71c00079d793e3c2"
+    }
+  ],
+  "visualReview": {
+    "reviewed": true,
+    "reviewer": "Codex direct image inspection",
+    "imagesReviewed": 9,
+    "notes": [
+      "모바일 단계별 입력 문맥과 진행·이전·다음 표시를 확인했습니다.",
+      "유효한 일정에서 날짜 오류 표시가 없고 시간 요약이 유지됩니다.",
+      "입력 라벨 겹침과 가로 잘림이 없는 최종 캡처를 확인했습니다.",
+      "PC 1280 화면은 기존 통합 입력 네 영역을 유지합니다."
+    ],
+    "limitations": [
+      "휴대폰·APK·실제 API·DB·동의·접수·결제 검증을 뜻하지 않습니다.",
+      "전체 화면 스크린샷으로 실제 휴대폰에서는 세로 스크롤이 필요합니다."
+    ]
+  }
+}

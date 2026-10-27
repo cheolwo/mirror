@@ -1,0 +1,12 @@
+[
+  {
+    "File": "cargo-closeout-preview.png",
+    "Sha256": "8fed80ee413bf6df1d821b39b0986384c4075fd407ae3e556686ea29e0d90843",
+    "SourceScope": "local component preview; no real shipment or financial effect"
+  },
+  {
+    "File": "cargo-closeout-waiting.png",
+    "Sha256": "a033cc24bb3ee9b2f57f2b6b4c9def065fbe0c86f15e9a12d2a0c546448dc175",
+    "SourceScope": "local component preview; no real shipment or financial effect"
+  }
+]

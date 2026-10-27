@@ -1,0 +1,66 @@
+[
+  {
+    "file": "emu-shipper-public.png",
+    "sha256": "fb95b4992a6e78849db6d3be0d1963df4550edea12be081d0e79bb76308054bb",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-shipper-home-after-login.png",
+    "sha256": "e4adc71e789878d17fea0bc0b92bceef8ae7faeed8fd8205b5469af1b5a822aa",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-shipper-cargo-work.png",
+    "sha256": "20155d3629155d680b9521e43734bcc10a983d07da8fb4424ed1a1019eef13c3",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-driver-start-settled.png",
+    "sha256": "426e93e0890730c6b4e7f2388cd6a8c87b51f0ff116babde3eeaa186b884b443",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-driver-tools.png",
+    "sha256": "7d880a426e74c1f86eec31d096c32beba06785c9aba2b801fc445ed3222fcc29",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-driver-offer.png",
+    "sha256": "1cf44ebe339bf0a239ed5a3b20e5e349523c3ac460def4d5a9f075e060dc5145",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-driver-accept-confirm.png",
+    "sha256": "e3a6b418d8494ff5f99bdbb14edcb71a953fc985879f42a191b5bbfa3c795e5b",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  },
+  {
+    "file": "emu-driver-retry-outcome.png",
+    "sha256": "82eb88f85b729d71da386887fe9e36898faa73fb10377e6e48891e0d3417084f",
+    "source": "Actual Android emulator APK capture",
+    "syntheticData": true,
+    "physicalPhone": false,
+    "pixelEdited": false
+  }
+]

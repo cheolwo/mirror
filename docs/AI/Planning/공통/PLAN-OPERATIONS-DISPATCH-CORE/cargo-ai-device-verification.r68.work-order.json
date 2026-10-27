@@ -1,0 +1,30 @@
+{
+  "schema": "cargo-ai-device-verification-work-order.v1",
+  "planId": "PLAN-OPERATIONS-DISPATCH-CORE",
+  "revision": "dispatch-core.r68",
+  "status": "ApprovedInCurrentThread",
+  "authorization": "2026-10-19 user requested synthetic legal-dong order/driver data, real local AI recommendation, USB Android receipt/acceptance/pickup/delivery verification.",
+  "scope": "Dedicated loopback Simulation host and new isolated logical databases; actual eligible-candidate review to Ollama selection to existing guarded recommendation transition; synthetic requests via existing APIs; physical app interaction and screenshot/evidence capture when current USB authorization and camera scene confirmation are available.",
+  "sourcePlan": "cargo-regional-training.implementation.r67.md",
+  "writePaths": [
+    "eng/CargoAiDeviceVerificationR114/",
+    "eng/CargoAiClientProbeR114/",
+    "eng/verification/cargo-ai-device-r114.py",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-device-verification*",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/Changes/2026-10-19-cargo-ai-device-verification-r114.md",
+    "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/"
+  ],
+  "privateArtifacts": "artifacts/local/cargo-ai-device-r114/",
+  "database": "mirror_ai_device_r114_20261019",
+  "server": "http://127.0.0.1:5364",
+  "phoneUsbReverse": "phone:5363 to host:5364 only after current ADB authorization",
+  "excluded": ["production DB", "existing test DB reset", "product dispatch policy changes", "worker activation", "cloud FCM", "weight training", "real goods", "real payment", "device security changes", "Unity", "videos", "commit", "push"],
+  "latestUserSteering": "Current USB state is unauthorized. User selected local verification only; no device interaction or installation in this run.",
+  "deviceVerificationDeferred": true,
+  "localVerification": "Real local model, dedicated Simulation server, existing application API contracts, synthetic photo payloads only; no actual camera or physical goods claim.",
+  "deviceApprovalRequired": true,
+  "cameraSceneConfirmationRequired": true,
+  "operationalUseApproved": false
+}

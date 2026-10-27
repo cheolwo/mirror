@@ -1882,5 +1882,489 @@
   "WarehouseManagerApp/Components/Pages/WarehouseWorkspace.razor": {
     "id": "WarehouseManagerApp-Components-Pages-WarehouseWorkspace",
     "detail": null
+  },
+  "DriverApp/Components/Pages/Driver/04_Settings/운송자격Page.razor": {
+    "id": "DriverApp-Components-Pages-Driver-04_Settings-운송자격Page",
+    "detail": null
+  },
+  "DriverApp/Components/Pages/Driver/05_Settlement/운송대금Page.razor": {
+    "id": "DriverApp-Components-Pages-Driver-05_Settlement-운송대금Page",
+    "detail": null
+  },
+  "DriverApp/Components/Pages/Driver/05_Settlement/운송대금상세Page.razor": {
+    "id": "DriverApp-Components-Pages-Driver-05_Settlement-운송대금상세Page",
+    "detail": null
+  },
+  "DriverApp/Components/Pages/분산배송Page.razor": {
+    "id": "DriverApp-Components-Pages-분산배송Page",
+    "detail": null
+  },
+  "eng/web-role-app/Pages/IntegratedRoleSelection.razor": {
+    "id": "eng-web-role-app-Pages-IntegratedRoleSelection",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/AgreedRateReturn.razor": {
+    "id": "FDriverApp-Components-Pages-AgreedRateReturn",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/AgreedRateTable.razor": {
+    "id": "FDriverApp-Components-Pages-AgreedRateTable",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/CommerceDisputesPage.razor": {
+    "id": "FDriverApp-Components-Pages-CommerceDisputesPage",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/CommerceNoticesPage.razor": {
+    "id": "FDriverApp-Components-Pages-CommerceNoticesPage",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/CommercePrivacyPage.razor": {
+    "id": "FDriverApp-Components-Pages-CommercePrivacyPage",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/CommerceSellerPage.razor": {
+    "id": "FDriverApp-Components-Pages-CommerceSellerPage",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/SupportLoginPage.razor": {
+    "id": "FDriverApp-Components-Pages-SupportLoginPage",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/WorkPreferences.razor": {
+    "id": "FDriverApp-Components-Pages-WorkPreferences",
+    "detail": null
+  },
+  "FDriverApp/Components/Pages/WorkPreferencesReturn.razor": {
+    "id": "FDriverApp-Components-Pages-WorkPreferencesReturn",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/CommerceDisputesPage.razor": {
+    "id": "OrdererApp-Components-Pages-CommerceDisputesPage",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/CommerceNoticesPage.razor": {
+    "id": "OrdererApp-Components-Pages-CommerceNoticesPage",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/CommercePrivacyPage.razor": {
+    "id": "OrdererApp-Components-Pages-CommercePrivacyPage",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/CommerceSellerPage.razor": {
+    "id": "OrdererApp-Components-Pages-CommerceSellerPage",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/Login.razor": {
+    "id": "OrdererApp-Components-Pages-Login",
+    "detail": null
+  },
+  "OrdererApp/Components/Pages/분산주문Page.razor": {
+    "id": "OrdererApp-Components-Pages-분산주문Page",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/AgreedRates.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-AgreedRates",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/CommerceDisputesPage.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-CommerceDisputesPage",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/CommerceNoticesPage.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-CommerceNoticesPage",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/CommercePrivacyPage.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-CommercePrivacyPage",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/CommerceSellerPage.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-CommerceSellerPage",
+    "detail": null
+  },
+  "RestaurantDeskApp/Components/Pages/NotificationSettings.razor": {
+    "id": "RestaurantDeskApp-Components-Pages-NotificationSettings",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/AgreedRateTablePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-AgreedRateTablePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CargoWorkspaceActionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CargoWorkspaceActionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CargoWorkspaceOfferPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CargoWorkspaceOfferPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommerceDisputesPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommerceDisputesPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommerceNoticesPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommerceNoticesPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommercePrivacyPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommercePrivacyPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommerceSellerPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommerceSellerPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityExchangeDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityExchangeDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityExchangePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityExchangePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityExchangeWritePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityExchangeWritePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMemberDeliveryOfferDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryOfferDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMemberDeliveryOffersPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryOffersPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMemberDeliveryParticipationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryParticipationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkListPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkListPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationListPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationListPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryListPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryListPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodMapPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodMapPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageCreatePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageCreatePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageDetailPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageDetailPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageListPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageListPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/CurrentDriverWorkPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-CurrentDriverWorkPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DistributedFulfillment/DistributedWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DistributedFulfillment-DistributedWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/DriverQualificationPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-DriverQualificationPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/LifeHome.razor": {
+    "id": "Ssalddel.WebApp-Pages-LifeHome",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/OperatorCargoIncidentsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-OperatorCargoIncidentsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/PlatformParticipationDetailsPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-PlatformParticipationDetailsPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/QuickServiceIntroductionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-QuickServiceIntroductionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleOrdererNewOrderPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleOrdererNewOrderPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleWarehouseWorkspaceTaskPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleWarehouseWorkspaceTaskPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleWorkspaceActionPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleWorkspaceActionPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleWorkspaceHistoryPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleWorkspaceHistoryPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleWorkspaceLoginPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleWorkspaceLoginPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/RoleWorkspacePage.razor": {
+    "id": "Ssalddel.WebApp-Pages-RoleWorkspacePage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/ShipperRequestMobileContextPage.razor": {
+    "id": "Ssalddel.WebApp-Pages-ShipperRequestMobileContextPage",
+    "detail": null
+  },
+  "Ssalddel.WebApp/Pages/활동정산Page.razor": {
+    "id": "Ssalddel.WebApp-Pages-활동정산Page",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/DriverQualification.razor": {
+    "id": "SsalddelAdmin-Components-Pages-DriverQualification",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/FreightPlatformReadiness.razor": {
+    "id": "SsalddelAdmin-Components-Pages-FreightPlatformReadiness",
+    "detail": null
+  },
+  "SsalddelAdmin/Components/Pages/PrivacySupport.razor": {
+    "id": "SsalddelAdmin-Components-Pages-PrivacySupport",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/CargoOverview.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-CargoOverview",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/DispatchTraining.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-DispatchTraining",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/DispatchTrainingDecisions.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-DispatchTrainingDecisions",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/FoodDemandSurcharge.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-FoodDemandSurcharge",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/FoodInterruptionReview.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-FoodInterruptionReview",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/FoodOperations.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-FoodOperations",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/FoodOrderDetail.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-FoodOrderDetail",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/OperationsAlerts.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-OperationsAlerts",
+    "detail": null
+  },
+  "SsalddelAdminApp/Components/Pages/PrivacySupport.razor": {
+    "id": "SsalddelAdminApp-Components-Pages-PrivacySupport",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/AgreedRateTablePage.razor": {
+    "id": "SsalddelApp-Components-Pages-AgreedRateTablePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CargoWorkspaceActionPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CargoWorkspaceActionPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CargoWorkspaceOfferPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CargoWorkspaceOfferPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommerceDisputesPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommerceDisputesPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommerceNoticesPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommerceNoticesPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommercePrivacyPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommercePrivacyPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommerceSellerPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommerceSellerPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityExchangeDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityExchangeDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityExchangePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityExchangePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityExchangeWritePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityExchangeWritePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityLoginPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityLoginPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityMemberDeliveryOfferDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryOfferDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityMemberDeliveryOffersPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryOffersPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityMemberDeliveryParticipationPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryParticipationPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkListPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkListPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationCreatePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationCreatePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationListPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationListPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryCreatePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryCreatePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryListPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryListPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodMapPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodMapPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageCreatePage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageCreatePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageDetailPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageDetailPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageListPage.razor": {
+    "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageListPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/DriverCurrentWorkPage.razor": {
+    "id": "SsalddelApp-Components-Pages-DriverCurrentWorkPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/DriverQualificationPage.razor": {
+    "id": "SsalddelApp-Components-Pages-DriverQualificationPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/DriverRecommendationSettingsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-DriverRecommendationSettingsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/DriverWorkspaceHistoryPage.razor": {
+    "id": "SsalddelApp-Components-Pages-DriverWorkspaceHistoryPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/OperatorCargoIncidentsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-OperatorCargoIncidentsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/PlatformParticipationDetailsPage.razor": {
+    "id": "SsalddelApp-Components-Pages-PlatformParticipationDetailsPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/QuickServiceIntroductionPage.razor": {
+    "id": "SsalddelApp-Components-Pages-QuickServiceIntroductionPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RoleOrdererNewOrderPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RoleOrdererNewOrderPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RoleWorkspaceActionPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RoleWorkspaceActionPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RoleWorkspaceLoginPage.razor": {
+    "id": "SsalddelApp-Components-Pages-RoleWorkspaceLoginPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/RoleWorkspacePage.razor": {
+    "id": "SsalddelApp-Components-Pages-RoleWorkspacePage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/ShipperRequestMobileContextPage.razor": {
+    "id": "SsalddelApp-Components-Pages-ShipperRequestMobileContextPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/WarehouseWorkspaceTaskPage.razor": {
+    "id": "SsalddelApp-Components-Pages-WarehouseWorkspaceTaskPage",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/분산이행Page.razor": {
+    "id": "SsalddelApp-Components-Pages-분산이행Page",
+    "detail": null
+  },
+  "SsalddelApp/Components/Pages/활동정산Page.razor": {
+    "id": "SsalddelApp-Components-Pages-활동정산Page",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/분산거점Page.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-분산거점Page",
+    "detail": null
+  },
+  "WarehouseManagerApp/Components/Pages/분산거점로그인Page.razor": {
+    "id": "WarehouseManagerApp-Components-Pages-분산거점로그인Page",
+    "detail": null
   }
 }

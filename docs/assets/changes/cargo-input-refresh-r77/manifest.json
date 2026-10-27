@@ -1,0 +1,1156 @@
+{
+  "uiReportSource": "artifacts/local/cargo-input-refresh/20261019-r77/ui-verify-r4-2026-10-19T13-30-53-852Z/result.json",
+  "sourceManifestSha256": "9b00e83b1905ce37e39b34de628ba557e3f940b8b944e0774aba28141a7ee177",
+  "planSha256": "d94dc037404df80af9df353d0c2fc14950366bad66e7264766d479cbf587e37a",
+  "sourceFiles": 77,
+  "uiReportSha256": "79c69e2852204764a5cf553988081b10e89820a73e52cd925860c4f971ba1d2a",
+  "schema": "cargo-input-refresh-screenshot-evidence.r77.v1",
+  "representativeScreenshots": [
+    {
+      "phase": "after",
+      "file": "shipper-valid-1280.png",
+      "sha256": "893ef67465fa6bca7d074f4349fc5ef131a9960e8e468f4addf1fb5d99d2e98f",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\shipper-valid-1280.png"
+    },
+    {
+      "phase": "after",
+      "file": "shipper-valid-390.png",
+      "sha256": "01a1b6194f65d15d9bebcd87ef618ca492e60ee8004295f331894dfa8f3b60eb",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\shipper-valid-390.png"
+    },
+    {
+      "phase": "after",
+      "file": "package-valid-1280.png",
+      "sha256": "7261f194a99d5c423b6e8c364a3e8d61a1a117869bfd9eb7ea9db9f311197ca5",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\package-valid-1280.png"
+    },
+    {
+      "phase": "after",
+      "file": "package-valid-390.png",
+      "sha256": "2e1761154684ccd27a6f88384070d585ac08b6179d2132fbb7462053a6d0fec1",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\package-valid-390.png"
+    },
+    {
+      "phase": "after",
+      "file": "vehicle-valid-1280.png",
+      "sha256": "b392eb7768d41ea257babd8d425fa9c1025d4d2a6a15dbe796987ec5cfcbfbc2",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\vehicle-valid-1280.png"
+    },
+    {
+      "phase": "after",
+      "file": "vehicle-valid-390.png",
+      "sha256": "88cb652c3ba3dd8d03dc617e2eeafaa4a9964816ebdf1f6b49ea65289fefd111",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\vehicle-valid-390.png"
+    },
+    {
+      "phase": "after",
+      "file": "shipper-negative-390.png",
+      "sha256": "fc82dee09b89f3cbbe9d55168c6b00a6641f99ba266a96aa2b679a4a1a2f04a1",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\shipper-negative-390.png"
+    },
+    {
+      "phase": "after",
+      "file": "vehicle-conflict-390-conflict.png",
+      "sha256": "5166c31628220e1032e62c777bd4e78d07b96a6341484ff4a38eef1407ec601b",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r4-2026-10-19T13-30-53-852Z\\vehicle-conflict-390-conflict.png"
+    },
+    {
+      "phase": "before",
+      "file": "before-package-valid-390-failure.png",
+      "sha256": "fb7da24fdd75486a57d3e891e6d7ae12de5d904343d41a88ea2bc7effcd186e0",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r1-2026-10-19T13-16-16-046Z\\package-valid-390-failure.png"
+    },
+    {
+      "phase": "before",
+      "file": "before-shipper-negative-390-failure.png",
+      "sha256": "b55ce8abac955fbfc81492f3abd9aaf1a974a34b879135e6d35f8d43071e8ae2",
+      "source": "artifacts\\local\\cargo-input-refresh\\20261019-r77\\ui-verify-r1-2026-10-19T13-16-16-046Z\\shipper-negative-390-failure.png"
+    }
+  ],
+  "syntheticOnly": true,
+  "capturedAtUtc": "2026-10-19T13:31:19.088Z",
+  "uiAssertionsPassed": 18,
+  "limits": "Local browser widths only. No phone, actual measurements, operating DB or dispatch.",
+  "baselineHead": "fd55a1c4bca4dffb4752ac34de64c62d07caced3",
+  "branch": "dev/mirror-integration",
+  "frozenSourceFiles": [
+    {
+      "path": "eng/RoleWorkspacePreview/CargoInputRefreshR77PreviewFixture.cs",
+      "sha256": "982b4775e577a0be02ab60a467c63da7d9a2fc74f8eee007949e871794ec6907"
+    },
+    {
+      "path": "eng/RoleWorkspacePreview/CargoInputRefreshR77PreviewPage.razor",
+      "sha256": "04f2c71e2dd19edf359cb3abf1a2eae018257f8e1c65a24e58918e3dedd5f743"
+    },
+    {
+      "path": "eng/RoleWorkspacePreview/Program.cs",
+      "sha256": "7af41d2a193e3356688b6cd6d66dd0f06deeb4d490b13f998689d8e52fbe35da"
+    },
+    {
+      "path": "eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj",
+      "sha256": "f026e94219fcbf4788c4ef7d5997fe5524f0ee860356c7f9f2c76d4198c0b446"
+    },
+    {
+      "path": "Ssalddel.Contracts/Admin/Management/기사실차적재제원Dtos.cs",
+      "sha256": "d2ea09e216f8f41b3108e7c8f2dfb9a2a39868ed08cd1cadb0deffa17a0924e5"
+    },
+    {
+      "path": "Ssalddel.Contracts/Common/Community/NeighborhoodDeliveryDtos.cs",
+      "sha256": "c8aecf1f472e3055aac8a330a362b6b3d9d95c56ad2f8a55e10b40778938d8d9"
+    },
+    {
+      "path": "Ssalddel.Contracts/Common/Community/NeighborhoodDeliveryLoadingInput.cs",
+      "sha256": "cb1d79655cf95ff6688655dba540e3990c9b93f82af8e64ea41284f62eaec07c"
+    },
+    {
+      "path": "Ssalddel.Contracts/Shipper/Request/화주운송의뢰Dtos.cs",
+      "sha256": "aa1355ee858f0d38f42cd3bd2ca62ac213e2a936e37a04943776644ecb91bfb7"
+    },
+    {
+      "path": "Ssalddel.Domain/화주/화주운송의뢰.cs",
+      "sha256": "b54bb78388980410fe1b98cb60325daaec4b585d45a2e5b8be8aec9fa8ea3f36"
+    },
+    {
+      "path": "Ssalddel.Infrastructure/Persistence/Configurations/Shipper/화주운송의뢰Configuration.cs",
+      "sha256": "38efccbcb95ba7f6764056012681cd2e86a8659304014f598ccbcde2bf4df03b"
+    },
+    {
+      "path": "Ssalddel.Tests/Application/Driver/DispatchAction/배차수락CommandHandlerTests.R77.cs",
+      "sha256": "a972781354248f3f6af0d22ed8ea62c4d7246fc90cc28361cac077734809e5a9"
+    },
+    {
+      "path": "Ssalddel.Tests/Application/Driver/DispatchAction/CargoAcceptanceRecoveryTests.cs",
+      "sha256": "be21e263bb00840b688fe0a53584760999c6108c5cc3168b9461d2b6a609be93"
+    },
+    {
+      "path": "Ssalddel.Tests/Application/Shipper/Request/화물작업시간영속R77Tests.cs",
+      "sha256": "9c04e7ba883d3f745dc813553cf40b8c568c3e0d17c935bed10a1bc47113250d"
+    },
+    {
+      "path": "Ssalddel.Tests/Clients/Admin/ActualVehicleLoadingViewModelTests.cs",
+      "sha256": "abbea75eb46a9576a06f45c645fcd8549fac3216db953732ef5cba3f048d15f1"
+    },
+    {
+      "path": "Ssalddel.Tests/Domain/Dispatch/운영배차공통계약Tests.cs",
+      "sha256": "c60f97c7ef3684805f12be9f1610cdb363fe3025ead3030bad301084eb9d6818"
+    },
+    {
+      "path": "Ssalddel.Tests/Services/Community/NeighborhoodDeliveryTests.cs",
+      "sha256": "ae65d4525c6c4d01fd9040a30d1f600cd7d7ae3427b538e6f55f5698f5775019"
+    },
+    {
+      "path": "Ssalddel.Tests/Services/Dispatch/Coordination/국내화물추천최신검증Tests.cs",
+      "sha256": "8054bba403645a79dfc7b1631acf2291e053c3e81c2a7a5b9e6366b784c84968"
+    },
+    {
+      "path": "Ssalddel.Tests/Services/Dispatch/Coordination/화물배차상태근거Tests.cs",
+      "sha256": "7e1d86eb1c3597e2697673881c5d4c550c9a5770499e98b39329642e4fa0e291"
+    },
+    {
+      "path": "Ssalddel.Tests/Services/Dispatch/DispatchWorkflowR75Tests.cs",
+      "sha256": "90b0595c8ac8670d22e188a3065c8bed4ea89ff2c9c7a404571a61dd91f57805"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/ActualVehicleLoadingPanelRenderTests.cs",
+      "sha256": "0fb5e0bb321d4cb185f9bccef3f8c930a5c8a05a8e5ae1ec7f0afffdb95ad342"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/CargoOfferRefreshR77Tests.cs",
+      "sha256": "4cc27a5b4acefd1beb86f4a628b7fe242f72c6de95d343744dbba3840e08deb0"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliveryDurableRecoveryTests.cs",
+      "sha256": "30a6ee6ca43abf80ad79e7438d03dcc85ddd5bf19495ebe6df369fa2bd286288"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliverySimpleInputTests.cs",
+      "sha256": "0911a2f6571127cfa684de5f8eccfc554c50ce93708bdcf1485030b1d7329e5e"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliveryViewModelTests.cs",
+      "sha256": "6ebb9e98dc4e18ef8e8271860493c2dc1cc71c0b94f6f687ea8ec11cdafd53a2"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/NeighborhoodFulfillmentViewModelTests.cs",
+      "sha256": "4b26a993c6d4318b0fc6c1862e58e42c05e9e69cf2658eaeab05f803d9a3341d"
+    },
+    {
+      "path": "Ssalddel.Tests/Ui/Common/ShipperHandlingTimeR77Tests.cs",
+      "sha256": "6d07d5af417095db07aa1df4563d7589d6426962e4291fd79da7665263281827"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/생활배송간편입력.razor",
+      "sha256": "436f3a4c3befecd102ba3e4084d1c74843ad9339c03b5aec0a462970571ce629"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodDeliveryCreate.razor",
+      "sha256": "cd6ad3faedfca4b2fda0156ea1cb050000f608aff9f126fe71e2508118eb8253"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodDeliveryPackageInput.razor",
+      "sha256": "e0ed2c26967efc906da7fac95513027c8c4efae19bedf8c883d39cdb1863c804"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/Components/Transport/ShipperRequestTransportScreen.razor",
+      "sha256": "9086d4f0bed427c297e7ccbd88313863b7eb8ce48da1015488feeb83a9d76b99"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/Models/운송모델작성Draft.cs",
+      "sha256": "d5207546f41b5c10536429c5bf3d2db927cf2608a6b33ae5bfc980f78408b5ff"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Cargo/CargoOfferActionScreen.razor",
+      "sha256": "0a6862fae3437fc93ad5933ed718fae6161f86c205b9ee0191fa1071a2729895"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Cargo/CargoOfferActionViewModel.cs",
+      "sha256": "c9b770574361e478b85e5b8f54239e1196da8f5907856109fab41f3d9301f472"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/생활배송간편입력ViewModel.cs",
+      "sha256": "882d5bca7d54ae0a0fcac387b4d190bcf8b14832eb579f22cae64595945f1d3d"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+      "sha256": "d7fd2b6429a187ac603882f998b4395736647f0783f24525e5bf986584169e9e"
+    },
+    {
+      "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/NeighborhoodDeliveryAuthoringViewModel.cs",
+      "sha256": "de7252353fb09740fc492d7ee58f3142738443b78e88255b1bd416381a77697f"
+    },
+    {
+      "path": "Ssalddel.WebApp/Services/화주운송의뢰등록Service.cs",
+      "sha256": "91898af6d345a2fc45980f7b0e07e61f1a17992aadd87148a5e2b693dc03c86d"
+    },
+    {
+      "path": "Ssalddel/Application/Admin/Management/기사실차적재제원UseCase.cs",
+      "sha256": "b94458e5c7edb9bb40baddd7039830ed340ae07c545711cee6d80b82ddf4215d"
+    },
+    {
+      "path": "Ssalddel/Application/Driver/DispatchAction/Handlers/배차수락CommandHandler.cs",
+      "sha256": "6ea297efddbb70ea5d42a431f16197d63c3e908f7dc25ca8c718cb9c0e18abbb"
+    },
+    {
+      "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryMarker.cs",
+      "sha256": "fe66073bbd76d9892b96c5004efbb6d4cb6cf9ad538e9b3301e4adc3f3d7ceb2"
+    },
+    {
+      "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryService.cs",
+      "sha256": "425382eee0a45e05f0511c45efa5330147ba32217f5519549002fae1aca5760f"
+    },
+    {
+      "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryService.Retry.cs",
+      "sha256": "8133e5dc96fb2c6fb3c90c79f268ae1a0eaa752e3f986d653432af38d0cc89c7"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/화주운송의뢰매퍼.cs",
+      "sha256": "b817bc3cd924e1d9f40c40c9850049605130d4c8a0d784c381304684f3b421e4"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/화주운송의뢰UseCase.cs",
+      "sha256": "ca6eecf0b3e051291b9390f8cbcf993d2a3766ce5b31e0046e5a492e5e879725"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/Commands/의뢰생성Command.cs",
+      "sha256": "619ffb313dd01509ae4a30cca4d18f3a0470dbd887d49a23aa01939a2f7a9fd5"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/Commands/의뢰수정입력값.cs",
+      "sha256": "b8ad7d7192454a1cab725069451b7aa5fe1c74b162331ef791b65545f8947bbf"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/Handlers/의뢰생성CommandHandler.cs",
+      "sha256": "6da51e96537e7def36acd88340bc264e62d0e9044c4e51fc4f848095d1956cb5"
+    },
+    {
+      "path": "Ssalddel/Application/Shipper/Request/Handlers/의뢰수정CommandHandler.cs",
+      "sha256": "2844817864792d38183330c577bf04ced2ccb38e3ab5fccef6c2f24de75e3c13"
+    },
+    {
+      "path": "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+      "sha256": "8eccadbf8acd21ed6306398ef37a76165f56ca64ba2d41264fc95d97c418fe44"
+    },
+    {
+      "path": "Ssalddel/Migrations/20261019190000_AddCargoHandlingMinutes.cs",
+      "sha256": "420fc14086bc8f7ab8e7e66a207f18fff187cc2f898b5122db218b82796916e0"
+    },
+    {
+      "path": "Ssalddel/Migrations/20261019190000_AddCargoHandlingMinutes.Designer.cs",
+      "sha256": "565cf3d138bd71a9e43a39166843246d40c9a9901f1a6e3f36207d1f0bca952b"
+    },
+    {
+      "path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+      "sha256": "7f8f4808f8de8c3df042c5c0b7ff400680c4ef0b58be9febe323817ad736b22a"
+    },
+    {
+      "path": "Ssalddel/Services/Community/운송원장Mongo동기화Service.cs",
+      "sha256": "25b0e68b42a172a0c140b6af35078b3482896c01c599f4a305dc2f468d71c051"
+    },
+    {
+      "path": "Ssalddel/Services/Community/NeighborhoodDeliveryUseCase.cs",
+      "sha256": "5aac3145ba9684435fc59a29f9f1a2650828ccdfe6db0aebd9e27b753fba7e35"
+    },
+    {
+      "path": "Ssalddel/Services/Community/TransportLedgerBusinessProjectionHandler.cs",
+      "sha256": "edf5f52296ac043f11ffd0651ebcc14686f08d01fa5dba20c6f0d74a9e702fa6"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차계획검증Service.cs",
+      "sha256": "89c864c72acdde4d7750ee7b2eeeedb9779faf3ca665ed8439394f9b29799ae3"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율모델.cs",
+      "sha256": "64e72acdf151b6b76a3a5df11b53f2e34024d0e0d45ee8d9aa9ea2dd518b512d"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.cs",
+      "sha256": "5c6b2454f0f9571cfede5b7fe920fd47799636d8c4663010659e2b8079c827da"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+      "sha256": "472fefc17aeaa724800ad0dd7585951eab22ef3e6dd78387795abb0a3a6596f7"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Loading.cs",
+      "sha256": "47eb4a18e3001fe302111be8422a2bd9d731e4567eebe4e4c111962baa2480e9"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율적용Service.Locking.cs",
+      "sha256": "6675abe059c5fb3c8c1e58cd0d2d4873651fff7f0e1206c8d30f3ea1db3da8ea"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/국내화물추천재검증Service.cs",
+      "sha256": "a09ebe883ae433d4918af12faf38bf5815dc57525e78b7d6c2eadb1a83e02443"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Coordination/화물배차상태SnapshotService.cs",
+      "sha256": "f140b06db25fd5e69b106ff7a801479d855c1438daa01c505f486db9fd064954"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Recommendation/기사운송일정구성Service.cs",
+      "sha256": "80c0647154de3cb66a0c4b6716c7ebaee0e44c00ec971a60c71cb191505751d2"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Recommendation/화물배차수락적격성Service.cs",
+      "sha256": "a8837c102c5be957f77f86744e6a3ee38b24be14b47e1b8df6178bc02e77bdf6"
+    },
+    {
+      "path": "Ssalddel/Services/Dispatch/Recommendation/CargoDispatchRecommendationService.cs",
+      "sha256": "cc3d9518c486afd12d80cf39c97a6d0ae817468e42ade5e53a79c6cf2597ae40"
+    },
+    {
+      "path": "SsalddelAdmin/Components/Pages/Drivers.razor",
+      "sha256": "6c41ebad1a82959e48ed9635d71ccd663fa7ce6d65a584e25305bab2dd37f020"
+    },
+    {
+      "path": "SsalddelAdmin/Components/Pages/VehicleManagement.razor",
+      "sha256": "ebcaf378167d06986b20e02b7ac95c85a76b374f9da84f5b2b77e6907973a12b"
+    },
+    {
+      "path": "SsalddelAdmin/Components/Shared/ActualVehicleLoadingPanel.razor",
+      "sha256": "83d69355925faa25d4639984925377c1eded57f914b4a8f64849e5cd2256e62f"
+    },
+    {
+      "path": "SsalddelAdmin/Services/기사실차적재확인ViewModel.cs",
+      "sha256": "2ea783523835d39c9ee1fccfb9918be854646c4be356503abca24f4926f78af9"
+    },
+    {
+      "path": "SsalddelAdmin/Services/차량관리Service.cs",
+      "sha256": "2936abea92cbda93c0dd3de2023675feed4686bda5e773c594495f37fd98ebb2"
+    },
+    {
+      "path": "SsalddelApp/Models/Shipper/ShipperRequestHandoffMapper.cs",
+      "sha256": "60c8ce914d82efb35a30ecf0c1976615e0182c82f51dc7b1bd68dfa50bc666b3"
+    },
+    {
+      "path": "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+      "sha256": "4004ef54b0a328ce61f32431c7694b39b37dff075ee205e7c0522004b46ab177"
+    },
+    {
+      "path": "SsalddelAdmin/Services/관리자인증세션Service.cs",
+      "sha256": "272f7606baf053374119b95eb99dbc4b9f4ccf310ea9ec0bfdd6eccd5c95c40a"
+    },
+    {
+      "path": "SsalddelAdmin/Services/관리자인증Service.cs",
+      "sha256": "155721bf0aad8e72412121c4e319f56ecd62b39c78b9814bfbab37c22bbe5751"
+    },
+    {
+      "path": "SsalddelAdmin/Components/Shared/관리자화면Ui.cs",
+      "sha256": "7da36842beef54151ea5bcf46aedf00e9f2be9494293a484665b3d02ebfef4ab"
+    },
+    {
+      "path": "SsalddelAdmin/Components/Shared/AdminInfoField.razor",
+      "sha256": "12e5e3ec2081b7c38cb09702ca3b972f5dc6038b40d6af518a1711653e496628"
+    }
+  ],
+  "uiChecks": [
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "shipper",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "package",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": [
+        {
+          "id": "delivery-package-length",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-width",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-height",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-volume",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-pallet",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-rotation",
+          "tag": "select",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-stacking",
+          "tag": "select",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        }
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "vehicle",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "shipper",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "shipper",
+      "scenario": "negative",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "package",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "vehicle",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "vehicle",
+      "scenario": "error",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "desktop",
+      "width": 1280,
+      "area": "vehicle",
+      "scenario": "conflict",
+      "passed": true,
+      "layout": {
+        "width": 1280,
+        "rootScrollWidth": 1280,
+        "bodyScrollWidth": 1280
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "shipper",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "package",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": [
+        {
+          "id": "delivery-package-length",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-width",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-height",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-volume",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-pallet",
+          "tag": "input",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-rotation",
+          "tag": "select",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        },
+        {
+          "id": "delivery-package-stacking",
+          "tag": "select",
+          "minHeight": "48px",
+          "height": 48,
+          "borderTopWidth": "1px",
+          "borderRightWidth": "1px",
+          "borderBottomWidth": "1px",
+          "borderLeftWidth": "1px"
+        }
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "vehicle",
+      "scenario": "valid",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "shipper",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "shipper",
+      "scenario": "negative",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "package",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "vehicle",
+      "scenario": "empty",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "vehicle",
+      "scenario": "error",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "area": "vehicle",
+      "scenario": "conflict",
+      "passed": true,
+      "layout": {
+        "width": 390,
+        "rootScrollWidth": 390,
+        "bodyScrollWidth": 390
+      },
+      "controlStyles": null
+    }
+  ],
+  "uiCleanupSucceeded": true,
+  "modelReviewHumanApprovals": 0,
+  "finalVerificationSource": {
+    "reason": "Only server EF query membership expressions changed after capture; synthetic UI never calls this Factory.",
+    "manifestSha256": "16b8ca3a25d07636f84b4b4bd757a2bac75c484d292681fa8cc4e32db032ff8b",
+    "files": [
+      {
+        "path": "eng/RoleWorkspacePreview/CargoInputRefreshR77PreviewFixture.cs",
+        "sha256": "982b4775e577a0be02ab60a467c63da7d9a2fc74f8eee007949e871794ec6907"
+      },
+      {
+        "path": "eng/RoleWorkspacePreview/CargoInputRefreshR77PreviewPage.razor",
+        "sha256": "04f2c71e2dd19edf359cb3abf1a2eae018257f8e1c65a24e58918e3dedd5f743"
+      },
+      {
+        "path": "eng/RoleWorkspacePreview/Program.cs",
+        "sha256": "7af41d2a193e3356688b6cd6d66dd0f06deeb4d490b13f998689d8e52fbe35da"
+      },
+      {
+        "path": "eng/RoleWorkspacePreview/RoleWorkspacePreview.csproj",
+        "sha256": "f026e94219fcbf4788c4ef7d5997fe5524f0ee860356c7f9f2c76d4198c0b446"
+      },
+      {
+        "path": "Ssalddel.Contracts/Admin/Management/기사실차적재제원Dtos.cs",
+        "sha256": "d2ea09e216f8f41b3108e7c8f2dfb9a2a39868ed08cd1cadb0deffa17a0924e5"
+      },
+      {
+        "path": "Ssalddel.Contracts/Common/Community/NeighborhoodDeliveryDtos.cs",
+        "sha256": "c8aecf1f472e3055aac8a330a362b6b3d9d95c56ad2f8a55e10b40778938d8d9"
+      },
+      {
+        "path": "Ssalddel.Contracts/Common/Community/NeighborhoodDeliveryLoadingInput.cs",
+        "sha256": "cb1d79655cf95ff6688655dba540e3990c9b93f82af8e64ea41284f62eaec07c"
+      },
+      {
+        "path": "Ssalddel.Contracts/Shipper/Request/화주운송의뢰Dtos.cs",
+        "sha256": "aa1355ee858f0d38f42cd3bd2ca62ac213e2a936e37a04943776644ecb91bfb7"
+      },
+      {
+        "path": "Ssalddel.Domain/화주/화주운송의뢰.cs",
+        "sha256": "b54bb78388980410fe1b98cb60325daaec4b585d45a2e5b8be8aec9fa8ea3f36"
+      },
+      {
+        "path": "Ssalddel.Infrastructure/Persistence/Configurations/Shipper/화주운송의뢰Configuration.cs",
+        "sha256": "38efccbcb95ba7f6764056012681cd2e86a8659304014f598ccbcde2bf4df03b"
+      },
+      {
+        "path": "Ssalddel.Tests/Application/Driver/DispatchAction/배차수락CommandHandlerTests.R77.cs",
+        "sha256": "a972781354248f3f6af0d22ed8ea62c4d7246fc90cc28361cac077734809e5a9"
+      },
+      {
+        "path": "Ssalddel.Tests/Application/Driver/DispatchAction/CargoAcceptanceRecoveryTests.cs",
+        "sha256": "be21e263bb00840b688fe0a53584760999c6108c5cc3168b9461d2b6a609be93"
+      },
+      {
+        "path": "Ssalddel.Tests/Application/Shipper/Request/화물작업시간영속R77Tests.cs",
+        "sha256": "9c04e7ba883d3f745dc813553cf40b8c568c3e0d17c935bed10a1bc47113250d"
+      },
+      {
+        "path": "Ssalddel.Tests/Clients/Admin/ActualVehicleLoadingViewModelTests.cs",
+        "sha256": "abbea75eb46a9576a06f45c645fcd8549fac3216db953732ef5cba3f048d15f1"
+      },
+      {
+        "path": "Ssalddel.Tests/Domain/Dispatch/운영배차공통계약Tests.cs",
+        "sha256": "c60f97c7ef3684805f12be9f1610cdb363fe3025ead3030bad301084eb9d6818"
+      },
+      {
+        "path": "Ssalddel.Tests/Services/Community/NeighborhoodDeliveryTests.cs",
+        "sha256": "ae65d4525c6c4d01fd9040a30d1f600cd7d7ae3427b538e6f55f5698f5775019"
+      },
+      {
+        "path": "Ssalddel.Tests/Services/Dispatch/Coordination/국내화물추천최신검증Tests.cs",
+        "sha256": "8054bba403645a79dfc7b1631acf2291e053c3e81c2a7a5b9e6366b784c84968"
+      },
+      {
+        "path": "Ssalddel.Tests/Services/Dispatch/Coordination/화물배차상태근거Tests.cs",
+        "sha256": "7e1d86eb1c3597e2697673881c5d4c550c9a5770499e98b39329642e4fa0e291"
+      },
+      {
+        "path": "Ssalddel.Tests/Services/Dispatch/DispatchWorkflowR75Tests.cs",
+        "sha256": "90b0595c8ac8670d22e188a3065c8bed4ea89ff2c9c7a404571a61dd91f57805"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/ActualVehicleLoadingPanelRenderTests.cs",
+        "sha256": "0fb5e0bb321d4cb185f9bccef3f8c930a5c8a05a8e5ae1ec7f0afffdb95ad342"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/CargoOfferRefreshR77Tests.cs",
+        "sha256": "4cc27a5b4acefd1beb86f4a628b7fe242f72c6de95d343744dbba3840e08deb0"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliveryDurableRecoveryTests.cs",
+        "sha256": "30a6ee6ca43abf80ad79e7438d03dcc85ddd5bf19495ebe6df369fa2bd286288"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliverySimpleInputTests.cs",
+        "sha256": "0911a2f6571127cfa684de5f8eccfc554c50ce93708bdcf1485030b1d7329e5e"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/NeighborhoodDeliveryViewModelTests.cs",
+        "sha256": "6ebb9e98dc4e18ef8e8271860493c2dc1cc71c0b94f6f687ea8ec11cdafd53a2"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/NeighborhoodFulfillmentViewModelTests.cs",
+        "sha256": "4b26a993c6d4318b0fc6c1862e58e42c05e9e69cf2658eaeab05f803d9a3341d"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/ShipperHandlingTimeR77Tests.cs",
+        "sha256": "6d07d5af417095db07aa1df4563d7589d6426962e4291fd79da7665263281827"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/생활배송간편입력.razor",
+        "sha256": "436f3a4c3befecd102ba3e4084d1c74843ad9339c03b5aec0a462970571ce629"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodDeliveryCreate.razor",
+        "sha256": "cd6ad3faedfca4b2fda0156ea1cb050000f608aff9f126fe71e2508118eb8253"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/Components/Community/Exchange/NeighborhoodDeliveryPackageInput.razor",
+        "sha256": "e0ed2c26967efc906da7fac95513027c8c4efae19bedf8c883d39cdb1863c804"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/Components/Transport/ShipperRequestTransportScreen.razor",
+        "sha256": "9086d4f0bed427c297e7ccbd88313863b7eb8ce48da1015488feeb83a9d76b99"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/Models/운송모델작성Draft.cs",
+        "sha256": "d5207546f41b5c10536429c5bf3d2db927cf2608a6b33ae5bfc980f78408b5ff"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Cargo/CargoOfferActionScreen.razor",
+        "sha256": "0a6862fae3437fc93ad5933ed718fae6161f86c205b9ee0191fa1071a2729895"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Cargo/CargoOfferActionViewModel.cs",
+        "sha256": "c9b770574361e478b85e5b8f54239e1196da8f5907856109fab41f3d9301f472"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/생활배송간편입력ViewModel.cs",
+        "sha256": "882d5bca7d54ae0a0fcac387b4d190bcf8b14832eb579f22cae64595945f1d3d"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+        "sha256": "d7fd2b6429a187ac603882f998b4395736647f0783f24525e5bf986584169e9e"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/NeighborhoodDeliveryAuthoringViewModel.cs",
+        "sha256": "de7252353fb09740fc492d7ee58f3142738443b78e88255b1bd416381a77697f"
+      },
+      {
+        "path": "Ssalddel.WebApp/Services/화주운송의뢰등록Service.cs",
+        "sha256": "91898af6d345a2fc45980f7b0e07e61f1a17992aadd87148a5e2b693dc03c86d"
+      },
+      {
+        "path": "Ssalddel/Application/Admin/Management/기사실차적재제원UseCase.cs",
+        "sha256": "b94458e5c7edb9bb40baddd7039830ed340ae07c545711cee6d80b82ddf4215d"
+      },
+      {
+        "path": "Ssalddel/Application/Driver/DispatchAction/Handlers/배차수락CommandHandler.cs",
+        "sha256": "6ea297efddbb70ea5d42a431f16197d63c3e908f7dc25ca8c718cb9c0e18abbb"
+      },
+      {
+        "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryMarker.cs",
+        "sha256": "fe66073bbd76d9892b96c5004efbb6d4cb6cf9ad538e9b3301e4adc3f3d7ceb2"
+      },
+      {
+        "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryService.cs",
+        "sha256": "425382eee0a45e05f0511c45efa5330147ba32217f5519549002fae1aca5760f"
+      },
+      {
+        "path": "Ssalddel/Application/Driver/DispatchAction/Services/CargoAcceptanceRecoveryService.Retry.cs",
+        "sha256": "8133e5dc96fb2c6fb3c90c79f268ae1a0eaa752e3f986d653432af38d0cc89c7"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/화주운송의뢰매퍼.cs",
+        "sha256": "b817bc3cd924e1d9f40c40c9850049605130d4c8a0d784c381304684f3b421e4"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/화주운송의뢰UseCase.cs",
+        "sha256": "ca6eecf0b3e051291b9390f8cbcf993d2a3766ce5b31e0046e5a492e5e879725"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/Commands/의뢰생성Command.cs",
+        "sha256": "619ffb313dd01509ae4a30cca4d18f3a0470dbd887d49a23aa01939a2f7a9fd5"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/Commands/의뢰수정입력값.cs",
+        "sha256": "b8ad7d7192454a1cab725069451b7aa5fe1c74b162331ef791b65545f8947bbf"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/Handlers/의뢰생성CommandHandler.cs",
+        "sha256": "6da51e96537e7def36acd88340bc264e62d0e9044c4e51fc4f848095d1956cb5"
+      },
+      {
+        "path": "Ssalddel/Application/Shipper/Request/Handlers/의뢰수정CommandHandler.cs",
+        "sha256": "2844817864792d38183330c577bf04ced2ccb38e3ab5fccef6c2f24de75e3c13"
+      },
+      {
+        "path": "Ssalddel/Extensions/ServiceCollectionExtensions.DomainServices.Operations.cs",
+        "sha256": "8eccadbf8acd21ed6306398ef37a76165f56ca64ba2d41264fc95d97c418fe44"
+      },
+      {
+        "path": "Ssalddel/Migrations/20261019190000_AddCargoHandlingMinutes.cs",
+        "sha256": "420fc14086bc8f7ab8e7e66a207f18fff187cc2f898b5122db218b82796916e0"
+      },
+      {
+        "path": "Ssalddel/Migrations/20261019190000_AddCargoHandlingMinutes.Designer.cs",
+        "sha256": "565cf3d138bd71a9e43a39166843246d40c9a9901f1a6e3f36207d1f0bca952b"
+      },
+      {
+        "path": "Ssalddel/Migrations/SsalddelContextModelSnapshot.cs",
+        "sha256": "7f8f4808f8de8c3df042c5c0b7ff400680c4ef0b58be9febe323817ad736b22a"
+      },
+      {
+        "path": "Ssalddel/Services/Community/운송원장Mongo동기화Service.cs",
+        "sha256": "25b0e68b42a172a0c140b6af35078b3482896c01c599f4a305dc2f468d71c051"
+      },
+      {
+        "path": "Ssalddel/Services/Community/NeighborhoodDeliveryUseCase.cs",
+        "sha256": "5aac3145ba9684435fc59a29f9f1a2650828ccdfe6db0aebd9e27b753fba7e35"
+      },
+      {
+        "path": "Ssalddel/Services/Community/TransportLedgerBusinessProjectionHandler.cs",
+        "sha256": "edf5f52296ac043f11ffd0651ebcc14686f08d01fa5dba20c6f0d74a9e702fa6"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차계획검증Service.cs",
+        "sha256": "89c864c72acdde4d7750ee7b2eeeedb9779faf3ca665ed8439394f9b29799ae3"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율모델.cs",
+        "sha256": "64e72acdf151b6b76a3a5df11b53f2e34024d0e0d45ee8d9aa9ea2dd518b512d"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.cs",
+        "sha256": "712d7e177daddfc18a433a7b79a6795cad11ff127810c39dcdc8e85bf2bbd706"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+        "sha256": "472fefc17aeaa724800ad0dd7585951eab22ef3e6dd78387795abb0a3a6596f7"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Loading.cs",
+        "sha256": "47eb4a18e3001fe302111be8422a2bd9d731e4567eebe4e4c111962baa2480e9"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율적용Service.Locking.cs",
+        "sha256": "6675abe059c5fb3c8c1e58cd0d2d4873651fff7f0e1206c8d30f3ea1db3da8ea"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물추천재검증Service.cs",
+        "sha256": "a09ebe883ae433d4918af12faf38bf5815dc57525e78b7d6c2eadb1a83e02443"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/화물배차상태SnapshotService.cs",
+        "sha256": "f140b06db25fd5e69b106ff7a801479d855c1438daa01c505f486db9fd064954"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Recommendation/기사운송일정구성Service.cs",
+        "sha256": "80c0647154de3cb66a0c4b6716c7ebaee0e44c00ec971a60c71cb191505751d2"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Recommendation/화물배차수락적격성Service.cs",
+        "sha256": "a8837c102c5be957f77f86744e6a3ee38b24be14b47e1b8df6178bc02e77bdf6"
+      },
+      {
+        "path": "Ssalddel/Services/Dispatch/Recommendation/CargoDispatchRecommendationService.cs",
+        "sha256": "cc3d9518c486afd12d80cf39c97a6d0ae817468e42ade5e53a79c6cf2597ae40"
+      },
+      {
+        "path": "SsalddelAdmin/Components/Pages/Drivers.razor",
+        "sha256": "6c41ebad1a82959e48ed9635d71ccd663fa7ce6d65a584e25305bab2dd37f020"
+      },
+      {
+        "path": "SsalddelAdmin/Components/Pages/VehicleManagement.razor",
+        "sha256": "ebcaf378167d06986b20e02b7ac95c85a76b374f9da84f5b2b77e6907973a12b"
+      },
+      {
+        "path": "SsalddelAdmin/Components/Shared/ActualVehicleLoadingPanel.razor",
+        "sha256": "83d69355925faa25d4639984925377c1eded57f914b4a8f64849e5cd2256e62f"
+      },
+      {
+        "path": "SsalddelAdmin/Services/기사실차적재확인ViewModel.cs",
+        "sha256": "2ea783523835d39c9ee1fccfb9918be854646c4be356503abca24f4926f78af9"
+      },
+      {
+        "path": "SsalddelAdmin/Services/차량관리Service.cs",
+        "sha256": "2936abea92cbda93c0dd3de2023675feed4686bda5e773c594495f37fd98ebb2"
+      },
+      {
+        "path": "SsalddelApp/Models/Shipper/ShipperRequestHandoffMapper.cs",
+        "sha256": "60c8ce914d82efb35a30ecf0c1976615e0182c82f51dc7b1bd68dfa50bc666b3"
+      },
+      {
+        "path": "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+        "sha256": "4004ef54b0a328ce61f32431c7694b39b37dff075ee205e7c0522004b46ab177"
+      },
+      {
+        "path": "SsalddelAdmin/Services/관리자인증세션Service.cs",
+        "sha256": "272f7606baf053374119b95eb99dbc4b9f4ccf310ea9ec0bfdd6eccd5c95c40a"
+      },
+      {
+        "path": "SsalddelAdmin/Services/관리자인증Service.cs",
+        "sha256": "155721bf0aad8e72412121c4e319f56ecd62b39c78b9814bfbab37c22bbe5751"
+      },
+      {
+        "path": "SsalddelAdmin/Components/Shared/관리자화면Ui.cs",
+        "sha256": "7da36842beef54151ea5bcf46aedf00e9f2be9494293a484665b3d02ebfef4ab"
+      },
+      {
+        "path": "SsalddelAdmin/Components/Shared/AdminInfoField.razor",
+        "sha256": "12e5e3ec2081b7c38cb09702ca3b972f5dc6038b40d6af518a1711653e496628"
+      }
+    ],
+    "changesFromUi": [
+      {
+        "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.cs",
+        "finalSha256": "712d7e177daddfc18a433a7b79a6795cad11ff127810c39dcdc8e85bf2bbd706",
+        "uiSha256": "5c6b2454f0f9571cfede5b7fe920fd47799636d8c4663010659e2b8079c827da"
+      }
+    ]
+  },
+  "validationRuns": [
+    {
+      "trxSha256": "6c0a121d2dc9aa452dd8c4e633550d5f86d89044441f9d61d1d2e1c72d064d31",
+      "executed": 541,
+      "skipped": 0,
+      "logSha256": "a867865b80680442326ac6a5c8658fc5dd31be111b05187b18856e7ec04b14a5",
+      "passed": 537,
+      "total": 541,
+      "phase": "initial-focused",
+      "failed": 4,
+      "directory": "artifacts/local/validation/20261019-215815"
+    },
+    {
+      "trxSha256": "988735b1e44489d78b4e185e17a84dfe925287d7d568d8bf2d01e4071307f48f",
+      "executed": 541,
+      "skipped": 0,
+      "logSha256": "26b39789cb6b82afa8283c7a4d5dec8d2da11011c3bcac243c7f6d4df7d47652",
+      "passed": 541,
+      "total": 541,
+      "phase": "focused-fixture-corrections",
+      "failed": 0,
+      "directory": "artifacts/local/validation/20261019-220910"
+    },
+    {
+      "trxSha256": "3a731e1bbedbdc88f0806659d2612cec989aff80001d1d0222cc62f9c6f8d224",
+      "executed": 279,
+      "skipped": 0,
+      "logSha256": "c0e5e3551f43986ac309e9a10e45d6f5d5c20ded382d3e096e443c3d579939cb",
+      "passed": 279,
+      "total": 279,
+      "phase": "ui-corrections-focused",
+      "failed": 0,
+      "directory": "artifacts/local/validation/20261019-222210"
+    },
+    {
+      "trxSha256": "db3b9a8225f6362ba821d93d7d6ded32ad5450bf4a05e1d7a2ad7c347b890f3e",
+      "executed": 13165,
+      "skipped": 16,
+      "logSha256": "df497553f88c0677b7131c101925dd644863c84a0f25410e0d10f9c2b6c5f16a",
+      "passed": 13154,
+      "total": 13181,
+      "phase": "initial-full",
+      "failed": 11,
+      "directory": "artifacts/local/validation/20261019-222623"
+    },
+    {
+      "trxSha256": "be32d6e4095c21e7953e4be8efe455a90aedd4a585195889da01c7bd588920aa",
+      "executed": 61,
+      "skipped": 0,
+      "logSha256": "3669c3bdd8ac012c2d4964e5aa002f2eb4d3da0e3592cb6068da6fd21b6926ac",
+      "passed": 61,
+      "total": 61,
+      "phase": "ef-query-correction-focused",
+      "failed": 0,
+      "directory": "artifacts/local/validation/20261019-223557"
+    },
+    {
+      "trxSha256": "847b9c0b8a837ebd417713b7be1c498c36ff1bb1086fb214a5023ba00eeb9635",
+      "executed": 13165,
+      "skipped": 16,
+      "logSha256": "a8a76acd5ab7479daed99cfd9ad76388d2c00a94ebbc5c9aba29729f23c891c7",
+      "passed": 13165,
+      "total": 13181,
+      "phase": "final-full",
+      "failed": 0,
+      "directory": "artifacts/local/validation/20261019-223655"
+    }
+  ],
+  "finalStatus": "CompletedLocalValidation"
+}

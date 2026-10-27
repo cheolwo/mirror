@@ -1,0 +1,37 @@
+[
+  {
+    "source": "artifacts/local/usability-review-r109/cua/roles-home.jpg",
+    "file": "roles-home.jpg",
+    "sha256": "c74c6ee361ab9cd0437e34899c7e095fa4c0e1dd8d7c315a339a54e0d4787f04",
+    "scope": "CUA desktop viewport, synthetic fixtures, actual common RoleSelectionHome.",
+    "review": "Root inspected screenshot pixels. Synthetic people/places only. No edits/crops/re-encoding in this copy."
+  },
+  {
+    "source": "artifacts/local/usability-review-r109/cua/warehouse-inbound-blocked.jpg",
+    "file": "warehouse-inbound-blocked.jpg",
+    "sha256": "ad8252087166104eefdaf22f8570e7631b9f6bc7f58d6426119d4d5644d3fc8e",
+    "scope": "CUA actual common warehouse task: three confirmations checked, missing storage location, disabled save with no missing-field hint.",
+    "review": "Root inspected screenshot pixels. Synthetic people/places only. No edits/crops/re-encoding in this copy."
+  },
+  {
+    "source": "artifacts/local/usability-review-r109/cua/warehouse-inbound-rechecked.jpg",
+    "file": "warehouse-inbound-rechecked.jpg",
+    "sha256": "7948bacdb80f7f2ee7bd8cdf08fd242041139d7a099e67e66a568dbe7bac6a23",
+    "scope": "CUA actual common warehouse task: A-01 and confirmations preserved after intentional preview write failure and explicit GET refresh.",
+    "review": "Root inspected screenshot pixels. Synthetic people/places only. No edits/crops/re-encoding in this copy."
+  },
+  {
+    "source": "artifacts/local/usability-review-r109/cua/living-step-4.jpg",
+    "file": "living-step-4.jpg",
+    "sha256": "f23ff98b372ee1d6cb7e5163c5f66eca78f32d8800ac98e577f6d73027c2fd03",
+    "scope": "CUA four-step delivery composer, confirmation reached without submitting a business request.",
+    "review": "Root inspected screenshot pixels. Synthetic people/places only. No edits/crops/re-encoding in this copy."
+  },
+  {
+    "source": "artifacts/local/usability-review-r109/workspace/usability-browser-r3/orderer-readiness-390.png",
+    "file": "orderer-readiness-390.png",
+    "sha256": "c89dff1465208e2b31e0f8b908af77ba688580a35110e382729036952df6ebd1",
+    "scope": "Purpose-built UI regression, viewport390, full fixture document3053px including test banners, optional details expanded and required name empty.",
+    "review": "Root inspected screenshot pixels. Synthetic people/places only. No edits/crops/re-encoding in this copy."
+  }
+]

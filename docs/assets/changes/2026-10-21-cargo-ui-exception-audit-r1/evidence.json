@@ -1,0 +1,86 @@
+{
+  "schema": "cargo-ui-exception-gallery.v1",
+  "productChanged": false,
+  "notes": [
+    "화면02는 복구 전 촬영으로 이름이 잘못되어 제외",
+    "화면03은 실제 PNG로 오류 잔존 확인",
+    "raw의 request/transport 문맥은 완료 건 참조이며 없는ID 화면의 대상ID가 아님"
+  ],
+  "captures": [
+    {
+      "title": "통신 실패",
+      "description": "연결 차단 뒤 조회 오류와 복구 행동 표시",
+      "file": "01-shipper-offline-error.png",
+      "sha256": "8fe6782c28a2d92b7ba6e3ac21191becd143b568e3229c858e5b11832269eddc",
+      "observedAtUtc": "2026-10-21T11:38:13.707Z",
+      "package": "com.companyname.ssalddelapp",
+      "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "physicalDevice": true,
+      "syntheticBusinessData": true,
+      "appVersionCode": 201,
+      "referenceCompletedTransportId": 9,
+      "subject": "existing-completed-transport",
+      "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+    },
+    {
+      "title": "자동 복구 후 오류 잔존",
+      "description": "정상 운송 카드가 돌아왔는데 이전 연결 오류가 남음",
+      "file": "03-shipper-auto-recovery-stale-error.png",
+      "sha256": "4e4a9e7dc22f6e964d7f17749b582f57d4cdf4d09b371ff45ec446495eb42ba3",
+      "observedAtUtc": "2026-10-21T11:39:02.916Z",
+      "package": "com.companyname.ssalddelapp",
+      "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "physicalDevice": true,
+      "syntheticBusinessData": true,
+      "appVersionCode": 201,
+      "referenceCompletedTransportId": 9,
+      "subject": "existing-completed-transport",
+      "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+    },
+    {
+      "title": "수동 복구",
+      "description": "새로고침 뒤 오류가 사라짐",
+      "file": "07-shipper-recovered-confirmed.png",
+      "sha256": "8d7019a6833a24c8fd0505318d6e981b3fe99baf6dfb6db6ad8faf5fd0d053bc",
+      "observedAtUtc": "2026-10-21T11:40:01.451Z",
+      "package": "com.companyname.ssalddelapp",
+      "url": "https://0.0.0.1/shipper/request/d828af66-2803-4c14-2415-a56ddbb25fcc",
+      "physicalDevice": true,
+      "syntheticBusinessData": true,
+      "appVersionCode": 201,
+      "referenceCompletedTransportId": 9,
+      "subject": "existing-completed-transport",
+      "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+    },
+    {
+      "title": "없는 화주 의뢰",
+      "description": "긴 서버 오류 원문이 표시됨",
+      "file": "06-shipper-404-confirmed.png",
+      "sha256": "4f852c8bb0da6849ec2466fbfc2c76a235e27dfcaa5ed900183dce491940daa6",
+      "observedAtUtc": "2026-10-21T11:39:57.159Z",
+      "package": "com.companyname.ssalddelapp",
+      "url": "https://0.0.0.1/shipper/request/00000000-0000-0000-0000-000000000001",
+      "physicalDevice": true,
+      "syntheticBusinessData": true,
+      "appVersionCode": 201,
+      "referenceCompletedTransportId": 9,
+      "subject": "deliberately-absent-id",
+      "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+    },
+    {
+      "title": "없는 기사 운송",
+      "description": "짧은 안내·재조회·복귀 표시, 완료 행동 없음",
+      "file": "08-driver-missing-transport.png",
+      "sha256": "f3b09c6bbd88533cce0da2c9f2cab4087189e0d3392dbdffe60f61a14ebfda1f",
+      "observedAtUtc": "2026-10-21T11:40:30.863Z",
+      "package": "kr.hongdal.driver",
+      "url": "https://0.0.0.1/driver/transports/9223372036854770000/pickup",
+      "physicalDevice": true,
+      "syntheticBusinessData": true,
+      "appVersionCode": 201,
+      "referenceCompletedTransportId": 9,
+      "subject": "deliberately-absent-id",
+      "rawCaptureManifest": "artifacts/local/cargo-ui-exceptions/20261021-r1/screens/manifest.jsonl"
+    }
+  ]
+}

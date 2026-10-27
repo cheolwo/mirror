@@ -1,0 +1,137 @@
+{
+  "schema": "restaurant-pos-ui-r66",
+  "synthetic": true,
+  "actualProductRazor": true,
+  "actualProductMainLayout": true,
+  "serverDbVerified": false,
+  "windowsNativeAppVerified": false,
+  "deviceVerified": false,
+  "physicalPrintingVerified": false,
+  "checks": [
+    {
+      "case": "incoming-order-preserves-selection-draft-scroll",
+      "before": {
+        "input": "30",
+        "scroll": 1127
+      },
+      "after": {
+        "counts": "수신함\n10\n신규\n4\n진행\n6\n확인 필요\n1",
+        "input": "30",
+        "scroll": 1127,
+        "selected": "주문 DEMO-001"
+      },
+      "passed": true
+    },
+    {
+      "case": "acceptance-waits-for-driver-before-cooking",
+      "passed": true,
+      "result": {
+        "counts": "수신함\n10\n신규\n3\n진행\n7\n확인 필요\n1",
+        "hasStart": false,
+        "selected": "주문 DEMO-001\nDEMO-001 주문을 확인해 배차를 요청하고 전표 출력 요청을 보냈습니다.\n기사 배정 대기\n\n기사 배정을 기다리고 있어요. 조리는 배정 후 시작해 주세요.\n\n주문 메뉴\n18,000원\n\n든든한 비빔밥\n\n2개\n\n18,000원\n\n주문자 1 · 22:52 접수\n\n요청사항\n\n일회용 수저는 빼 주세요.\n맵지 않게 부탁드립니다.\n\n조리 예상시간 변경\n취소 조건 협의\n전표 출력\n새로고침\n\n마지막 확인 22:54:48\n\n상세 정보\n\n기사 배정 대기"
+      }
+    },
+    {
+      "case": "assignment-enables-cooking-then-ready-action",
+      "passed": true
+    },
+    {
+      "case": "pickup-is-not-delivery-completion",
+      "passed": true
+    },
+    {
+      "case": "failed-reads-preserve-list-disable-commands",
+      "passed": true,
+      "rows": 10
+    },
+    {
+      "case": "query-recovery-restores-next-action",
+      "passed": true
+    },
+    {
+      "case": "print-request-failure-keeps-accepted-order",
+      "passed": true
+    },
+    {
+      "case": "filter-change-keeps-selected-order",
+      "passed": true
+    },
+    {
+      "case": "dispatch-attention-does-not-grant-cooking",
+      "passed": true
+    },
+    {
+      "case": "390px-inbox-opens-existing-order-detail-route",
+      "passed": true,
+      "method": "actual iframe navigation and visual inspection"
+    },
+    {
+      "case": "320px-inbox-visual-layout",
+      "passed": true,
+      "method": "fresh isolated iframe viewport; visual inspection"
+    },
+    {
+      "case": "pc-content-footer-do-not-overlap",
+      "passed": true,
+      "result": {
+        "contentBottom": 503.59375,
+        "footerTop": 503.59375,
+        "height": 720,
+        "horizontalOverflow": false,
+        "width": 1280
+      }
+    }
+  ],
+  "sourceBindingRef": "artifacts/local/restaurant-pos-r66/preview-host.json",
+  "sourceBindingSha256": "d52f1798fca9ce956afa6708d8fae121ff04082bc21840e647d64311ff05f4d1",
+  "screenshots": [
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/01-pc-new-order.png",
+      "sha256": "963de780c58dfb238b2af8bf7cbd0326e3880ea9ad8822d8f93187a200216fce"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/02-accepted-waiting.png",
+      "sha256": "f3ff8656d70ea0d35c3a10753ed3de93a66896c85eadab697b9adf8a6ec6f173"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/03-assigned-cooking-action.png",
+      "sha256": "adb7421abbfa806029c9a0b86c2e3d94d530e476437ddc0a99286800aff7e4cb"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/04-pickup-ready.png",
+      "sha256": "40a22afb2c89af9485cf595b968c9ebe860591da9030b48ae9425edfd57417c9"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/05-driver-picked-up.png",
+      "sha256": "63ceb92fbf529d122e8362f1cdbb640501a33136e675ac36fc88bc9f62ade668"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/06-query-failure.png",
+      "sha256": "c2eb90c95b370efed9f1d5f1b1a235f98d9c0df6f8c2d57588aefa815121d3d5"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/07-print-failure-accepted.png",
+      "sha256": "c377bbeaa03ea717f7b0ed413ce7b5d834a8cbf26e9e71c649c589819be9e775"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/08-dispatch-attention.png",
+      "sha256": "048f013a7ffac28657fd2d485e798dc0d32f3dc0c20eff6a9422f2a6cf1535a2"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/09-pc-workspace-final.png",
+      "sha256": "9046a5b50facd54def89728755b27db2f68c27e0ac9bf54773007cb47b5d7ae3"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/10-mobile-390-inbox.png",
+      "sha256": "0bf1b6471adc0f8caa6847f4b74f74d7670cd5b62d813889f953e18cc2a20936"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/11-mobile-390-detail.png",
+      "sha256": "84e51ff17f05830dcd29637a2d8c47677e86a2c2684d78d209f4615879394126"
+    },
+    {
+      "path": "docs/assets/changes/2026-10-22-restaurant-pos-workspace-r66/12-mobile-320-inbox.png",
+      "sha256": "4faaaa14fe6af3761c5ccf7aab0edece8159864fe35628e2fc8a987c5accab40"
+    }
+  ]
+}

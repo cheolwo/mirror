@@ -1,5 +1,13 @@
 # 화면별 상세 README
 
+- [로그인·업무 분리와 공통 역할 로그인 책임 카드](auth-workspace-separation-r1.md): 역할 인증·안전한 원업무 복귀, 모바일 입력/버튼 배치와 실패·취소·재시도의 책임 및 검증 범위.
+
+- [기사 추천 알림 설정](driver-recommendation-alerts-r1.md): 음식·퀵/화물 종류별 허용과 그림·문구, 본인 설정 저장 후 재조회, 배차 수신·자격·수락과의 경계를 다룬다.
+
+- [기사 현재 업무 모아보기](driver-current-work-r1.md) · [약정 담당·동의 확인](settlement-responsibility-r1.md): 같은 계정의 음식·화물·직접 피킹 업무에서 전문 화면으로 이동하고, 수락 전 작업·보수와 본인 조회 범위의 담당·동의를 구분한다. 실제 검증 결과는 연결된 변경 기록을 따른다.
+
+- [주문자 비구속 수요 등록](OrdererApp/GroupPurchaseDemandCreate/README.md) · [판매자 주문자 수요 허브](SellerApp/OrdererDemand/README.md): r2 내부 수명 분리의 페이지 책임 카드. 기존 화면/route/행동을 유지하며 실제 UI·운영 증거는 별도다.
+
 - [살뜰마트 기사 수락·픽업·전달 r58](ssalddel-mart-driver-work-r58.md) · FDriver 별도 진입·현재 배정·전표 입력 한 번의 픽업·전달과 요청 결과 우선 복구. Simulation·기본 OFF, 실제 단말·하드웨어·운영 검증은 별도.
 
 - [일반 회원 생활 배송 참여](neighborhood-member-delivery-r43.md) · 참여 설정·받은 제안·본인 수행을 분리하고 사진 전송과 완료, 서버 판본·수락 권위를 연결. 실행 결과는 r43 변경 기록에서 확인.

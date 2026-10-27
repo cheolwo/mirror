@@ -1,0 +1,20 @@
+[
+  {
+    "file": "services-1280.png",
+    "sha256": "75c8cb01ebae10235ffbc2acfe3db64daa06bd151c41bec758b41ca27e06a5fc",
+    "scope": "loopback-render-only",
+    "synthetic": true
+  },
+  {
+    "file": "services-390-viewport.png",
+    "sha256": "970803e2e3d371d80a50c4fd115ac782af34fa1442fc680c14234342171c0de9",
+    "scope": "loopback-render-only",
+    "synthetic": true
+  },
+  {
+    "file": "services-390.png",
+    "sha256": "3151de5b1538217e0c1ef45c624ce00ad2fb1869dcc28fc2f15666ed486b4034",
+    "scope": "loopback-render-only",
+    "synthetic": true
+  }
+]

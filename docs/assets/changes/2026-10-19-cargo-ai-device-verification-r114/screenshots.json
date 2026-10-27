@@ -1,0 +1,35 @@
+{
+  "kind": "actual-shared-razor-static-browser-not-android",
+  "images": [
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/01-recommended-pricing-gap.png",
+      "sha256": "6836b1b7094b24b87a16298bbb96b4aa78ae0f92dc8bb18dbe4298f94a890dbd",
+      "bytes": 64874
+    },
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/02-accepted.png",
+      "sha256": "5c6e3e0c82f920f8c13bb7c4dbd1c4a8fdfcd47c9a81e3324ceb203fd8111494",
+      "bytes": 59346
+    },
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/03-pickup-arrived.png",
+      "sha256": "0b94e92a826c2b5b365ebbb3348876cb61b5a64eef08ada6d18121a41ebbeb94",
+      "bytes": 58189
+    },
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/04-picked-up.png",
+      "sha256": "7de3636f4d4c5c1ea26f829ba6b56d45337af364ce41e9c107da59fa727f365b",
+      "bytes": 62169
+    },
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/05-dropoff-arrived.png",
+      "sha256": "22267080f071462f1cc9a22d5f79b5b97e4d6757b5d9ee8204e7f90f7b30a9a0",
+      "bytes": 58950
+    },
+    {
+      "path": "docs/assets/changes/2026-10-19-cargo-ai-device-verification-r114/06-completed.png",
+      "sha256": "d579d75c9eb335696152bd733e79f327eea4f04b3e06d5699e6b7cc85895c57f",
+      "bytes": 50157
+    }
+  ]
+}

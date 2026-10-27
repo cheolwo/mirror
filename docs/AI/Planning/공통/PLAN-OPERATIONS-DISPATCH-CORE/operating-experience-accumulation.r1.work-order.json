@@ -1,0 +1,37 @@
+{
+  "schema": "dispatch-operating-experience-work-order.v1",
+  "date": "2026-10-21",
+  "status": "CompletedLocalValidation",
+  "implementationAuthorized": true,
+  "approvalSource": "사용자가 운영 경험을 하나씩 쌓을 구조를 먼저 세팅하도록 요청함. 직전 가상 화물·로컬 누적 절차를 바탕으로 범위를 고정한다.",
+  "objective": "기존 로컬 가상 배차 회차를 주문별 경험 기록으로 중복 없이 접수하고 당시 판단·최신 관측·명시적 사람 검토를 보존한다.",
+  "writePaths": [
+    "eng/Ssalddel.DispatchTraining/Experiences/*.cs",
+    "eng/Ssalddel.DispatchTraining/Program.cs",
+    "eng/Ssalddel.DispatchTraining/DispatchTrainingSessionStore.cs",
+    "eng/Ssalddel.DispatchTraining/README.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md"
+  ],
+  "boundaries": [
+    "기존 session/actors/운영 DB와 기존 review-events.jsonl/approved export는 읽기만 하거나 건드리지 않는다.",
+    "새 운영 DB·서버 API·UI·백그라운드 수집·실제 배차·가중치 학습·자동 사람 승인 없음.",
+    "가상 훈련 snapshot만 별도 비공개 corpus에 보존. 실제 운영 수집 adapter는 후속이다.",
+    "수행 완료는 개별 주문의 성공한 정본 조회 결과로만 표시. phase/접수 성공/알림/정산/입금으로 추론하지 않는다.",
+    "없는 주문조건·단계 시각·정책/모델 digest·사진·학습사례 연결은 미확인으로 남긴다.",
+    "원문 SHA/회차/판본/ClientRequestId로 연결하고 재접수는 재사용, 같은 판본 다른 원문은 충돌로 거부한다.",
+    "사람 검토는 별도 사건. 새 snapshot은 과거 검토를 자동 승계하지 않는다. TrainingEligible/WeightsTrained/OperationalDispatchEnabled는 false.",
+    "commit/push는 하지 않는다."
+  ],
+  "acceptance": [
+    "기존 3개 snapshot을 원본 변경 없이 접수하고 재접수/재시작에서 중복 집계하지 않음",
+    "주문별 접수/추천/최신 관측/미확인 자료와 검토 상태 보고서 생성",
+    "명시적 검토의 request ID 멱등성·revision/snapshot 충돌·동시 작성·손상 검증",
+    "현재 source 파일 해시 및 과거 검토 기록/approved 내보내기 무변경",
+    "도구 소비 빌드·새 self-check·기존 training selftest·scoped Fast/Task"
+  ],
+  "evidenceRoot": "artifacts/local/dispatch-experience-setup/20261021-r1"
+}

@@ -1,0 +1,133 @@
+{
+  "schema": "ssalddel-mobile-context-preview-evidence-v2",
+  "kind": "local-common-ui-preview-with-nested-scroll-regression",
+  "deviceValidation": false,
+  "apiValidation": false,
+  "realConsentOrSubmission": false,
+  "previousEvidenceRetained": "docs/assets/changes/mobile-context-authoring-r72/preview-evidence.json",
+  "rawStandardResult": "artifacts/local/mobile-context-r72-focus-standard-20261019-143918/result.json",
+  "rawNestedResult": "artifacts/local/mobile-context-r72-focus-nested-20261019-143859/result.json",
+  "inputHashes": {
+    "RoleWorkspacePreview.dll": "10bacb7fa57efef38af6fb8342426c0b9ffffbc28bd94f5d4a4f76c9a673b644",
+    "Ssalddel.Ui.Common.dll": "048b4f3470e68632d9137d8f396e724091d7fae4da38ebcf92656283fa3839b3"
+  },
+  "scriptSha256": "81277f81a9b6afd63b71ff3c99d4a945dc7f7e698563221a0c6b5ce3db86c959",
+  "viewportWidths": [
+    320,
+    390,
+    1280
+  ],
+  "standardChecksPassed": 6,
+  "nestedScrollChecksPassed": 9,
+  "nestedTransitions": 42,
+  "automatedCaptures": 50,
+  "javascriptErrors": 0,
+  "externalOrApiRequests": 0,
+  "representativeImages": [
+    {
+      "width": 390,
+      "step": "cargo",
+      "file": "cargo-390.png",
+      "imageWidth": 390,
+      "imageHeight": 917,
+      "sha256": "d51541d43cd60811038142b4df828e8d926f5faa85166fc4fe28351eede57ffb"
+    },
+    {
+      "width": 390,
+      "step": "package",
+      "file": "package-390.png",
+      "imageWidth": 390,
+      "imageHeight": 978,
+      "sha256": "27a8de848d6a5693164ad08d8b9c749ae92bd9198a79dc5902a61ef4bedf2d54"
+    },
+    {
+      "width": 390,
+      "step": "pickup",
+      "file": "pickup-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "42fc887af9423f186433b018d0c5b5d44841419f8ecd093cfacdff00a7449c44"
+    },
+    {
+      "width": 390,
+      "step": "dropoff",
+      "file": "dropoff-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "624e139afd318e0405b1218116bc03af51c4a3347d6c1a852701ba7ae0b87eb9"
+    },
+    {
+      "width": 390,
+      "step": "schedule",
+      "file": "schedule-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "4bdfaf0210c66b868bbb5fb4f3fac74ffb99c37c7918924f5acf225d2b552b96"
+    },
+    {
+      "width": 390,
+      "step": "vehicle",
+      "file": "vehicle-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1688,
+      "sha256": "81344877205f4ce6be82406751eda220e8620fd8f0b803b692c6d481a7a8d742"
+    },
+    {
+      "width": 390,
+      "step": "payment",
+      "file": "payment-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1789,
+      "sha256": "108eea9dc1ffad479439798f55c211f5af8565cadcac51dab257a4ad71c02f76"
+    },
+    {
+      "width": 390,
+      "step": "review",
+      "file": "review-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1483,
+      "sha256": "38cbc78dee2f3e655e60362de6fd8837715a9d1443852028ef4962837979a2b2"
+    },
+    {
+      "width": 1280,
+      "step": "desktop",
+      "file": "desktop-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 6097,
+      "sha256": "b976ba06e2d9d9f806208cf21953a7959ddbab1f0f16f1ef71c00079d793e3c2"
+    },
+    {
+      "width": 390,
+      "step": "package",
+      "file": "nested-package-390.png",
+      "imageWidth": 390,
+      "imageHeight": 640,
+      "sha256": "343c04927a1fe32185c511895e4a5aee40ccb12932706aa967d2b0892518c019",
+      "nestedScroll": true
+    },
+    {
+      "width": 390,
+      "step": "schedule",
+      "file": "nested-schedule-390.png",
+      "imageWidth": 390,
+      "imageHeight": 640,
+      "sha256": "db0c036e74fa214bc13061cc0dff621d7979119d06ccd761fc32e923e05d1fbc",
+      "nestedScroll": true
+    }
+  ],
+  "visualReview": {
+    "reviewed": true,
+    "reviewer": "Codex direct image inspection",
+    "imagesReviewed": 11,
+    "notes": [
+      "모바일 8단계와 PC 통합 예시를 최종 Focus 수정 DLL로 다시 확인했습니다.",
+      "중첩 스크롤 하단에서 다음 화면으로 이동하면 새 제목이 보이고 포커스를 받습니다.",
+      "같은 화면의 입력·검증 재렌더는 입력 포커스를 빼앗지 않습니다.",
+      "중첩 화면은 실제 스크롤 영역과 상하단을 함께 캡처한 640px 높이 예시입니다."
+    ],
+    "limitations": [
+      "실제 휴대폰·APK·API·DB·접수·동의·결제 검증을 뜻하지 않습니다.",
+      "PC의 전체 화면 캡처와 모바일의 세로 스크롤 분량은 실제 화면 높이와 구분합니다."
+    ]
+  }
+}

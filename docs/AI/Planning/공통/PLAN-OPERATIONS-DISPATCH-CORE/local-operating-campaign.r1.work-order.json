@@ -1,0 +1,27 @@
+{
+  "schema": "dispatch-local-operating-campaign-work-order.v1",
+  "date": "2026-10-21",
+  "status": "CompletedLocalValidation",
+  "runtimeScope": "SyntheticLocalOnly / BoundedCampaignRunningAtVerification",
+  "implementationAuthorized": true,
+  "approvalSource": "최신 사용자 요청: 배달 중 가상 주문→배차→배송 완료 시험 누적 및 대표 사례 선별 구현",
+  "writePaths": [
+    "eng/Ssalddel.DispatchTraining/Experiences/*.cs",
+    "eng/Ssalddel.DispatchTraining/README.md",
+    "eng/Ssalddel.DispatchTraining/DispatchTrainingActions.cs",
+    "eng/Ssalddel.DispatchTraining/DispatchTrainingFixtureAdapters.cs",
+    "eng/Ssalddel.DispatchTraining/DispatchTrainingFixtureSelfChecks.cs",
+    "eng/Ssalddel.DispatchTraining/DispatchTrainingOrderFixture.cs",
+    "eng/Ssalddel.DispatchTraining/Program.cs",
+    "Ssalddel/Services/Dispatch/Coordination/국내화물추천재검증Service.cs",
+    "Ssalddel.Tests/Application/Driver/DispatchAction/*RecommendationRefresh*Tests.cs",
+    "eng/verification/dispatch-operating-campaign*.py",
+    "eng/verification/dispatch-operating-campaign.ps1",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operating-campaign.r1*",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/AI/PLANNING.md"
+  ],
+  "boundaries": ["기존 전문 원장/상태기계 재사용", "합성 loopback 전용", "기존 source 및 승인 자료 보존", "실제 배차/푸시/지급/가중치 학습/자동 승인/게시/commit/push 금지"],
+  "evidenceRoot": "artifacts/local/dispatch-operating-campaign/20261021-r1"
+}

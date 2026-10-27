@@ -186,6 +186,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "DriverApp-Components-Pages-Driver-04_Settings-운송자격Page",
+      "owner": "DriverApp",
+      "source": "DriverApp/Components/Pages/Driver/04_Settings/운송자격Page.razor",
+      "routes": [
+        "/driver/qualification"
+      ],
+      "hosts": [
+        "DriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "DriverApp-P06-1",
       "owner": "DriverApp",
       "source": "DriverApp/Components/Pages/Driver/04_Settings/운행설정Page.razor",
@@ -222,6 +235,32 @@
         "DriverApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/DriverApp/DriverApp-P14-2/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "DriverApp-Components-Pages-Driver-05_Settlement-운송대금Page",
+      "owner": "DriverApp",
+      "source": "DriverApp/Components/Pages/Driver/05_Settlement/운송대금Page.razor",
+      "routes": [
+        "/driver/payouts"
+      ],
+      "hosts": [
+        "DriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "DriverApp-Components-Pages-Driver-05_Settlement-운송대금상세Page",
+      "owner": "DriverApp",
+      "source": "DriverApp/Components/Pages/Driver/05_Settlement/운송대금상세Page.razor",
+      "routes": [
+        "/driver/payouts/{TransportId:long}"
+      ],
+      "hosts": [
+        "DriverApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -329,6 +368,37 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "DriverApp-Components-Pages-분산배송Page",
+      "owner": "DriverApp",
+      "source": "DriverApp/Components/Pages/분산배송Page.razor",
+      "routes": [
+        "/workspace/cargo-driver/distributed/{Screen}",
+        "/driver/distributed/{Screen}"
+      ],
+      "hosts": [
+        "DriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "eng-web-role-app-Pages-IntegratedRoleSelection",
+      "owner": "eng",
+      "source": "eng/web-role-app/Pages/IntegratedRoleSelection.razor",
+      "routes": [
+        "/apps"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.Web.DriverApp",
+        "Ssalddel.Web.OrdererApp",
+        "Ssalddel.Web.ShipperApp",
+        "Ssalddel.Web.WarehouseApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "eng-web-role-app-Pages-RoleNotFound",
       "owner": "eng",
       "source": "eng/web-role-app/Pages/RoleNotFound.razor",
@@ -363,6 +433,86 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "FDriverApp-Components-Pages-AgreedRateReturn",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/AgreedRateReturn.razor",
+      "routes": [
+        "/rates-return"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-AgreedRateTable",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/AgreedRateTable.razor",
+      "routes": [
+        "/agreed-rates"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-CommerceDisputesPage",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/CommerceDisputesPage.razor",
+      "routes": [
+        "/commerce/disputes",
+        "/commerce/disputes/{CaseId}"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-CommerceNoticesPage",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/CommerceNoticesPage.razor",
+      "routes": [
+        "/commerce/notices"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-CommercePrivacyPage",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/CommercePrivacyPage.razor",
+      "routes": [
+        "/commerce/privacy",
+        "/commerce/privacy/{CaseId}"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-CommerceSellerPage",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/CommerceSellerPage.razor",
+      "routes": [
+        "/commerce/seller"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "FDriverApp-Components-Pages-FDriverHome",
       "owner": "FDriverApp",
       "source": "FDriverApp/Components/Pages/FDriverHome.razor",
@@ -381,6 +531,45 @@
       "source": "FDriverApp/Components/Pages/FDriverWorkspaceLaunchPage.razor",
       "routes": [
         "/food-delivery/open/{Focus}"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-SupportLoginPage",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/SupportLoginPage.razor",
+      "routes": [
+        "/driver-support-login"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-WorkPreferences",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/WorkPreferences.razor",
+      "routes": [
+        "/work-preferences"
+      ],
+      "hosts": [
+        "FDriverApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "FDriverApp-Components-Pages-WorkPreferencesReturn",
+      "owner": "FDriverApp",
+      "source": "FDriverApp/Components/Pages/WorkPreferencesReturn.razor",
+      "routes": [
+        "/work-preferences-return"
       ],
       "hosts": [
         "FDriverApp"
@@ -412,6 +601,60 @@
         "OrdererApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/OrdererApp/OrdererApp-P03/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "OrdererApp-Components-Pages-CommerceDisputesPage",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/CommerceDisputesPage.razor",
+      "routes": [
+        "/commerce/disputes",
+        "/commerce/disputes/{CaseId}"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "OrdererApp-Components-Pages-CommerceNoticesPage",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/CommerceNoticesPage.razor",
+      "routes": [
+        "/commerce/notices"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "OrdererApp-Components-Pages-CommercePrivacyPage",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/CommercePrivacyPage.razor",
+      "routes": [
+        "/commerce/privacy",
+        "/commerce/privacy/{CaseId}"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "OrdererApp-Components-Pages-CommerceSellerPage",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/CommerceSellerPage.razor",
+      "routes": [
+        "/commerce/seller"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -885,6 +1128,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "OrdererApp-Components-Pages-Login",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/Login.razor",
+      "routes": [
+        "/login"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "OrdererApp-P04-2",
       "owner": "OrdererApp",
       "source": "OrdererApp/Components/Pages/MartOrder.razor",
@@ -1003,6 +1259,86 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "OrdererApp-Components-Pages-분산주문Page",
+      "owner": "OrdererApp",
+      "source": "OrdererApp/Components/Pages/분산주문Page.razor",
+      "routes": [
+        "/workspace/orderer/distributed/{Screen}"
+      ],
+      "hosts": [
+        "OrdererApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-AgreedRates",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/AgreedRates.razor",
+      "routes": [
+        "/settings/agreed-rates"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-CommerceDisputesPage",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/CommerceDisputesPage.razor",
+      "routes": [
+        "/commerce/disputes",
+        "/commerce/disputes/{CaseId}"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-CommerceNoticesPage",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/CommerceNoticesPage.razor",
+      "routes": [
+        "/commerce/notices"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-CommercePrivacyPage",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/CommercePrivacyPage.razor",
+      "routes": [
+        "/commerce/privacy",
+        "/commerce/privacy/{CaseId}"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-CommerceSellerPage",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/CommerceSellerPage.razor",
+      "routes": [
+        "/commerce/seller"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "RestaurantDeskApp-P04",
       "owner": "RestaurantDeskApp",
       "source": "RestaurantDeskApp/Components/Pages/DispatchAddressForm.razor",
@@ -1086,6 +1422,19 @@
       "source": "RestaurantDeskApp/Components/Pages/NotFound.razor",
       "routes": [
         "/not-found"
+      ],
+      "hosts": [
+        "RestaurantDeskApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "RestaurantDeskApp-Components-Pages-NotificationSettings",
+      "owner": "RestaurantDeskApp",
+      "source": "RestaurantDeskApp/Components/Pages/NotificationSettings.razor",
+      "routes": [
+        "/settings/notifications"
       ],
       "hosts": [
         "RestaurantDeskApp"
@@ -1370,6 +1719,99 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-AgreedRateTablePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/AgreedRateTablePage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/agreed-rates"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CargoWorkspaceActionPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CargoWorkspaceActionPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/transports/{ItemId:long}/{ActionKey}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CargoWorkspaceOfferPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CargoWorkspaceOfferPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/offers/{ItemId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommerceDisputesPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommerceDisputesPage.razor",
+      "routes": [
+        "/commerce/disputes",
+        "/commerce/disputes/{CaseId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommerceNoticesPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommerceNoticesPage.razor",
+      "routes": [
+        "/commerce/notices"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommercePrivacyPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommercePrivacyPage.razor",
+      "routes": [
+        "/commerce/privacy",
+        "/commerce/privacy/{CaseId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommerceSellerPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommerceSellerPage.razor",
+      "routes": [
+        "/commerce/seller"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "Ssalddel.WebApp-Pages-CommunityBaguaTransitionPage",
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/CommunityBaguaTransitionPage.razor",
@@ -1504,6 +1946,48 @@
       "routes": [
         "/community/categories",
         "/community/boards/directory"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityExchangeDetailPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityExchangeDetailPage.razor",
+      "routes": [
+        "/community/exchange/posts/{PostId:long}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityExchangePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityExchangePage.razor",
+      "routes": [
+        "/community/exchange"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityExchangeWritePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityExchangeWritePage.razor",
+      "routes": [
+        "/community/exchange/write"
       ],
       "hosts": [
         "Ssalddel.Web.CommunityApp",
@@ -1780,6 +2264,216 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryOfferDetailPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityMemberDeliveryOfferDetailPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/offers/{OfferId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryOffersPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityMemberDeliveryOffersPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/offers"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryParticipationPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityMemberDeliveryParticipationPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/participation"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkListPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkListPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/work"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/work/{RequestId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationCreatePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationCreatePage.razor",
+      "routes": [
+        "/community/exchange/work/new"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationDetailPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationDetailPage.razor",
+      "routes": [
+        "/community/exchange/work/{WorkId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationListPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationListPage.razor",
+      "routes": [
+        "/community/exchange/work"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryCreatePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryCreatePage.razor",
+      "routes": [
+        "/community/exchange/deliveries/new"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryDetailPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryDetailPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/{RequestId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryListPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryListPage.razor",
+      "routes": [
+        "/community/exchange/deliveries"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodMapPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodMapPage.razor",
+      "routes": [
+        "/community/map"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageCreatePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageCreatePage.razor",
+      "routes": [
+        "/community/exchange/spaces/new"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageDetailPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageDetailPage.razor",
+      "routes": [
+        "/community/exchange/spaces/{SpaceId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageListPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageListPage.razor",
+      "routes": [
+        "/community/exchange/spaces"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "Ssalddel.WebApp-Pages-CommunityPage",
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/CommunityPage.razor",
@@ -1922,6 +2616,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-CurrentDriverWorkPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/CurrentDriverWorkPage.razor",
+      "routes": [
+        "/driver/current-work"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "Ssalddel.WebApp-Pages-DiagramWorkbenchPage",
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/DiagramWorkbenchPage.razor",
@@ -1930,6 +2637,24 @@
       ],
       "hosts": [
         "Ssalddel.Web.CommunityApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-DistributedFulfillment-DistributedWorkspacePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/DistributedFulfillment/DistributedWorkspacePage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/distributed/{Screen}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.CommunityApp",
+        "Ssalddel.Web.DriverApp",
+        "Ssalddel.Web.OrdererApp",
+        "Ssalddel.Web.ShipperApp",
+        "Ssalddel.Web.WarehouseApp",
         "Ssalddel.WebApp"
       ],
       "detail": null,
@@ -2054,6 +2779,20 @@
       "source": "Ssalddel.WebApp/Pages/DriverNotificationsPage.razor",
       "routes": [
         "/driver/notifications"
+      ],
+      "hosts": [
+        "Ssalddel.Web.DriverApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-DriverQualificationPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/DriverQualificationPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/qualification"
       ],
       "hosts": [
         "Ssalddel.Web.DriverApp",
@@ -2320,7 +3059,7 @@
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/Home.razor",
       "routes": [
-        "/"
+        "/apps"
       ],
       "hosts": [
         "Ssalddel.WebApp"
@@ -2402,6 +3141,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-LifeHome",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/LifeHome.razor",
+      "routes": [
+        "/"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "Ssalddel.WebApp-Pages-LoginPage",
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/LoginPage.razor",
@@ -2437,6 +3189,20 @@
       ],
       "hosts": [
         "Ssalddel.Web.OrdererApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-OperatorCargoIncidentsPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/OperatorCargoIncidentsPage.razor",
+      "routes": [
+        "/workspace/operator/cargo-incidents",
+        "/workspace/operator/cargo-incidents/{IncidentId}/review"
+      ],
+      "hosts": [
         "Ssalddel.WebApp"
       ],
       "detail": null,
@@ -2547,6 +3313,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-PlatformParticipationDetailsPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/PlatformParticipationDetailsPage.razor",
+      "routes": [
+        "/overview/participation"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "Ssalddel.WebApp-Pages-ProduceRegionalPriceComparisonPage",
       "owner": "Ssalddel.WebApp",
       "source": "Ssalddel.WebApp/Pages/ProduceRegionalPriceComparisonPage.razor",
@@ -2572,6 +3351,20 @@
       "hosts": [
         "Ssalddel.Web.CommunityApp",
         "Ssalddel.Web.OrdererApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-QuickServiceIntroductionPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/QuickServiceIntroductionPage.razor",
+      "routes": [
+        "/quick",
+        "/services"
+      ],
+      "hosts": [
         "Ssalddel.WebApp"
       ],
       "detail": null,
@@ -2615,6 +3408,86 @@
       "hosts": [
         "Ssalddel.Web.CommunityApp",
         "Ssalddel.Web.OrdererApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleOrdererNewOrderPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleOrdererNewOrderPage.razor",
+      "routes": [
+        "/workspace/orderer/new"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleWarehouseWorkspaceTaskPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleWarehouseWorkspaceTaskPage.razor",
+      "routes": [
+        "/workspace/warehouse/tasks/{Kind}/{ItemId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleWorkspaceActionPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleWorkspaceActionPage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/action/{ActionKey}",
+        "/workspace/{RoleKey}/action"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleWorkspaceHistoryPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleWorkspaceHistoryPage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/history",
+        "/workspace/{RoleKey}/history/{RecordId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleWorkspaceLoginPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleWorkspaceLoginPage.razor",
+      "routes": [
+        "/workspace-login/{RoleKey}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-RoleWorkspacePage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/RoleWorkspacePage.razor",
+      "routes": [
+        "/workspace/{RoleKey}"
+      ],
+      "hosts": [
         "Ssalddel.WebApp"
       ],
       "detail": null,
@@ -2851,6 +3724,24 @@
       "routes": [
         "/shipper/request/detail",
         "/shipper/request/{RequestId}"
+      ],
+      "hosts": [
+        "Ssalddel.Web.ShipperApp",
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "Ssalddel.WebApp-Pages-ShipperRequestMobileContextPage",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/ShipperRequestMobileContextPage.razor",
+      "routes": [
+        "/shipper/request/package",
+        "/shipper/request/pickup",
+        "/shipper/request/dropoff",
+        "/shipper/request/schedule",
+        "/shipper/request/vehicle"
       ],
       "hosts": [
         "Ssalddel.Web.ShipperApp",
@@ -3616,6 +4507,20 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "Ssalddel.WebApp-Pages-활동정산Page",
+      "owner": "Ssalddel.WebApp",
+      "source": "Ssalddel.WebApp/Pages/활동정산Page.razor",
+      "routes": [
+        "/activity-settlements",
+        "/activity-settlements/{AgreementId}"
+      ],
+      "hosts": [
+        "Ssalddel.WebApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdmin-P23",
       "owner": "SsalddelAdmin",
       "source": "SsalddelAdmin/Components/Pages/ActivityLogs.razor",
@@ -3883,6 +4788,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelAdmin-Components-Pages-DriverQualification",
+      "owner": "SsalddelAdmin",
+      "source": "SsalddelAdmin/Components/Pages/DriverQualification.razor",
+      "routes": [
+        "/drivers/{DriverId}/qualification"
+      ],
+      "hosts": [
+        "SsalddelAdmin"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdmin-P32",
       "owner": "SsalddelAdmin",
       "source": "SsalddelAdmin/Components/Pages/Drivers.razor",
@@ -4003,6 +4921,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelAdmin-Components-Pages-FreightPlatformReadiness",
+      "owner": "SsalddelAdmin",
+      "source": "SsalddelAdmin/Components/Pages/FreightPlatformReadiness.razor",
+      "routes": [
+        "/drivers/platform-registration-readiness"
+      ],
+      "hosts": [
+        "SsalddelAdmin"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdmin-Components-Pages-GroupImportTradeReadiness",
       "owner": "SsalddelAdmin",
       "source": "SsalddelAdmin/Components/Pages/GroupImportTradeReadiness.razor",
@@ -4078,6 +5009,20 @@
         "SsalddelAdmin"
       ],
       "detail": "docs/ProjectOverview/page-docs/SsalddelAdmin/SsalddelAdmin-P26/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdmin-Components-Pages-PrivacySupport",
+      "owner": "SsalddelAdmin",
+      "source": "SsalddelAdmin/Components/Pages/PrivacySupport.razor",
+      "routes": [
+        "/privacy-support",
+        "/privacy-support/{CaseId}"
+      ],
+      "hosts": [
+        "SsalddelAdmin"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -4281,6 +5226,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelAdminApp-Components-Pages-CargoOverview",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/CargoOverview.razor",
+      "routes": [
+        "/overview/cargo"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdminApp-P03",
       "owner": "SsalddelAdminApp",
       "source": "SsalddelAdminApp/Components/Pages/CommunityInformationReview.razor",
@@ -4307,6 +5265,32 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelAdminApp-Components-Pages-DispatchTraining",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/DispatchTraining.razor",
+      "routes": [
+        "/training/dispatch"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-DispatchTrainingDecisions",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/DispatchTrainingDecisions.razor",
+      "routes": [
+        "/training/dispatch/decisions"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdminApp-Components-Pages-Finance",
       "owner": "SsalddelAdminApp",
       "source": "SsalddelAdminApp/Components/Pages/Finance.razor",
@@ -4325,6 +5309,58 @@
       "source": "SsalddelAdminApp/Components/Pages/FollowUpRecovery.razor",
       "routes": [
         "/operations/follow-up-recovery"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-FoodDemandSurcharge",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/FoodDemandSurcharge.razor",
+      "routes": [
+        "/food-operations/demand-surcharge"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-FoodInterruptionReview",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/FoodInterruptionReview.razor",
+      "routes": [
+        "/food-operations/reviews/{OrderNo}"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-FoodOperations",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/FoodOperations.razor",
+      "routes": [
+        "/food-operations"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-FoodOrderDetail",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/FoodOrderDetail.razor",
+      "routes": [
+        "/food-operations/orders/{OrderNo}"
       ],
       "hosts": [
         "SsalddelAdminApp"
@@ -4386,6 +5422,20 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelAdminApp-Components-Pages-OperationsAlerts",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/OperationsAlerts.razor",
+      "routes": [
+        "/operations-alerts",
+        "/operations-alerts/{AlertId}"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelAdminApp-Components-Pages-PageCatalog",
       "owner": "SsalddelAdminApp",
       "source": "SsalddelAdminApp/Components/Pages/PageCatalog.razor",
@@ -4420,6 +5470,113 @@
       ],
       "hosts": [
         "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelAdminApp-Components-Pages-PrivacySupport",
+      "owner": "SsalddelAdminApp",
+      "source": "SsalddelAdminApp/Components/Pages/PrivacySupport.razor",
+      "routes": [
+        "/privacy-support",
+        "/privacy-support/{CaseId}"
+      ],
+      "hosts": [
+        "SsalddelAdminApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-AgreedRateTablePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/AgreedRateTablePage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/agreed-rates"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CargoWorkspaceActionPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CargoWorkspaceActionPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/transports/{ItemId:long}/{ActionKey}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CargoWorkspaceOfferPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CargoWorkspaceOfferPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/offers/{ItemId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommerceDisputesPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommerceDisputesPage.razor",
+      "routes": [
+        "/commerce/disputes",
+        "/commerce/disputes/{CaseId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommerceNoticesPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommerceNoticesPage.razor",
+      "routes": [
+        "/commerce/notices"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommercePrivacyPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommercePrivacyPage.razor",
+      "routes": [
+        "/commerce/privacy",
+        "/commerce/privacy/{CaseId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommerceSellerPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommerceSellerPage.razor",
+      "routes": [
+        "/commerce/seller"
+      ],
+      "hosts": [
+        "SsalddelApp"
       ],
       "detail": null,
       "review": "InventoryOnly"
@@ -4580,6 +5737,45 @@
         "SsalddelApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P10-4/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityExchangeDetailPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityExchangeDetailPage.razor",
+      "routes": [
+        "/community/exchange/posts/{PostId:long}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityExchangePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityExchangePage.razor",
+      "routes": [
+        "/community/exchange"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityExchangeWritePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityExchangeWritePage.razor",
+      "routes": [
+        "/community/exchange/write"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -4792,6 +5988,214 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelApp-Components-Pages-CommunityLoginPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityLoginPage.razor",
+      "routes": [
+        "/community/login"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryOfferDetailPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityMemberDeliveryOfferDetailPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/offers/{OfferId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryOffersPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityMemberDeliveryOffersPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/offers"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryParticipationPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityMemberDeliveryParticipationPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/participation"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkListPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkListPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/work"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/work/{RequestId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationCreatePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationCreatePage.razor",
+      "routes": [
+        "/community/exchange/work/new"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationDetailPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationDetailPage.razor",
+      "routes": [
+        "/community/exchange/work/{WorkId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationListPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationListPage.razor",
+      "routes": [
+        "/community/exchange/work"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryCreatePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryCreatePage.razor",
+      "routes": [
+        "/community/exchange/deliveries/new"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryDetailPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryDetailPage.razor",
+      "routes": [
+        "/community/exchange/deliveries/{RequestId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryListPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryListPage.razor",
+      "routes": [
+        "/community/exchange/deliveries"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodMapPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodMapPage.razor",
+      "routes": [
+        "/community/map"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageCreatePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageCreatePage.razor",
+      "routes": [
+        "/community/exchange/spaces/new"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageDetailPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageDetailPage.razor",
+      "routes": [
+        "/community/exchange/spaces/{SpaceId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-CommunityNeighborhoodStorageListPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/CommunityNeighborhoodStorageListPage.razor",
+      "routes": [
+        "/community/exchange/spaces"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelApp-Components-Pages-CommunityPersonalPage",
       "owner": "SsalddelApp",
       "source": "SsalddelApp/Components/Pages/CommunityPersonalPage.razor",
@@ -4945,6 +6349,59 @@
         "SsalddelApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P02-2/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-DriverCurrentWorkPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/DriverCurrentWorkPage.razor",
+      "routes": [
+        "/driver/current-work"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-DriverQualificationPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/DriverQualificationPage.razor",
+      "routes": [
+        "/workspace/cargo-driver/qualification"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-DriverRecommendationSettingsPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/DriverRecommendationSettingsPage.razor",
+      "routes": [
+        "/driver/notifications/settings"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-DriverWorkspaceHistoryPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/DriverWorkspaceHistoryPage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/history",
+        "/workspace/{RoleKey}/history/{RecordId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -5118,6 +6575,20 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelApp-Components-Pages-OperatorCargoIncidentsPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/OperatorCargoIncidentsPage.razor",
+      "routes": [
+        "/workspace/operator/cargo-incidents",
+        "/workspace/operator/cargo-incidents/{IncidentId}/review"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelApp-P06-2",
       "owner": "SsalddelApp",
       "source": "SsalddelApp/Components/Pages/OrderFulfillment.razor",
@@ -5248,6 +6719,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelApp-Components-Pages-PlatformParticipationDetailsPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/PlatformParticipationDetailsPage.razor",
+      "routes": [
+        "/overview/participation"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelApp-Components-Pages-ProduceRegionalPriceComparison",
       "owner": "SsalddelApp",
       "source": "SsalddelApp/Components/Pages/ProduceRegionalPriceComparison.razor",
@@ -5302,6 +6786,20 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelApp-Components-Pages-QuickServiceIntroductionPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/QuickServiceIntroductionPage.razor",
+      "routes": [
+        "/quick",
+        "/services"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelApp-P08",
       "owner": "SsalddelApp",
       "source": "SsalddelApp/Components/Pages/ReconsignmentOrders.razor",
@@ -5346,6 +6844,59 @@
       "source": "SsalddelApp/Components/Pages/RegionalProductCandidatesPage.razor",
       "routes": [
         "/information/regional-products"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-RoleOrdererNewOrderPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/RoleOrdererNewOrderPage.razor",
+      "routes": [
+        "/workspace/orderer/new"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-RoleWorkspaceActionPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/RoleWorkspaceActionPage.razor",
+      "routes": [
+        "/workspace/{RoleKey}/action/{ActionKey}",
+        "/workspace/{RoleKey}/action"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-RoleWorkspaceLoginPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/RoleWorkspaceLoginPage.razor",
+      "routes": [
+        "/workspace-login/{RoleKey}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-RoleWorkspacePage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/RoleWorkspacePage.razor",
+      "routes": [
+        "/workspace/{RoleKey}"
       ],
       "hosts": [
         "SsalddelApp"
@@ -5455,6 +7006,23 @@
         "SsalddelApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P03/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-ShipperRequestMobileContextPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/ShipperRequestMobileContextPage.razor",
+      "routes": [
+        "/shipper/request/package",
+        "/shipper/request/pickup",
+        "/shipper/request/dropoff",
+        "/shipper/request/schedule",
+        "/shipper/request/vehicle"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -5667,6 +7235,19 @@
       "review": "InventoryOnly"
     },
     {
+      "id": "SsalddelApp-Components-Pages-WarehouseWorkspaceTaskPage",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/WarehouseWorkspaceTaskPage.razor",
+      "routes": [
+        "/workspace/warehouse/tasks/{Kind}/{ItemId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
       "id": "SsalddelApp-P05-3",
       "owner": "SsalddelApp",
       "source": "SsalddelApp/Components/Pages/WarehouseWorkStart.razor",
@@ -5690,6 +7271,33 @@
         "SsalddelApp"
       ],
       "detail": "docs/ProjectOverview/page-docs/SsalddelApp/SsalddelApp-P90/README.md",
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-분산이행Page",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/분산이행Page.razor",
+      "routes": [
+        "/workspace/{RoleKey}/distributed/{Screen}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "SsalddelApp-Components-Pages-활동정산Page",
+      "owner": "SsalddelApp",
+      "source": "SsalddelApp/Components/Pages/활동정산Page.razor",
+      "routes": [
+        "/activity-settlements",
+        "/activity-settlements/{AgreementId}"
+      ],
+      "hosts": [
+        "SsalddelApp"
+      ],
+      "detail": null,
       "review": "InventoryOnly"
     },
     {
@@ -6319,6 +7927,32 @@
       ],
       "detail": "docs/ProjectOverview/page-docs/WarehouseManagerApp/WarehouseManagerApp-P02-1/README.md",
       "review": "InventoryOnly"
+    },
+    {
+      "id": "WarehouseManagerApp-Components-Pages-분산거점Page",
+      "owner": "WarehouseManagerApp",
+      "source": "WarehouseManagerApp/Components/Pages/분산거점Page.razor",
+      "routes": [
+        "/workspace/warehouse/distributed/{Screen}"
+      ],
+      "hosts": [
+        "WarehouseManagerApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
+    },
+    {
+      "id": "WarehouseManagerApp-Components-Pages-분산거점로그인Page",
+      "owner": "WarehouseManagerApp",
+      "source": "WarehouseManagerApp/Components/Pages/분산거점로그인Page.razor",
+      "routes": [
+        "/distributed-login"
+      ],
+      "hosts": [
+        "WarehouseManagerApp"
+      ],
+      "detail": null,
+      "review": "InventoryOnly"
     }
   ],
   "retired": [
@@ -6356,13 +7990,13 @@
   "hosts": [
     {
       "host": "DriverApp",
-      "pageFiles": 25,
-      "routeDeclarations": 25
+      "pageFiles": 29,
+      "routeDeclarations": 30
     },
     {
       "host": "FDriverApp",
-      "pageFiles": 2,
-      "routeDeclarations": 2
+      "pageFiles": 11,
+      "routeDeclarations": 13
     },
     {
       "host": "HumanResourcesManagerApp",
@@ -6371,13 +8005,13 @@
     },
     {
       "host": "OrdererApp",
-      "pageFiles": 46,
-      "routeDeclarations": 49
+      "pageFiles": 52,
+      "routeDeclarations": 57
     },
     {
       "host": "RestaurantDeskApp",
-      "pageFiles": 12,
-      "routeDeclarations": 13
+      "pageFiles": 18,
+      "routeDeclarations": 21
     },
     {
       "host": "SellerApp",
@@ -6386,23 +8020,23 @@
     },
     {
       "host": "Ssalddel.Web.CommunityApp",
-      "pageFiles": 50,
-      "routeDeclarations": 58
+      "pageFiles": 70,
+      "routeDeclarations": 78
     },
     {
       "host": "Ssalddel.Web.DriverApp",
-      "pageFiles": 22,
-      "routeDeclarations": 23
+      "pageFiles": 25,
+      "routeDeclarations": 26
     },
     {
       "host": "Ssalddel.Web.OrdererApp",
-      "pageFiles": 32,
-      "routeDeclarations": 39
+      "pageFiles": 34,
+      "routeDeclarations": 41
     },
     {
       "host": "Ssalddel.Web.ShipperApp",
-      "pageFiles": 49,
-      "routeDeclarations": 51
+      "pageFiles": 52,
+      "routeDeclarations": 58
     },
     {
       "host": "Ssalddel.Web.UnityReviewApp",
@@ -6411,33 +8045,33 @@
     },
     {
       "host": "Ssalddel.Web.WarehouseApp",
-      "pageFiles": 36,
-      "routeDeclarations": 58
+      "pageFiles": 38,
+      "routeDeclarations": 60
     },
     {
       "host": "Ssalddel.WebApp",
-      "pageFiles": 156,
-      "routeDeclarations": 195
+      "pageFiles": 196,
+      "routeDeclarations": 246
     },
     {
       "host": "SsalddelAdmin",
-      "pageFiles": 50,
-      "routeDeclarations": 65
+      "pageFiles": 53,
+      "routeDeclarations": 69
     },
     {
       "host": "SsalddelAdminApp",
-      "pageFiles": 11,
-      "routeDeclarations": 12
+      "pageFiles": 20,
+      "routeDeclarations": 23
     },
     {
       "host": "SsalddelApp",
-      "pageFiles": 97,
-      "routeDeclarations": 104
+      "pageFiles": 138,
+      "routeDeclarations": 156
     },
     {
       "host": "WarehouseManagerApp",
-      "pageFiles": 48,
-      "routeDeclarations": 52
+      "pageFiles": 50,
+      "routeDeclarations": 54
     }
   ]
 }

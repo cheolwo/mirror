@@ -1,0 +1,43 @@
+{
+  "copiedUtc": "2026-10-19T12:12:59.1366228Z",
+  "source": "artifacts/local/cargo-dispatch-evidence/20261019-r76/ui-verify-r1-2026-10-19T12-09-07-858Z",
+  "screenshots": [
+    {
+      "width": 1280,
+      "file": "compatible-1280.png",
+      "sha256": "aa39bf9f1483ee21befb3c12d0ac040ee0ba0c6bde47dd36d140573836561680",
+      "scenario": "compatible"
+    },
+    {
+      "width": 1280,
+      "file": "overloaded-1280.png",
+      "sha256": "2381b2c7df37d5e7de880192b77aab3e8fe0201039d7bdbd4b251bef17e2649f",
+      "scenario": "overloaded"
+    },
+    {
+      "width": 1280,
+      "file": "missingall-1280.png",
+      "sha256": "efd54ae48a8214e00de9747d2e13e723702db77aff680110eea8a4671662ccac",
+      "scenario": "missingall"
+    },
+    {
+      "width": 390,
+      "file": "compatible-390.png",
+      "sha256": "3ee0f2f804823fbe557ac3a8c783e8cfd2db61514397d2c7d00f08b65638b906",
+      "scenario": "compatible"
+    },
+    {
+      "width": 390,
+      "file": "overloaded-390.png",
+      "sha256": "22ec3057bb2fad3564eb55097fca27e731a34df91e99b7bdf8f23b7a04caf9f5",
+      "scenario": "overloaded"
+    },
+    {
+      "width": 390,
+      "file": "missingall-390.png",
+      "sha256": "c8b7eb106d7f511816d9dcc8df4a7b7bc26628dbcc6ff6e84397d328866b1633",
+      "scenario": "missingall"
+    }
+  ],
+  "sourceResultSha256": "f8e7048bafd3caa7ff4cf0154c4929b3473055ca49891266f666d0b0283d7886"
+}

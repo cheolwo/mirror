@@ -1,0 +1,37 @@
+[
+  {
+    "file": "03-payment-pending-action.jpg",
+    "sha256": "5C724EE2CCCA3E84654B7C6F9FAAAB84F473ADDE993EF86403AC649830E89B96",
+    "capture": "CUA browser 1280x720; shared MAUI layout and shared UI; synthetic data; default preview theme",
+    "nativeWindow": false,
+    "serverLedger": false
+  },
+  {
+    "file": "04-input-after-menu.jpg",
+    "sha256": "EB60DD256B464AC7A6DA670149661CBD0EA3AD09117815B66415350708C8D688",
+    "capture": "CUA browser 1280x720; shared MAUI layout and shared UI; synthetic data; default preview theme",
+    "nativeWindow": false,
+    "serverLedger": false
+  },
+  {
+    "file": "05-request-list.jpg",
+    "sha256": "E7424BFF8A000874BD03BE3A46920D700F0896424D2C4E28AC3877D224D9CFE9",
+    "capture": "CUA browser 1280x720; shared MAUI layout and shared UI; synthetic data; default preview theme",
+    "nativeWindow": false,
+    "serverLedger": false
+  },
+  {
+    "file": "06-held-action.jpg",
+    "sha256": "4677251CC61FEC3651B662A291D5D24968F7D7D52CF5335995BCE2C909D3B954",
+    "capture": "CUA browser 1280x720; shared MAUI layout and shared UI; synthetic data; default preview theme",
+    "nativeWindow": false,
+    "serverLedger": false
+  },
+  {
+    "file": "07-transport-completed.jpg",
+    "sha256": "740D8594996E6CD939110EDDF96E521651394258B74522CE9A71B7AD55BD2376",
+    "capture": "CUA browser 1280x720; shared MAUI layout and shared UI; synthetic data; default preview theme",
+    "nativeWindow": false,
+    "serverLedger": false
+  }
+]

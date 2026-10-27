@@ -1,0 +1,23 @@
+[
+  {
+    "source": "artifacts\\local\\local-operations-r108\\mobile\\ui-02\\assigned-390.png",
+    "file": "assigned-390.png",
+    "sha256": "516F21B3A672DBD13DF14714B63A5BA5083CFC54F51C93B6B378A36AFE23D4CE",
+    "scope": "Actual product Razor and VM with synthetic in-process data. Browser 390px; no Android, native map, GPS or real camera verification.",
+    "review": "Root inspected pixels; synthetic fixture labels remain visible; no real customer data; copied without crop or alteration."
+  },
+  {
+    "source": "artifacts\\local\\local-operations-r108\\mobile\\ui-02\\evidence-ready-390.png",
+    "file": "evidence-ready-390.png",
+    "sha256": "58C8D9D005ACB082DE62C69EABB7527AE836380F98AE18CCB73311B077FAA0F0",
+    "scope": "Actual product Razor and VM with synthetic in-process data. Browser 390px; no Android, native map, GPS or real camera verification.",
+    "review": "Root inspected pixels; synthetic fixture labels remain visible; no real customer data; copied without crop or alteration."
+  },
+  {
+    "source": "artifacts\\local\\local-operations-r108\\mobile\\ui-02\\delivered-390.png",
+    "file": "delivered-390.png",
+    "sha256": "4D52C8162E4A4E363A0ADB92C9A45658E5CA81E506333F85F8221D7A59C71431",
+    "scope": "Actual product Razor and VM with synthetic in-process data. Browser 390px; no Android, native map, GPS or real camera verification.",
+    "review": "Root inspected pixels; synthetic fixture labels remain visible; no real customer data; copied without crop or alteration."
+  }
+]

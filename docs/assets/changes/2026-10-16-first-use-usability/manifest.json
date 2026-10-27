@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-16",
+  "baselineCommit": "fd55a1c4bca4dffb4752ac34de64c62d07caced3",
+  "renderKind": "isolated-local-Blazor-component",
+  "viewportCssPx": [
+    390,
+    844
+  ],
+  "fullAppOrApkValidation": false,
+  "dataKind": "fixture-only-no-real-customer-account-location",
+  "review": "Codex inspected these six PNG pixels; not a human usability or privacy certification. Region image is captured directly from the form, with no pixel editing.",
+  "sourceSnapshot": "artifacts/local/usability-review-20261016/source-state-final.json",
+  "sourceSnapshotSha256": "827a3115964b44c702091945dd9ec99c66e81f522be2e033fb5fe9a632eb10d9",
+  "browserResultSha256": "5bd560759e24bc726406de95b140e48e2e76a5440ace7d04bd98f8f570060547",
+  "previewBinarySha256": "a6d37bcd6c0c7d5d120d289335e5ab773728fdc43931baeccd1f6d06f8ac621b",
+  "sharedUiBinarySha256": "a1f26a550a3662eb53c48546c713bd0d2f7c5f3540d455649ad6def817f59eeb",
+  "captures": [
+    {
+      "file": "mart-off-390.png",
+      "sha256": "3e31e854a138e5bfb9e8092b00c45a050121f320c38a10cc678bd2d5eaa49b54",
+      "width": 390,
+      "height": 844,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/mart-off-390.png",
+      "region": "full-page"
+    },
+    {
+      "file": "mart-error-390.png",
+      "sha256": "1bade0be320060a9d3c427d5a010ff743256fc2e3c01e30dcf5227a8d8107a32",
+      "width": 390,
+      "height": 844,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/mart-error-390.png",
+      "region": "full-page"
+    },
+    {
+      "file": "mart-recovered-390.png",
+      "sha256": "14aba40562eac5e9e31d8950ac5ef088a17765ae020b5f6c1447952ee3b97e25",
+      "width": 390,
+      "height": 844,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/mart-recovered-390.png",
+      "region": "full-page"
+    },
+    {
+      "file": "driver-bank-390.png",
+      "sha256": "76860c8969de7355147e7074566b09d363a2e1dcb3abcd545d78a31345cf92c4",
+      "width": 390,
+      "height": 844,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/driver-bank-390.png",
+      "region": "full-page"
+    },
+    {
+      "file": "orderer-required-fields-390.png",
+      "sha256": "c9f0286e9c0b67b82b7441d4991058c9be1126ce69639c3756ec04ee1e9b1ac3",
+      "width": 356,
+      "height": 491,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/orderer-required-fields-390.png",
+      "region": ".food-order-composer__form"
+    },
+    {
+      "file": "orderer-readiness-390.png",
+      "sha256": "f17d8148cdf5f274c7a8466e6ff8dce7fb5077dd2aa66b9860389f65714283c2",
+      "width": 390,
+      "height": 2823,
+      "metadataKeys": [],
+      "source": "artifacts/local/usability-review-20261016/browser/orderer-readiness-390.png",
+      "region": "full-page"
+    }
+  ]
+}

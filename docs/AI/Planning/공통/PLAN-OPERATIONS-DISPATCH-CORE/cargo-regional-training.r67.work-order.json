@@ -1,0 +1,25 @@
+{
+  "schema": "cargo-regional-training-work-order.v1",
+  "planId": "PLAN-OPERATIONS-DISPATCH-CORE",
+  "revision": "dispatch-core.r67",
+  "status": "ApprovedInCurrentThread",
+  "authorization": "2026-10-19 user accepted the proposed legal-dong cargo training preparation and desktop human review workflow in the current development conversation.",
+  "scope": "SmallQuick synthetic case preparation, existing cargo rule comparison, optional loopback Ollama comparison, immutable dataset fingerprints, durable human feedback, isolated holdout and approved-only export, shared admin desktop review component and local-only host.",
+  "assumption": "SmallQuick first; vehicle freight remains a distinct future task profile. No production geographic policy changes.",
+  "writePaths": [
+    "Ssalddel.Contracts/Admin/DispatchTraining/CargoRegionalTrainingDtos.cs",
+    "SsalddelAdmin/Components/DispatchTraining/",
+    "eng/local-dispatch-ai/cargo-regional-training/",
+    "eng/CargoRegionalTrainingReview/",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-regional-training*",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/ProjectOverview/page-docs/cargo-regional-training-review-r113.md",
+    "docs/Changes/2026-10-19-cargo-regional-training-r113.md",
+    "docs/assets/changes/2026-10-19-cargo-regional-training-r113/"
+  ],
+  "excluded": ["model installation", "weight training", "production dispatch", "operational DB", "worker activation", "payment", "APK", "Unity", "video analysis", "commit", "push"],
+  "humanReviewInitialState": "Pending",
+  "weightTrainingStarted": false,
+  "operationalUseApproved": false
+}

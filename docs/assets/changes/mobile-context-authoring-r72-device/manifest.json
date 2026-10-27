@@ -1,0 +1,45 @@
+{
+  "schema": "r72-reviewed-device-form-captures.v1",
+  "apkVersion": "0.1.200",
+  "apkSha256": "1b9412776646be35e7dde3e0435cab03533d8fbd9fde60c16f5b71654473b476",
+  "images": [
+    {
+      "file": "01-cargo.png",
+      "caption": "물품 입력",
+      "sha256": "a9da04c828b79146a42ba25c78892caf8452d9baf40583985492900cc50c35d9",
+      "sourceCapture": "device-01-cargo-200-r2.png",
+      "physicalAndroidScreenshot": true,
+      "privacyVisuallyReviewed": true,
+      "onlySyntheticFormValues": true
+    },
+    {
+      "file": "02-package.png",
+      "caption": "포장·중량 입력",
+      "sha256": "fa2969c761d6dd645c543deb8b17783290cb6a82a3c9802ffac6407efc2c0ac1",
+      "sourceCapture": "device-02-package-200-r4-volume.png",
+      "physicalAndroidScreenshot": true,
+      "privacyVisuallyReviewed": true,
+      "onlySyntheticFormValues": true
+    },
+    {
+      "file": "03-pickup.png",
+      "caption": "출발지 입력",
+      "sha256": "82f7bd4c65403dc8bd1d508a9bd040239790da00edc6e70e59a82b46602000f3",
+      "sourceCapture": "device-entry-pickup-200-r4-volume.png",
+      "physicalAndroidScreenshot": true,
+      "privacyVisuallyReviewed": true,
+      "onlySyntheticFormValues": true
+    },
+    {
+      "file": "05-schedule.png",
+      "caption": "시간 입력",
+      "sha256": "99c21d7c5396b09b2175eeb5530f0d89cb25abd1bce3f6c4ea7b7d6d808a3ce4",
+      "sourceCapture": "device-entry-schedule-200-r4-volume.png",
+      "physicalAndroidScreenshot": true,
+      "privacyVisuallyReviewed": true,
+      "onlySyntheticFormValues": true
+    }
+  ],
+  "noCameraFramesOrMapsPromoted": true,
+  "capturesAreNotAllOneCase": "01 is original r2; other frames are the new explicit-volume case. Both use same APK200."
+}

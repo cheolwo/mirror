@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-19",
+  "scope": "Actual common Razor panels and CargoScreen in isolated loopback preview with synthetic in-memory data",
+  "scenarios": 14,
+  "qualificationScenarios": 12,
+  "cargoViewportScenarios": 2,
+  "cargoChecks": 4,
+  "widths": [
+    320,
+    390,
+    1280
+  ],
+  "pageErrors": 0,
+  "externalOrBusinessApiRequests": 0,
+  "sourceEvidence": "artifacts/local/freight-registration-ui-r71-final-20261019-123648/result.json",
+  "sourceEvidenceSha256": "AA76BC2F71E4E4B0B0A46FB1CD158E02DDD5308AE9F0497CD3FCF15560D4BEF1",
+  "cargoSourceEvidence": "artifacts/local/cargo-registration-fields-r71-r2-20261019-123855/result.json",
+  "cargoSourceEvidenceSha256": "8DC671A2EDF0F57667BA1856B2E64BC5368DD7D17D2BBBB9A2F6306DAD8DB29D",
+  "previousEvidence": [
+    {
+      "sourceEvidence": "artifacts/local/freight-registration-ui-r71-r3-20261019-122623/result.json",
+      "sourceEvidenceSha256": "AA76BC2F71E4E4B0B0A46FB1CD158E02DDD5308AE9F0497CD3FCF15560D4BEF1",
+      "hostAssemblySha256": "86EEAEDB3799090DC509FE141B77DE1E3C9C585BBE478E0C0345C2C57D04CE6A",
+      "commonUiAssemblySha256": "16386F6398EFFC5AD4B1555CC315A0E742EC36EE5F1A64C6551DEC06378EEBE9"
+    }
+  ],
+  "hostAssemblySha256": "C530D791D7D2E94D5D3D5DE563038834034F5B6DE69834B9A9468DF3AA36FE7E",
+  "commonUiAssemblySha256": "7AB88B137364A26F469851012A93BD0090C97B7C8F6C2C90603F07228321F731",
+  "representativeImages": [
+    {
+      "file": "driver-390.png",
+      "sha256": "2E875B34C3FFCCBE1283422C67B79BD7F691C5AF3953477A100FEC4C885CEDC4",
+      "length": 100283,
+      "visuallyReviewed": true
+    },
+    {
+      "file": "admin-1280.png",
+      "sha256": "18F988537448078A010C99467E6F939D92EF410F49FCF3BE0883EF087AAFEFE6",
+      "length": 125338,
+      "visuallyReviewed": true
+    },
+    {
+      "file": "platform-1280.png",
+      "sha256": "CD16D3CCC7EB07C2B765093A4F1BC0F05F9BCD872C4575DF4A710173CD1510E8",
+      "length": 46420,
+      "visuallyReviewed": true
+    },
+    {
+      "file": "error-390.png",
+      "sha256": "CB1320D38F0413CA0C7725576A76D89AA6BDE1CF3BF14E90CA2463B6B1BDC588",
+      "length": 17099,
+      "visuallyReviewed": true
+    },
+    {
+      "file": "cargo-input-390.png",
+      "sha256": "C3B90A23E626DE46EA454EC616BACBCBE36EB2743B215899AF8CF9AD764D44B7",
+      "length": 29463,
+      "visuallyReviewed": true
+    },
+    {
+      "file": "cargo-input-1280.png",
+      "sha256": "1612AB626EAD338AFBC335662ADA2B00BF01DEF837CFCFB17A111BA7AF9D8118",
+      "length": 49479,
+      "visuallyReviewed": true
+    }
+  ],
+  "cargoCaptureNote": "390px screenshot scrolls the existing inner main content to the gross-weight field; product layout and styles are unchanged.",
+  "doesNotProve": [
+    "Real document verification",
+    "Authority registration",
+    "Operational activation",
+    "APK installation",
+    "Phone execution",
+    "External push delivery",
+    "Real order submission"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "source": "artifacts/local/cargo-dispatch-evidence/20261019-r76/ui-model-result-r1-2026-10-19T12-13-01-096Z",
+  "resultSha256": "ed01715cdaeab5c5c45f6a1f42fe3d9f8cb703f6dbeca2dbdeb3a0318b0ffc3c",
+  "expected": "timeout",
+  "humanApprovals": 0,
+  "sourceChanges": 0,
+  "copiedUtc": "2026-10-19T12:16:18.9576034Z",
+  "screenshots": [
+    {
+      "file": "overloaded-model-timeout-1280.png",
+      "sha256": "ed1b0c7dfc2cb3d3f7d34df4c70c1b703db68f10e36c0502c315387c2b62f763",
+      "kind": "full-page",
+      "width": 1280
+    },
+    {
+      "file": "overloaded-model-timeout-status-1280.png",
+      "sha256": "1c3fb58ff71395305e26c0b5ce9d2f4bcd3f526ab73e9527d95098e513a4e0bf",
+      "kind": "judgment-and-review",
+      "width": 1280
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "file": "01-initial.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\01-initial.jpg",
+    "sha256": "2042a71db69c9b13f2291c220633400ad7605d4106ba4c2b43456cf20a600655",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "03-receiving-on.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\03-receiving-on.jpg",
+    "sha256": "5abd26ffd95ecd4d574164115aa4f6145c8acb31a808c89eca3e855915e051d1",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "04-pickup-photo-required.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\04-pickup-photo-required.jpg",
+    "sha256": "0f7807a193e0eafbfe65ff807d4aef80738dec62bf7a2fdf786fbf9e6b554c50",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "05-dropoff-completed.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\05-dropoff-completed.jpg",
+    "sha256": "f71340111eee943db212680d71f2ddb3a5117da1ef218046438b17dc99990cd9",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "06-location-denied.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\06-location-denied.jpg",
+    "sha256": "d7ac23d067cddaf4e3359df374dc7114c7b25215ce3ffb73aa99915dc542773a",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "07-start-response-lost.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\07-start-response-lost.jpg",
+    "sha256": "ca9b139cf8f27993ee4513cbb5bd31e9eb68801e5b76487de7336ad5cf1ed54b",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "08-start-recovered.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\08-start-recovered.jpg",
+    "sha256": "b5660f61f5b4b79464bd6362b7351b241da5a66e58c254fb709784a6bb52ecc0",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  },
+  {
+    "file": "09-active-stop-blocked.jpg",
+    "source": "artifacts\\local\\quick-usability-r110\\cua\\09-active-stop-blocked.jpg",
+    "sha256": "e1f676ad65c924b6f815725038366d828cdaf40c23ad08ec8714dc10a9c5a4dd",
+    "scope": "Actual common UI in memory-only local preview; desktop browser, not Android, real map, real GPS or actual dispatch",
+    "review": "Root inspected pixels and accessibility state. Synthetic actors/roads. Unchanged bytes; no crop or image edit."
+  }
+]

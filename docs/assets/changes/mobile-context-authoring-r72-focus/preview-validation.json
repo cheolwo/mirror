@@ -1,0 +1,243 @@
+{
+  "base": "http://127.0.0.1:5594",
+  "nestedScroll": false,
+  "startedAtUtc": "2026-10-19T05:39:18.756Z",
+  "completedAtUtc": "2026-10-19T05:39:27.956Z",
+  "inputHashes": {
+    "RoleWorkspacePreview.dll": "10bacb7fa57efef38af6fb8342426c0b9ffffbc28bd94f5d4a4f76c9a673b644",
+    "Ssalddel.Ui.Common.dll": "048b4f3470e68632d9137d8f396e724091d7fae4da38ebcf92656283fa3839b3"
+  },
+  "scriptSha256": "81277f81a9b6afd63b71ff3c99d4a945dc7f7e698563221a0c6b5ce3db86c959",
+  "scope": "Common Razor eight-context preview with scoped in-memory draft only; no API, database, real consent, submission or device.",
+  "checks": [
+    {
+      "width": 320,
+      "check": "eight-contexts-live-next-validation-back-retention-correction-links-and-no-submission"
+    },
+    {
+      "width": 320,
+      "check": "desktop-legacy-four-screen-or-narrow-mobile-entry"
+    },
+    {
+      "width": 390,
+      "check": "eight-contexts-live-next-validation-back-retention-correction-links-and-no-submission"
+    },
+    {
+      "width": 390,
+      "check": "desktop-legacy-four-screen-or-narrow-mobile-entry"
+    },
+    {
+      "width": 1280,
+      "check": "eight-contexts-live-next-validation-back-retention-correction-links-and-no-submission"
+    },
+    {
+      "width": 1280,
+      "check": "desktop-legacy-four-screen-or-narrow-mobile-entry"
+    }
+  ],
+  "errors": [],
+  "blocked": [],
+  "scrollTransitions": [],
+  "captures": [
+    {
+      "width": 320,
+      "step": "cargo",
+      "file": "cargo-320.png",
+      "imageWidth": 320,
+      "imageHeight": 957,
+      "sha256": "24170bee911cd1df16a6d49936673bbfa575899467c84c793d998595ccf25892"
+    },
+    {
+      "width": 320,
+      "step": "package",
+      "file": "package-320.png",
+      "imageWidth": 320,
+      "imageHeight": 998,
+      "sha256": "4bb93c4759d000095428cc0fd331771a78a80b3d74e3e2b3df5d9dc1f51c2ec1"
+    },
+    {
+      "width": 320,
+      "step": "pickup",
+      "file": "pickup-320.png",
+      "imageWidth": 320,
+      "imageHeight": 948,
+      "sha256": "8af1d1949cf300af11a21000d83af86e1be6e24c568ab93d5de21a2ce2790f3b"
+    },
+    {
+      "width": 320,
+      "step": "dropoff",
+      "file": "dropoff-320.png",
+      "imageWidth": 320,
+      "imageHeight": 928,
+      "sha256": "05f80f71c339ebc4da6e5a8fd5b8175efb6e464da87557aab30263f7f7c8b612"
+    },
+    {
+      "width": 320,
+      "step": "schedule",
+      "file": "schedule-320.png",
+      "imageWidth": 320,
+      "imageHeight": 900,
+      "sha256": "fb8548f518d9b1b09f5a2f649854f7128e844afdf079d900a5f80e338ab3ce1e"
+    },
+    {
+      "width": 320,
+      "step": "vehicle",
+      "file": "vehicle-320.png",
+      "imageWidth": 320,
+      "imageHeight": 1786,
+      "sha256": "eeed982201302602145a1661421492f94fb405eaea0aab259ce7d87fcef5cf68"
+    },
+    {
+      "width": 320,
+      "step": "payment",
+      "file": "payment-320.png",
+      "imageWidth": 320,
+      "imageHeight": 2065,
+      "sha256": "f8d55afcf98dfae304e78ba51012da7c8f003e822e01b2a0bae3cd34364b94b8"
+    },
+    {
+      "width": 320,
+      "step": "review",
+      "file": "review-320.png",
+      "imageWidth": 320,
+      "imageHeight": 1671,
+      "sha256": "11595471f68b661aab31625fe466426282a7593e5c5317bd467cb6ffcb4b8f85"
+    },
+    {
+      "width": 390,
+      "step": "cargo",
+      "file": "cargo-390.png",
+      "imageWidth": 390,
+      "imageHeight": 917,
+      "sha256": "d51541d43cd60811038142b4df828e8d926f5faa85166fc4fe28351eede57ffb"
+    },
+    {
+      "width": 390,
+      "step": "package",
+      "file": "package-390.png",
+      "imageWidth": 390,
+      "imageHeight": 978,
+      "sha256": "27a8de848d6a5693164ad08d8b9c749ae92bd9198a79dc5902a61ef4bedf2d54"
+    },
+    {
+      "width": 390,
+      "step": "pickup",
+      "file": "pickup-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "42fc887af9423f186433b018d0c5b5d44841419f8ecd093cfacdff00a7449c44"
+    },
+    {
+      "width": 390,
+      "step": "dropoff",
+      "file": "dropoff-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "624e139afd318e0405b1218116bc03af51c4a3347d6c1a852701ba7ae0b87eb9"
+    },
+    {
+      "width": 390,
+      "step": "schedule",
+      "file": "schedule-390.png",
+      "imageWidth": 390,
+      "imageHeight": 900,
+      "sha256": "4bdfaf0210c66b868bbb5fb4f3fac74ffb99c37c7918924f5acf225d2b552b96"
+    },
+    {
+      "width": 390,
+      "step": "vehicle",
+      "file": "vehicle-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1688,
+      "sha256": "81344877205f4ce6be82406751eda220e8620fd8f0b803b692c6d481a7a8d742"
+    },
+    {
+      "width": 390,
+      "step": "payment",
+      "file": "payment-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1789,
+      "sha256": "108eea9dc1ffad479439798f55c211f5af8565cadcac51dab257a4ad71c02f76"
+    },
+    {
+      "width": 390,
+      "step": "review",
+      "file": "review-390.png",
+      "imageWidth": 390,
+      "imageHeight": 1483,
+      "sha256": "38cbc78dee2f3e655e60362de6fd8837715a9d1443852028ef4962837979a2b2"
+    },
+    {
+      "width": 1280,
+      "step": "cargo",
+      "file": "cargo-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 900,
+      "sha256": "bbd567ea078e43c2d60d4903e5fc1c5b1af872f6d7cc8fe4ad8d26467735e56f"
+    },
+    {
+      "width": 1280,
+      "step": "package",
+      "file": "package-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 900,
+      "sha256": "f37533247c35ce6ec6c152e4d18c900db4f1867fa8f19383573fb778bb15c214"
+    },
+    {
+      "width": 1280,
+      "step": "pickup",
+      "file": "pickup-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 900,
+      "sha256": "f2fcfc23f2a240a4a851a8e99dd3f2cdaffe0578ed6186ca9e1c0dbb0b4d5202"
+    },
+    {
+      "width": 1280,
+      "step": "dropoff",
+      "file": "dropoff-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 900,
+      "sha256": "bac39f689c59166bd7a35ff3e7c62618eebcc150659b0866c08a4c15f1c21a9c"
+    },
+    {
+      "width": 1280,
+      "step": "schedule",
+      "file": "schedule-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 900,
+      "sha256": "41c2a23f2a9fab45d6f0e35d8ac3964ede0c9e0ebd706d8cd2433cecc609d1b6"
+    },
+    {
+      "width": 1280,
+      "step": "vehicle",
+      "file": "vehicle-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 1196,
+      "sha256": "29c4e1ff7ab3fd0629c1a8729d27ba2b0a039567f1c9235931a8f21d62da6c86"
+    },
+    {
+      "width": 1280,
+      "step": "payment",
+      "file": "payment-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 1216,
+      "sha256": "da3e73471ae9fc03dca249cfedf2d73c1c252e444d2601e8f03b630c6beba5ab"
+    },
+    {
+      "width": 1280,
+      "step": "review",
+      "file": "review-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 1366,
+      "sha256": "268ae88dbdb92ff870b26eec15465af7a7a7fbec5ea753ab8d1c16999c2a3c64"
+    },
+    {
+      "width": 1280,
+      "step": "desktop",
+      "file": "desktop-1280.png",
+      "imageWidth": 1280,
+      "imageHeight": 6097,
+      "sha256": "b976ba06e2d9d9f806208cf21953a7959ddbab1f0f16f1ef71c00079d793e3c2"
+    }
+  ]
+}

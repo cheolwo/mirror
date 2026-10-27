@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "cargo-phone-sanitized-final-proof.v1",
+  "verifiedAtUtc": "2026-10-21T10:23:15.186921+00:00",
+  "synthetic": true,
+  "requestId": "d828af66-2803-4c14-2415-a56ddbb25fcc",
+  "transportId": 9,
+  "sourceProofFile": ".private/api-setup/proofs/phone-02-20261021T102028343867Z.json",
+  "sourceProofSha256": "bdc4a4ec1d34aacb555a0af7a807abaaf7a496311163a73e7c7dec76cc663bd2",
+  "sql": {
+    "state": "인수완료",
+    "stage": 90,
+    "exposure": 900,
+    "round": 1,
+    "frozenPayout": 6200.0,
+    "communityState": "완료",
+    "updatedAt": "2026-10-21 10:17:24.318446"
+  },
+  "sqlSingleRequestBindingVerified": true,
+  "sameSyntheticDriverConfirmedAndPerformed": true,
+  "mongo": {
+    "singleLedgerFound": true,
+    "state": "완료",
+    "stepKey": "인수완료",
+    "revision": {
+      "high": 0,
+      "low": 8,
+      "unsigned": false
+    },
+    "projectionState": "완료",
+    "matchesSql": true
+  },
+  "actualCargoAI": {
+    "status": "Applied",
+    "auditEventId": 19,
+    "auditPayloadSha256": "23b025bf564a52774abca2a2721662da3448d1120bb0307e13f132a1a4ec18a6",
+    "recommendationStarted": true,
+    "canonicalAppliedProofMatches": true,
+    "fallbackUsed": false
+  },
+  "photos": [
+    {
+      "photoKind": "pickup-complete-photo",
+      "bytes": 2876195,
+      "sha256": "dc1307a9cfa0015737efd1f8956ca666ce9fdaee0bbab1203343b3e2e159b6eb",
+      "bindingVerified": true,
+      "completionLinked": true,
+      "privateStorageVerified": true,
+      "storageBytesMatchReceipt": true,
+      "fileSignatureIsPhoto": true,
+      "sourceProofMatches": true
+    },
+    {
+      "photoKind": "dropoff-complete-photo",
+      "bytes": 2893133,
+      "sha256": "02c28e53a9333e3aab3b684e0c276ebef7e9bc63f6e7cc8ac6d686577ef96446",
+      "bindingVerified": true,
+      "completionLinked": true,
+      "privateStorageVerified": true,
+      "storageBytesMatchReceipt": true,
+      "fileSignatureIsPhoto": true,
+      "sourceProofMatches": true
+    }
+  ],
+  "distinctPhotoHashes": true,
+  "dbMutationsPerformed": false,
+  "acceptPickupCompleteCommandsPerformedByThisVerifier": false,
+  "physicalCameraCaptureVerifiedByThisVerifier": false,
+  "physicalUiEvidenceRecordedSeparately": true,
+  "actualGoodsDeliveredVerified": false,
+  "actualPaymentVerified": false,
+  "actualFcmVerified": false,
+  "modelWeightsTrained": false
+}

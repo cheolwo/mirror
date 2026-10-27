@@ -2,7 +2,7 @@
 
 이 파일은 `eng/page-docs/catalog.py --write`로 생성한다. 소스와 MSBuild Content/RazorComponent 평가 결과이며 실제 사용자 조작·캡처·출시 완료를 뜻하지 않는다.
 
-물리 페이지 파일 **466개**, route 선언 **538개**. 별칭 route는 같은 페이지에 묶고, 여러 호스트에서 재사용하는 소스는 한 번만 센다.
+물리 페이지 파일 **587개**, route 선언 **691개**. 별칭 route는 같은 페이지에 묶고, 여러 호스트에서 재사용하는 소스는 한 번만 센다.
 
 기존 P ID와 캡처는 보존한다. 새 파일에는 경로 기반 ID를 부여하고 `page-identities.json`에 고정한다. 과거 문서가 있다는 사실과 이번 페이지→코드→DB 상세 검토 완료는 별개다.
 
@@ -10,23 +10,23 @@
 
 | 호스트 | 페이지 파일 | route 선언 |
 | --- | ---: | ---: |
-| `DriverApp` | 25 | 25 |
-| `FDriverApp` | 2 | 2 |
+| `DriverApp` | 29 | 30 |
+| `FDriverApp` | 11 | 13 |
 | `HumanResourcesManagerApp` | 1 | 1 |
-| `OrdererApp` | 46 | 49 |
-| `RestaurantDeskApp` | 12 | 13 |
+| `OrdererApp` | 52 | 57 |
+| `RestaurantDeskApp` | 18 | 21 |
 | `SellerApp` | 13 | 13 |
-| `Ssalddel.Web.CommunityApp` | 50 | 58 |
-| `Ssalddel.Web.DriverApp` | 22 | 23 |
-| `Ssalddel.Web.OrdererApp` | 32 | 39 |
-| `Ssalddel.Web.ShipperApp` | 49 | 51 |
+| `Ssalddel.Web.CommunityApp` | 70 | 78 |
+| `Ssalddel.Web.DriverApp` | 25 | 26 |
+| `Ssalddel.Web.OrdererApp` | 34 | 41 |
+| `Ssalddel.Web.ShipperApp` | 52 | 58 |
 | `Ssalddel.Web.UnityReviewApp` | 3 | 5 |
-| `Ssalddel.Web.WarehouseApp` | 36 | 58 |
-| `Ssalddel.WebApp` | 156 | 195 |
-| `SsalddelAdmin` | 50 | 65 |
-| `SsalddelAdminApp` | 11 | 12 |
-| `SsalddelApp` | 97 | 104 |
-| `WarehouseManagerApp` | 48 | 52 |
+| `Ssalddel.Web.WarehouseApp` | 38 | 60 |
+| `Ssalddel.WebApp` | 196 | 246 |
+| `SsalddelAdmin` | 53 | 69 |
+| `SsalddelAdminApp` | 20 | 23 |
+| `SsalddelApp` | 138 | 156 |
+| `WarehouseManagerApp` | 50 | 54 |
 
 호스트 표는 컴파일 입력이다. 기능 플래그·인증·실행 모드의 실제 접근 가능 여부는 각 화면에서 확인한다. `eng/web-role-app`의 공통 진입 화면은 제품 역할 호스트에 포함되므로 목록에 남긴다.
 
@@ -48,9 +48,12 @@
 | `DriverApp-P03` | `/driver/reservations` | [예약Page.razor](../../../DriverApp/Components/Pages/Driver/04_Reservation/예약Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P03/README.md) |
 | `DriverApp-P02` | `/driver/menu` | [메뉴Page.razor](../../../DriverApp/Components/Pages/Driver/04_Settings/메뉴Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P02/README.md) |
 | `DriverApp-P15-1` | `/driver/notifications/settings` | [알림설정Page.razor](../../../DriverApp/Components/Pages/Driver/04_Settings/알림설정Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P15-1/README.md) |
+| `DriverApp-Components-Pages-Driver-04_Settings-운송자격Page` | `/driver/qualification` | [운송자격Page.razor](../../../DriverApp/Components/Pages/Driver/04_Settings/운송자격Page.razor) | DriverApp | 미검토 |
 | `DriverApp-P06-1` | `/driver/work/settings` | [운행설정Page.razor](../../../DriverApp/Components/Pages/Driver/04_Settings/운행설정Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P06-1/README.md) |
 | `DriverApp-P02-1` | `/driver/settings/views` | [화면설정Page.razor](../../../DriverApp/Components/Pages/Driver/04_Settings/화면설정Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P02-1/README.md) |
 | `DriverApp-P14-2` | `/driver/account/bank` | [계좌정보Page.razor](../../../DriverApp/Components/Pages/Driver/05_Settlement/계좌정보Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P14-2/README.md) |
+| `DriverApp-Components-Pages-Driver-05_Settlement-운송대금Page` | `/driver/payouts` | [운송대금Page.razor](../../../DriverApp/Components/Pages/Driver/05_Settlement/운송대금Page.razor) | DriverApp | 미검토 |
+| `DriverApp-Components-Pages-Driver-05_Settlement-운송대금상세Page` | `/driver/payouts/{TransportId:long}` | [운송대금상세Page.razor](../../../DriverApp/Components/Pages/Driver/05_Settlement/운송대금상세Page.razor) | DriverApp | 미검토 |
 | `DriverApp-P14` | `/driver/settlements/current-month` | [월정산Page.razor](../../../DriverApp/Components/Pages/Driver/05_Settlement/월정산Page.razor) | DriverApp | [페이지→코드→DB](DriverApp/DriverApp-P14/README.md) |
 | `DriverApp-P14-1` | `/driver/settlements/info` | [이용료안내Page.razor](../../../DriverApp/Components/Pages/Driver/05_Settlement/이용료안내Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P14-1/README.md) |
 | `DriverApp-P15` | `/driver/notifications` | [알림함Page.razor](../../../DriverApp/Components/Pages/Driver/06_Notification/알림함Page.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P15/README.md) |
@@ -59,13 +62,23 @@
 | `DriverApp-P07` | `/driver/home` | [Home.razor](../../../DriverApp/Components/Pages/Home.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P07/README.md) |
 | `DriverApp-P01` | `/login` | [Login.razor](../../../DriverApp/Components/Pages/Login.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P01/README.md) |
 | `DriverApp-P00` | `/` | [RootRedirect.razor](../../../DriverApp/Components/Pages/RootRedirect.razor) | DriverApp | [이전 화면 문서](DriverApp/DriverApp-P00/README.md) |
+| `DriverApp-Components-Pages-분산배송Page` | `/workspace/cargo-driver/distributed/{Screen}`<br>`/driver/distributed/{Screen}` | [분산배송Page.razor](../../../DriverApp/Components/Pages/분산배송Page.razor) | DriverApp | 미검토 |
 
 ## FDriverApp
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `FDriverApp-Components-Pages-AgreedRateReturn` | `/rates-return` | [AgreedRateReturn.razor](../../../FDriverApp/Components/Pages/AgreedRateReturn.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-AgreedRateTable` | `/agreed-rates` | [AgreedRateTable.razor](../../../FDriverApp/Components/Pages/AgreedRateTable.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-CommerceDisputesPage` | `/commerce/disputes`<br>`/commerce/disputes/{CaseId}` | [CommerceDisputesPage.razor](../../../FDriverApp/Components/Pages/CommerceDisputesPage.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-CommerceNoticesPage` | `/commerce/notices` | [CommerceNoticesPage.razor](../../../FDriverApp/Components/Pages/CommerceNoticesPage.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-CommercePrivacyPage` | `/commerce/privacy`<br>`/commerce/privacy/{CaseId}` | [CommercePrivacyPage.razor](../../../FDriverApp/Components/Pages/CommercePrivacyPage.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-CommerceSellerPage` | `/commerce/seller` | [CommerceSellerPage.razor](../../../FDriverApp/Components/Pages/CommerceSellerPage.razor) | FDriverApp | 미검토 |
 | `FDriverApp-Components-Pages-FDriverHome` | `/` | [FDriverHome.razor](../../../FDriverApp/Components/Pages/FDriverHome.razor) | FDriverApp | 미검토 |
 | `FDriverApp-Components-Pages-FDriverWorkspaceLaunchPage` | `/food-delivery/open/{Focus}` | [FDriverWorkspaceLaunchPage.razor](../../../FDriverApp/Components/Pages/FDriverWorkspaceLaunchPage.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-SupportLoginPage` | `/driver-support-login` | [SupportLoginPage.razor](../../../FDriverApp/Components/Pages/SupportLoginPage.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-WorkPreferences` | `/work-preferences` | [WorkPreferences.razor](../../../FDriverApp/Components/Pages/WorkPreferences.razor) | FDriverApp | 미검토 |
+| `FDriverApp-Components-Pages-WorkPreferencesReturn` | `/work-preferences-return` | [WorkPreferencesReturn.razor](../../../FDriverApp/Components/Pages/WorkPreferencesReturn.razor) | FDriverApp | 미검토 |
 
 ## HumanResourcesManagerApp
 
@@ -78,6 +91,10 @@
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
 | `OrdererApp-P03` | `/cargo` | [CargoOrder.razor](../../../OrdererApp/Components/Pages/CargoOrder.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P03/README.md) |
+| `OrdererApp-Components-Pages-CommerceDisputesPage` | `/commerce/disputes`<br>`/commerce/disputes/{CaseId}` | [CommerceDisputesPage.razor](../../../OrdererApp/Components/Pages/CommerceDisputesPage.razor) | OrdererApp | 미검토 |
+| `OrdererApp-Components-Pages-CommerceNoticesPage` | `/commerce/notices` | [CommerceNoticesPage.razor](../../../OrdererApp/Components/Pages/CommerceNoticesPage.razor) | OrdererApp | 미검토 |
+| `OrdererApp-Components-Pages-CommercePrivacyPage` | `/commerce/privacy`<br>`/commerce/privacy/{CaseId}` | [CommercePrivacyPage.razor](../../../OrdererApp/Components/Pages/CommercePrivacyPage.razor) | OrdererApp | 미검토 |
+| `OrdererApp-Components-Pages-CommerceSellerPage` | `/commerce/seller` | [CommerceSellerPage.razor](../../../OrdererApp/Components/Pages/CommerceSellerPage.razor) | OrdererApp | 미검토 |
 | `OrdererApp-Components-Pages-FoodOrderHistory` | `/orders/food` | [FoodOrderHistory.razor](../../../OrdererApp/Components/Pages/FoodOrderHistory.razor) | OrdererApp | 미검토 |
 | `OrdererApp-P04` | `/food` | [FoodOrderHome.razor](../../../OrdererApp/Components/Pages/FoodOrderHome.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P04/README.md) |
 | `OrdererApp-Components-Pages-GroupExportLedger` | `/trade/group-export` | [GroupExportLedger.razor](../../../OrdererApp/Components/Pages/GroupExportLedger.razor) | OrdererApp | 미검토 |
@@ -114,6 +131,7 @@
 | `OrdererApp-P01` | `/` | [Home.razor](../../../OrdererApp/Components/Pages/Home.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P01/README.md) |
 | `OrdererApp-Components-Pages-IndividualExportLedger` | `/trade/individual-export`<br>`/orders/{OrderLedgerId}/individual-export` | [IndividualExportLedger.razor](../../../OrdererApp/Components/Pages/IndividualExportLedger.razor) | OrdererApp | 미검토 |
 | `OrdererApp-Components-Pages-IndividualImportLedger` | `/trade/individual-import`<br>`/orders/{OrderLedgerId}/individual-import` | [IndividualImportLedger.razor](../../../OrdererApp/Components/Pages/IndividualImportLedger.razor) | OrdererApp | 미검토 |
+| `OrdererApp-Components-Pages-Login` | `/login` | [Login.razor](../../../OrdererApp/Components/Pages/Login.razor) | OrdererApp | 미검토 |
 | `OrdererApp-P04-2` | `/food/mart` | [MartOrder.razor](../../../OrdererApp/Components/Pages/MartOrder.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P04-2/README.md) |
 | `OrdererApp-P04-3` | `/food/mart/order`<br>`/food/mart/order/{ProductId:long}` | [MartOrderRequest.razor](../../../OrdererApp/Components/Pages/MartOrderRequest.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P04-3/README.md) |
 | `OrdererApp-P04-2-1` | `/food/mart/products/{ProductId:long}` | [MartProductDetail.razor](../../../OrdererApp/Components/Pages/MartProductDetail.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P04-2-1/README.md) |
@@ -123,11 +141,17 @@
 | `OrdererApp-P05` | `/orders` | [OrderHistory.razor](../../../OrdererApp/Components/Pages/OrderHistory.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P05/README.md) |
 | `OrdererApp-Components-Pages-ProducePriceComparison` | `/group-purchase/produce-prices` | [ProducePriceComparison.razor](../../../OrdererApp/Components/Pages/ProducePriceComparison.razor) | OrdererApp | 미검토 |
 | `OrdererApp-P04-1` | `/food/restaurants` | [RestaurantOrder.razor](../../../OrdererApp/Components/Pages/RestaurantOrder.razor) | OrdererApp | [이전 화면 문서](OrdererApp/OrdererApp-P04-1/README.md) |
+| `OrdererApp-Components-Pages-분산주문Page` | `/workspace/orderer/distributed/{Screen}` | [분산주문Page.razor](../../../OrdererApp/Components/Pages/분산주문Page.razor) | OrdererApp | 미검토 |
 
 ## RestaurantDeskApp
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `RestaurantDeskApp-Components-Pages-AgreedRates` | `/settings/agreed-rates` | [AgreedRates.razor](../../../RestaurantDeskApp/Components/Pages/AgreedRates.razor) | RestaurantDeskApp | 미검토 |
+| `RestaurantDeskApp-Components-Pages-CommerceDisputesPage` | `/commerce/disputes`<br>`/commerce/disputes/{CaseId}` | [CommerceDisputesPage.razor](../../../RestaurantDeskApp/Components/Pages/CommerceDisputesPage.razor) | RestaurantDeskApp | 미검토 |
+| `RestaurantDeskApp-Components-Pages-CommerceNoticesPage` | `/commerce/notices` | [CommerceNoticesPage.razor](../../../RestaurantDeskApp/Components/Pages/CommerceNoticesPage.razor) | RestaurantDeskApp | 미검토 |
+| `RestaurantDeskApp-Components-Pages-CommercePrivacyPage` | `/commerce/privacy`<br>`/commerce/privacy/{CaseId}` | [CommercePrivacyPage.razor](../../../RestaurantDeskApp/Components/Pages/CommercePrivacyPage.razor) | RestaurantDeskApp | 미검토 |
+| `RestaurantDeskApp-Components-Pages-CommerceSellerPage` | `/commerce/seller` | [CommerceSellerPage.razor](../../../RestaurantDeskApp/Components/Pages/CommerceSellerPage.razor) | RestaurantDeskApp | 미검토 |
 | `RestaurantDeskApp-P04` | `/dispatch/address-form` | [DispatchAddressForm.razor](../../../RestaurantDeskApp/Components/Pages/DispatchAddressForm.razor) | RestaurantDeskApp | [이전 화면 문서](RestaurantDeskApp/RestaurantDeskApp-P04/README.md) |
 | `RestaurantDeskApp-P01` | `/store` | [Home.razor](../../../RestaurantDeskApp/Components/Pages/Home.razor) | RestaurantDeskApp | [이전 화면 문서](RestaurantDeskApp/RestaurantDeskApp-P01/README.md) |
 | `RestaurantDeskApp-Components-Pages-IngredientSupplyRequest` | `/ingredients/supply-request` | [IngredientSupplyRequest.razor](../../../RestaurantDeskApp/Components/Pages/IngredientSupplyRequest.razor) | RestaurantDeskApp | 미검토 |
@@ -135,6 +159,7 @@
 | `RestaurantDeskApp-Components-Pages-Menus` | `/menus` | [Menus.razor](../../../RestaurantDeskApp/Components/Pages/Menus.razor) | RestaurantDeskApp | 미검토 |
 | `RestaurantDeskApp-P02` | `/restaurants/nearby` | [NearbyRestaurants.razor](../../../RestaurantDeskApp/Components/Pages/NearbyRestaurants.razor) | RestaurantDeskApp | [이전 화면 문서](RestaurantDeskApp/RestaurantDeskApp-P02/README.md) |
 | `RestaurantDeskApp-Components-Pages-NotFound` | `/not-found` | [NotFound.razor](../../../RestaurantDeskApp/Components/Pages/NotFound.razor) | RestaurantDeskApp | 미검토 |
+| `RestaurantDeskApp-Components-Pages-NotificationSettings` | `/settings/notifications` | [NotificationSettings.razor](../../../RestaurantDeskApp/Components/Pages/NotificationSettings.razor) | RestaurantDeskApp | 미검토 |
 | `RestaurantDeskApp-Components-Pages-OrderDetail` | `/orders/{OrderNo}` | [OrderDetail.razor](../../../RestaurantDeskApp/Components/Pages/OrderDetail.razor) | RestaurantDeskApp | 미검토 |
 | `RestaurantDeskApp-Components-Pages-OrderInbox` | `/orders`<br>`/` | [OrderInbox.razor](../../../RestaurantDeskApp/Components/Pages/OrderInbox.razor) | RestaurantDeskApp | 미검토 |
 | `RestaurantDeskApp-P02-1` | `/restaurants/popular` | [PopularRestaurants.razor](../../../RestaurantDeskApp/Components/Pages/PopularRestaurants.razor) | RestaurantDeskApp | [이전 화면 문서](RestaurantDeskApp/RestaurantDeskApp-P02-1/README.md) |
@@ -171,6 +196,13 @@
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `Ssalddel.WebApp-Pages-AgreedRateTablePage` | `/workspace/{RoleKey}/agreed-rates` | [AgreedRateTablePage.razor](../../../Ssalddel.WebApp/Pages/AgreedRateTablePage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CargoWorkspaceActionPage` | `/workspace/cargo-driver/transports/{ItemId:long}/{ActionKey}` | [CargoWorkspaceActionPage.razor](../../../Ssalddel.WebApp/Pages/CargoWorkspaceActionPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CargoWorkspaceOfferPage` | `/workspace/cargo-driver/offers/{ItemId}` | [CargoWorkspaceOfferPage.razor](../../../Ssalddel.WebApp/Pages/CargoWorkspaceOfferPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommerceDisputesPage` | `/commerce/disputes`<br>`/commerce/disputes/{CaseId}` | [CommerceDisputesPage.razor](../../../Ssalddel.WebApp/Pages/CommerceDisputesPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommerceNoticesPage` | `/commerce/notices` | [CommerceNoticesPage.razor](../../../Ssalddel.WebApp/Pages/CommerceNoticesPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommercePrivacyPage` | `/commerce/privacy`<br>`/commerce/privacy/{CaseId}` | [CommercePrivacyPage.razor](../../../Ssalddel.WebApp/Pages/CommercePrivacyPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommerceSellerPage` | `/commerce/seller` | [CommerceSellerPage.razor](../../../Ssalddel.WebApp/Pages/CommerceSellerPage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityBaguaTransitionPage` | `/community/bagua/{SourceTrigramKey}/{TargetTrigramKey}`<br>`/community/bagua/{RoleCode}/{SourceTrigramKey}/{TargetTrigramKey}` | [CommunityBaguaTransitionPage.razor](../../../Ssalddel.WebApp/Pages/CommunityBaguaTransitionPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityBoardManagementPage` | `/community/boards/manage` | [CommunityBoardManagementPage.razor](../../../Ssalddel.WebApp/Pages/CommunityBoardManagementPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityBoardPage` | `/community/boards` | [CommunityBoardPage.razor](../../../Ssalddel.WebApp/Pages/CommunityBoardPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
@@ -181,6 +213,9 @@
 | `Ssalddel.WebApp-Pages-CommunityDecorationProductPage` | `/community/decorations/products/{ProductKey}` | [CommunityDecorationProductPage.razor](../../../Ssalddel.WebApp/Pages/CommunityDecorationProductPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityDecorationStorePage` | `/community/decorations` | [CommunityDecorationStorePage.razor](../../../Ssalddel.WebApp/Pages/CommunityDecorationStorePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityDirectoryPage` | `/community/categories`<br>`/community/boards/directory` | [CommunityDirectoryPage.razor](../../../Ssalddel.WebApp/Pages/CommunityDirectoryPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityExchangeDetailPage` | `/community/exchange/posts/{PostId:long}` | [CommunityExchangeDetailPage.razor](../../../Ssalddel.WebApp/Pages/CommunityExchangeDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityExchangePage` | `/community/exchange` | [CommunityExchangePage.razor](../../../Ssalddel.WebApp/Pages/CommunityExchangePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityExchangeWritePage` | `/community/exchange/write` | [CommunityExchangeWritePage.razor](../../../Ssalddel.WebApp/Pages/CommunityExchangeWritePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityFoodDiscoveryPage` | `/community/discover/food` | [CommunityFoodDiscoveryPage.razor](../../../Ssalddel.WebApp/Pages/CommunityFoodDiscoveryPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityGlobalTradeThreadPage` | `/community/global-trade/{ThreadId:long}` | [CommunityGlobalTradeThreadPage.razor](../../../Ssalddel.WebApp/Pages/CommunityGlobalTradeThreadPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityGroupImportPage` | `/community/group-import` | [CommunityGroupImportPage.razor](../../../Ssalddel.WebApp/Pages/CommunityGroupImportPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
@@ -199,6 +234,21 @@
 | `Ssalddel.WebApp-Pages-CommunityGroupPurchaseSuppliersPage` | `/community/group-purchase/{CampaignId:guid}/suppliers` | [CommunityGroupPurchaseSuppliersPage.razor](../../../Ssalddel.WebApp/Pages/CommunityGroupPurchaseSuppliersPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityLedgerDraftPage` | `/community/ledgers/new` | [CommunityLedgerDraftPage.razor](../../../Ssalddel.WebApp/Pages/CommunityLedgerDraftPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityMapApplicationChooserPage` | `/community/map-application-chooser` | [CommunityMapApplicationChooserPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMapApplicationChooserPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityMemberDeliveryOfferDetailPage` | `/community/exchange/deliveries/offers/{OfferId}` | [CommunityMemberDeliveryOfferDetailPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMemberDeliveryOfferDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityMemberDeliveryOffersPage` | `/community/exchange/deliveries/offers` | [CommunityMemberDeliveryOffersPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMemberDeliveryOffersPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityMemberDeliveryParticipationPage` | `/community/exchange/deliveries/participation` | [CommunityMemberDeliveryParticipationPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMemberDeliveryParticipationPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkListPage` | `/community/exchange/deliveries/work` | [CommunityMemberDeliveryWorkListPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkListPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityMemberDeliveryWorkPage` | `/community/exchange/deliveries/work/{RequestId}` | [CommunityMemberDeliveryWorkPage.razor](../../../Ssalddel.WebApp/Pages/CommunityMemberDeliveryWorkPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationCreatePage` | `/community/exchange/work/new` | [CommunityNeighborhoodCollaborationCreatePage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationCreatePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationDetailPage` | `/community/exchange/work/{WorkId}` | [CommunityNeighborhoodCollaborationDetailPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodCollaborationListPage` | `/community/exchange/work` | [CommunityNeighborhoodCollaborationListPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodCollaborationListPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryCreatePage` | `/community/exchange/deliveries/new` | [CommunityNeighborhoodDeliveryCreatePage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryCreatePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryDetailPage` | `/community/exchange/deliveries/{RequestId}` | [CommunityNeighborhoodDeliveryDetailPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodDeliveryListPage` | `/community/exchange/deliveries` | [CommunityNeighborhoodDeliveryListPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodDeliveryListPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodMapPage` | `/community/map` | [CommunityNeighborhoodMapPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodMapPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageCreatePage` | `/community/exchange/spaces/new` | [CommunityNeighborhoodStorageCreatePage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageCreatePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageDetailPage` | `/community/exchange/spaces/{SpaceId}` | [CommunityNeighborhoodStorageDetailPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CommunityNeighborhoodStorageListPage` | `/community/exchange/spaces` | [CommunityNeighborhoodStorageListPage.razor](../../../Ssalddel.WebApp/Pages/CommunityNeighborhoodStorageListPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityPage` | `/community`<br>`/{LanguageSegment}/community` | [CommunityPage.razor](../../../Ssalddel.WebApp/Pages/CommunityPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityPersonalPage` | `/community/me`<br>`/community/me/{SectionKey}` | [CommunityPersonalPage.razor](../../../Ssalddel.WebApp/Pages/CommunityPersonalPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityPostComposePage` | `/community/write` | [CommunityPostComposePage.razor](../../../Ssalddel.WebApp/Pages/CommunityPostComposePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
@@ -209,7 +259,9 @@
 | `Ssalddel.WebApp-Pages-CommunityRoleHomePage` | `/community/home` | [CommunityRoleHomePage.razor](../../../Ssalddel.WebApp/Pages/CommunityRoleHomePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunitySafetyCenterPage` | `/community/safety` | [CommunitySafetyCenterPage.razor](../../../Ssalddel.WebApp/Pages/CommunitySafetyCenterPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-CommunityWorkspacePage` | `/community/workspace` | [CommunityWorkspacePage.razor](../../../Ssalddel.WebApp/Pages/CommunityWorkspacePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-CurrentDriverWorkPage` | `/driver/current-work` | [CurrentDriverWorkPage.razor](../../../Ssalddel.WebApp/Pages/CurrentDriverWorkPage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DiagramWorkbenchPage` | `/diagram` | [DiagramWorkbenchPage.razor](../../../Ssalddel.WebApp/Pages/DiagramWorkbenchPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-DistributedFulfillment-DistributedWorkspacePage` | `/workspace/{RoleKey}/distributed/{Screen}` | [DistributedWorkspacePage.razor](../../../Ssalddel.WebApp/Pages/DistributedFulfillment/DistributedWorkspacePage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.DriverApp, Ssalddel.Web.OrdererApp, Ssalddel.Web.ShipperApp, Ssalddel.Web.WarehouseApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverBankAccountPage` | `/driver/account/bank` | [DriverBankAccountPage.razor](../../../Ssalddel.WebApp/Pages/DriverBankAccountPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverCommunityRequestsPage` | `/driver/community-requests` | [DriverCommunityRequestsPage.razor](../../../Ssalddel.WebApp/Pages/DriverCommunityRequestsPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverCurrentMonthSettlementPage` | `/driver/settlements/current-month` | [DriverCurrentMonthSettlementPage.razor](../../../Ssalddel.WebApp/Pages/DriverCurrentMonthSettlementPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
@@ -219,6 +271,7 @@
 | `Ssalddel.WebApp-Pages-DriverMyInfoPage` | `/driver/me` | [DriverMyInfoPage.razor](../../../Ssalddel.WebApp/Pages/DriverMyInfoPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverNotificationSettingsPage` | `/driver/notifications/settings` | [DriverNotificationSettingsPage.razor](../../../Ssalddel.WebApp/Pages/DriverNotificationSettingsPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverNotificationsPage` | `/driver/notifications` | [DriverNotificationsPage.razor](../../../Ssalddel.WebApp/Pages/DriverNotificationsPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-DriverQualificationPage` | `/workspace/cargo-driver/qualification` | [DriverQualificationPage.razor](../../../Ssalddel.WebApp/Pages/DriverQualificationPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverRecommendationDecisionPage` | `/driver/dispatch-decisions/{RequestId}` | [DriverRecommendationDecisionPage.razor](../../../Ssalddel.WebApp/Pages/DriverRecommendationDecisionPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverRecommendationMapPage` | `/driver/recommendations/{RequestId}` | [DriverRecommendationMapPage.razor](../../../Ssalddel.WebApp/Pages/DriverRecommendationMapPage.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-DriverRecommendations` | `/driver/recommendations` | [DriverRecommendations.razor](../../../Ssalddel.WebApp/Pages/DriverRecommendations.razor) | Ssalddel.Web.DriverApp, Ssalddel.WebApp | 미검토 |
@@ -237,15 +290,17 @@
 | `Ssalddel.WebApp-Pages-GlobalSupplierApplyPage` | `/global/suppliers/apply` | [GlobalSupplierApplyPage.razor](../../../Ssalddel.WebApp/Pages/GlobalSupplierApplyPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-GlobalTradeHome` | `/global` | [GlobalTradeHome.razor](../../../Ssalddel.WebApp/Pages/GlobalTradeHome.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-GroupExportLedgerPage` | `/orderer/ledgers/group-export` | [GroupExportLedgerPage.razor](../../../Ssalddel.WebApp/Pages/GroupExportLedgerPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
-| `Ssalddel.WebApp-Pages-Home` | `/` | [Home.razor](../../../Ssalddel.WebApp/Pages/Home.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-Home` | `/apps` | [Home.razor](../../../Ssalddel.WebApp/Pages/Home.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-IdentifierCodeWorkbenchPage` | `/tools/identifier-codes` | [IdentifierCodeWorkbenchPage.razor](../../../Ssalddel.WebApp/Pages/IdentifierCodeWorkbenchPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-IndividualExportLedgerPage` | `/orderer/ledgers/individual-export` | [IndividualExportLedgerPage.razor](../../../Ssalddel.WebApp/Pages/IndividualExportLedgerPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-IndividualImportLedgerPage` | `/orderer/ledgers/individual-import` | [IndividualImportLedgerPage.razor](../../../Ssalddel.WebApp/Pages/IndividualImportLedgerPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-KamisDomesticPriceComparisonPage` | `/information/kamis-domestic-price-comparison` | [KamisDomesticPriceComparisonPage.razor](../../../Ssalddel.WebApp/Pages/KamisDomesticPriceComparisonPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-KoreaAgriculturalMapPage` | `/information/korea-agricultural-map`<br>`/information/regional-agricultural-map` | [KoreaAgriculturalMapPage.razor](../../../Ssalddel.WebApp/Pages/KoreaAgriculturalMapPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-LifeHome` | `/` | [LifeHome.razor](../../../Ssalddel.WebApp/Pages/LifeHome.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-LoginPage` | `/login` | [LoginPage.razor](../../../Ssalddel.WebApp/Pages/LoginPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-NotFound` | `/not-found` | [NotFound.razor](../../../Ssalddel.WebApp/Pages/NotFound.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OfficialFoodIngredientPage` | `/information/food-ingredients` | [OfficialFoodIngredientPage.razor](../../../Ssalddel.WebApp/Pages/OfficialFoodIngredientPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-OperatorCargoIncidentsPage` | `/workspace/operator/cargo-incidents`<br>`/workspace/operator/cargo-incidents/{IncidentId}/review` | [OperatorCargoIncidentsPage.razor](../../../Ssalddel.WebApp/Pages/OperatorCargoIncidentsPage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OrdererFclSharedGoalPage` | `/orderer/group-import/fcl-goal` | [OrdererFclSharedGoalPage.razor](../../../Ssalddel.WebApp/Pages/OrdererFclSharedGoalPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OrdererHome` | `/orderer` | [OrdererHome.razor](../../../Ssalddel.WebApp/Pages/OrdererHome.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OrdererMartCatalogPage` | `/food/mart`<br>`/orderer/mart` | [OrdererMartCatalogPage.razor](../../../Ssalddel.WebApp/Pages/OrdererMartCatalogPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
@@ -253,11 +308,19 @@
 | `Ssalddel.WebApp-Pages-OrdererMartProductDetailPage` | `/food/mart/products/{ProductId:long}`<br>`/orderer/mart/products/{ProductId:long}` | [OrdererMartProductDetailPage.razor](../../../Ssalddel.WebApp/Pages/OrdererMartProductDetailPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OrdererMartProductReviewPage` | `/food/mart/reviews/{ProductId:long}`<br>`/orderer/mart/reviews/{ProductId:long}` | [OrdererMartProductReviewPage.razor](../../../Ssalddel.WebApp/Pages/OrdererMartProductReviewPage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-OrdererWorkspacePage` | `/orderer/workspace` | [OrdererWorkspacePage.razor](../../../Ssalddel.WebApp/Pages/OrdererWorkspacePage.razor) | Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-PlatformParticipationDetailsPage` | `/overview/participation` | [PlatformParticipationDetailsPage.razor](../../../Ssalddel.WebApp/Pages/PlatformParticipationDetailsPage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ProduceRegionalPriceComparisonPage` | `/information/produce-price-comparison`<br>`/information/apple-price-comparison` | [ProduceRegionalPriceComparisonPage.razor](../../../Ssalddel.WebApp/Pages/ProduceRegionalPriceComparisonPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-PublicDataInformationPage` | `/information/public-data`<br>`/information/agricultural-fisheries-price-comparison` | [PublicDataInformationPage.razor](../../../Ssalddel.WebApp/Pages/PublicDataInformationPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-QuickServiceIntroductionPage` | `/quick`<br>`/services` | [QuickServiceIntroductionPage.razor](../../../Ssalddel.WebApp/Pages/QuickServiceIntroductionPage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-RegionalCultureSpecialtyDetailPage` | `/community/regions/{RegionKey}` | [RegionalCultureSpecialtyDetailPage.razor](../../../Ssalddel.WebApp/Pages/RegionalCultureSpecialtyDetailPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-RegionalCultureSpecialtyPage` | `/community/regions` | [RegionalCultureSpecialtyPage.razor](../../../Ssalddel.WebApp/Pages/RegionalCultureSpecialtyPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-RegionalProductCandidatesPage` | `/information/regional-products` | [RegionalProductCandidatesPage.razor](../../../Ssalddel.WebApp/Pages/RegionalProductCandidatesPage.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.OrdererApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleOrdererNewOrderPage` | `/workspace/orderer/new` | [RoleOrdererNewOrderPage.razor](../../../Ssalddel.WebApp/Pages/RoleOrdererNewOrderPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleWarehouseWorkspaceTaskPage` | `/workspace/warehouse/tasks/{Kind}/{ItemId}` | [RoleWarehouseWorkspaceTaskPage.razor](../../../Ssalddel.WebApp/Pages/RoleWarehouseWorkspaceTaskPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleWorkspaceActionPage` | `/workspace/{RoleKey}/action/{ActionKey}`<br>`/workspace/{RoleKey}/action` | [RoleWorkspaceActionPage.razor](../../../Ssalddel.WebApp/Pages/RoleWorkspaceActionPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleWorkspaceHistoryPage` | `/workspace/{RoleKey}/history`<br>`/workspace/{RoleKey}/history/{RecordId}` | [RoleWorkspaceHistoryPage.razor](../../../Ssalddel.WebApp/Pages/RoleWorkspaceHistoryPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleWorkspaceLoginPage` | `/workspace-login/{RoleKey}` | [RoleWorkspaceLoginPage.razor](../../../Ssalddel.WebApp/Pages/RoleWorkspaceLoginPage.razor) | Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-RoleWorkspacePage` | `/workspace/{RoleKey}` | [RoleWorkspacePage.razor](../../../Ssalddel.WebApp/Pages/RoleWorkspacePage.razor) | Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperBulkImportPage` | `/shipper/request/bulk` | [ShipperBulkImportPage.razor](../../../Ssalddel.WebApp/Pages/ShipperBulkImportPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperCustomsHsReviewsPage` | `/shipper/customs/hs-reviews` | [ShipperCustomsHsReviewsPage.razor](../../../Ssalddel.WebApp/Pages/ShipperCustomsHsReviewsPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperDispatchAddressFormPage` | `/dispatch/address-form` | [ShipperDispatchAddressFormPage.razor](../../../Ssalddel.WebApp/Pages/ShipperDispatchAddressFormPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
@@ -275,6 +338,7 @@
 | `Ssalddel.WebApp-Pages-ShipperReconsignmentOrdersPage` | `/shipper/reconsignment/orders` | [ShipperReconsignmentOrdersPage.razor](../../../Ssalddel.WebApp/Pages/ShipperReconsignmentOrdersPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperRequestCargoPage` | `/shipper/request/cargo` | [ShipperRequestCargoPage.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestCargoPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperRequestDetailPreview` | `/shipper/request/detail`<br>`/shipper/request/{RequestId}` | [ShipperRequestDetailPreview.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestDetailPreview.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-ShipperRequestMobileContextPage` | `/shipper/request/package`<br>`/shipper/request/pickup`<br>`/shipper/request/dropoff`<br>`/shipper/request/schedule`<br>`/shipper/request/vehicle` | [ShipperRequestMobileContextPage.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestMobileContextPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperRequestPage` | `/shipper/request` | [ShipperRequestPage.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperRequestPaymentPage` | `/shipper/request/{RequestId}/payment` | [ShipperRequestPaymentPage.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestPaymentPage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-ShipperRequestProcedurePage` | `/shipper/request/procedure` | [ShipperRequestProcedurePage.razor](../../../Ssalddel.WebApp/Pages/ShipperRequestProcedurePage.razor) | Ssalddel.Web.ShipperApp, Ssalddel.WebApp | 미검토 |
@@ -327,6 +391,7 @@
 | `Ssalddel.WebApp-Pages-WarehouseWorkBoardPage` | `/warehouse/work-board`<br>`/work-board` | [WarehouseWorkBoardPage.razor](../../../Ssalddel.WebApp/Pages/WarehouseWorkBoardPage.razor) | Ssalddel.Web.WarehouseApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-WarehouseWorkspaceCatalogPage` | `/warehouse/workspace` | [WarehouseWorkspaceCatalogPage.razor](../../../Ssalddel.WebApp/Pages/WarehouseWorkspaceCatalogPage.razor) | Ssalddel.Web.WarehouseApp, Ssalddel.WebApp | 미검토 |
 | `Ssalddel.WebApp-Pages-WarehouseWorkStartPage` | `/warehouse/work/{ProcessCode}`<br>`/work/{ProcessCode}` | [WarehouseWorkStartPage.razor](../../../Ssalddel.WebApp/Pages/WarehouseWorkStartPage.razor) | Ssalddel.Web.WarehouseApp, Ssalddel.WebApp | 미검토 |
+| `Ssalddel.WebApp-Pages-활동정산Page` | `/activity-settlements`<br>`/activity-settlements/{AgreementId}` | [활동정산Page.razor](../../../Ssalddel.WebApp/Pages/활동정산Page.razor) | Ssalddel.WebApp | 미검토 |
 
 ## SsalddelAdmin
 
@@ -352,6 +417,7 @@
 | `SsalddelAdmin-P27-1` | `/documents/upload` | [DocumentUpload.razor](../../../SsalddelAdmin/Components/Pages/DocumentUpload.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P27-1/README.md) |
 | `SsalddelAdmin-P37` | `/dispatch/ai-review`<br>`/admin/freight-delivery/dispatch-ai-review` | [DomesticCargoDispatchAIReview.razor](../../../SsalddelAdmin/Components/Pages/DomesticCargoDispatchAIReview.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P37/README.md) |
 | `SsalddelAdmin-P20` | `/drivers/operating`<br>`/admin/freight-delivery/drivers` | [DriverOperatingView.razor](../../../SsalddelAdmin/Components/Pages/DriverOperatingView.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P20/README.md) |
+| `SsalddelAdmin-Components-Pages-DriverQualification` | `/drivers/{DriverId}/qualification` | [DriverQualification.razor](../../../SsalddelAdmin/Components/Pages/DriverQualification.razor) | SsalddelAdmin | 미검토 |
 | `SsalddelAdmin-P32` | `/drivers` | [Drivers.razor](../../../SsalddelAdmin/Components/Pages/Drivers.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P32/README.md) |
 | `SsalddelAdmin-P00-2` | `/Error` | [Error.razor](../../../SsalddelAdmin/Components/Pages/Error.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P00-2/README.md) |
 | `SsalddelAdmin-P31` | `/exploration/campaigns` | [ExplorationCampaigns.razor](../../../SsalddelAdmin/Components/Pages/ExplorationCampaigns.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P31/README.md) |
@@ -361,12 +427,14 @@
 | `SsalddelAdmin-P38` | `/dispatch/food-ai-review`<br>`/admin/food-delivery/dispatch-ai-review` | [FoodDeliveryDispatchAIReview.razor](../../../SsalddelAdmin/Components/Pages/FoodDeliveryDispatchAIReview.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P38/README.md) |
 | `SsalddelAdmin-P30` | `/food/operations`<br>`/admin/food-delivery/operations` | [FoodOperations.razor](../../../SsalddelAdmin/Components/Pages/FoodOperations.razor) | SsalddelAdmin | [페이지→코드→DB](SsalddelAdmin/SsalddelAdmin-P30/README.md) |
 | `SsalddelAdmin-Components-Pages-FoodOrderOperationsTrace` | `/food/order-trace`<br>`/admin/food-delivery/order-trace` | [FoodOrderOperationsTrace.razor](../../../SsalddelAdmin/Components/Pages/FoodOrderOperationsTrace.razor) | SsalddelAdmin | 미검토 |
+| `SsalddelAdmin-Components-Pages-FreightPlatformReadiness` | `/drivers/platform-registration-readiness` | [FreightPlatformReadiness.razor](../../../SsalddelAdmin/Components/Pages/FreightPlatformReadiness.razor) | SsalddelAdmin | 미검토 |
 | `SsalddelAdmin-Components-Pages-GroupImportTradeReadiness` | `/trade-readiness` | [GroupImportTradeReadiness.razor](../../../SsalddelAdmin/Components/Pages/GroupImportTradeReadiness.razor) | SsalddelAdmin | 미검토 |
 | `SsalddelAdmin-P00` | `/` | [Home.razor](../../../SsalddelAdmin/Components/Pages/Home.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P00/README.md) |
 | `SsalddelAdmin-P29` | `/customs/hs-codes` | [HsCodeOperations.razor](../../../SsalddelAdmin/Components/Pages/HsCodeOperations.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P29/README.md) |
 | `SsalddelAdmin-P99` | `/not-found` | [NotFound.razor](../../../SsalddelAdmin/Components/Pages/NotFound.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P99/README.md) |
 | `SsalddelAdmin-P33` | `/partners` | [Partners.razor](../../../SsalddelAdmin/Components/Pages/Partners.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P33/README.md) |
 | `SsalddelAdmin-P26` | `/payments` | [Payments.razor](../../../SsalddelAdmin/Components/Pages/Payments.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P26/README.md) |
+| `SsalddelAdmin-Components-Pages-PrivacySupport` | `/privacy-support`<br>`/privacy-support/{CaseId}` | [PrivacySupport.razor](../../../SsalddelAdmin/Components/Pages/PrivacySupport.razor) | SsalddelAdmin | 미검토 |
 | `SsalddelAdmin-P28` | `/cargo` | [PublicCargo.razor](../../../SsalddelAdmin/Components/Pages/PublicCargo.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P28/README.md) |
 | `SsalddelAdmin-P18` | `/requests/{RequestId}` | [RequestDetail.razor](../../../SsalddelAdmin/Components/Pages/RequestDetail.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P18/README.md) |
 | `SsalddelAdmin-P17` | `/requests`<br>`/admin/freight-delivery/requests`<br>`/admin/order-warehouse/outbound-requests` | [Requests.razor](../../../SsalddelAdmin/Components/Pages/Requests.razor) | SsalddelAdmin | [이전 화면 문서](SsalddelAdmin/SsalddelAdmin-P17/README.md) |
@@ -387,22 +455,38 @@
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `SsalddelAdminApp-Components-Pages-CargoOverview` | `/overview/cargo` | [CargoOverview.razor](../../../SsalddelAdminApp/Components/Pages/CargoOverview.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P03` | `/information-review` | [CommunityInformationReview.razor](../../../SsalddelAdminApp/Components/Pages/CommunityInformationReview.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P02` | `/community-management` | [CommunityManagement.razor](../../../SsalddelAdminApp/Components/Pages/CommunityManagement.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-DispatchTraining` | `/training/dispatch` | [DispatchTraining.razor](../../../SsalddelAdminApp/Components/Pages/DispatchTraining.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-DispatchTrainingDecisions` | `/training/dispatch/decisions` | [DispatchTrainingDecisions.razor](../../../SsalddelAdminApp/Components/Pages/DispatchTrainingDecisions.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-Components-Pages-Finance` | `/operations/finance` | [Finance.razor](../../../SsalddelAdminApp/Components/Pages/Finance.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-Components-Pages-FollowUpRecovery` | `/operations/follow-up-recovery` | [FollowUpRecovery.razor](../../../SsalddelAdminApp/Components/Pages/FollowUpRecovery.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-FoodDemandSurcharge` | `/food-operations/demand-surcharge` | [FoodDemandSurcharge.razor](../../../SsalddelAdminApp/Components/Pages/FoodDemandSurcharge.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-FoodInterruptionReview` | `/food-operations/reviews/{OrderNo}` | [FoodInterruptionReview.razor](../../../SsalddelAdminApp/Components/Pages/FoodInterruptionReview.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-FoodOperations` | `/food-operations` | [FoodOperations.razor](../../../SsalddelAdminApp/Components/Pages/FoodOperations.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-FoodOrderDetail` | `/food-operations/orders/{OrderNo}` | [FoodOrderDetail.razor](../../../SsalddelAdminApp/Components/Pages/FoodOrderDetail.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-Components-Pages-GroupImportTradeReadiness` | `/trade-readiness` | [GroupImportTradeReadiness.razor](../../../SsalddelAdminApp/Components/Pages/GroupImportTradeReadiness.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P00` | `/`<br>`/overview` | [Home.razor](../../../SsalddelAdminApp/Components/Pages/Home.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P01` | `/login` | [Login.razor](../../../SsalddelAdminApp/Components/Pages/Login.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-Components-Pages-Operations` | `/operations` | [Operations.razor](../../../SsalddelAdminApp/Components/Pages/Operations.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-OperationsAlerts` | `/operations-alerts`<br>`/operations-alerts/{AlertId}` | [OperationsAlerts.razor](../../../SsalddelAdminApp/Components/Pages/OperationsAlerts.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-Components-Pages-PageCatalog` | `/page-catalog` | [PageCatalog.razor](../../../SsalddelAdminApp/Components/Pages/PageCatalog.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P04-1` | `/prajna/hongik-hakdang` | [PrajnaHongikHakdang.razor](../../../SsalddelAdminApp/Components/Pages/PrajnaHongikHakdang.razor) | SsalddelAdminApp | 미검토 |
 | `SsalddelAdminApp-P04` | `/prajna` | [PrajnaHub.razor](../../../SsalddelAdminApp/Components/Pages/PrajnaHub.razor) | SsalddelAdminApp | 미검토 |
+| `SsalddelAdminApp-Components-Pages-PrivacySupport` | `/privacy-support`<br>`/privacy-support/{CaseId}` | [PrivacySupport.razor](../../../SsalddelAdminApp/Components/Pages/PrivacySupport.razor) | SsalddelAdminApp | 미검토 |
 
 ## SsalddelApp
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `SsalddelApp-Components-Pages-AgreedRateTablePage` | `/workspace/{RoleKey}/agreed-rates` | [AgreedRateTablePage.razor](../../../SsalddelApp/Components/Pages/AgreedRateTablePage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CargoWorkspaceActionPage` | `/workspace/cargo-driver/transports/{ItemId:long}/{ActionKey}` | [CargoWorkspaceActionPage.razor](../../../SsalddelApp/Components/Pages/CargoWorkspaceActionPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CargoWorkspaceOfferPage` | `/workspace/cargo-driver/offers/{ItemId}` | [CargoWorkspaceOfferPage.razor](../../../SsalddelApp/Components/Pages/CargoWorkspaceOfferPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommerceDisputesPage` | `/commerce/disputes`<br>`/commerce/disputes/{CaseId}` | [CommerceDisputesPage.razor](../../../SsalddelApp/Components/Pages/CommerceDisputesPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommerceNoticesPage` | `/commerce/notices` | [CommerceNoticesPage.razor](../../../SsalddelApp/Components/Pages/CommerceNoticesPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommercePrivacyPage` | `/commerce/privacy`<br>`/commerce/privacy/{CaseId}` | [CommercePrivacyPage.razor](../../../SsalddelApp/Components/Pages/CommercePrivacyPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommerceSellerPage` | `/commerce/seller` | [CommerceSellerPage.razor](../../../SsalddelApp/Components/Pages/CommerceSellerPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityBaguaTransition` | `/community/bagua/{SourceTrigramKey}/{TargetTrigramKey}`<br>`/community/bagua/{RoleCode}/{SourceTrigramKey}/{TargetTrigramKey}` | [CommunityBaguaTransition.razor](../../../SsalddelApp/Components/Pages/CommunityBaguaTransition.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityBoardDirectoryPage` | `/community/boards/directory` | [CommunityBoardDirectoryPage.razor](../../../SsalddelApp/Components/Pages/CommunityBoardDirectoryPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityBoardManagementPage` | `/community/boards/manage` | [CommunityBoardManagementPage.razor](../../../SsalddelApp/Components/Pages/CommunityBoardManagementPage.razor) | SsalddelApp | 미검토 |
@@ -415,6 +499,9 @@
 | `SsalddelApp-Components-Pages-CommunityDecorationLegacyProductPage` | `/community/decorations/{ProductKey}` | [CommunityDecorationLegacyProductPage.razor](../../../SsalddelApp/Components/Pages/CommunityDecorationLegacyProductPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P10` | `/community/decorations` | [CommunityDecorationStorePage.razor](../../../SsalddelApp/Components/Pages/CommunityDecorationStorePage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P10/README.md) |
 | `SsalddelApp-P10-4` | `/community/decorations/themes/submit` | [CommunityDecorationThemeSubmitPage.razor](../../../SsalddelApp/Components/Pages/CommunityDecorationThemeSubmitPage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P10-4/README.md) |
+| `SsalddelApp-Components-Pages-CommunityExchangeDetailPage` | `/community/exchange/posts/{PostId:long}` | [CommunityExchangeDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityExchangeDetailPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityExchangePage` | `/community/exchange` | [CommunityExchangePage.razor](../../../SsalddelApp/Components/Pages/CommunityExchangePage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityExchangeWritePage` | `/community/exchange/write` | [CommunityExchangeWritePage.razor](../../../SsalddelApp/Components/Pages/CommunityExchangeWritePage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityGroupImport` | `/community/group-import` | [CommunityGroupImport.razor](../../../SsalddelApp/Components/Pages/CommunityGroupImport.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityGroupPurchase` | `/community/group-purchase` | [CommunityGroupPurchase.razor](../../../SsalddelApp/Components/Pages/CommunityGroupPurchase.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityGroupPurchaseCreatePage` | `/community/group-purchase/new` | [CommunityGroupPurchaseCreatePage.razor](../../../SsalddelApp/Components/Pages/CommunityGroupPurchaseCreatePage.razor) | SsalddelApp | 미검토 |
@@ -431,6 +518,22 @@
 | `SsalddelApp-P00-C` | `/community` | [CommunityHomePage.razor](../../../SsalddelApp/Components/Pages/CommunityHomePage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P00-C2` | `/community/orders` | [CommunityIndividualOrdersPage.razor](../../../SsalddelApp/Components/Pages/CommunityIndividualOrdersPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityLedgerDraftPage` | `/community/ledgers/new` | [CommunityLedgerDraftPage.razor](../../../SsalddelApp/Components/Pages/CommunityLedgerDraftPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityLoginPage` | `/community/login` | [CommunityLoginPage.razor](../../../SsalddelApp/Components/Pages/CommunityLoginPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityMemberDeliveryOfferDetailPage` | `/community/exchange/deliveries/offers/{OfferId}` | [CommunityMemberDeliveryOfferDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityMemberDeliveryOfferDetailPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityMemberDeliveryOffersPage` | `/community/exchange/deliveries/offers` | [CommunityMemberDeliveryOffersPage.razor](../../../SsalddelApp/Components/Pages/CommunityMemberDeliveryOffersPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityMemberDeliveryParticipationPage` | `/community/exchange/deliveries/participation` | [CommunityMemberDeliveryParticipationPage.razor](../../../SsalddelApp/Components/Pages/CommunityMemberDeliveryParticipationPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkListPage` | `/community/exchange/deliveries/work` | [CommunityMemberDeliveryWorkListPage.razor](../../../SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkListPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityMemberDeliveryWorkPage` | `/community/exchange/deliveries/work/{RequestId}` | [CommunityMemberDeliveryWorkPage.razor](../../../SsalddelApp/Components/Pages/CommunityMemberDeliveryWorkPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationCreatePage` | `/community/exchange/work/new` | [CommunityNeighborhoodCollaborationCreatePage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationCreatePage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationDetailPage` | `/community/exchange/work/{WorkId}` | [CommunityNeighborhoodCollaborationDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationDetailPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodCollaborationListPage` | `/community/exchange/work` | [CommunityNeighborhoodCollaborationListPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodCollaborationListPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryCreatePage` | `/community/exchange/deliveries/new` | [CommunityNeighborhoodDeliveryCreatePage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryCreatePage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryDetailPage` | `/community/exchange/deliveries/{RequestId}` | [CommunityNeighborhoodDeliveryDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryDetailPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodDeliveryListPage` | `/community/exchange/deliveries` | [CommunityNeighborhoodDeliveryListPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodDeliveryListPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodMapPage` | `/community/map` | [CommunityNeighborhoodMapPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodMapPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodStorageCreatePage` | `/community/exchange/spaces/new` | [CommunityNeighborhoodStorageCreatePage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodStorageCreatePage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodStorageDetailPage` | `/community/exchange/spaces/{SpaceId}` | [CommunityNeighborhoodStorageDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodStorageDetailPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-CommunityNeighborhoodStorageListPage` | `/community/exchange/spaces` | [CommunityNeighborhoodStorageListPage.razor](../../../SsalddelApp/Components/Pages/CommunityNeighborhoodStorageListPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityPersonalPage` | `/community/me` | [CommunityPersonalPage.razor](../../../SsalddelApp/Components/Pages/CommunityPersonalPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityPostComposePage` | `/community/write` | [CommunityPostComposePage.razor](../../../SsalddelApp/Components/Pages/CommunityPostComposePage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-CommunityPostDetailPage` | `/community/posts/{PostId:long}` | [CommunityPostDetailPage.razor](../../../SsalddelApp/Components/Pages/CommunityPostDetailPage.razor) | SsalddelApp | 미검토 |
@@ -443,6 +546,10 @@
 | `SsalddelApp-P07-1` | `/shipper/customs/hs-reviews` | [CustomsHsReviews.razor](../../../SsalddelApp/Components/Pages/CustomsHsReviews.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P07-1/README.md) |
 | `SsalddelApp-Components-Pages-DiagramWorkbench` | `/diagram` | [DiagramWorkbench.razor](../../../SsalddelApp/Components/Pages/DiagramWorkbench.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P02-2` | `/dispatch/address-form` | [DispatchAddressForm.razor](../../../SsalddelApp/Components/Pages/DispatchAddressForm.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P02-2/README.md) |
+| `SsalddelApp-Components-Pages-DriverCurrentWorkPage` | `/driver/current-work` | [DriverCurrentWorkPage.razor](../../../SsalddelApp/Components/Pages/DriverCurrentWorkPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-DriverQualificationPage` | `/workspace/cargo-driver/qualification` | [DriverQualificationPage.razor](../../../SsalddelApp/Components/Pages/DriverQualificationPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-DriverRecommendationSettingsPage` | `/driver/notifications/settings` | [DriverRecommendationSettingsPage.razor](../../../SsalddelApp/Components/Pages/DriverRecommendationSettingsPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-DriverWorkspaceHistoryPage` | `/workspace/{RoleKey}/history`<br>`/workspace/{RoleKey}/history/{RecordId}` | [DriverWorkspaceHistoryPage.razor](../../../SsalddelApp/Components/Pages/DriverWorkspaceHistoryPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P01-4` | `/shipper/exploration/inbox` | [ExplorationInbox.razor](../../../SsalddelApp/Components/Pages/ExplorationInbox.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P01-4/README.md) |
 | `SsalddelApp-P07` | `/shipper/international/fcl-lcl` | [FclLclPlanner.razor](../../../SsalddelApp/Components/Pages/FclLclPlanner.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P07/README.md) |
 | `SsalddelApp-P01` | `/shipper` | [Home.razor](../../../SsalddelApp/Components/Pages/Home.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P01/README.md) |
@@ -456,6 +563,7 @@
 | `SsalddelApp-Components-Pages-LogisticsServiceContract` | `/shipper/warehouse/logistics-contract` | [LogisticsServiceContract.razor](../../../SsalddelApp/Components/Pages/LogisticsServiceContract.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P99` | `/not-found` | [NotFound.razor](../../../SsalddelApp/Components/Pages/NotFound.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P99/README.md) |
 | `SsalddelApp-Components-Pages-OfficialFoodIngredients` | `/information/food-ingredients` | [OfficialFoodIngredients.razor](../../../SsalddelApp/Components/Pages/OfficialFoodIngredients.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-OperatorCargoIncidentsPage` | `/workspace/operator/cargo-incidents`<br>`/workspace/operator/cargo-incidents/{IncidentId}/review` | [OperatorCargoIncidentsPage.razor](../../../SsalddelApp/Components/Pages/OperatorCargoIncidentsPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P06-2` | `/shipper/sales/fulfillment` | [OrderFulfillment.razor](../../../SsalddelApp/Components/Pages/OrderFulfillment.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2/README.md) |
 | `SsalddelApp-P06-2-5` | `/shipper/sales/fulfillment/inventory` | [OrderFulfillmentInventory.razor](../../../SsalddelApp/Components/Pages/OrderFulfillmentInventory.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-5/README.md) |
 | `SsalddelApp-P06-2-4-1` | `/shipper/sales/fulfillment/orders/{OrderKey}` | [OrderFulfillmentOrderDetail.razor](../../../SsalddelApp/Components/Pages/OrderFulfillmentOrderDetail.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-4-1/README.md) |
@@ -466,14 +574,20 @@
 | `SsalddelApp-P06-2-6-1` | `/shipper/sales/fulfillment/picking/{TaskId:long}` | [OrderFulfillmentPickingTask.razor](../../../SsalddelApp/Components/Pages/OrderFulfillmentPickingTask.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-6-1/README.md) |
 | `SsalddelApp-P06-2-8` | `/shipper/sales/fulfillment/restock-policy` | [OrderFulfillmentRestockPolicy.razor](../../../SsalddelApp/Components/Pages/OrderFulfillmentRestockPolicy.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-8/README.md) |
 | `SsalddelApp-P06-2-3` | `/shipper/sales/fulfillment/samples` | [OrderFulfillmentSamples.razor](../../../SsalddelApp/Components/Pages/OrderFulfillmentSamples.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-3/README.md) |
+| `SsalddelApp-Components-Pages-PlatformParticipationDetailsPage` | `/overview/participation` | [PlatformParticipationDetailsPage.razor](../../../SsalddelApp/Components/Pages/PlatformParticipationDetailsPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-ProduceRegionalPriceComparison` | `/information/produce-price-comparison`<br>`/information/apple-price-comparison` | [ProduceRegionalPriceComparison.razor](../../../SsalddelApp/Components/Pages/ProduceRegionalPriceComparison.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P06-1` | `/shipper/sales/listings` | [ProductListings.razor](../../../SsalddelApp/Components/Pages/ProductListings.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-1/README.md) |
 | `SsalddelApp-P01-3` | `/shipper/public-cargo` | [PublicCargo.razor](../../../SsalddelApp/Components/Pages/PublicCargo.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P01-3/README.md) |
 | `SsalddelApp-Components-Pages-PublicDataInformation` | `/information/public-data`<br>`/information/agricultural-fisheries-price-comparison` | [PublicDataInformation.razor](../../../SsalddelApp/Components/Pages/PublicDataInformation.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-QuickServiceIntroductionPage` | `/quick`<br>`/services` | [QuickServiceIntroductionPage.razor](../../../SsalddelApp/Components/Pages/QuickServiceIntroductionPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P08` | `/shipper/reconsignment/orders` | [ReconsignmentOrders.razor](../../../SsalddelApp/Components/Pages/ReconsignmentOrders.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P08/README.md) |
 | `SsalddelApp-Components-Pages-RegionalCultureSpecialtyDetailPage` | `/community/regions/{RegionKey}` | [RegionalCultureSpecialtyDetailPage.razor](../../../SsalddelApp/Components/Pages/RegionalCultureSpecialtyDetailPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-RegionalCultureSpecialtyPage` | `/community/regions` | [RegionalCultureSpecialtyPage.razor](../../../SsalddelApp/Components/Pages/RegionalCultureSpecialtyPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-Components-Pages-RegionalProductCandidatesPage` | `/information/regional-products` | [RegionalProductCandidatesPage.razor](../../../SsalddelApp/Components/Pages/RegionalProductCandidatesPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-RoleOrdererNewOrderPage` | `/workspace/orderer/new` | [RoleOrdererNewOrderPage.razor](../../../SsalddelApp/Components/Pages/RoleOrdererNewOrderPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-RoleWorkspaceActionPage` | `/workspace/{RoleKey}/action/{ActionKey}`<br>`/workspace/{RoleKey}/action` | [RoleWorkspaceActionPage.razor](../../../SsalddelApp/Components/Pages/RoleWorkspaceActionPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-RoleWorkspaceLoginPage` | `/workspace-login/{RoleKey}` | [RoleWorkspaceLoginPage.razor](../../../SsalddelApp/Components/Pages/RoleWorkspaceLoginPage.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-RoleWorkspacePage` | `/workspace/{RoleKey}` | [RoleWorkspacePage.razor](../../../SsalddelApp/Components/Pages/RoleWorkspacePage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P06` | `/shipper/sales/channels` | [SalesChannels.razor](../../../SsalddelApp/Components/Pages/SalesChannels.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06/README.md) |
 | `SsalddelApp-P06-2-2` | `/shipper/sales/orders/{OrderId:long}` | [SalesOrderDetail.razor](../../../SsalddelApp/Components/Pages/SalesOrderDetail.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-2/README.md) |
 | `SsalddelApp-P06-2-1` | `/shipper/sales/orders` | [SalesOrders.razor](../../../SsalddelApp/Components/Pages/SalesOrders.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P06-2-1/README.md) |
@@ -482,6 +596,7 @@
 | `SsalddelApp-P01-1` | `/shipper/settings/profile` | [ShipperProfileSettings.razor](../../../SsalddelApp/Components/Pages/ShipperProfileSettings.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P01-1/README.md) |
 | `SsalddelApp-P02` | `/shipper/request/cargo` | [ShipperRequestCargoPage.razor](../../../SsalddelApp/Components/Pages/ShipperRequestCargoPage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P02/README.md) |
 | `SsalddelApp-P03` | `/shipper/request/{RequestId}` | [ShipperRequestDetail.razor](../../../SsalddelApp/Components/Pages/ShipperRequestDetail.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P03/README.md) |
+| `SsalddelApp-Components-Pages-ShipperRequestMobileContextPage` | `/shipper/request/package`<br>`/shipper/request/pickup`<br>`/shipper/request/dropoff`<br>`/shipper/request/schedule`<br>`/shipper/request/vehicle` | [ShipperRequestMobileContextPage.razor](../../../SsalddelApp/Components/Pages/ShipperRequestMobileContextPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P02` | `/shipper/request/{RequestId}/payment` | [ShipperRequestPaymentPage.razor](../../../SsalddelApp/Components/Pages/ShipperRequestPaymentPage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P02/README.md) |
 | `SsalddelApp-P02` | `/shipper/request/procedure` | [ShipperRequestProcedurePage.razor](../../../SsalddelApp/Components/Pages/ShipperRequestProcedurePage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P02/README.md) |
 | `SsalddelApp-P02` | `/shipper/request/{RequestId}/proofs` | [ShipperRequestProofsPage.razor](../../../SsalddelApp/Components/Pages/ShipperRequestProofsPage.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P02/README.md) |
@@ -498,8 +613,11 @@
 | `SsalddelApp-Components-Pages-WarehouseRegistrationPage` | `/shipper/warehouses/new` | [WarehouseRegistrationPage.razor](../../../SsalddelApp/Components/Pages/WarehouseRegistrationPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P05-2` | `/shipper/warehouse/scan` | [WarehouseScanStation.razor](../../../SsalddelApp/Components/Pages/WarehouseScanStation.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P05-2/README.md) |
 | `SsalddelApp-P05` | `/shipper/warehouse/workspace` | [WarehouseWorkspace.razor](../../../SsalddelApp/Components/Pages/WarehouseWorkspace.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P05/README.md) |
+| `SsalddelApp-Components-Pages-WarehouseWorkspaceTaskPage` | `/workspace/warehouse/tasks/{Kind}/{ItemId}` | [WarehouseWorkspaceTaskPage.razor](../../../SsalddelApp/Components/Pages/WarehouseWorkspaceTaskPage.razor) | SsalddelApp | 미검토 |
 | `SsalddelApp-P05-3` | `/shipper/warehouse/work/{ProcessCode}` | [WarehouseWorkStart.razor](../../../SsalddelApp/Components/Pages/WarehouseWorkStart.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P05-3/README.md) |
 | `SsalddelApp-P90` | `/weather` | [Weather.razor](../../../SsalddelApp/Components/Pages/Weather.razor) | SsalddelApp | [이전 화면 문서](SsalddelApp/SsalddelApp-P90/README.md) |
+| `SsalddelApp-Components-Pages-분산이행Page` | `/workspace/{RoleKey}/distributed/{Screen}` | [분산이행Page.razor](../../../SsalddelApp/Components/Pages/분산이행Page.razor) | SsalddelApp | 미검토 |
+| `SsalddelApp-Components-Pages-활동정산Page` | `/activity-settlements`<br>`/activity-settlements/{AgreementId}` | [활동정산Page.razor](../../../SsalddelApp/Components/Pages/활동정산Page.razor) | SsalddelApp | 미검토 |
 
 ## WarehouseManagerApp
 
@@ -553,11 +671,14 @@
 | `WarehouseManagerApp-P02-2` | `/work/{ProcessCode}/workbench` | [WorkbenchScan.razor](../../../WarehouseManagerApp/Components/Pages/WorkbenchScan.razor) | WarehouseManagerApp | [이전 화면 문서](WarehouseManagerApp/WarehouseManagerApp-P02-2/README.md) |
 | `WarehouseManagerApp-P02` | `/work-board` | [WorkBoard.razor](../../../WarehouseManagerApp/Components/Pages/WorkBoard.razor) | WarehouseManagerApp | [이전 화면 문서](WarehouseManagerApp/WarehouseManagerApp-P02/README.md) |
 | `WarehouseManagerApp-P02-1` | `/work/{ProcessCode}` | [WorkStart.razor](../../../WarehouseManagerApp/Components/Pages/WorkStart.razor) | WarehouseManagerApp | [이전 화면 문서](WarehouseManagerApp/WarehouseManagerApp-P02-1/README.md) |
+| `WarehouseManagerApp-Components-Pages-분산거점Page` | `/workspace/warehouse/distributed/{Screen}` | [분산거점Page.razor](../../../WarehouseManagerApp/Components/Pages/분산거점Page.razor) | WarehouseManagerApp | 미검토 |
+| `WarehouseManagerApp-Components-Pages-분산거점로그인Page` | `/distributed-login` | [분산거점로그인Page.razor](../../../WarehouseManagerApp/Components/Pages/분산거점로그인Page.razor) | WarehouseManagerApp | 미검토 |
 
 ## eng
 
 | 페이지 ID | route (별칭 포함) | 소스 | 포함 호스트 | 상세 검토 |
 | --- | --- | --- | --- | --- |
+| `eng-web-role-app-Pages-IntegratedRoleSelection` | `/apps` | [IntegratedRoleSelection.razor](../../../eng/web-role-app/Pages/IntegratedRoleSelection.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.DriverApp, Ssalddel.Web.OrdererApp, Ssalddel.Web.ShipperApp, Ssalddel.Web.WarehouseApp | 미검토 |
 | `eng-web-role-app-Pages-RoleNotFound` | `/not-found` | [RoleNotFound.razor](../../../eng/web-role-app/Pages/RoleNotFound.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.DriverApp, Ssalddel.Web.OrdererApp, Ssalddel.Web.ShipperApp, Ssalddel.Web.WarehouseApp | 미검토 |
 | `eng-web-role-app-Pages-RoleRoot` | `/` | [RoleRoot.razor](../../../eng/web-role-app/Pages/RoleRoot.razor) | Ssalddel.Web.CommunityApp, Ssalddel.Web.DriverApp, Ssalddel.Web.OrdererApp, Ssalddel.Web.ShipperApp, Ssalddel.Web.WarehouseApp | 미검토 |
 
