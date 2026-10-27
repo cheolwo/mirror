@@ -19,34 +19,63 @@
         @if (Model.Lifetime.IsBusy) { <MudProgressLinear Indeterminate="true" aria-label="추천 운송 확인 중" /> }
         @if (Model.AwaitingResult)
         { <p role="status">수락 결과 확인 중입니다. 다시 참여하지 말고 현재 운송을 확인해 주세요.</p> }
-        @if (Model.RecommendationChanged && !Model.Saved)
+        @if (Model.AwaitingRejectionResult)
+        { <p role="status">거절 결과 확인 중입니다. 다시 보내거나 수락하지 말고 현재 추천 상태를 확인해 주세요.</p> }
+        @if (Model.RecommendationChanged && !Model.Saved && !Model.Rejected)
         { <MudAlert Severity="Severity.Info">현재 위치나 진행 중 운송에 맞춰 추천 조건이 갱신됐습니다. 아래 보수와 주의사항을 다시 확인한 뒤 참여해 주세요.</MudAlert> }
         @if (Model.Saved)
         { <MudAlert Severity="Severity.Success">진행 중 운송을 확인했습니다. 지도로 돌아가 상차 업무를 시작해 주세요.</MudAlert> }
+        @if (Model.Rejected)
+        { <MudAlert Severity="Severity.Success">추천 거절 후 현재 추천 목록을 다시 확인했습니다. 지도 업무로 돌아가 다음 추천을 확인해 주세요.</MudAlert> }
         @if (Model.Source is { } source && Model.Offer is { } offer)
         {
             <article class="cargo-action-card">
                 <h2>@source.화물종류</h2>
                 @{ var payout = CargoDriverPayoutPresentation.OfferAmount(offer); }
                 <dl><dt>기사 제안 보수</dt><dd data-testid="cargo-offer-driver-pay">@CargoDriverPayoutPresentation.Money(payout)</dd><dt>상차지</dt><dd>@source.픽업지</dd><dt>하차지</dt><dd>@source.하차지</dd><dt>의뢰 결제 예정액</dt><dd>@CargoWorkspacePresentation.Money(source.결제예정금액)</dd></dl>
+                <화물운송조건Panel Fields="@CargoWorkspacePresentation.조건목록(source.운송방식, source.차량종류,
+                    source.화물중량Kg, source.화물수량, source.상차시간창시작일시, source.상차시간창종료일시,
+                    source.하차시간창시작일시, source.하차시간창종료일시)" />
                 @if (!payout.HasValue)
                 { <p role="status">기사 제안 보수의 산정 근거를 확인하지 못했습니다. 보수가 확인된 최신 추천에서 참여할 수 있습니다.</p> }
                 else
                 { <p>기사 제안 보수는 이번 운송을 맡았을 때의 지급 예정액이며, 입금 완료 금액은 아닙니다.</p> }
                 <p>의뢰 결제 예정액은 기사 실지급액을 뜻하지 않습니다. 참여 확인은 이번 추천 운송 한 건에 적용됩니다.</p>
                 <p>지도에 표시한 선은 직선 후보선이며 실제 주행 경로가 아닙니다.</p>
+                @if (!Model.운송조건일치 && !Model.Saved && !Model.Rejected)
+                { <MudAlert Severity="Severity.Warning">추천과 운송 의뢰의 조건이 서로 다릅니다. 최신 추천 조건을 다시 확인해 주세요.</MudAlert> }
                 @foreach (var warning in Model.Warnings) { <MudAlert Severity="Severity.Warning">@warning</MudAlert> }
-                @if (!Model.ServerCandidateAvailable && !Model.Saved)
+                @if (!Model.ServerCandidateAvailable && !Model.Saved && !Model.Rejected)
                 { <MudAlert Severity="Severity.Warning">현재 운송 조건이나 추천 유효기간을 확인해 주세요. 지금은 참여할 수 없습니다.</MudAlert> }
-                @if (!Model.Saved)
+                @if (!Model.Saved && !Model.Rejected)
                 {
-                    <MudCheckBox T="bool" Label="차량·화물·일정 조건과 주의사항을 확인했습니다" @bind-Value="Model.ConditionsConfirmed" Disabled="Model.Lifetime.IsBusy" />
-                    <MudCheckBox T="bool" Label="확인한 운송에 참여하겠습니다" @bind-Value="Model.AcceptConfirmed" Disabled="Model.Lifetime.IsBusy" />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">운송 참여</MudButton>
+                    @if (Model.RejectInputVisible)
+                    {
+                        <MudSelect T="string" Label="거절 사유" @bind-Value="Model.RejectReason" Variant="Variant.Outlined" Disabled="@(Model.Lifetime.IsBusy || Model.AwaitingRejectionResult)">
+                            <MudSelectItem Value='@("동선이 맞지 않음")'>동선이 맞지 않음</MudSelectItem>
+                            <MudSelectItem Value='@("차량·적재 조건이 맞지 않음")'>차량·적재 조건이 맞지 않음</MudSelectItem>
+                            <MudSelectItem Value='@("상하차 시간에 맞추기 어려움")'>상하차 시간에 맞추기 어려움</MudSelectItem>
+                            <MudSelectItem Value='@("제안 보수가 맞지 않음")'>제안 보수가 맞지 않음</MudSelectItem>
+                            <MudSelectItem Value='@("다른 업무를 진행 중")'>다른 업무를 진행 중</MudSelectItem>
+                        </MudSelect>
+                        <div class="cargo-action-decisions" aria-label="추천 거절 확인">
+                            <MudButton Class="cargo-offer-reject" Variant="Variant.Filled" Disabled="@(!Model.CanConfirmRejection)" OnClick="Model.RejectAsync">거절 확정</MudButton>
+                            <MudButton Variant="Variant.Outlined" Disabled="@(Model.Lifetime.IsBusy || Model.AwaitingRejectionResult)" OnClick="Model.CancelRejection">계속 검토</MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudCheckBox T="bool" Label="차량·화물·일정 조건과 주의사항을 확인했습니다" @bind-Value="Model.ConditionsConfirmed" Disabled="@(Model.Lifetime.IsBusy || !Model.운송조건일치 || Model.AwaitingRejectionResult)" />
+                        <MudCheckBox T="bool" Label="확인한 운송에 참여하겠습니다" @bind-Value="Model.AcceptConfirmed" Disabled="@(Model.Lifetime.IsBusy || !Model.운송조건일치 || Model.AwaitingRejectionResult)" />
+                        <div class="cargo-action-decisions" aria-label="추천 운송 결정">
+                            <MudButton Class="cargo-offer-reject" Variant="Variant.Filled" Disabled="@(!Model.CanReject)" OnClick="Model.OpenRejection">거절</MudButton>
+                            <MudButton Class="cargo-offer-accept" Variant="Variant.Filled" Disabled="@(!Model.CanSubmit)" OnClick="Model.SubmitAsync">운송 참여</MudButton>
+                        </div>
+                    }
                 }
             </article>
         }
-        @if (!Model.Lifetime.IsBusy && !Model.Saved) { <MudButton Variant="Variant.Outlined" OnClick="Reload">@(Model.AwaitingResult ? "수락 결과 확인" : "추천 조건 다시 확인")</MudButton> }
+        @if (!Model.Lifetime.IsBusy && !Model.Saved && !Model.Rejected) { <MudButton Variant="Variant.Outlined" OnClick="Reload">@(Model.AwaitingResult ? "수락 결과 확인" : Model.AwaitingRejectionResult ? "거절 결과 확인" : "추천 조건 다시 확인")</MudButton> }
     }
 </section>
 

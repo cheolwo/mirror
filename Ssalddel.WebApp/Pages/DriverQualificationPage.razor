@@ -1,0 +1,51 @@
+@page "/workspace/cargo-driver/qualification"
+@using Ssalddel.Contracts.Driver.Profile
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject ISsalddelJsonApiClient Api
+@inject WebAuthSessionService Session
+@inject NavigationManager Navigation
+@implements IDisposable
+<PageTitle>운송 자격 확인 · Mirror</PageTitle>
+<a href="@ReturnHref">← 내 정보로</a>
+@if (model is not null && Session.IsLoggedIn) { <TransportQualificationPanel Model="model" /> }
+else if (loading) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+else { <p role="alert">@(error ?? "로그인한 뒤 운송 자격을 확인해 주세요.")</p><a href="@LoginHref">로그인</a> }
+
+@code {
+    private 운송자격ViewModel? model;
+    private string? originalSession;
+    private bool loading = true;
+    private string? error;
+    // 같은 소스가 통합 Web과 전문 기사 Web에 링크됩니다. 앱의 기존 assembly 경계만 경로에 사용하며 권한은 서버가 확인합니다.
+    private bool DedicatedDriverHost => typeof(DriverQualificationPage).Assembly.GetName().Name == "Ssalddel.Web.DriverApp";
+    private string ReturnHref => Navigation.ToAbsoluteUri(DedicatedDriverHost ? "driver/me" : "workspace/cargo-driver").ToString();
+    private string LoginHref => DedicatedDriverHost
+        ? new Uri(Navigation.BaseUri).GetLeftPart(UriPartial.Authority) + "/roles/01/login"
+        : Navigation.ToAbsoluteUri("workspace-login/cargo-driver").ToString();
+    private string SessionKey => Session.UserId + ":" + Session.AccessToken;
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += SessionChanged;
+        try
+        {
+            await Session.RestoreAsync();
+            if (!Session.IsLoggedIn) return;
+            originalSession = SessionKey;
+            model = new(new 운송자격Client(async ct => await Api.GetAsync<운송자격상세Dto>(운송자격Client.OwnPath,
+                    "운송 자격 확인", false, ct) ?? throw new InvalidDataException(),
+                async (request, ct) => await Api.SendAsync<object, 운송자격상세Dto>(HttpMethod.Post,
+                    운송자격Client.OwnPath, request, "운송 자격 검토 요청", false, ct) ?? throw new InvalidDataException()), sessionKey: () => SessionKey);
+            await model.LoadAsync();
+        }
+        catch { error = "로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요."; }
+        finally { loading = false; }
+    }
+    private void SessionChanged()
+    {
+        if (originalSession is null || originalSession == SessionKey) return;
+        model?.Invalidate(); model = null; error = "로그인 상태가 변경됐습니다. 다시 로그인해 주세요.";
+        _ = InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() { Session.Changed -= SessionChanged; model?.Dispose(); }
+}

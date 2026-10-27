@@ -1,0 +1,24 @@
+@page "/drivers/{DriverId}/qualification"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject ISsalddelJsonApiClient Api
+@inject 관리자인증세션Service Session
+@implements IDisposable
+
+<PageTitle>기사 자격 검토 · Mirror</PageTitle>
+<a href="/drivers">← 기사 관리로</a>
+@if (!Session.로그인됨 || !Session.서버관리자인가) { <p role="alert">서버관리자로 로그인해 주세요.</p><a href="/login">관리자 로그인</a> }
+else if (model is not null) { <TransportQualificationPanel Model="model" /> }
+@code {
+    [Parameter] public string DriverId { get; set; } = "";
+    private 운송자격ViewModel? model;
+    private string? loadedId;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedId == DriverId || !Session.로그인됨 || !Session.서버관리자인가) return;
+        model?.Dispose(); loadedId = DriverId;
+        model = new(운송자격Client.ForAdministrator(Api, DriverId), true, () => Session.UserId + ":" + Session.AccessToken);
+        await model.LoadAsync();
+    }
+    public void Dispose() => model?.Dispose();
+}

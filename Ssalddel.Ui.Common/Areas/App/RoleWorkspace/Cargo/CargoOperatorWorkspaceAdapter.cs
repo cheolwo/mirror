@@ -27,6 +27,9 @@ public sealed class CargoOperatorWorkspaceAdapter(IRoleWorkspaceApi api) : IRole
 
     private static RoleWorkspaceItem Map(운송진행응답 source)
     {
+        var id = source.Id.ToString(CultureInfo.InvariantCulture);
+        var location = CargoDriverLocationPresentation.Create(id, source.기사_운송자, source.기사위치상태Code,
+            source.기사최근위도, source.기사최근경도, source.기사최근위치시각Utc, CargoWorkspacePresentation.IsClosed(source.상태));
         var sections = new List<RoleWorkspaceSection>
         {
             CargoWorkspacePresentation.Section("운송 정보", ("운송번호", source.운송번호),
@@ -34,23 +37,29 @@ public sealed class CargoOperatorWorkspaceAdapter(IRoleWorkspaceApi api) : IRole
                 ("기사", CargoWorkspacePresentation.Display(source.기사_운송자, "배정 대기"))),
             CargoWorkspacePresentation.Section("운송 구간", ("상차지", CargoWorkspacePresentation.Display(source.출발지)),
                 ("하차지", CargoWorkspacePresentation.Display(source.도착지))),
-            CargoWorkspacePresentation.Section("운임", ("운임", CargoWorkspacePresentation.Money(source.운임)))
+            CargoWorkspacePresentation.Section("운임", ("운임", CargoWorkspacePresentation.Money(source.운임))),
+            new("기사 위치", [location.Field("위치 확인")])
         };
         if (source.예외신고됨 || source.관리자확인필요)
             sections.Add(CargoWorkspacePresentation.Section("신고 기록",
                 ("신고 단계", CargoWorkspacePresentation.Display(source.최근예외단계))));
         if (source.UpdatedAt != default)
             sections.Add(CargoWorkspacePresentation.Section("최근 변경", ("시각", CargoWorkspacePresentation.Time(source.UpdatedAt))));
-        return new(source.Id.ToString(CultureInfo.InvariantCulture),
+        return new(id,
             CargoWorkspacePresentation.Display(source.도착지, "하차지 확인"),
             CargoWorkspacePresentation.Display(source.상태), source.운송번호, sections,
             [IncidentAction(source.Id)],
+            Markers: location.Marker is { } marker ? [marker] : [],
             IsCurrent: !CargoWorkspacePresentation.IsClosed(source.상태),
             Summary: new("하차지", CargoWorkspacePresentation.Display(source.도착지),
                 [new("상차지", CargoWorkspacePresentation.Display(source.출발지)),
                  new("운임", CargoWorkspacePresentation.Money(source.운임)),
-                 new("기사", CargoWorkspacePresentation.Display(source.기사_운송자, "배정 대기"))],
-                new("다음 확인", "운송 진행")));
+                 new("기사", CargoWorkspacePresentation.Display(source.기사_운송자, "배정 대기")),
+                 location.Field("기사 위치")],
+                new("다음 확인", "운송 진행")),
+            ComparisonFields: CargoWorkspacePresentation.조건목록(source.운송방식, source.차량종류,
+                source.화물중량Kg, source.화물수량, source.상차시간창시작일시, source.상차시간창종료일시,
+                source.하차시간창시작일시, source.하차시간창종료일시));
     }
 
     private static RoleWorkspaceAction IncidentAction(long? transportId = null)

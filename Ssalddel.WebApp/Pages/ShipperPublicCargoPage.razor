@@ -1,90 +1,13 @@
 @page "/shipper/public-cargo"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject IRoleWorkspaceAccess Access
 
-<WebPageHeader Eyebrow="Shipper Web"
-               Title="공개 화물정보"
-               Description="살뜰 앱의 공개 화물 목록을 웹에서 먼저 확인합니다."
-               Badge="@($"{PublicCargo.Count}건")" />
+<PageTitle>공개 화물 · 살뜰</PageTitle>
 
-<MudStack Spacing="3">
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-        현재 WebApp은 샘플 공개 화물로 화면 흐름을 검증합니다. 서버 API 연결은 `api/v1/shipper/requests/public` 계약에 맞춰 붙이면 됩니다.
-    </MudAlert>
-
-    <MudGrid>
-        @foreach (var cargo in PublicCargo)
-        {
-            <MudItem xs="12" md="6" lg="4">
-                <MudPaper Elevation="0" Outlined="true" Class="pa-4 h-100">
-                    <MudStack Spacing="2">
-                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.subtitle1">@cargo.의뢰Id</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="@GetDispatchColor(cargo.배차상태)" Variant="Variant.Outlined">@cargo.배차상태</MudChip>
-                        </MudStack>
-                        <MudText Typo="Typo.body2">@cargo.화물종류 · @cargo.운송방식 · @cargo.차량종류</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            수량 @(cargo.화물수량?.ToString("N0") ?? "-") · 중량 @(cargo.화물중량Kg?.ToString("N1") ?? "-") kg
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            등록 @cargo.생성일시.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                        </MudText>
-                        <MudButton Href="@ShipperRoutes.RequestDetailFor(cargo.의뢰Id)"
-                                   Variant="Variant.Text"
-                                   Color="Color.Primary"
-                                   EndIcon="@Icons.Material.Filled.ChevronRight">
-                            상세 타임라인
-                        </MudButton>
-                    </MudStack>
-                </MudPaper>
-            </MudItem>
-        }
-    </MudGrid>
-</MudStack>
-
-@code {
-    private static readonly IReadOnlyList<공개화물요약응답> PublicCargo =
-    [
-        new()
-        {
-            의뢰Id = "SHP-1001",
-            화물종류 = "냉장 간편식 세트",
-            화물수량 = 42,
-            화물중량Kg = 380,
-            운송방식 = "단독",
-            차량종류 = "냉동탑차",
-            의뢰상태 = "접수",
-            배차상태 = "매칭중",
-            생성일시 = DateTime.Now.AddHours(-2)
-        },
-        new()
-        {
-            의뢰Id = "SHP-1002",
-            화물종류 = "캠핑 테이블",
-            화물수량 = 80,
-            화물중량Kg = 920,
-            운송방식 = "혼적",
-            차량종류 = "1톤 카고",
-            의뢰상태 = "결제완료",
-            배차상태 = "기사배정",
-            생성일시 = DateTime.Now.AddHours(-5)
-        },
-        new()
-        {
-            의뢰Id = "SHP-1003",
-            화물종류 = "행사 비품",
-            화물수량 = 16,
-            화물중량Kg = 210,
-            운송방식 = "예약",
-            차량종류 = "1.4톤 윙바디",
-            의뢰상태 = "결제대기",
-            배차상태 = "배차대기",
-            생성일시 = DateTime.Now.AddDays(-1)
-        }
-    ];
-
-    private static Color GetDispatchColor(string status)
-        => status.Contains("기사", StringComparison.OrdinalIgnoreCase)
-            ? Color.Success
-            : status.Contains("매칭", StringComparison.OrdinalIgnoreCase)
-                ? Color.Info
-                : Color.Warning;
-}
+<CargoPublicBrowseScreen InformationNoticesHref="@CargoNoticeNavigation.Public"
+                         PrimaryActionHref="@(Access.GetIdentity("shipper").IsAuthenticated ? ShipperRoutes.Request : CargoPublicBrowseNavigation.ShipperRequestLogin)"
+                         PrimaryActionLabel="@(Access.GetIdentity("shipper").IsAuthenticated ? "운송 의뢰하기" : "로그인하고 운송 의뢰")"
+                         SecondaryActionHref="@CargoPublicBrowseNavigation.DriverLogin"
+                         SecondaryActionLabel="기사로 로그인하고 추천 확인"
+                         ReturnHref="@ShipperRoutes.Home" ReturnLabel="화주 홈" />

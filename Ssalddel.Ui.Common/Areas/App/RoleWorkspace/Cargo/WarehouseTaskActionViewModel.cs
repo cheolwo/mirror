@@ -2,6 +2,7 @@ using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo;
 
@@ -14,11 +15,14 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
     private 피킹작업상세응답? _picking;
     private 포장작업상세응답? _packing;
     private 출고인계준비상세응답? _handoff;
+    private bool? _pendingWasStart;
     public WarehouseTaskActionViewModel(WarehouseWorkspaceApiClient client, IRoleWorkspaceAccess access)
     {
         _client = client; Lifetime = new(access, RoleWorkspaceCatalog.Warehouse, Clear);
     }
     public CargoInputLifetime Lifetime { get; }
+    public WorkflowCompletionFeedback CompletionFeedback { get; } = new();
+    public bool AwaitingResult => _pendingWasStart.HasValue;
     public string Kind { get; private set; } = "";
     public string ItemId { get; private set; } = "";
     public bool Loaded { get; private set; }
@@ -47,7 +51,7 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
         "handoff" => _handoff?.CanConfirmHandoff == true,
         _ => false
     };
-    public bool CanSubmit => !Lifetime.IsBusy && !Lifetime.HasError && !Saved && Loaded && ServerAllows && SaveConfirmed
+    public bool CanSubmit => !AwaitingResult && !Lifetime.IsBusy && !Lifetime.HasError && !Saved && Loaded && ServerAllows && SaveConfirmed
         && (CanStartPicking || FirstConfirmed && SecondConfirmed && InputValid);
     public string Title => Kind switch { "inbound" => "입고 수령 확인", "put-away" => "적재 확인", "picking" => "피킹 확인", "packing" => "포장 확인", "handoff" => "출고 인계 준비", _ => "창고 업무" };
     public string PrimaryLabel => CanStartPicking ? "피킹 시작" : Title + " 저장";
@@ -69,6 +73,14 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
         {
             _ = WarehouseWorkspaceAdapter.ParseId(kind + ":" + id);
             await RefreshAsync(ct, initializeDraft: !Loaded);
+            if (_pendingWasStart is { } wasStart)
+            {
+                RequireTransition(CanonicalCompletion(wasStart));
+                Saved = !wasStart;
+                _pendingWasStart = null;
+                if (!wasStart) RecordCompletion();
+                FirstConfirmed = SecondConfirmed = SaveConfirmed = false;
+            }
         });
     }
 
@@ -117,6 +129,10 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
             Lifetime.RequireCurrent(ct);
             if (!ServerAllows || wasStart != CanStartPicking || (!wasStart && !InputValid))
                 throw new InvalidOperationException("작업 상태가 바뀌었습니다. 현재 입력을 다시 확인해 주세요.");
+            _pendingWasStart = wasStart;
+            var commandConfirmed = false;
+            try
+            {
             switch (Kind)
             {
                 case "inbound":
@@ -126,6 +142,7 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
                     if (inbound is null || inbound.Items.Count == 0 || inbound.Items.Any(item => CargoWorkspaceRoutes.Number(item.입고요청Id) != ItemId))
                         throw new InvalidOperationException("입고 완료 결과를 확인하지 못했습니다.");
                     RequireTransition(inbound.Items.All(item => item.입고완료일시 > DateTime.MinValue));
+                    commandConfirmed = true;
                     var inspectionActions = new List<RoleWorkspaceAction>();
                     foreach (var received in inbound.Items)
                     {
@@ -145,17 +162,20 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
                     { StorageLocation = StorageLocation.Trim(), Memo = Memo.Trim(), InspectionResultConfirmed = FirstConfirmed, LocationLabelConfirmed = SecondConfirmed }, ct);
                     Lifetime.RequireCurrent(ct); RequireId(putAway is null ? "" : CargoWorkspaceRoutes.Number(putAway.InboundItemId));
                     RequireTransition(putAway!.PutAwayAtUtc > DateTime.MinValue && putAway.InventoryStatus == "적재완료" && putAway.StorageLocation == StorageLocation.Trim());
+                    commandConfirmed = true;
                     break;
                 case "picking" when wasStart:
                     var started = await _client.StartPickingAsync(ItemId, ct);
                     Lifetime.RequireCurrent(ct); RequireId(started?.TaskKey ?? "");
                     RequireTransition(started!.StartedAtUtc > DateTime.MinValue && started.Status == 피킹작업조회상태코드.진행중);
+                    commandConfirmed = true;
                     break;
                 case "picking":
                     var picked = await _client.CompleteAsync<피킹작업결과응답>(Kind, ItemId, new 피킹작업완료요청
                     { RackCode = StorageLocation.Trim(), ProductConfirmed = FirstConfirmed, QuantityConfirmed = SecondConfirmed }, ct);
                     Lifetime.RequireCurrent(ct); RequireId(picked?.TaskKey ?? "");
                     RequireTransition(picked!.CompletedAtUtc > DateTime.MinValue && picked.Status == 피킹작업조회상태코드.완료);
+                    commandConfirmed = true;
                     break;
                 case "packing":
                     var packed = await _client.CompleteAsync<포장작업결과응답>(Kind, ItemId, new 포장작업완료요청
@@ -163,6 +183,7 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
                     Lifetime.RequireCurrent(ct); RequireId(packed is null ? "" : CargoWorkspaceRoutes.Number(packed.InboundItemId));
                     RequireTransition(packed!.PackedAtUtc > DateTime.MinValue && packed.InventoryStatus == "포장완료-" + PackagingType
                         && packed.PackagingQuantity == Quantity && packed.PackagingType == PackagingType);
+                    commandConfirmed = true;
                     break;
                 case "handoff":
                     var handoff = await _client.CompleteAsync<출고인계준비결과응답>(Kind, ItemId, new 출고인계준비완료요청
@@ -170,6 +191,7 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
                     Lifetime.RequireCurrent(ct); RequireId(handoff is null ? "" : CargoWorkspaceRoutes.Number(handoff.InboundItemId));
                     RequireTransition(handoff!.HandoffReadyAtUtc > DateTime.MinValue && handoff.OutboundPlanId > 0 && handoff.HandoffQuantity == Quantity
                         && !string.IsNullOrWhiteSpace(handoff.OutboundStatus) && handoff.OutboundStatus != "취소");
+                    commandConfirmed = true;
                     var planId = CargoWorkspaceRoutes.Number(handoff.OutboundPlanId);
                     var plan = await _client.DetailAsync<출고예정검토상세응답>("outbound", planId, ct);
                     Lifetime.RequireCurrent(ct);
@@ -180,20 +202,52 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
             }
             await RefreshAsync(ct, initializeDraft: false);
             Lifetime.RequireCurrent(ct);
-            RequireTransition(Kind switch
-            {
-                "inbound" => _inbound?.상태 == 입고상태코드.완료,
-                "put-away" => _putAway?.PutAwayAtUtc > DateTime.MinValue && _putAway?.CanPutAway == false && _putAway.StorageLocation == StorageLocation.Trim(),
-                "picking" when wasStart => _picking?.StartedAtUtc > DateTime.MinValue && _picking?.Status is 피킹작업조회상태코드.진행중 or 피킹작업조회상태코드.완료,
-                "picking" => _picking?.CompletedAtUtc > DateTime.MinValue && _picking?.Status == 피킹작업조회상태코드.완료 && _picking.CanComplete == false,
-                "packing" => _packing?.PackedAtUtc > DateTime.MinValue && _packing?.CanPack == false && _packing.PackingType == PackagingType,
-                "handoff" => _handoff?.HandoffReadyAtUtc > DateTime.MinValue && _handoff?.CanConfirmHandoff == false && _handoff.OutboundPlanId > 0,
-                _ => false
-            });
+            RequireTransition(CanonicalCompletion(wasStart));
             Saved = !wasStart;
             NextActions = nextActions; NextItemId = nextItemId;
+            _pendingWasStart = null;
+            if (!wasStart) RecordCompletion();
             FirstConfirmed = SecondConfirmed = SaveConfirmed = false;
+            }
+            catch (RoleWorkspaceAccessException ex) when (!commandConfirmed && ex.StatusCode is >= 400 and < 500 and not 408)
+            {
+                _pendingWasStart = null;
+                throw;
+            }
         }, wasStart ? "피킹을 시작했습니다. 물품과 수량을 확인한 뒤 완료해 주세요." : "저장된 작업 상태를 확인했습니다. 지도로 돌아가 다음 업무를 확인해 주세요.");
+    }
+
+    private bool CanonicalCompletion(bool wasStart) => Kind switch
+    {
+        "inbound" => _inbound?.상태 == 입고상태코드.완료,
+        "put-away" => _putAway?.PutAwayAtUtc > DateTime.MinValue && _putAway?.CanPutAway == false && _putAway.StorageLocation == StorageLocation.Trim(),
+        "picking" when wasStart => _picking?.StartedAtUtc > DateTime.MinValue && _picking?.Status is 피킹작업조회상태코드.진행중 or 피킹작업조회상태코드.완료,
+        "picking" => _picking?.CompletedAtUtc > DateTime.MinValue && _picking?.Status == 피킹작업조회상태코드.완료 && _picking.CanComplete == false,
+        "packing" => _packing?.PackedAtUtc > DateTime.MinValue && _packing?.CanPack == false && _packing.PackingType == PackagingType,
+        "handoff" => _handoff?.HandoffReadyAtUtc > DateTime.MinValue && _handoff?.CanConfirmHandoff == false && _handoff.OutboundPlanId > 0,
+        _ => false
+    };
+
+    private void RecordCompletion()
+    {
+        var (title, next) = Kind switch
+        {
+            "inbound" => ("입고 수령이 완료되었습니다", "수령한 물품의 검수 상태를 확인해 주세요."),
+            "put-away" => ("적재가 완료되었습니다", "지도에서 보관 위치와 다음 업무를 확인해 주세요."),
+            "picking" => ("피킹이 완료되었습니다", "포장 또는 다음 담당자의 인계 상태를 확인해 주세요."),
+            "packing" => ("포장이 완료되었습니다", "출고 인계 준비 상태를 확인해 주세요."),
+            "handoff" => ("출고 인계 준비가 완료되었습니다", "실제 기사 인계는 배차와 기사 확인 이후 별도로 처리합니다."),
+            _ => ("", "")
+        };
+        if (title.Length == 0) return;
+        var timestamp = Kind switch
+        {
+            "put-away" => _putAway?.PutAwayAtUtc, "picking" => _picking?.CompletedAtUtc,
+            "packing" => _packing?.PackedAtUtc, "handoff" => _handoff?.HandoffReadyAtUtc, _ => null
+        };
+        CompletionFeedback.Record(new($"warehouse:{Kind}:{ItemId}:{timestamp?.Ticks}", title,
+            "저장된 작업 상태를 확인했습니다.", next, false,
+            WorkflowCompletionVisuals.PickingIconPath, "#0F766E"));
     }
 
     private static void RequireTransition(bool confirmed)
@@ -207,6 +261,7 @@ public sealed class WarehouseTaskActionViewModel : IDisposable
     }
     private void Clear()
     {
+        CompletionFeedback.Clear(); _pendingWasStart = null;
         _inbound = null; _putAway = null; _picking = null; _packing = null; _handoff = null;
         Loaded = Saved = FirstConfirmed = SecondConfirmed = SaveConfirmed = false;
         NextActions = []; NextItemId = null;

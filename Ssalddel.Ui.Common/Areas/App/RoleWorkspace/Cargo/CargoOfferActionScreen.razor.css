@@ -8,3 +8,7 @@
 .cargo-action-card dt { color: #586b78; font-size: 14px; }
 .cargo-action-card dd { margin: 0 0 12px; overflow-wrap: anywhere; }
 .cargo-action-screen ::deep .mud-button-root { min-height: 44px; }
+.cargo-action-decisions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.cargo-action-decisions ::deep .mud-button-root { min-height: 48px; min-width: 0; overflow-wrap: anywhere; }
+.cargo-action-decisions ::deep .cargo-offer-reject:not(:disabled) { background: #1d4ed8; color: #fff; }
+.cargo-action-decisions ::deep .cargo-offer-accept:not(:disabled) { background: #c2410c; color: #fff; }

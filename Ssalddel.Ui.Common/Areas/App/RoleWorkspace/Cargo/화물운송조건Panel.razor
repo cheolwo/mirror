@@ -1,0 +1,19 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+
+<section class="cargo-conditions @(Compact ? "cargo-conditions--compact" : "")" aria-label="운송 조건 비교">
+    @if (!Compact) { <h3>운송 조건</h3> }
+    <dl>
+        @foreach (var field in Fields)
+        {
+            <div class="@(field.Label is "상차 시간" or "하차 시간" ? "cargo-conditions__window" : "")">
+                <dt>@field.Label</dt><dd>@field.Value</dd>
+            </div>
+        }
+    </dl>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<RoleWorkspaceField> Fields { get; set; } = [];
+    [Parameter] public bool Compact { get; set; }
+}

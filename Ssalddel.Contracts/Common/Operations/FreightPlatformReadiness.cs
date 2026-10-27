@@ -29,9 +29,25 @@ public sealed class FreightPlatformReadinessDto
     public string BrokeragePermitStatusCode { get; init; } = FreightPlatformReadinessStatusCodes.Unknown;
     public bool FreeConnectionConfigured { get; init; }
     public bool CanActivateOperations { get; init; }
+    public FreightInformationSubscriptionPlanDto? PlannedInformationSubscription { get; init; }
     public string Notice { get; init; } = "준비 자료 확인과 실제 기관 등록·허가, 영업 활성화는 별개입니다. 이 조회는 운영을 활성화하지 않습니다.";
     public IReadOnlyList<FreightPlatformReadinessRequirementDto> Requirements { get; init; } = [];
     public IReadOnlyList<string> MissingRequirementCodes { get; init; } = [];
+}
+
+/// <summary>향후 사업 모델의 검토 후보이며 현재 이용료·청구 명령·운송 계약 권한이 아닙니다.</summary>
+public sealed class FreightInformationSubscriptionPlanDto
+{
+    public string ModelCode { get; init; } = string.Empty;
+    public IReadOnlyList<decimal> CandidateMonthlyAmountsKrw { get; init; } = [];
+    public decimal? ConfirmedMonthlyAmountKrw { get; init; }
+    public bool PerShipmentCommissionPlanned { get; init; }
+    public bool RealtimeRecommendationsPlanned { get; init; }
+    public bool PartyFinalDecisionRequired { get; init; }
+    public bool BillingImplemented { get; init; }
+    public string LegalClassificationStatusCode { get; init; } = FreightPlatformReadinessStatusCodes.Unknown;
+    public bool LegalClassificationConfirmed { get; init; }
+    public string Notice { get; init; } = string.Empty;
 }
 
 public sealed class FreightPlatformReadinessRequirementDto

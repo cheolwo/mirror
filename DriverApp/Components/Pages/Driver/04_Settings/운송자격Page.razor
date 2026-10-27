@@ -1,0 +1,32 @@
+@page "/driver/qualification"
+@using Ssalddel.Contracts.Driver.Profile
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@inject IDriverApiClient Api
+@inject IAuthSession Session
+@implements IDisposable
+<PageTitle>운송 자격 확인</PageTitle>
+<MudContainer MaxWidth="MaxWidth.Small"><MudButton Href="/driver/menu" Variant="Variant.Text" StartIcon="@Icons.Material.Outlined.ArrowBack">내 정보로</MudButton>
+    @if (model is not null && Session.IsAuthenticated) { <TransportQualificationPanel Model="model" /> }
+    else { <p role="alert">로그인한 뒤 운송 자격을 확인해 주세요.</p><a href="/driver/login">로그인</a> }
+</MudContainer>
+@code {
+    private 운송자격ViewModel? model;
+    private string SessionKey => Session.UserId + ":" + Session.SessionRevision;
+    private string? originalSession;
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += SessionChanged;
+        await Session.RestoreAsync();
+        if (!Session.IsAuthenticated) return;
+        originalSession = SessionKey;
+        model = new(new 운송자격Client(async ct => await Api.GetAsync<운송자격상세Dto>(운송자격Client.OwnPath, "운송 자격 확인", ct) ?? throw new InvalidDataException(),
+            async (request, ct) => await Api.PostAsync<object, 운송자격상세Dto>(운송자격Client.OwnPath, request, "운송 자격 검토 요청", ct) ?? throw new InvalidDataException()), sessionKey: () => SessionKey);
+        await model.LoadAsync();
+    }
+    private void SessionChanged()
+    {
+        if (originalSession is not null && originalSession != SessionKey)
+        { model?.Invalidate(); model = null; _ = InvokeAsync(StateHasChanged); }
+    }
+    public void Dispose() { Session.Changed -= SessionChanged; model?.Dispose(); }
+}

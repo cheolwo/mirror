@@ -1,8 +1,11 @@
 using System.Globalization;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Components.Forms;
+using Ssalddel.Contracts.Common.Versioning;
+using Ssalddel.Contracts.Common.Workflow;
 using Ssalddel.Contracts.Driver.Transport;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
@@ -21,6 +24,7 @@ public sealed class CargoTransportActionViewModel : IDisposable
     private IBrowserFile? _photo;
     private CargoEvidenceUploadResponse? _uploaded;
     private bool _captureNeedsReview;
+    private Guid? _confirmedRejectedCompletionRequestId;
     public CargoTransportActionViewModel(CargoDriverWorkspaceApiClient client, IRoleWorkspaceApi api, IRoleWorkspaceAccess access,
         I업무사진촬영Adapter? capture = null, IWorkflowRecoveryStore? recoveryStore = null,
         IWorkflowRecoveryContext? recoveryContext = null)
@@ -30,6 +34,7 @@ public sealed class CargoTransportActionViewModel : IDisposable
         Lifetime = new(access, RoleWorkspaceCatalog.CargoDriver, Clear);
     }
     public CargoInputLifetime Lifetime { get; }
+    public WorkflowCompletionFeedback CompletionFeedback { get; } = new();
     public long ItemId { get; private set; }
     public string ActionKey { get; private set; } = "";
     public 기사운송상세응답? Source { get; private set; }
@@ -136,10 +141,15 @@ public sealed class CargoTransportActionViewModel : IDisposable
             Source = source;
             if (AwaitingResult)
             {
-                if (!IsCanonicalCompletion(source))
+                if (IsCanonicalCompletion(source))
+                {
+                    await recovery.ConfirmAsync(ct);
+                    RequireCurrent(ct);
+                    _confirmedRejectedCompletionRequestId = null;
+                    RecordCompletion();
+                }
+                else if (!await ConfirmRejectedCompletionAsync(source, ct))
                     throw new InvalidOperationException("이전 처리 결과를 아직 확인하지 못했습니다. 다시 저장하지 말고 현재 상태를 확인해 주세요.");
-                await recovery.ConfirmAsync(ct);
-                RequireCurrent(ct);
             }
         });
     }
@@ -214,9 +224,28 @@ public sealed class CargoTransportActionViewModel : IDisposable
                 RequireCurrent(ct);
                 await recovery.BeginAsync(ct);
                 RequireCurrent(ct);
-                var result = ActionKey == "pickup"
-                    ? await _client.PickupAsync(ItemId, PickupPayload(_uploaded), ct)
-                    : await _client.DropoffAsync(ItemId, new 기사운송하차완료요청 { 하차사진ObjectName = _uploaded.ObjectName, 하차사진Url = _uploaded.Url }, ct);
+                var submittedRecordId = recovery.Pending!.RequestId;
+                기사운송상태변경응답? result;
+                try
+                {
+                    result = ActionKey == "pickup"
+                        ? await _client.PickupAsync(ItemId, PickupPayload(_uploaded), ct)
+                        : await _client.DropoffAsync(ItemId, new 기사운송하차완료요청 { 하차사진ObjectName = _uploaded.ObjectName, 하차사진Url = _uploaded.Url }, ct);
+                }
+                catch (RoleWorkspaceAccessException ex) when (IsConfirmedCompletionRejection(ex))
+                {
+                    RequireCurrent(ct);
+                    if (recovery.Pending?.RequestId == submittedRecordId)
+                        _confirmedRejectedCompletionRequestId = submittedRecordId;
+                    // 확정 미적용 응답도 같은 운송의 현재 단계를 재조회한 뒤에만 재입력을 허용한다.
+                    // 이 근거는 현재 화면 수명에만 두며 응답 유실이나 재실행을 거절로 추측하지 않는다.
+                    var current = await _client.TransportAsync(ItemId, ct);
+                    RequireCurrent(ct); CargoWorkspacePresentation.RequireTransport(current, ItemId);
+                    if (current.개인정보제공보류) throw new RoleWorkspaceAccessException(403, "운송 정보 제공 조건을 확인해 주세요.");
+                    Source = current;
+                    await ConfirmRejectedCompletionAsync(current, ct);
+                    throw;
+                }
                 RequireCurrent(ct);
                 if (result?.Id != ItemId) throw new InvalidOperationException("완료 처리 응답을 확인하지 못했습니다. 운송 상태를 다시 조회해 주세요.");
                 if (result.상태 != (ActionKey == "pickup" ? "상차완료" : "인수완료"))
@@ -234,6 +263,7 @@ public sealed class CargoTransportActionViewModel : IDisposable
             Saved = true;
             await recovery.ConfirmAsync(ct);
             RequireCurrent(ct);
+            RecordCompletion();
             _photo = null; _uploaded = null;
         }, "저장된 운송 상태를 확인했습니다. 지도로 돌아가 다음 업무를 확인해 주세요.",
             ActionKey == "issue"
@@ -246,6 +276,47 @@ public sealed class CargoTransportActionViewModel : IDisposable
         "dropoff" => source.상태 == "인수완료",
         _ => false // 기존 신고 존재만으로 이번 신고의 처리 결과를 확정하지 않습니다.
     };
+    private bool IsConfirmedCompletionRejection(RoleWorkspaceAccessException exception)
+    {
+        if (ActionKey is not ("pickup" or "dropoff")
+            || exception.StatusCode is < 400 or >= 500 or 401 or 403 or 408 or 429)
+            return false;
+        var problem = SsalddelApiProblemParser.Parse(exception.ResponseBody ?? string.Empty);
+        var context = problem.WorkflowContext;
+        var stage = ActionKey == "pickup" ? OperatingSystemLifecycleStageIds.CargoPickup : OperatingSystemLifecycleStageIds.CargoDropoff;
+        return context?.유효한가() == true && context.OperatingSystemId == OperatingSystemIds.DomesticCargoTransport
+            && context.OutcomeCode == 업무처리결과Codes.미적용
+            && (context.StageId == stage || context.StageId == OperatingSystemLifecycleStageIds.CargoInterruptionRecovery
+                && (exception.ErrorCode ?? problem.ErrorCode) == "CargoTransportHeld");
+    }
+    private async Task<bool> ConfirmRejectedCompletionAsync(기사운송상세응답 source, CancellationToken ct)
+    {
+        RequireCurrent(ct);
+        if (_confirmedRejectedCompletionRequestId is not { } rejectedId || recovery.Pending?.RequestId != rejectedId
+            || source.Id != ItemId || source.개인정보제공보류
+            || source.기사_운송자 != recovery.Pending.Owner
+            || source.상태 != (ActionKey == "pickup" ? "상차지도착" : ActionKey == "dropoff" ? "하차지도착" : string.Empty))
+            return false;
+        await recovery.LoadAsync(ct);
+        RequireCurrent(ct);
+        if (recovery.Pending?.RequestId != rejectedId) return false;
+        await recovery.ConfirmAsync(ct);
+        RequireCurrent(ct);
+        await recovery.LoadAsync(ct);
+        RequireCurrent(ct);
+        if (recovery.Pending is not null) return false;
+        _confirmedRejectedCompletionRequestId = null;
+        return true;
+    }
+    private void RecordCompletion()
+    {
+        if (ActionKey is not ("pickup" or "dropoff") || Source is null || !IsCanonicalCompletion(Source)) return;
+        var final = ActionKey == "dropoff";
+        CompletionFeedback.Record(new($"cargo:{ItemId}:{ActionKey}",
+            final ? "하차가 완료되었습니다" : "상차가 완료되었습니다",
+            final ? "하차·인수 완료 상태를 확인했습니다. 정산과 입금은 별도로 확인합니다." : "상차 완료 상태를 확인했습니다.",
+            CompletionNextStep, final, WorkflowCompletionVisuals.CargoIconPath, "#DC2626"));
+    }
     private void RequireCurrent(CancellationToken ct) { Lifetime.RequireCurrent(ct); recovery.RequireCurrent(ct); }
     private void RequireIssueRecorded(기사운송요약응답 source)
     {
@@ -285,8 +356,10 @@ public sealed class CargoTransportActionViewModel : IDisposable
     }
     private void Clear()
     {
+        CompletionFeedback.Clear();
         Source = null; Saved = false; _photo = null; _uploaded = null;
         _captureNeedsReview = false; PhotoCaptureMessage = null;
+        _confirmedRejectedCompletionRequestId = null;
         CargoConfirmed = LocationConfirmed = RecipientConfirmed = PaymentConfirmed = SaveConfirmed = false;
         DocumentPhotoConfirmed = ReceiptOmissionConfirmed = WorkCannotContinue = false;
         RecipientName = RecipientSignature = DriverSignature = ReceiptOmissionReason = IssueReason = IssueMemo = "";

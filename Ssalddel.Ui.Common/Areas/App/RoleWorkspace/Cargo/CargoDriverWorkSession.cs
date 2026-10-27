@@ -26,6 +26,7 @@ public sealed class CargoDriverWorkSession(CargoDriverWorkspaceApiClient client,
     public const string EnableDispatch = "cargo-driver.enable-dispatch";
     public const string DisableDispatch = "cargo-driver.disable-dispatch";
     public const string CheckLocation = "cargo-driver.check-location";
+    public const string WorkSettings = "cargo-driver.work-settings";
     private readonly TimeProvider time = clock ?? TimeProvider.System;
     private 기사운행상태응답? work;
     private 운영배차수신상태Dto? reception;
@@ -71,6 +72,10 @@ public sealed class CargoDriverWorkSession(CargoDriverWorkspaceApiClient client,
             new(Receiving ? DisableDispatch : EnableDispatch, "신규 배차 받기",
                 Enabled: Driving && !blocked && FoodDriverDispatchReceptionPolicy.IsKnown(reception),
                 DisabledReason: !Driving ? "운행을 먼저 시작해 주세요." : blocked ? "수신 변경 결과를 확인하고 있습니다." : null,
+                RequiresConfirmation: false),
+            new(WorkSettings, "받을 업무·적재 설정", "/workspace/cargo-driver/settings",
+                Enabled: Known && !blocked,
+                DisabledReason: !Known ? "현재 운행 상태를 확인해 주세요." : blocked ? "이전 요청 결과를 먼저 확인해 주세요." : null,
                 RequiresConfirmation: false)
         ];
         if (locationNotice is not null && Driving)

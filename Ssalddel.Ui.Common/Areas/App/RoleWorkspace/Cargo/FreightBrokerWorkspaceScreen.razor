@@ -1,0 +1,79 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@inject FreightBrokerWorkspaceViewModel Model
+@inject IRoleWorkspaceAccess Access
+@implements IDisposable
+
+<main class="broker-workspace" aria-label="운송주선업무">
+    <header><a href="/">역할 선택</a><h1>운송주선업무</h1><p>내가 작성한 정보 공고와 참여 중인 화물 협업 원장을 확인합니다.</p></header>
+    <nav class="broker-links" aria-label="화물 정보 업무">
+        <a href="@CargoNoticeNavigation.Mine">내 공고 작성·관리</a>
+        <a href="@CargoNoticeNavigation.Public">공개 화물 정보</a>
+        <a href="@CollaborationHref">화물 협업 글</a>
+    </nav>
+    <section aria-label="내 화물 협업 원장">
+        <div class="broker-toolbar"><h2>내 화물 협업 원장</h2><button type="button" disabled="@(_initializing || _initializationError is not null || Model.IsBusy)" @onclick="Model.LoadAsync">다시 조회</button></div>
+        @if (_initializing)
+        { <p role="status">저장된 로그인 상태를 확인하고 있습니다.</p> }
+        else if (_initializationError is { } initializationError)
+        { <p role="alert">@initializationError</p><button type="button" @onclick="InitializeAsync">로그인 상태 다시 확인</button> }
+        else if (!Model.IsAuthenticated || Model.RequiresLogin)
+        { <p role="status">로그인하면 본인이 참여하거나 작성한 업무를 확인할 수 있습니다.</p><a class="broker-login" href="@LoginHref">로그인</a> }
+        else if (Model.Error is { } error)
+        { <p role="alert">@error</p> }
+        else if (Model.IsBusy)
+        { <p role="status">본인 화물 협업 정보를 불러오는 중입니다.</p> }
+        else if (Model.HasLoaded && Model.Items.Count == 0)
+        { <p role="status">현재 조회할 본인 화물 협업 원장이 없습니다.</p> }
+        else if (!Model.HasLoaded)
+        { <p role="status">현재 로그인 계정의 업무를 다시 조회해 주세요.</p> }
+        @if (Model.Items.Count > 0)
+        {
+            <ul class="broker-cards">
+            @foreach (var item in Model.Items)
+            {
+                <li @key="item.Id"><button type="button" disabled="@Model.IsBusy" aria-pressed="@(Model.SelectedId == item.Id)" @onclick="() => Model.SelectAsync(item.Id)">
+                    <strong>@item.Title</strong><span>@item.Status · @item.Stage</span><small>내 참여: @item.ParticipationRole</small><span>원장 상세 보기</span>
+                </button></li>
+            }
+            </ul>
+        }
+    </section>
+    @if (Model.DetailMessage is { } message) { <p role="status">@message</p> }
+    @if (Model.Detail is { } detail)
+    {
+        <section class="broker-detail" aria-label="선택한 내 화물 원장">
+            <h2>@detail.Title</h2><dl><div><dt>상태</dt><dd>@detail.Status</dd></div><div><dt>현재 단계</dt><dd>@detail.Stage</dd></div></dl>
+            @if (!detail.WorkflowEnabled) { <p>현재 이 원장의 실행 기능은 꺼져 있습니다. 저장된 상태만 확인합니다.</p> }
+            @if (detail.Blocks.Count == 0) { <p>저장된 업무 단계가 없습니다.</p> }
+            @foreach (var block in detail.Blocks) { <article><strong>@block.Title</strong><p>@block.Status</p></article> }
+        </section>
+    }
+    <p class="broker-scope">현재 계정의 정보·협업 업무입니다. 업체 전체 의뢰·수수료·정산이나 운송주선 허가 확인을 대신하지 않습니다.</p>
+</main>
+
+@code {
+    [Parameter] public string LoginHref { get; set; } = "/workspace-login/freight-broker?returnUrl=%2Fworkspace%2Ffreight-broker";
+    private static string CollaborationHref => Ssalddel.Contracts.Common.Community.CommunityPageRoutes.BoardsFor(workflowTag: FreightBrokerWorkspaceClient.WorkflowTag);
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _initializing, _disposed;
+    private long _initializationGeneration;
+    private string? _initializationError;
+    protected override async Task OnInitializedAsync() { Model.Changed += Changed; await InitializeAsync(); }
+    private async Task InitializeAsync()
+    {
+        if (_disposed || _initializing) return;
+        var ticket = ++_initializationGeneration; _initializing = true; _initializationError = null;
+        try
+        {
+            await Access.EnsureInitializedAsync(RoleWorkspaceCatalog.FreightBroker, _lifetime.Token);
+            if (!_disposed && ticket == _initializationGeneration) await Model.LoadAsync();
+        }
+        catch (OperationCanceledException) when (_disposed || ticket != _initializationGeneration) { }
+        catch (Exception) { if (!_disposed && ticket == _initializationGeneration) _initializationError = "저장된 로그인 상태를 확인하지 못했습니다. 다시 확인해 주세요."; }
+        finally { if (!_disposed && ticket == _initializationGeneration) _initializing = false; }
+    }
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose()
+    { _disposed = true; _initializationGeneration++; _lifetime.Cancel(); _lifetime.Dispose(); Model.Changed -= Changed; Model.Dispose(); }
+}

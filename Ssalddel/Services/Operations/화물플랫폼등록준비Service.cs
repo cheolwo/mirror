@@ -42,12 +42,12 @@ public sealed class 화물플랫폼등록준비Service(
     private static readonly (string Code, string Title, string NextAction)[] Dossier =
     [
         ("subordinate-rules-review", "확정 등록 세부기준 대조", "시행령·시행규칙의 확정 기준과 실제 신청 요건을 대조해 주세요."),
-        ("business-plan", "사업계획·이용요금·부가서비스", "무료 0원 요금과 실제 부가서비스를 포함한 사업계획 검토 근거를 기록해 주세요."),
+        ("business-plan", "사업계획·이용요금·부가서비스", "현재 무료 설정과 향후 월정액 정보추천 계획을 구분하고, 납부 주체·확정 금액·갱신·환불 조건의 검토 근거를 기록해 주세요."),
         ("office", "사무실 등 등록 시설", "확정 기준에 따른 실제 사무실·시설 자료와 검토 근거를 확인해 주세요."),
         ("disqualification-review", "사업자 결격사유 확인", "신청 주체와 적용 대상자의 결격사유를 적법한 범위에서 확인해 주세요."),
         ("information-security", "화물정보 처리·보안 체계", "실제 접근권한·변경 이력·보안·장애 복구 검증 근거를 확인해 주세요."),
-        ("direct-contract-payment", "무료 연결·직접계약·직접지급", "실제 운송계약 당사자와 수납·정산 경로를 확인해 주세요. 무료 자체가 허가 면제 판정은 아닙니다."),
-        ("fee-filing-dossier", "이용요금 신고 준비", "0원 요금을 포함한 신고 서류·절차와 제출 근거를 준비해 주세요."),
+        ("direct-contract-payment", "정보추천·당사자 계약·대금 흐름", "기사의 수락·거절과 계약 당사자의 최종 결정, 실제 수납·지급 경로를 확인해 주세요. 월정액이나 직접 수락만으로 허가 면제를 판단하지 않습니다."),
+        ("fee-filing-dossier", "이용요금 신고 준비", "현재 0원 설정과 향후 확정할 월정액 요금의 적용 시기·신고 절차를 구분하고 제출 근거를 준비해 주세요."),
         ("terms-filing-dossier", "이용약관 신고 준비", "실제 계약·취소·분쟁 기준과 적용 약관의 신고 준비 근거를 확인해 주세요."),
         ("violation-prior-notice", "금지행위 사전 고지", "무허가 운송·무자격 운전·과적·불법 재위탁의 적용 기준과 사전 고지를 확인해 주세요."),
         ("violation-review-report", "위반 확인·기관 신고 절차", "의심·확인·미전송·전송 증거·기관 확인을 구분한 담당자와 신고 절차를 검토해 주세요."),
@@ -66,12 +66,16 @@ public sealed class 화물플랫폼등록준비Service(
             definition.NextAction, value.Requirements.GetValueOrDefault(definition.Code), now)).ToList();
         items.Add(new()
         {
-            Code = "free-fee-settings", Title = "무료 배차·이용료 0원 설정",
+            Code = "free-fee-settings", Title = "현재 무료·이용료 0원 실행 설정",
             StatusCode = free ? FreightPlatformReadinessStatusCodes.Prepared : FreightPlatformReadinessStatusCodes.Pending,
             IsSatisfied = free,
-            NextAction = free ? "현재 서버 설정은 무료 배차·기본 및 월 상한 0원입니다. 실제 운임·당사자 직접지급은 별도입니다."
-                : "이번 무료 연결 모드와 기사 기본이용료·월상한 0원 설정을 일치시켜 주세요."
+            NextAction = free ? "현재 서버는 무료·0원 설정입니다. 향후 월정액 후보는 이 설정이나 실제 청구에 적용되지 않으며 운송대금과도 별개입니다."
+                : "현재 무료·0원 실행 설정을 확인해 주세요. 기존 건수 누적형 기본이용료·월상한을 월정액 후보로 바꾸어 사용하지 않습니다."
         });
+        var subscriptionClassification = Evaluate("information-subscription-classification", "월정액 정보추천의 법적 분류 확인",
+            "월정액도 유상 서비스입니다. 실시간 단건 추천·수락 결과 전달과 운임 협상·계약 중개의 경계를 실제 화면·약관·대금 흐름으로 서면 확인하고 기관 회신 참조를 남겨 주세요.",
+            value.Requirements.GetValueOrDefault("information-subscription-classification"), now, authority: true);
+        items.Add(subscriptionClassification);
         var commerce = commerceOptions.Value;
         var commerceReady = !string.IsNullOrWhiteSpace(commerce.TermsApprovalReference)
             && !string.IsNullOrWhiteSpace(commerce.PrivacyApprovalReference)
@@ -95,12 +99,26 @@ public sealed class 화물플랫폼등록준비Service(
             "약관 준비·접수 주장·전송 근거와 실제 기관 확인을 구분해 기록해 주세요. 이 서버는 외부 신고를 전송하지 않습니다.", value.TermsFiling, now, authority: true);
         return new()
         {
+            PolicyVersion = "freight-platform-readiness-2026-10-26-r4",
             EvaluatedAtUtc = now, IsPreparationComplete = items.All(x => x.IsSatisfied),
             ActualRegistrationConfirmed = registration.IsSatisfied,
             RequiredAuthorityProceduresConfirmed = registration.IsSatisfied && feeFiling.IsSatisfied && termsFiling.IsSatisfied,
             PlatformRegistrationStatusCode = registration.StatusCode,
             BrokeragePermitStatusCode = brokerage.StatusCode,
             FreeConnectionConfigured = free, CanActivateOperations = false,
+            PlannedInformationSubscription = new()
+            {
+                ModelCode = "MonthlyInformationSubscriptionDraft",
+                CandidateMonthlyAmountsKrw = [5000m, 10000m],
+                ConfirmedMonthlyAmountKrw = null,
+                PerShipmentCommissionPlanned = false,
+                RealtimeRecommendationsPlanned = true,
+                PartyFinalDecisionRequired = true,
+                BillingImplemented = false,
+                LegalClassificationStatusCode = subscriptionClassification.StatusCode,
+                LegalClassificationConfirmed = subscriptionClassification.IsSatisfied,
+                Notice = "월정액 5천원·1만원은 검토 후보입니다. 확정 요금·실제 청구·주선업 허가 면제 또는 운영 허용을 뜻하지 않습니다."
+            },
             MissingRequirementCodes = items.Where(x => !x.IsSatisfied).Select(x => x.Code).ToArray(),
             Requirements = [.. items, registration, brokerage, feeFiling, termsFiling]
         };

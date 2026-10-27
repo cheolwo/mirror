@@ -1,0 +1,11 @@
+@page "/driver/public-cargo"
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@inject IAuthSession Session
+
+<PageTitle>공개 화물 · 살뜰 기사</PageTitle>
+
+<CargoPublicBrowseScreen PrimaryActionHref="@DriverRoutes.WorkStart"
+                         PrimaryActionLabel="@(Session.IsAuthenticated ? "배차 추천받기" : "로그인하고 배차 추천받기")"
+                         SecondaryActionHref="@DriverRoutes.CurrentTransport"
+                         SecondaryActionLabel="진행 중 운송 확인"
+                         ReturnHref="@DriverRoutes.HomeSummary" ReturnLabel="기사 홈" />

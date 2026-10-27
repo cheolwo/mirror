@@ -1,0 +1,69 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Contracts.Common.Transport
+@inject 공개화물목록ViewModel Model
+@implements IDisposable
+
+<section class="cargo-public-browse" aria-label="공개 화물 목록">
+    <header>
+        <span class="cargo-public-browse__eyebrow">로그인 없이 둘러보기</span>
+        <h2>공개 화물 목록</h2>
+        <p>공개된 화물 조건을 먼저 살펴보세요. 운송 의뢰와 배차 신청·추천은 로그인 후 진행합니다.</p>
+    </header>
+    <nav class="cargo-public-browse__actions" aria-label="화물 업무 시작">
+        @if (InformationNoticesHref is { Length: > 0 })
+        { <a href="@InformationNoticesHref">화물 정보 공고 둘러보기</a> }
+        <a class="cargo-public-browse__primary" href="@PrimaryActionHref">@PrimaryActionLabel</a>
+        @if (SecondaryActionHref is { Length: > 0 })
+        { <a href="@SecondaryActionHref">@SecondaryActionLabel</a> }
+        @if (ReturnHref is { Length: > 0 })
+        { <a href="@ReturnHref">@ReturnLabel</a> }
+    </nav>
+    <p class="cargo-public-browse__boundary">신청이나 추천을 선택하기 전에는 배차가 시작되지 않습니다. 연락처·상세 주소·개인 운송 내역은 공개하지 않습니다.</p>
+    <div class="cargo-public-browse__toolbar">
+        <strong>@Model.Page 페이지</strong>
+        <button type="button" disabled="@Model.IsLoading" @onclick="Refresh">새로고침</button>
+    </div>
+    @if (Model.IsLoading)
+    { <p role="status">공개 화물 목록을 불러오는 중입니다.</p> }
+    else if (Model.Error is { } error)
+    { <div role="alert"><p>@error</p><button type="button" @onclick="Refresh">다시 시도</button></div> }
+    else if (Model.HasLoaded && Model.Items.Count == 0)
+    { <p role="status">이 페이지에 공개된 화물이 없습니다.</p> }
+    else
+    {
+        <ul class="cargo-public-browse__list">
+            @foreach (var cargo in Model.Items)
+            {
+                <li>
+                    <h3>@(string.IsNullOrWhiteSpace(cargo.화물종류) ? "화물 조건 미입력" : cargo.화물종류)</h3>
+                    <p>@cargo.의뢰상태 · @cargo.배차상태</p>
+                    <dl>
+                        <div><dt>운송 방식</dt><dd>@화물운송조건표시.운송방식(cargo.운송방식)</dd></div>
+                        <div><dt>차량 종류</dt><dd>@화물운송조건표시.차량종류(cargo.차량종류)</dd></div>
+                        <div><dt>수량</dt><dd>@화물운송조건표시.수량(cargo.화물수량)</dd></div>
+                        <div><dt>중량</dt><dd>@화물운송조건표시.중량(cargo.화물중량Kg)</dd></div>
+                    </dl>
+                </li>
+            }
+        </ul>
+    }
+    <nav class="cargo-public-browse__pagination" aria-label="공개 화물 페이지">
+        <button type="button" disabled="@(Model.IsLoading || Model.Page <= 1)" @onclick="Previous">이전</button>
+        <button type="button" disabled="@(!Model.CanReadNext)" @onclick="Next">다음</button>
+    </nav>
+</section>
+
+@code {
+    [Parameter] public string? InformationNoticesHref { get; set; }
+    [Parameter] public string PrimaryActionHref { get; set; } = "/workspace-login/shipper?returnUrl=%2Fshipper%2Frequest";
+    [Parameter] public string PrimaryActionLabel { get; set; } = "로그인하고 운송 의뢰";
+    [Parameter] public string? SecondaryActionHref { get; set; }
+    [Parameter] public string SecondaryActionLabel { get; set; } = "로그인하고 추천 확인";
+    [Parameter] public string? ReturnHref { get; set; }
+    [Parameter] public string ReturnLabel { get; set; } = "돌아가기";
+    protected override Task OnInitializedAsync() => Model.LoadAsync();
+    private Task Refresh() => Model.LoadAsync(Model.Page);
+    private Task Previous() => Model.LoadAsync(Model.Page - 1);
+    private Task Next() => Model.CanReadNext ? Model.LoadAsync(Model.Page + 1) : Task.CompletedTask;
+    public void Dispose() => Model.Dispose();
+}

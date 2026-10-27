@@ -1,0 +1,93 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@using Ssalddel.Contracts.Driver.Profile
+@implements IDisposable
+
+<section class="qualification-panel" aria-label="운송 자격 확인">
+    <header><MudIcon Icon="@Icons.Material.Outlined.Badge" /><div><h1>@(Model.Administrator ? "기사 운송 자격 검토" : "운송 자격 확인")</h1><p>운송수단에 맞는 자료와 실제 차량의 확인 상태를 봅니다.</p></div></header>
+    <p class="qualification-panel__notice">주민등록번호·면허번호·서류 원본을 입력하지 마세요. 별도 보관된 비공개 증빙 참조코드만 사용합니다.</p>
+    @if (Model.Error is { } error) { <p role="alert" class="qualification-panel__error">@error</p> }
+    @if (Model.Message is { } message) { <p role="status">@message</p> }
+    @if (Model.Busy) { <p role="status">확인 중입니다.</p> }
+    @if (Model.Current is { } current)
+    {
+        <article class="qualification-panel__summary">
+            <strong>@운송자격Presentation.Status(current.Status)</strong>
+            <p>@current.Eligibility.Message</p>
+            <p>@(current.OfficialAuthorityVerified ? "공식기관 확인 기록 있음" : "공식기관 확인 미완료") · 자료 검토와 법정 적격·영업 허용은 별개입니다.</p>
+            @if (!string.IsNullOrWhiteSpace(current.ReviewReason)) { <p>최근 검토 사유: @current.ReviewReason</p> }
+            @if (!Model.Administrator && current.Status == 운송자격Codes.Suspended) { <p>이용 정지 상태입니다. 관리자에게 사유와 자료 보완 절차를 문의해 주세요.</p> }
+            @if (current.RecheckAtUtc is { } recheck) { <p>재확인 예정: @recheck.ToLocalTime().ToString("yyyy-MM-dd")</p> }
+        </article>
+        <fieldset disabled="@(!Model.CanEdit)">
+            <legend>운송수단·차량</legend>
+            @if (Model.Administrator)
+            { <p>@(Model.VehicleKind == 운송자격Codes.Motorcycle ? "오토바이" : "용달·트럭") · 프로필 차량 @Model.VehicleProfileValue</p> }
+            else
+            {
+                <label>운송수단<select value="@Model.VehicleKind" @onchange="VehicleChanged"><option value="Motorcycle">오토바이</option><option value="FreightVehicle">용달·트럭</option></select></label>
+                <label>프로필에 등록된 차량 정보<input maxlength="100" @bind="Model.VehicleProfileValue" /></label>
+            }
+            <label>@(Model.Administrator ? "검토한 실제 차량 참조코드" : "실제 차량 비공개 참조코드")<input maxlength="160" placeholder="vehicle:등록된 관리 ID" @bind="Model.ActualVehicleReference" /></label>
+            @if (Model.VehicleKind == 운송자격Codes.FreightVehicle)
+            {
+                <label>운송사업자 비공개 참조코드<input maxlength="160" placeholder="operator:등록된 관리 ID" @bind="Model.TransportOperatorReference" disabled="@Model.Administrator" /></label>
+            }
+        </fieldset>
+        <fieldset disabled="@(!Model.CanEdit)">
+            <legend>운송수단별 검토 자료</legend>
+            <p>필요한 자료는 계약·차량·보장 범위에 따라 검토합니다. 아래 목록만으로 법정 요건 충족이 확정되지는 않습니다.</p>
+            @foreach (var row in Model.Rows)
+            {
+                <div class="qualification-panel__evidence" @key="row.Code">
+                    <strong>@운송자격Presentation.Requirement(row.Code)</strong>
+                    @if (Model.Administrator)
+                    {
+                        <p>비공개 참조: @row.Reference</p>
+                        <label>자료 검토 요약<input maxlength="300" @bind="row.Summary" /></label>
+                        <label class="qualification-panel__check"><input type="checkbox" @bind="row.Checked" />자료와 적용 범위를 확인했습니다</label>
+                    }
+                    else
+                    {
+                        <label>증빙 참조코드<input maxlength="160" placeholder="private-evidence:등록된 관리 ID" @bind="row.Reference" /></label>
+                        <label>자료 설명 (3자 이상)<input maxlength="300" @bind="row.Summary" /></label>
+                    }
+                    <label>효력 시작일 (자료에 있을 때)<input type="date" value="@row.ValidFromDate" @onchange="e => row.ValidFromDate = e.Value?.ToString() ?? string.Empty" /></label>
+                    <label>자료상 유효기한 @(row.Insurance ? "(보험은 필수)" : "")<input type="date" value="@row.ValidUntilDate" disabled="@(row.NoStatedExpiry && !row.Insurance)" @onchange="e => row.ValidUntilDate = e.Value?.ToString() ?? string.Empty" /></label>
+                    @if (!row.Insurance) { <label class="qualification-panel__check"><input type="checkbox" @bind="row.NoStatedExpiry" />자료에 만료일이 명시돼 있지 않습니다</label> }
+                </div>
+            }
+        </fieldset>
+        @if (Model.Administrator)
+        {
+            <fieldset disabled="@(!Model.CanEdit)"><legend>검토 결과</legend>
+                <label>검토 사유 (10자 이상)<textarea rows="3" maxlength="600" @bind="Model.ReviewReason"></textarea></label>
+                <label>다시 확인할 날짜<input type="date" value="@Model.RecheckDate" @onchange="e => Model.RecheckDate = e.Value?.ToString() ?? string.Empty" /></label>
+                <p>자체 자료 검토 결과를 기록합니다. 공식기관 조회 완료나 플랫폼 등록 승인을 대신하지 않습니다.</p>
+            </fieldset>
+            <div class="qualification-panel__actions">
+                <button type="button" disabled="@(!Model.CanApprove)" @onclick="() => Model.ReviewAsync(운송자격Codes.Valid)">검토 유효로 기록</button>
+                <button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Model.ReviewAsync(운송자격Codes.Rejected)">보완 요청</button>
+                <button type="button" disabled="@(!Model.CanEdit)" @onclick="() => Model.ReviewAsync(운송자격Codes.Suspended)">이용 정지</button>
+            </div>
+        }
+        else
+        {
+            <button class="qualification-panel__primary" type="button" disabled="@(!Model.CanSubmit)" @onclick="Model.SubmitAsync">검토 요청</button>
+        }
+    }
+    <button class="qualification-panel__reload" type="button" disabled="@Model.Busy" @onclick="Model.LoadAsync">@(Model.NeedsResultCheck ? "처리 결과 확인" : "최신 상태 확인")</button>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 운송자격ViewModel Model { get; set; } = default!;
+    private 운송자격ViewModel? subscribed;
+    protected override void OnParametersSet()
+    {
+        if (subscribed == Model) return;
+        if (subscribed is not null) subscribed.Changed -= Changed;
+        subscribed = Model; subscribed.Changed += Changed;
+    }
+    private void VehicleChanged(ChangeEventArgs value) => Model.SetVehicleKind(value.Value?.ToString() ?? "");
+    private void Changed() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() { if (subscribed is not null) subscribed.Changed -= Changed; }
+}

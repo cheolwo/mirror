@@ -1,0 +1,21 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo
+@using Ssalddel.Contracts.Common.Community
+
+<div class="cargo-notice-summary">
+    <h3>@Content.Title</h3>
+    <p class="cargo-notice-summary__route"><strong>@PickupRegionName</strong><span aria-label="도착">→</span><strong>@DropoffRegionName</strong></p>
+    <dl>
+        <div><dt>화물</dt><dd>@Content.GoodsName</dd></div>
+        <div><dt>수량</dt><dd>@Content.Quantity 개</dd></div>
+        <div><dt>총 중량</dt><dd>@(Content.WeightKg is { } weight ? $"{weight:0.###} kg" : "지정 안 함")</dd></div>
+        <div><dt>차량 분류</dt><dd>@CargoNoticePresentation.Vehicle(Content.VehicleKind)</dd></div>
+    </dl>
+    @if (Content.DesiredFromUtc is not null)
+    { <p>희망 시간 (한국): @CargoNoticePresentation.Time(Content.DesiredFromUtc) ~ @CargoNoticePresentation.Time(Content.DesiredUntilUtc)</p> }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CargoNoticeContent Content { get; set; } = new();
+    [Parameter] public string PickupRegionName { get; set; } = "지역 미확인";
+    [Parameter] public string DropoffRegionName { get; set; } = "지역 미확인";
+}

@@ -75,6 +75,10 @@ public sealed class CargoDriverWorkspaceApiClient(IRoleWorkspaceApi api)
         => api.PostAsync<기사배차처리응답>(RoleWorkspaceCatalog.CargoDriver,
             "api/v1/driver/dispatch-actions/" + CargoWorkspaceRoutes.Segment(id) + "/accept", body, ct);
 
+    public async Task RejectAsync(string id, 기사배차거절요청 body, CancellationToken ct)
+        => _ = await api.PostAsync<object>(RoleWorkspaceCatalog.CargoDriver,
+            "api/v1/driver/dispatch-actions/" + CargoWorkspaceRoutes.Segment(id) + "/reject", body, ct);
+
     private static string TransportPath(long id)
         => "api/v1/driver/transports/" + CargoWorkspaceRoutes.Number(id);
 }

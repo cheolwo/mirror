@@ -1,0 +1,44 @@
+@namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Qualification
+@using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core
+@implements IDisposable
+@inject IRoleWorkspaceAccess Access
+@inject IRoleWorkspaceApi Api
+
+<main><a class="qualification-back" href="@ReturnHref">← 내 정보로</a>
+    @if (model is not null && identity?.IsAuthenticated == true)
+    { <TransportQualificationPanel Model="model" /> }
+    else if (loading) { <p role="status">로그인 상태를 확인하고 있습니다.</p> }
+    else { <p role="alert">@(error ?? "로그인한 뒤 운송 자격을 확인해 주세요.")</p><a href="@LoginHref">로그인</a> }
+</main>
+
+@code {
+    [Parameter] public string RoleKey { get; set; } = RoleWorkspaceCatalog.CargoDriver;
+    [Parameter] public string ReturnHref { get; set; } = "/workspace/cargo-driver";
+    [Parameter] public string LoginHref { get; set; } = "/workspace-login/cargo-driver";
+    private 운송자격ViewModel? model;
+    private RoleWorkspaceIdentity? identity;
+    private bool loading = true;
+    private string? error;
+    protected override async Task OnInitializedAsync()
+    {
+        Access.Changed += SessionChanged;
+        try
+        {
+            await Access.EnsureInitializedAsync(RoleKey);
+            identity = Access.GetIdentity(RoleKey);
+            if (identity.IsAuthenticated)
+            {
+                model = new(운송자격Client.ForRole(Api, RoleKey), sessionKey: () => Access.GetIdentity(RoleKey).ToString());
+                await model.LoadAsync();
+            }
+        }
+        catch { error = "로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요."; }
+        finally { loading = false; }
+    }
+    private void SessionChanged()
+    {
+        if (identity is not null && Access.GetIdentity(RoleKey) != identity)
+        { model?.Invalidate(); model = null; identity = null; error = "로그인 상태가 변경됐습니다. 다시 로그인해 주세요."; _ = InvokeAsync(StateHasChanged); }
+    }
+    public void Dispose() { Access.Changed -= SessionChanged; model?.Dispose(); }
+}

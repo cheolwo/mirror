@@ -2,6 +2,7 @@ using System.Globalization;
 using Ssalddel.Contracts.Common.Commerce;
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
+using Ssalddel.Contracts.Common.Transport;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Contracts.Driver.Recommendation;
 using Ssalddel.Contracts.Driver.Transport;
@@ -51,25 +52,9 @@ public sealed class ShipperWorkspaceAdapter(ShipperWorkspaceApiClient client) : 
             source.픽업위도 ?? source.픽업?.주소?.위도, source.픽업경도 ?? source.픽업?.주소?.경도,
             source.하차위도 ?? source.하차?.주소?.위도, source.하차경도 ?? source.하차?.주소?.경도);
         var ended = CargoWorkspacePresentation.IsClosed(source.운송상태) || CargoWorkspacePresentation.IsClosed(source.의뢰상태);
-        var locationText = ended ? "운송 종료 후 비공개" : ShipperRequestDetailPresentation.ResolveDriverLocationFreshness(presentation);
-        var now = DateTimeOffset.UtcNow;
-        if (!ended
-            && !string.IsNullOrWhiteSpace(source.확정기사Id)
-            && source.기사최근위치시각Utc is { } measured
-            && ShipperRequestDetailPresentation.NormalizeUtc(measured) <= now.UtcDateTime
-            && !ShipperRequestDetailPresentation.IsDriverLocationStale(presentation)
-            && CargoWorkspacePresentation.Point(source.기사최근위도, source.기사최근경도) is { } driver
-            && (driver.Latitude != 0 || driver.Longitude != 0))
-        {
-            var measuredAt = new DateTimeOffset(ShipperRequestDetailPresentation.NormalizeUtc(measured));
-            markers.Add(new(source.의뢰Id + "|driver", "운송 기사", NeighborhoodMapMarkerKinds.Driver,
-                driver.Latitude, driver.Longitude, MeasuredAt: measuredAt,
-                ExpiresAt: measuredAt.Add(ShipperRequestDetailPresentation.DriverLocationFreshnessWindow)));
-            locationText += " · " + measuredAt.ToOffset(TimeSpan.FromHours(9)).ToString("MM/dd HH:mm", CultureInfo.InvariantCulture);
-        }
-        else if (!ended && source.기사최근위치시각Utc is { } future
-            && ShipperRequestDetailPresentation.NormalizeUtc(future) > now.UtcDateTime)
-            locationText = "위치 시각 확인 필요";
+        var location = CargoDriverLocationPresentation.Create(source.의뢰Id, source.확정기사Id, source.기사위치상태Code,
+            source.기사최근위도, source.기사최근경도, source.기사최근위치시각Utc, ended);
+        if (location.Marker is { } driver) markers.Add(driver);
         var sections = new List<RoleWorkspaceSection>
         {
             CargoWorkspacePresentation.Section("운송", ("상차지", source.픽업지), ("하차지", source.하차지),
@@ -78,9 +63,9 @@ public sealed class ShipperWorkspaceAdapter(ShipperWorkspaceApiClient client) : 
                 ("운임", CargoWorkspacePresentation.Money(source.최종운임 ?? source.결제예정금액)),
                 ("결제", source.결제상태), ("정산", source.정산상태))
         };
-        if (!string.IsNullOrWhiteSpace(source.확정기사명))
-            sections.Add(CargoWorkspacePresentation.Section("배정 기사", ("기사", source.확정기사명),
-                ("차량", source.확정기사차량), ("위치 확인", locationText)));
+        if (!string.IsNullOrWhiteSpace(source.확정기사Id) || !string.IsNullOrWhiteSpace(source.확정기사명))
+            sections.Add(new("배정 기사", [new("기사", CargoWorkspacePresentation.Display(source.확정기사명, "이름 확인 필요")),
+                new("차량", CargoWorkspacePresentation.Display(source.확정기사차량)), location.Field("위치 확인")]));
         if (source.비정상운송검토보류중)
             sections.Add(CargoWorkspacePresentation.Section("확인 필요", ("운송", "운송 예외를 확인하는 중입니다. 운송 내역에서 진행 상황을 확인해 주세요.")));
         if (markers.Count == 0)
@@ -100,7 +85,10 @@ public sealed class ShipperWorkspaceAdapter(ShipperWorkspaceApiClient client) : 
                 [new("물품", CargoWorkspacePresentation.Display(source.화물?.화물종류 ?? source.요약?.화물종류)),
                  new("수량", source.화물?.수량 is { } quantity ? quantity.ToString("N0", CultureInfo.GetCultureInfo("ko-KR")) + "개" : "미확인"),
                  new("운임", CargoWorkspacePresentation.Money(source.최종운임 ?? source.결제예정금액))],
-                CargoIncidentPresentation.Notice(source) ?? new("기사 위치", locationText)));
+                CargoIncidentPresentation.Notice(source) ?? location.Field("기사 위치")),
+            ComparisonFields: CargoWorkspacePresentation.조건목록(source.운송방식, source.차량종류,
+                source.화물?.중량Kg, source.화물?.수량, source.픽업?.시간창?.시작일시, source.픽업?.시간창?.종료일시,
+                source.하차?.시간창?.시작일시, source.하차?.시간창?.종료일시));
     }
 }
 
@@ -144,17 +132,26 @@ public sealed class CargoDriverWorkspaceAdapter(CargoDriverWorkspaceApiClient cl
             }
         }
         var items = source.Select(item => Map(item, item.Id.ToString(CultureInfo.InvariantCulture) == selected)).ToList();
+        string? selectionNotice = null;
         // 진행 업무가 있으면 현재 운송에 집중한다. 추천은 대기 상태에서만 기본 표시한다.
         if (source.All(item => CargoWorkspacePresentation.IsClosed(item.상태)) || selected?.StartsWith("offer:", StringComparison.Ordinal) == true)
         {
             var offers = await client.RecommendationsAsync(cancellationToken);
             items.AddRange(offers.Select(MapOffer));
             if (selected?.StartsWith("offer:", StringComparison.Ordinal) == true && items.All(item => item.Id != selected))
-                throw new InvalidOperationException("추천 운송이 만료되었거나 현재 계정에 제공된 후보가 아닙니다.");
+            {
+                // 오래된 선택은 성공적으로 다시 조회한 본인 업무 안에서만 해제한다.
+                // 추천 조회 실패나 권한 오류는 이 복구 분기에 도달하지 않는다.
+                selected = items.FirstOrDefault(item => item.Id.StartsWith("offer:", StringComparison.Ordinal))?.Id
+                    ?? items.FirstOrDefault()?.Id;
+                selectionNotice = "선택한 추천을 더 이상 확인할 수 없습니다. 현재 받을 수 있는 업무를 확인해 주세요.";
+            }
             selected ??= items.FirstOrDefault()?.Id;
         }
         cancellationToken.ThrowIfCancellationRequested();
-        return new(RoleKey, items, workSession.Notice,
+        var notice = selectionNotice is null ? workSession.Notice
+            : workSession.Notice is { Length: > 0 } workNotice ? selectionNotice + " " + workNotice : selectionNotice;
+        return new(RoleKey, items, notice,
             selected, workSession.Actions(source.Any(item => !CargoWorkspacePresentation.IsClosed(item.상태))));
     }
 
@@ -260,7 +257,10 @@ public sealed class CargoDriverWorkspaceAdapter(CargoDriverWorkspaceApiClient cl
                  new("거리 기준", CargoWorkspacePresentation.Display(source.거리계산방식)) }
                     .Concat(CargoWorkspacePresentation.TaskRequirements(source, pickup, ended)).ToArray(),
                 source.예외신고됨 || source.관리자확인필요 || blocked ? new("확인 필요", CargoWorkspacePresentation.Display(source.다음행동안내, "운송 예외 처리 상태를 확인해 주세요."))
-                    : !pickup && !ended ? new("전달 요청", CargoWorkspacePresentation.Display(source.전달요청)) : null));
+                    : !pickup && !ended ? new("전달 요청", CargoWorkspacePresentation.Display(source.전달요청)) : null),
+            ComparisonFields: CargoWorkspacePresentation.조건목록(source.운송방식, source.차량종류,
+                source.화물중량Kg, source.화물수량, source.상차시간창시작일시, source.상차시간창종료일시,
+                source.하차시간창시작일시, source.하차시간창종료일시));
     }
 
     public static RoleWorkspaceItem MapOffer(기사배차추천항목응답 source)
@@ -281,12 +281,22 @@ public sealed class CargoDriverWorkspaceAdapter(CargoDriverWorkspaceApiClient cl
                 [new("기사 제안 보수", CargoDriverPayoutPresentation.Money(CargoDriverPayoutPresentation.OfferAmount(source))),
                  new("운송 거리", CargoWorkspacePresentation.Distance(source.운송거리Km ?? source.주행거리Km ?? source.직선거리Km)),
                  new("거리 기준", source.운송거리Km.HasValue ? "운송 거리" : source.주행거리Km.HasValue ? "주행 거리" : source.직선거리Km.HasValue ? "직선 거리" : "미확인")],
-                new("하차지", CargoWorkspacePresentation.Display(source.하차지))));
+                new("하차지", CargoWorkspacePresentation.Display(source.하차지))),
+            ComparisonFields: CargoWorkspacePresentation.조건목록(source.운송방식, source.차량종류,
+                source.화물중량Kg, source.화물수량, source.상차시간창시작일시, source.상차시간창종료일시,
+                source.하차시간창시작일시, source.하차시간창종료일시));
     }
 }
 
 public static class CargoWorkspacePresentation
 {
+    public static IReadOnlyList<RoleWorkspaceField> 조건목록(string? mode, string? vehicle, decimal? weight, int? quantity,
+        DateTime? pickupStart, DateTime? pickupEnd, DateTime? dropoffStart, DateTime? dropoffEnd)
+        => [new("운송 방식", 화물운송조건표시.운송방식(mode)), new("차량", 화물운송조건표시.차량종류(vehicle)),
+            new("총중량", 화물운송조건표시.중량(weight)), new("수량", 화물운송조건표시.수량(quantity)),
+            new("상차 시간", 화물운송조건표시.시간창(pickupStart, pickupEnd)),
+            new("하차 시간", 화물운송조건표시.시간창(dropoffStart, dropoffEnd))];
+
     public static string Display(string? value, string? fallback = "미확인")
         => string.IsNullOrWhiteSpace(value) ? string.IsNullOrWhiteSpace(fallback) ? "미확인" : fallback : value.Trim();
     public static string Money(decimal? value) => value.HasValue ? value.Value.ToString("N0", CultureInfo.GetCultureInfo("ko-KR")) + "원" : "미확정";
@@ -306,10 +316,7 @@ public static class CargoWorkspacePresentation
                     "arrive-dropoff" => CanArriveDropoff(source.상태), "dropoff" => source.상태 == "하차지도착", _ => false
                 }))));
     public static string? TimeWindow(DateTime? start, DateTime? end)
-    {
-        return start.HasValue ? Time(start.Value) + (end.HasValue ? " ~ " + Time(end.Value) : " 이후")
-            : end.HasValue ? Time(end.Value) + "까지" : null;
-    }
+        => start.HasValue || end.HasValue ? 화물운송조건표시.시간창(start, end) : null;
     public static string Time(DateTime value) => (value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : value)
         .AddHours(9).ToString("MM/dd HH:mm", CultureInfo.InvariantCulture);
     public static IEnumerable<RoleWorkspaceField> TaskRequirements(기사운송요약응답 source, bool pickup, bool ended)

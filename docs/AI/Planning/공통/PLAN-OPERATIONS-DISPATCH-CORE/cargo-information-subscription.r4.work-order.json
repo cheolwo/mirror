@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "planningId": "PLAN-OPERATIONS-DISPATCH-CORE",
+  "revision": "cargo-information-subscription.r4",
+  "owner": "01a0c8bc-d06d-7181-aa71-c34dd9986f98",
+  "approvedBy": "direct-user-request-current-thread",
+  "status": "ReadOnlyPreparationImplemented",
+  "verificationStatus": "LocalServerAndUiValidated_FullConsumerBuildBlocked",
+  "designDocumentRef": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.direction.r4.md",
+  "authorityQuestionRef": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.authority-question.r4.md",
+  "implementationScope": "existing administrator freight-platform readiness read-only projection of the selected future flat-rate information recommendation model; preserve current fee calculation, billing and operational settings",
+  "selectedDirection": {
+    "serviceModel": "MonthlyInformationSubscriptionDraft",
+    "currency": "KRW",
+    "monthlyAmountCandidates": [
+      5000,
+      10000
+    ],
+    "confirmedMonthlyAmount": null,
+    "perTransportBrokerageCommission": "NoneInSelectedDirection",
+    "realtimeRecommendationDirectionSelected": true,
+    "driverMayAcceptOrDecline": true,
+    "contractPartiesRetainFinalDecision": true,
+    "payerRole": null,
+    "vatTreatment": null,
+    "renewalAndRefundTerms": null,
+    "billingImplementedByThisWork": false
+  },
+  "writePaths": [
+    "Ssalddel.Contracts/Common/Operations/FreightPlatformReadiness.cs",
+    "Ssalddel/Services/Operations/화물플랫폼등록준비Service.cs",
+    "Ssalddel.Ui.Common/Areas/BackOffice/Components/Operations/FreightPlatformReadinessPanel.razor",
+    "Ssalddel.Tests/Services/Operations/화물플랫폼등록준비ServiceTests.cs",
+    "Ssalddel.Tests/Ui/Common/TransportQualificationRenderTests.cs",
+    "eng/RoleWorkspacePreview/QualificationReadinessPreviewPage.razor",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.direction.r4.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.authority-question.r4.md",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.r4.work-order.json",
+    "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/README.md",
+    "docs/AI/PLANNING.md",
+    "docs/AI/CURRENT_WORK.md",
+    "docs/ProjectOverview/page-docs/transport-qualification-registration-r1.md",
+    "docs/Changes/2026-10-26-cargo-information-subscription-r4.md",
+    "docs/Changes/README.md",
+    "docs/assets/changes/cargo-information-subscription-r4/platform-390.jpg",
+    "docs/assets/changes/cargo-information-subscription-r4/platform-1280.jpg"
+  ],
+  "planProjectionField": "PlannedInformationSubscription",
+  "legalClassificationRequirementCode": "information-subscription-classification",
+  "requiredBehavior": [
+    "show current free runtime fee settings separately from the future paid information service plan",
+    "preserve the two candidate amounts and a null confirmed amount without selecting a price or creating two launch tiers",
+    "show no per-transport brokerage commission as selected direction, not as a legal exemption decision",
+    "project realtime recommendations, driver accept or decline and contract-party final decision as direction, not as newly implemented runtime",
+    "require existing preparation evidence and an authority response reference for paid-information-service legal classification confirmation",
+    "retain administrator-only read access and existing preparation, registration, permit and filing distinctions",
+    "keep CanActivateOperations false and prevent proposal values from changing fee calculation, financial or dispatch state"
+  ],
+  "checks": [
+    "focused readiness tests for proposal versus current settings and authority evidence states",
+    "regression ensuring existing per-dispatch capped fee calculation remains unchanged",
+    "administrator component render at mobile and desktop widths with current settings, candidate prices, unconfirmed amount and legal status distinguished",
+    "affected consumer build and scoped Fast and Task validation according to current repository contract",
+    "local Markdown links, work-order JSON parse and scoped git diff --check"
+  ],
+  "excluded": [
+    "select or activate a monthly price",
+    "change DriverUsagePolicy or operational feature settings",
+    "implement subscription collection, bank receipt processing, entitlements, recurring billing, VAT, refunds or invoices",
+    "change existing settlement calculation or financial ledgers",
+    "activate or implement realtime dispatch, contract execution, fixed-anchor enforcement or next-job offers",
+    "create an approval database or submit authority filings or questions",
+    "mark legal applicability, registration, brokerage permit, fee filing or terms filing confirmed without actual evidence",
+    "operational database changes, real external notifications, APK installation, deployment, Unity, commit or push"
+  ],
+  "operationalActivation": false,
+  "operationalUseApproved": false,
+  "authorityQuestionSent": false,
+  "results": {
+    "focusedPassed": 29,
+    "serverFullPassed": 16220,
+    "serverFullSkipped": 16,
+    "serverFullFailed": 0,
+    "consumerSolutionBuild": "Blocked_AndroidResourceAndJavaGeneration",
+    "directProductionBuilds": "Passed_Contracts_UiCommon_Server",
+    "previewConsumerBuild": "Passed_WithExistingNu1903Warning",
+    "browserWidths": [
+      390,
+      1280
+    ],
+    "browserErrors": 0,
+    "authorityQuestionSent": false,
+    "billingImplemented": false,
+    "operationalActivation": false,
+    "evidenceRef": "artifacts/local/cargo-information-subscription-r4/verification-summary.json"
+  },
+  "designSha256": "25a5a4a27251f05126d019ac1003e1ddae30887aeb0c907daca252402af57757",
+  "approvedDesignSha256": "25a5a4a27251f05126d019ac1003e1ddae30887aeb0c907daca252402af57757",
+  "approvalScopeNote": "Current user direction and read-only scope unchanged; final revision records verification outcomes without approving operation or pricing."
+}

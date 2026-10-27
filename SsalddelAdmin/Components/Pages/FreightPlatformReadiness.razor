@@ -1,0 +1,23 @@
+@page "/drivers/platform-registration-readiness"
+@using Ssalddel.Contracts.Common.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.Components.Operations
+@using Ssalddel.Ui.Common.Areas.BackOffice.ViewModels
+@using Ssalddel.Ui.Common.Areas.App.Services
+@inject ISsalddelJsonApiClient Api
+@inject 관리자인증세션Service Session
+@implements IDisposable
+<PageTitle>플랫폼 등록 준비 · Mirror</PageTitle>
+<a href="/drivers">← 기사 관리로</a>
+@if (!Session.로그인됨 || !Session.서버관리자인가) { <p role="alert">서버관리자로 로그인해 주세요.</p><a href="/login">관리자 로그인</a> }
+else if (model is not null) { <FreightPlatformReadinessPanel Model="model" /> }
+@code {
+    private 플랫폼등록준비ViewModel? model;
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Session.로그인됨 || !Session.서버관리자인가) return;
+        model = new(async ct => await Api.GetAsync<FreightPlatformReadinessDto>(FreightPlatformReadinessRoutes.Readiness,
+            "플랫폼 등록 준비 확인", false, ct) ?? throw new InvalidDataException());
+        await model.LoadAsync();
+    }
+    public void Dispose() => model?.Dispose();
+}
