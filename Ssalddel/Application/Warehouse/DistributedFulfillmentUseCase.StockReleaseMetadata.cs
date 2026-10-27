@@ -32,6 +32,7 @@ public sealed partial class 분산물류UseCase
                     && !string.IsNullOrWhiteSpace(x.GoodsOwnerUserId) && !string.IsNullOrWhiteSpace(x.SpaceOwnerUserId)
                     && !string.IsNullOrWhiteSpace(x.AssignedUserId) && x.AgreedQuantity > 0
                     && x.ReleasedQuantity >= 0 && x.ReleasedQuantity <= x.AgreedQuantity
+                    && Ssalddel.Contracts.Common.Warehouse.DistributedStockResolutionKinds.Known(x.ResolutionKind)
                     && x.StatusCode is "AwaitingConsent" or "Confirmed" or "PartiallyReleased" or "Completed" or "Cancelled"),
                 "DistributedStockReleaseMetadataInvalid", 503);
             return plans;
@@ -41,7 +42,7 @@ public sealed partial class 분산물류UseCase
     private static StockReleasePlan StockRelease(분산거점Record site, string id)
         => StockReleases(site).SingleOrDefault(x => x.ReleaseId == id)
             ?? throw new DistributedFulfillmentException("DistributedStockReleaseNotFound", 404);
-    private void SaveStockRelease(분산거점Record site, StockReleasePlan plan, string actor, string action, int quantity = 0)
+    private void SaveStockRelease(분산거점Record site, StockReleasePlan plan, string actor, string action, int quantity = 0, string? resolutionEvidence = null)
     {
         var root = StockReleaseRoot(site);
         var envelope = StockReleaseEnvelope(root);
@@ -60,7 +61,7 @@ public sealed partial class 분산물류UseCase
         Require(existing["history"] is JsonArray, "DistributedStockReleaseMetadataInvalid", 503);
         Require(((JsonArray)existing["history"]!).Count < 500 || action is "HandedOver" or "Withdrawn" or "CancelledRemaining",
             "DistributedStockReleaseHistoryLimitReached");
-        ((JsonArray)existing["history"]!).Add(JsonSerializer.SerializeToNode(new { actorUserId = actor, action, quantity, atUtc = Now }, Json));
+        ((JsonArray)existing["history"]!).Add(JsonSerializer.SerializeToNode(new { actorUserId = actor, action, quantity, atUtc = Now, resolutionEvidenceReference = resolutionEvidence }, Json));
         site.PrivateDetailsJson = root.ToJsonString(Json);
     }
     private void SaveStockReleaseClosure(분산거점Record site, string actor, string evidence)
@@ -85,6 +86,8 @@ public sealed partial class 분산물류UseCase
         public bool SpaceOwnerConsented { get; set; }
         public string HandoverTerms { get; set; } = "";
         public string Reason { get; set; } = "";
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? ResolutionKind { get; set; }
         public string StatusCode { get; set; } = "AwaitingConsent";
         public DateTime CreatedAtUtc { get; set; }
     }

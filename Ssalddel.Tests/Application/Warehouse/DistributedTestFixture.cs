@@ -61,7 +61,8 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
         var handler = new 배차수락CommandHandler(workingDb, Publisher, current, new 참여자실행권한검사(), new WorkRelationshipSnapshotCollector(),
             eligibility, new Continuity(), NullLogger<배차수락CommandHandler>.Instance,
             운영배차: Availability(workingDb), 후속픽업: new 화물후속픽업기준Service(workingDb,
-                new 기사운송일정구성Service(workingDb), new 운송일정삽입평가Service(Routes)), 기사위치: Locations);
+                new 기사운송일정구성Service(workingDb), new 운송일정삽입평가Service(Routes)), 기사위치: Locations,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
         var executor = TransportExecutor(actor, workingDb);
         var cargo = new 분산화물연결Service(workingDb, new Sender(handler, () => FailCargoId), executor, Publisher, NullLogger<분산화물연결Service>.Instance);
         return new(workingDb, execution, options, new 분산배송경로Planner(Routes, options), cargo, Clock, Locations, new EmptyDistributedBuildingCandidateProvider(), binder ?? Photos, orderLedgers, sharedAdmission);
@@ -214,6 +215,9 @@ internal sealed class DistributedTestFixture(SqliteConnection connection, Ssaldd
         Db.화주운송의뢰.Add(new() { 의뢰Id = id, 화주Id = seller.UserId, 주문자UserId = customer.UserId, 화물종류 = "일반 상온 물품", 차량종류 = "fixture-vehicle",
             상태 = 상태값.의뢰상태.생성됨, 결제상태 = 상태값.결제상태.결제대기, 정산시점 = "현장지급", 정산상태 = "현장수금예정", 운임구성Id = fare.Id,
             화물수량 = quantity, 화물중량Kg = 10, 화물부피Cbm = 0.1m, 화물팔레트개수 = 0, 화물온도조건 = "상온", 화물길이Mm = RequireVehicleAdvisory ? 100 : null,
+            화물입력부피Cbm = 0.1m, 화물부피근거Code = "UserProvided",
+            화물적재계산판본 = Ssalddel.Contracts.Shipper.Request.화물적재입력Policy.CurrentRevision,
+            화물바닥회전가능여부 = true, 화물적층가능여부 = true,
             픽업_도로명주소 = "합성 공개도로 가", 픽업_위도 = 37, 픽업_경도 = 127, 픽업_시간창_시작일시 = Clock.Now, 픽업_시간창_종료일시 = Clock.Now.AddHours(5),
             하차_도로명주소 = customer == CustomerA ? "합성 고객주소 A" : "합성 고객주소 B", 하차_위도 = customer == CustomerA ? 37.02m : 37.03m,
             하차_경도 = 127.02m, 하차_시간창_시작일시 = Clock.Now, 하차_시간창_종료일시 = Clock.Now.AddHours(5) });

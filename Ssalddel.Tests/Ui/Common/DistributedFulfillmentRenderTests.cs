@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
+using MudBlazor.Services;
 using Ssalddel.Contracts.Common.Warehouse;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
@@ -304,7 +306,10 @@ public sealed class DistributedFulfillmentRenderTests
 
     private static async Task<string> Render(DistributedUiTransport t, string role, string screen, string? returnHref = null, string? selected = null, string? login = null)
     {
-        var services = new ServiceCollection(); services.AddLogging(); await using var provider = services.BuildServiceProvider();
+        var services = new ServiceCollection(); services.AddLogging(); services.AddMudServices();
+        services.AddSingleton<NavigationManager, CompletionRenderNavigation>();
+        services.AddSingleton<IJSRuntime, CompletionRenderJs>();
+        await using var provider = services.BuildServiceProvider();
         await using var renderer = new HtmlRenderer(provider, provider.GetRequiredService<ILoggerFactory>());
         return await renderer.Dispatcher.InvokeAsync(async () =>
         {
@@ -313,6 +318,16 @@ public sealed class DistributedFulfillmentRenderTests
                 [nameof(분산이행Screen.ReturnHref)] = returnHref, [nameof(분산이행Screen.SelectedId)] = selected, [nameof(분산이행Screen.LoginHref)] = login }));
             return WebUtility.HtmlDecode(output.ToHtmlString());
         });
+    }
+    private sealed class CompletionRenderNavigation : NavigationManager
+    {
+        public CompletionRenderNavigation() => Initialize("http://localhost/", "http://localhost/workspace/cargo-driver/distributed/round");
+        protected override void NavigateToCore(string uri, bool forceLoad) { }
+    }
+    private sealed class CompletionRenderJs : IJSRuntime
+    {
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => ValueTask.FromResult(default(TValue)!);
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken token, object?[]? args) => InvokeAsync<TValue>(identifier, args);
     }
 }
 

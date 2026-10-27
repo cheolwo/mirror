@@ -75,6 +75,12 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
     IDistributedPhotoEvidenceBinder photoEvidence, I분산주문원장연결Adapter? orderLedgers = null,
     ISharedDriverWorkAdmissionService? sharedAdmission = null) : IDistributedFulfillmentUseCase
 {
+    private readonly DistributedStorageAgreementCommands agreementCommands = new(db, clock);
+    private readonly DistributedInventoryCommandExecution inventoryCommands = new(db, clock, photoEvidence);
+    private readonly DistributedPickingCommandExecution pickingCommands = new(db, clock, cargo);
+    private readonly DistributedDeliveryCommandExecution deliveryCommands = new(db, clock, cargo);
+    private readonly DistributedCompletionRecorder completionRecorder = new(db, clock);
+    private readonly DistributedInboundCompletion inboundCompletion = new(db);
     private IQueryable<T> Query<T>() where T : class => db.Set<T>();
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -93,8 +99,8 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
     {
         var result = value?.Trim() ?? ""; Require(result.Length > 0 && result.Length <= max, "DistributedInputInvalid", 400); return result;
     }
-    private static string Id(string prefix) => prefix + "-" + Guid.NewGuid().ToString("N");
-    private static void Revision(long current, DistributedCommandRequest request)
+    internal static string Id(string prefix) => prefix + "-" + Guid.NewGuid().ToString("N");
+    internal static void Revision(long current, DistributedCommandRequest request)
         => Require(current == request.ExpectedRevision, "DistributedRevisionConflict");
     private static bool Manages(DistributedActor a, 분산거점Record s) => a.IsAdmin || a.UserId == s.OwnerUserId || a.UserId == s.ManagerUserId;
     private async Task<분산거점Record> Site(string id, CancellationToken ct)
@@ -105,8 +111,8 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
         => Require(actor.IsAdmin || await Query<분산거점Record>().AnyAsync(x => x.OwnerUserId == actor.UserId || x.ManagerUserId == actor.UserId, ct), "DistributedOperatorRequired", 403);
     private static void OwnWave(DistributedActor actor, 분산배송WaveRecord wave)
         => Require(actor.IsAdmin || wave.CreatorUserId == actor.UserId, "DistributedWaveOperatorRequired", 403);
-    private async Task TouchSite(string id, CancellationToken ct)
-    { var site = await Site(id, ct); site.Revision++; }
+    private Task TouchSite(string id, CancellationToken ct)
+        => deliveryCommands.TouchSite(id, ct);
     private async Task<DistributedCommandResponse> Execute<T>(DistributedActor actor, string kind, string target, T request,
         Func<Task<(string Id, long Revision, string Status, string? Reservation, int Quantity)>> action, CancellationToken ct)
         where T : DistributedCommandRequest
@@ -191,7 +197,7 @@ public sealed partial class 분산물류UseCase(SsalddelContext db, ISsalddelExe
             var history = Deserialize<List<DistributedConsentEntry>>(site.ConsentEvidenceJson);
             history.Add(new(actor.UserId, r.ConsentKind, r.Granted, evidence, Now)); site.ConsentEvidenceJson = Serialize(history);
             var stockIds = await Query<분산재고LotRecord>().Where(x => x.SiteId == id).Select(x => x.InboundItemId).ToArrayAsync(ct);
-            var custody = await db.입고상품.AnyAsync(x => Enumerable.Contains(stockIds, x.Id) && (x.가용수량 > 0 || x.예약수량 > 0), ct)
+            var custody = await db.입고상품.AnyAsync(x => Enumerable.Contains(stockIds, x.Id) && (x.가용수량 > 0 || x.예약수량 > 0 || x.불량수량 > 0), ct)
                 || await (from reservation in Query<분산재고예약Record>() join lot in Query<분산재고LotRecord>() on reservation.LotId equals lot.LotId
                     where lot.SiteId == id && reservation.PickedQuantity > reservation.DeliveredQuantity + reservation.ReturnedQuantity select reservation).AnyAsync(ct);
             site.StatusCode = site.OwnerConsented && site.ManagerConsented ? "Active" : custody ? "RevocationPendingCustody" : "Revoked";

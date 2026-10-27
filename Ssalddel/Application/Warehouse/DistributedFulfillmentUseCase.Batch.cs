@@ -15,7 +15,7 @@ public sealed partial class 분산물류UseCase
     public Task<DistributedCommandResponse> ReturnBatchAsync(DistributedActor actor, string id, DistributedReturnBatchRequest r, CancellationToken ct)
         => Execute(actor, "ReturnBatch", id, r, () => ReturnCore(actor, id, r, ct), ct);
 
-    private async Task<ReceiveWork> PrepareReceive(DistributedActor actor, string id, DistributedInboundReceiptBatchRequest r, CancellationToken ct)
+    private async Task<DistributedReceiveWork> PrepareReceive(DistributedActor actor, string id, DistributedInboundReceiptBatchRequest r, CancellationToken ct)
     {
         var plan = await Query<분산입고계획Record>().SingleOrDefaultAsync(x => x.PlanId == id, ct);
         Require(plan is not null, "DistributedInboundNotFound", 404); Revision(plan!.Revision, r);
@@ -44,32 +44,9 @@ public sealed partial class 분산물류UseCase
     {
         var work = await PrepareReceive(actor, id, r, ct);
         await BindWork(actor, new() { Kind = "Receive", AggregateId = id, Receive = r }, r.PhotoEvidenceIds, ct);
-        var completed = new List<CompletionLineDraft>();
-        foreach (var line in r.Lines)
-        {
-            var lot = work.Lots.Single(x => x.LineKey == line.LineKey);
-            var changed = await db.입고상품.Where(x => x.Id == lot.InboundItemId && x.소유자UserId == lot.OwnerUserId && x.판매자UserId == lot.SellerUserId && x.SKU == lot.Sku && x.입고수량 == lot.ReceivedQuantity)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.입고수량, x => x.입고수량 + line.Quantity).SetProperty(x => x.가용수량, x => x.가용수량 + line.Quantity)
-                    .SetProperty(x => x.상태, "보관중").SetProperty(x => x.UpdatedAt, Now), ct);
-            Require(changed == 1, "DistributedInventoryConflict"); lot.ReceivedQuantity += line.Quantity; lot.Revision++; SnapshotAgreement(lot, work.Agreement, line.Quantity);
-            var target = await db.입고요청.SingleAsync(x => x.Id == lot.TargetInboundId, ct);
-            target.상태 = lot.ReceivedQuantity == lot.ExpectedQuantity ? "입고완료" : "부분입고"; target.입고완료일시 = target.상태 == "입고완료" ? Now : null;
-            var history = await InventoryHistory(lot.InboundItemId, actor.UserId, "분할입고", line.Quantity, PhotoMemo(r.PhotoEvidenceIds), ct);
-            completed.Add(new(CompletionLine(actor, "Receive", line.LineKey, lot, line.Quantity, r.PhotoEvidenceIds), history));
-        }
-        work.Site.Revision++; work.Agreement.Revision++;
-        await RefreshInboundCompletion(work.Plan, ct); work.Plan.Revision++;
-        foreach (var sourceId in work.Lots.Select(x => x.SourceInboundId).Distinct())
-        {
-            var source = await db.입고요청.SingleAsync(x => x.Id == sourceId, ct);
-            var sourceLots = await Query<분산재고LotRecord>().Where(x => x.SourceInboundId == sourceId).ToArrayAsync(ct);
-            source.상태 = sourceLots.Sum(x => x.ReceivedQuantity) == source.예정수량 ? "입고완료" : "부분입고";
-            source.입고완료일시 = source.상태 == "입고완료" ? Now : null;
-        }
-        await SaveCompletionLines(actor, r, completed, ct);
-        return (id, work.Plan.Revision, work.Plan.StatusCode, null, r.Lines.Sum(x => x.Quantity));
+        return await inventoryCommands.ReceiveAsync(actor, id, r, work, ct);
     }
-    private async Task<CustodyWork> PreparePick(DistributedActor actor, string id, DistributedPickBatchRequest r, CancellationToken ct)
+    private async Task<DistributedCustodyWork> PreparePick(DistributedActor actor, string id, DistributedPickBatchRequest r, CancellationToken ct)
     {
         var wave = await Wave(id, ct); Revision(wave.Revision, r); var stop = CurrentStop(wave, r.StopId, "Pickup");
         ValidateLines(r.Lines, x => x.ReservationId, x => x.Quantity);
@@ -97,35 +74,9 @@ public sealed partial class 분산물류UseCase
     {
         var work = await PreparePick(actor, id, r, ct);
         await BindWork(actor, new() { Kind = "Pick", AggregateId = id, Pick = r }, r.PhotoEvidenceIds, ct);
-        var completed = new List<CompletionLineDraft>();
-        foreach (var order in work.Orders) await cargo.ArrivePickupAsync(actor.UserId, order.CargoRequestId, ct);
-        foreach (var line in r.Lines)
-        {
-            var reservation = work.Reservations.Single(x => x.ReservationId == line.ReservationId); var lot = work.Lots.Single(x => x.LotId == reservation.LotId);
-            var changed = await db.입고상품.Where(x => x.Id == lot.InboundItemId && x.창고Id == work.Site.WarehouseId && x.소유자UserId == lot.OwnerUserId
-                && x.판매자UserId == lot.SellerUserId && x.SKU == lot.Sku && x.보관위치 == work.Location.Barcode && x.예약수량 >= line.Quantity)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.예약수량, x => x.예약수량 - line.Quantity).SetProperty(x => x.UpdatedAt, Now), ct);
-            Require(changed == 1, "DistributedReservedInventoryChanged"); reservation.PickedQuantity += line.Quantity; reservation.Revision++;
-            var outbound = await db.출고예정.SingleAsync(x => x.Id == reservation.OutboundPlanId, ct);
-            outbound.상태 = reservation.PickedQuantity == reservation.Quantity ? 출고상태.출고완료 : "부분출고";
-            outbound.출고처리일시 = reservation.PickedQuantity == reservation.Quantity ? Now : null;
-            var history = await InventoryHistory(lot.InboundItemId, actor.UserId, "기사직접피킹", -line.Quantity, PhotoMemo(r.PhotoEvidenceIds), ct);
-            completed.Add(new(CompletionLine(actor, "Pick", line.ReservationId, lot, line.Quantity, r.PhotoEvidenceIds, reservation, work.Wave), history));
-        }
-        foreach (var order in work.Orders)
-        {
-            var all = await Query<분산재고예약Record>().Where(x => x.OrderId == order.OrderId).ToArrayAsync(ct);
-            if (all.All(x => x.PickedQuantity == x.Quantity)) { await cargo.PickupAsync(actor.UserId, order.CargoRequestId, ct); order.StatusCode = "Picked"; }
-            else order.StatusCode = "PartiallyPicked"; order.Revision++;
-        }
-        work.Site.Revision++;
-        var siteLots = await Query<분산재고LotRecord>().Where(x => x.SiteId == work.Site.SiteId).Select(x => x.LotId).ToArrayAsync(ct);
-        var remaining = await Query<분산재고예약Record>().Where(x => x.WaveId == id && Enumerable.Contains(work.Stop!.OrderIds, x.OrderId) && Enumerable.Contains(siteLots, x.LotId)).ToArrayAsync(ct);
-        if (remaining.All(x => x.PickedQuantity + x.ReleasedQuantity == x.Quantity)) CompleteStop(work.Wave, work.Stop!.StopId);
-        work.Wave.Revision++; await SaveCompletionLines(actor, r, completed, ct);
-        return (id, work.Wave.Revision, work.Wave.StatusCode, work.Reservations.Length == 1 ? work.Reservations[0].ReservationId : null, r.Lines.Sum(x => x.Quantity));
+        return await pickingCommands.PickAsync(actor, id, r, work, ct);
     }
-    private async Task<CustodyWork> PrepareDelivery(DistributedActor actor, string id, DistributedDeliveryBatchRequest r, CancellationToken ct)
+    private async Task<DistributedCustodyWork> PrepareDelivery(DistributedActor actor, string id, DistributedDeliveryBatchRequest r, CancellationToken ct)
     {
         var wave = await Wave(id, ct); Revision(wave.Revision, r); var stop = CurrentStop(wave, r.StopId, "Delivery");
         ValidateLines(r.Lines, x => x.ReservationId, x => x.Quantity);
@@ -145,28 +96,9 @@ public sealed partial class 분산물류UseCase
     {
         var work = await PrepareDelivery(actor, id, r, ct);
         await BindWork(actor, new() { Kind = "Deliver", AggregateId = id, Deliver = r }, r.PhotoEvidenceIds, ct);
-        var completed = new List<CompletionLineDraft>();
-        foreach (var line in r.Lines)
-        {
-            var reservation = work.Reservations.Single(x => x.ReservationId == line.ReservationId);
-            reservation.DeliveredQuantity += line.Quantity; reservation.Revision++;
-            completed.Add(new(CompletionLine(actor, "Deliver", line.ReservationId, work.Lots.Single(x => x.LotId == reservation.LotId),
-                line.Quantity, r.PhotoEvidenceIds, reservation, work.Wave)));
-        }
-        foreach (var order in work.Orders)
-        {
-            var all = await Query<분산재고예약Record>().Where(x => x.OrderId == order.OrderId).ToArrayAsync(ct);
-            if (all.All(x => x.DeliveredQuantity == x.Quantity)) { await cargo.DeliverAsync(actor.UserId, order.CargoRequestId, ct); order.StatusCode = "Delivered"; }
-            else order.StatusCode = "PartiallyDelivered"; order.Revision++;
-        }
-        foreach (var siteId in work.Lots.Select(x => x.SiteId).Distinct()) await TouchSite(siteId, ct);
-        var stopOrders = await Query<분산배송주문Record>().Where(x => Enumerable.Contains(work.Stop!.OrderIds, x.OrderId)).ToArrayAsync(ct);
-        if (stopOrders.All(x => x.StatusCode == "Delivered")) CompleteStop(work.Wave, work.Stop!.StopId);
-        if (Stops(work.Wave).All(x => x.StatusCode == "Completed")) work.Wave.StatusCode = "Completed";
-        work.Wave.Revision++; await SaveCompletionLines(actor, r, completed, ct);
-        return (id, work.Wave.Revision, work.Wave.StatusCode, null, r.Lines.Sum(x => x.Quantity));
+        return await deliveryCommands.DeliverAsync(actor, id, r, work, ct);
     }
-    private async Task<CustodyWork> PrepareReturn(DistributedActor actor, string id, DistributedReturnBatchRequest r, CancellationToken ct)
+    private async Task<DistributedCustodyWork> PrepareReturn(DistributedActor actor, string id, DistributedReturnBatchRequest r, CancellationToken ct)
     {
         var wave = await Wave(id, ct); Revision(wave.Revision, r); ValidateLines(r.Lines, x => x.ReservationId, x => x.Quantity);
         var ids = r.Lines.Select(x => x.ReservationId).ToArray(); var reservations = await Query<분산재고예약Record>().Where(x => x.WaveId == id && Enumerable.Contains(ids, x.ReservationId)).ToArrayAsync(ct);
@@ -184,35 +116,10 @@ public sealed partial class 분산물류UseCase
     {
         var work = await PrepareReturn(actor, id, r, ct);
         await BindWork(actor, new() { Kind = "Return", AggregateId = id, Return = r }, r.PhotoEvidenceIds, ct);
-        var completed = new List<CompletionLineDraft>();
-        foreach (var line in r.Lines)
-        {
-            var item = work.Reservations.Single(x => x.ReservationId == line.ReservationId); var lot = work.Lots.Single(x => x.LotId == item.LotId);
-            var changed = await db.입고상품.Where(x => x.Id == lot.InboundItemId && x.소유자UserId == lot.OwnerUserId && x.판매자UserId == lot.SellerUserId && x.보관위치 == work.Location.Barcode)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.가용수량, x => x.가용수량 + line.Quantity).SetProperty(x => x.UpdatedAt, Now), ct);
-            Require(changed == 1, "DistributedInventoryLineageMismatch"); item.ReturnedQuantity += line.Quantity; item.Revision++;
-            var history = await InventoryHistory(lot.InboundItemId, actor.UserId, "실물반환", line.Quantity, PhotoMemo(r.PhotoEvidenceIds), ct);
-            completed.Add(new(CompletionLine(actor, "Return", line.ReservationId, lot, line.Quantity, r.PhotoEvidenceIds, item, work.Wave), history));
-        }
-        work.Site.Revision++;
-        foreach (var order in work.Orders)
-        {
-            var all = await Query<분산재고예약Record>().Where(x => x.OrderId == order.OrderId).ToArrayAsync(ct);
-            if (all.All(x => x.PickedQuantity == x.ReturnedQuantity + x.DeliveredQuantity))
-            {
-                order.StatusCode = "Cancelled"; order.Revision++;
-                foreach (var item in all) (await db.출고예정.SingleAsync(x => x.Id == item.OutboundPlanId, ct)).상태 = 출고상태.취소;
-                await cargo.CancelAsync(actor.UserId, order.CargoRequestId, false, PhotoMemo(r.PhotoEvidenceIds), ct);
-            }
-        }
-        await RefreshCancellationStatus(work.Wave, ct); work.Wave.Revision++; await SaveCompletionLines(actor, r, completed, ct);
-        return (id, work.Wave.Revision, work.Wave.StatusCode, work.Reservations.Length == 1 ? work.Reservations[0].ReservationId : null, r.Lines.Sum(x => x.Quantity));
+        return await deliveryCommands.ReturnAsync(actor, id, r, work, ct);
     }
     private static void ValidateLines<T>(IReadOnlyList<T> lines, Func<T, string> key, Func<T, int> quantity)
         => Require(lines is { Count: > 0 and <= 100 } && lines.All(x => x is not null && !string.IsNullOrWhiteSpace(key(x)) && quantity(x) > 0)
             && lines.Select(key).Distinct(StringComparer.Ordinal).Count() == lines.Count, "DistributedBatchLinesInvalid", 400);
-    private static string PhotoMemo(IReadOnlyList<string> ids) => "photos:" + string.Join(",", ids);
-    private sealed record ReceiveWork(분산입고계획Record Plan, 분산거점Record Site, 분산적재위치Record Location, 분산보관합의Record Agreement, 분산재고LotRecord[] Lots);
-    private sealed record CustodyWork(분산배송WaveRecord Wave, DistributedStopDto? Stop, 분산거점Record Site, 분산적재위치Record Location, 분산재고LotRecord[] Lots,
-        분산재고예약Record[] Reservations, 분산배송주문Record[] Orders);
+    internal static string PhotoMemo(IReadOnlyList<string> ids) => "photos:" + string.Join(",", ids);
 }

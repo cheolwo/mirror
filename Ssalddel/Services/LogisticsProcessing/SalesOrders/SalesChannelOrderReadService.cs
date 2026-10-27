@@ -73,12 +73,22 @@ public sealed class SalesChannelOrderReadService(
             .ToArrayAsync(cancellationToken);
 
         var items = await LoadSummariesAsync(scoped, groupPage, cancellationToken);
+        var accountQuery = db.판매채널계정.AsNoTracking().AsQueryable();
+        var userId = RequireUserId();
+        if (!IsServerAdmin()) accountQuery = accountQuery.Where(account => account.UserId == userId);
+        if (!string.IsNullOrWhiteSpace(request.SyncScope))
+        {
+            var channels = CommerceChannelOrderSyncScopes.GetChannelTypes(request.SyncScope).ToList();
+            accountQuery = accountQuery.Where(account => channels.Contains(account.채널종류));
+        }
+        var accounts = await accountQuery.Where(account => account.동기화진단Json != null).ToArrayAsync(cancellationToken);
         return new 판매채널주문목록응답
         {
             Items = items,
             TotalCount = totalCount,
             Page = page,
-            PageSize = pageSize
+            PageSize = pageSize,
+            SyncIssues = accounts.SelectMany(SalesChannelSyncDiagnostics.Pending).OrderByDescending(issue => issue.LastObservedAtUtc).ToArray()
         };
     }
 

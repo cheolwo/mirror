@@ -35,6 +35,7 @@ public sealed class 판매채널주문목록응답
     public int TotalCount { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
+    public IReadOnlyList<판매채널주문보류진단> SyncIssues { get; set; } = [];
 }
 
 /// <summary>개인 식별 정보와 전체 창고 주소를 제외한 출고 후보 라인입니다.</summary>

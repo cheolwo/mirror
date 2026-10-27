@@ -19,9 +19,9 @@ public sealed class DistributedStockReleaseR76UiTests
         await renderer.Dispatcher.InvokeAsync(() => renderer.Start<분산잔여재고반출Screen>(new() { ["Model"] = model }));
         await renderer.Dispatcher.InvokeAsync(() => renderer.Change("반출 합의", "release-a"));
         Assert.Contains("양측 동의 대기", renderer.Text()); Assert.Contains("다음 담당 · 공간 제공자 동의", renderer.Text());
-        await renderer.Dispatcher.InvokeAsync(() => renderer.Change("본인의 인계 조건", true));
+        await renderer.Dispatcher.InvokeAsync(() => renderer.Change("본인의 처리 조건", true));
         await renderer.Dispatcher.InvokeAsync(() => renderer.Change("반출 합의", "release-b"));
-        await renderer.Dispatcher.InvokeAsync(() => renderer.Click("반출 조건에 동의"));
+        await renderer.Dispatcher.InvokeAsync(() => renderer.Click("처리 조건에 동의"));
         Assert.Empty(transport.Posts); Assert.Contains("다른 물품", renderer.Text());
     }
 

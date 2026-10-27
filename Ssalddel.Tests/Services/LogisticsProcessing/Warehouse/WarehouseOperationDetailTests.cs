@@ -597,8 +597,116 @@ public sealed class WarehouseOperationDetailTests
         Assert.Equal(0, inventory.예약수량);
     }
 
+    [Fact]
+    public async Task 재위탁SQL저장실패는_예약과원천생성을함께롤백하고_Mongo를호출하지않는다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options;
+        var sync = new RecordingTransportLedgerSync();
+
+        await using (var db = new SsalddelContext(options, new DummyPersonalDataEncryptionService()))
+        {
+            await db.Database.EnsureCreatedAsync();
+            await SeedReconsignmentAsync(db);
+            var historyTable = db.Model.FindEntityType(typeof(재고이력))!.GetTableName();
+            await db.Database.ExecuteSqlRawAsync(
+                $"CREATE TRIGGER fail_reconsignment_history BEFORE INSERT ON \"{historyTable}\" BEGIN SELECT RAISE(ABORT, 'synthetic reconsignment SQL failure'); END;");
+            var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), sync);
+
+            var error = await Assert.ThrowsAsync<DbUpdateException>(() =>
+                service.CreateReconsignmentRequestAsync(BuildReconsignmentRequest(), default));
+
+            Assert.IsType<SqliteException>(error.InnerException);
+            Assert.Equal(0, sync.Calls);
+        }
+
+        await using var verification = new SsalddelContext(options, new DummyPersonalDataEncryptionService());
+        var inventory = await verification.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal(12, inventory.가용수량);
+        Assert.Equal(0, inventory.예약수량);
+        Assert.Equal("보관중", inventory.상태);
+        Assert.True(string.IsNullOrWhiteSpace((await verification.출고예정.SingleAsync(x => x.Id == 51)).운송의뢰Id));
+        Assert.Empty(await verification.화주운송의뢰.ToArrayAsync());
+        Assert.Empty(await verification.운송원장.ToArrayAsync());
+        Assert.Empty(await verification.운송의뢰상품연결.ToArrayAsync());
+        Assert.Empty(await verification.화물요구조건.ToArrayAsync());
+        Assert.Empty(await verification.재고이력.ToArrayAsync());
+        Assert.Empty(await verification.재고이동.ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task 재위탁SQL성공후Mongo예외는_새컨텍스트재호출에기존의뢰를반환하고_동기화를다시호출하지않는다()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<SsalddelContext>().UseSqlite(connection).Options;
+        var sync = new RecordingTransportLedgerSync { Fail = true };
+
+        await using (var db = new SsalddelContext(options, new DummyPersonalDataEncryptionService()))
+        {
+            await db.Database.EnsureCreatedAsync();
+            await SeedReconsignmentAsync(db);
+            var service = new WarehouseOperationService(db, new TestCurrentUserAccessor("warehouse-owner"), sync);
+
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.CreateReconsignmentRequestAsync(BuildReconsignmentRequest(), default));
+
+            Assert.Equal("합성 Mongo 동기화 실패", error.Message);
+            Assert.Equal(1, sync.Calls);
+        }
+
+        await using var verification = new SsalddelContext(options, new DummyPersonalDataEncryptionService());
+        var stored = await verification.화주운송의뢰.AsNoTracking().SingleAsync();
+        Assert.Equal("warehouse-outbound-51", stored.의뢰Id);
+        Assert.Equal(stored.의뢰Id, (await verification.출고예정.SingleAsync(x => x.Id == 51)).운송의뢰Id);
+        var inventory = await verification.입고상품.SingleAsync(x => x.Id == 71);
+        Assert.Equal(0, inventory.가용수량);
+        Assert.Equal(12, inventory.예약수량);
+        Assert.Equal("재위탁대기", inventory.상태);
+        Assert.Equal(stored.의뢰Id, (await verification.운송원장.SingleAsync()).의뢰Id);
+        Assert.Equal(stored.의뢰Id, (await verification.운송의뢰상품연결.SingleAsync()).운송의뢰Id);
+        Assert.Equal(stored.의뢰Id, (await verification.화물요구조건.SingleAsync()).의뢰Id);
+        Assert.Single(await verification.재고이력.ToArrayAsync());
+        Assert.Single(await verification.재고이동.ToArrayAsync());
+
+        var replay = await new WarehouseOperationService(verification, new TestCurrentUserAccessor("warehouse-owner"), sync)
+            .CreateReconsignmentRequestAsync(BuildReconsignmentRequest(), default);
+
+        Assert.True(replay.멱등재시도여부);
+        Assert.Equal(stored.의뢰Id, replay.의뢰Id);
+        Assert.Equal(1, sync.Calls);
+        Assert.Single(await verification.화주운송의뢰.ToArrayAsync());
+        Assert.Single(await verification.운송원장.ToArrayAsync());
+        Assert.Single(await verification.운송의뢰상품연결.ToArrayAsync());
+        Assert.Single(await verification.화물요구조건.ToArrayAsync());
+        Assert.Single(await verification.재고이력.ToArrayAsync());
+        Assert.Single(await verification.재고이동.ToArrayAsync());
+        Assert.Equal(12, (await verification.입고상품.SingleAsync(x => x.Id == 71)).예약수량);
+    }
+
     private static WarehouseOperationService CreateReconsignmentService(SsalddelContext db)
         => new(db, new TestCurrentUserAccessor("warehouse-owner"), new NoOpTransportLedgerSync());
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 재위탁초안은저장창고좌표만인계하고하차위치와운임은추정하지않는다(bool warehouseHasCoordinates)
+    {
+        await using var db = CreateContext(); await SeedReconsignmentAsync(db);
+        var warehouse = await db.창고.SingleAsync(x => x.Id == 7);
+        warehouse.위도 = warehouseHasCoordinates ? 37.588m : null;
+        warehouse.경도 = warehouseHasCoordinates ? 127.085m : null;
+        await db.SaveChangesAsync();
+        await CreateReconsignmentService(db).CreateReconsignmentRequestAsync(BuildReconsignmentRequest(), default);
+        var request = await db.화주운송의뢰.AsNoTracking().SingleAsync();
+        var queue = await db.운송원장.AsNoTracking().SingleAsync();
+        Assert.Equal(warehouse.위도, request.픽업_위도); Assert.Equal(warehouse.경도, request.픽업_경도);
+        Assert.Equal(request.픽업_위도, queue.픽업_위도); Assert.Equal(request.픽업_경도, queue.픽업_경도);
+        Assert.Null(request.하차_위도); Assert.Null(request.하차_경도);
+        Assert.Null(request.최종운임); Assert.Null(request.결제예정금액); Assert.Null(request.운임구성Id);
+        Assert.Equal("청구대기", request.정산상태); Assert.Equal("미시작", request.배차상태);
+    }
 
     private static async Task SeedReconsignmentAsync(SsalddelContext db)
     {
@@ -1124,6 +1232,32 @@ public sealed class WarehouseOperationDetailTests
                 }
             ]
         };
+
+    private sealed class RecordingTransportLedgerSync : I운송원장Mongo동기화Service
+    {
+        public bool Fail { get; init; }
+        public int Calls { get; private set; }
+
+        public Task<커뮤니티원장Dto?> 화주운송의뢰동기화Async(
+            화주운송의뢰 source,
+            string updatedBy,
+            CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            return Fail
+                ? Task.FromException<커뮤니티원장Dto?>(new InvalidOperationException("합성 Mongo 동기화 실패"))
+                : Task.FromResult<커뮤니티원장Dto?>(null);
+        }
+
+        public Task<커뮤니티원장Dto?> 운송실행투영동기화Async(
+            운송원장 source,
+            string updatedBy,
+            CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public Task<운송원장Mongo동기화상태> 상태조회Async(string requestId, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+    }
 
     private sealed class NoOpTransportLedgerSync : I운송원장Mongo동기화Service
     {

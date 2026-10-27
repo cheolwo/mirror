@@ -190,7 +190,7 @@ public sealed class 마트주문요청작성UseCase(
         if (!string.Equals(orderRequest.상태코드, 마트주문요청상태코드.제출됨, StringComparison.Ordinal))
         {
             return 마트주문요청Results.Conflict<마트주문요청응답>(
-                "철회된 마트 주문 요청의 수량은 변경할 수 없습니다.");
+                "철회되었거나 주문 확정이 시작된 요청의 수량은 변경할 수 없습니다.");
         }
 
         var product = await db.마트공개상품
@@ -215,6 +215,23 @@ public sealed class 마트주문요청작성UseCase(
                 $"현재 표시 가능한 수량은 {product.판매가능수량:N0}개입니다. 수량을 줄여 다시 요청해 주세요.");
         }
 
+        if (db.Database.IsRelational())
+        {
+            var originalQuantity = orderRequest.수량;
+            var originalPrice = orderRequest.단가Snapshot;
+            var changed = await db.마트주문요청.Where(x => x.Id == orderRequestId && x.요청자UserId == userId
+                    && x.상태코드 == 마트주문요청상태코드.제출됨 && x.수량 == originalQuantity && x.단가Snapshot == originalPrice)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.상품명Snapshot, product.상품명.Trim())
+                    .SetProperty(x => x.판매단위Snapshot, product.판매단위.Trim()).SetProperty(x => x.단가Snapshot, product.판매가)
+                    .SetProperty(x => x.수량, request.수량).SetProperty(x => x.합계Snapshot, product.판매가 * request.수량)
+                    .SetProperty(x => x.제출시판매가능수량, product.판매가능수량).SetProperty(x => x.재고기준시각Utc, product.재고기준시각Utc)
+                    .SetProperty(x => x.비구속주문요청확인, true).SetProperty(x => x.안내버전, 마트주문요청안내.현재버전), cancellationToken);
+            if (changed != 1) return 마트주문요청Results.Conflict<마트주문요청응답>("주문 확정 또는 수량 변경이 먼저 처리되었습니다. 원 요청을 다시 확인해 주세요.");
+            var saved = await db.마트주문요청.AsNoTracking().SingleAsync(x => x.Id == orderRequestId && x.요청자UserId == userId, cancellationToken);
+            db.Entry(orderRequest).State = EntityState.Detached;
+            return Result.Ok(마트주문요청Mapper.ToResponse(saved));
+        }
+        // 비관계형 시험 저장소의 기존 계약을 유지합니다. 주문 확정 인계는 관계형 저장소에서만 열립니다.
         orderRequest.상품명Snapshot = product.상품명.Trim();
         orderRequest.판매단위Snapshot = product.판매단위.Trim();
         orderRequest.단가Snapshot = product.판매가;
@@ -262,6 +279,20 @@ public sealed class 마트주문요청작성UseCase(
         {
             return 마트주문요청Results.Conflict<마트주문요청응답>(
                 "마트 주문 요청 상태가 먼저 변경되었습니다. 최신 요청을 다시 조회해 주세요.");
+        }
+
+        if (orderRequest.상태코드 != 마트주문요청상태코드.제출됨)
+            return 마트주문요청Results.Conflict<마트주문요청응답>("주문 확정이 시작된 요청은 여기에서 철회할 수 없습니다. 연결된 전문 주문에서 확인해 주세요.");
+
+        if (db.Database.IsRelational())
+        {
+            var changed = await db.마트주문요청.Where(x => x.Id == orderRequestId && x.요청자UserId == userId
+                    && x.상태코드 == 마트주문요청상태코드.제출됨 && x.수량 == orderRequest.수량 && x.단가Snapshot == orderRequest.단가Snapshot)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.상태코드, 마트주문요청상태코드.철회됨), cancellationToken);
+            if (changed != 1) return 마트주문요청Results.Conflict<마트주문요청응답>("주문 확정 또는 수량 변경이 먼저 처리되었습니다. 원 요청을 다시 확인해 주세요.");
+            var saved = await db.마트주문요청.AsNoTracking().SingleAsync(x => x.Id == orderRequestId && x.요청자UserId == userId, cancellationToken);
+            db.Entry(orderRequest).State = EntityState.Detached;
+            return Result.Ok(마트주문요청Mapper.ToResponse(saved));
         }
 
         orderRequest.상태코드 = 마트주문요청상태코드.철회됨;

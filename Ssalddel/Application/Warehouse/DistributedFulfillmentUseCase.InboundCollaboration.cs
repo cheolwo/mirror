@@ -121,7 +121,7 @@ public sealed partial class 분산물류UseCase
 
     private static DistributedInboundCollaborationDto? Collaboration(분산재고LotRecord lot)
         => lot.InboundCollaborationJson is null ? null : Deserialize<DistributedInboundCollaborationDto>(lot.InboundCollaborationJson);
-    private static bool ClosedInbound(분산재고LotRecord lot) => Collaboration(lot)?.StatusCode is "Rejected" or "Cancelled";
+    internal static bool ClosedInbound(분산재고LotRecord lot) => Collaboration(lot)?.StatusCode is "Rejected" or "Cancelled";
     private static DistributedInboundCollaborationDto RequireCollaboration(분산재고LotRecord lot, int version, bool allowDraft = false)
     {
         var state = Collaboration(lot); Require(state is not null && (allowDraft || state.TermsVersion > 0), "DistributedInboundProposalRequired");

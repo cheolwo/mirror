@@ -63,26 +63,11 @@ public sealed partial class 분산물류UseCase
             "DistributedPhotoEvidenceRequired", 400);
         await photoEvidence.BindAsync(await AuthorizeEvidenceAsync(actor, work, ct), ids, ct);
     }
-    private sealed record CompletionLineDraft(분산물류완료행 Line, 재고이력? History = null);
     private static 분산물류완료행 CompletionLine(DistributedActor actor, string workKind, string lineKey,
         분산재고LotRecord lot, int quantity, IReadOnlyList<string> photos,
         분산재고예약Record? reservation = null, 분산배송WaveRecord? wave = null)
-        => new() { LineKey = lineKey, WorkKind = workKind, ActorUserId = actor.UserId, LotId = lot.LotId,
-            InboundItemId = lot.InboundItemId, ReservationId = reservation?.ReservationId, OrderId = reservation?.OrderId,
-            RootOrderLedgerId = reservation is not null && wave is not null
-                ? 분산주문원장Metadata.Connections(wave).GetValueOrDefault(reservation.OrderId)?.RootOrderLedgerId : null,
-            Quantity = quantity, PhotoEvidenceIds = photos.Order(StringComparer.Ordinal).ToArray() };
-    private async Task SaveCompletionLines(DistributedActor actor, DistributedCommandRequest request,
-        IReadOnlyList<CompletionLineDraft> lines, CancellationToken ct)
-    {
-        Require(lines.Count > 0 && lines.Select(x => x.Line.LineKey).Distinct(StringComparer.Ordinal).Count() == lines.Count,
-            "DistributedCompletionLinesInvalid");
-        // 기존 재고이력의 실제 ID를 사용합니다. 별도 작업 ID나 과거 행의 추정 연결을 만들지 않습니다.
-        await db.SaveChangesAsync(ct);
-        Require(!db.ChangeTracker.Entries<분산물류CommandReceipt>().Any(x => x.Entity.ActorUserId == actor.UserId
-            && x.Entity.RequestId == request.RequestId), "DistributedCompletionEvidenceAlreadyRecorded");
-        db.Add(new 분산물류CommandReceipt { ActorUserId = actor.UserId, RequestId = request.RequestId,
-            CompletionLinesJson = Serialize(new 분산물류완료근거(1,
-                lines.Select(x => x.Line with { InventoryHistoryId = x.History?.Id }).ToArray())) });
-    }
+        => DistributedCompletionRecorder.CompletionLine(actor, workKind, lineKey, lot, quantity, photos, reservation, wave);
+    private Task SaveCompletionLines(DistributedActor actor, DistributedCommandRequest request,
+        IReadOnlyList<DistributedCompletionLineDraft> lines, CancellationToken ct)
+        => completionRecorder.SaveCompletionLines(actor, request, lines, ct);
 }

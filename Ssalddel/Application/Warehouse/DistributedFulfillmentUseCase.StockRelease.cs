@@ -15,6 +15,7 @@ public sealed partial class 분산물류UseCase
             Require(lot is not null, "DistributedLotNotFound", 404);
             Require(actor.UserId == site.OwnerUserId || actor.UserId == lot!.OwnerUserId, "DistributedStockReleasePartyRequired", 403);
             Require(r.Quantity > 0, "DistributedStockReleaseQuantityInvalid", 400);
+            Require(DistributedStockResolutionKinds.Known(r.ResolutionKind), "DistributedStockResolutionKindInvalid", 400);
             var assigned = Text(r.AssignedUserId, 191);
             Require(assigned == site.OwnerUserId || assigned == site.ManagerUserId || assigned == lot!.OwnerUserId
                 || await db.용달기사.AnyAsync(x => x.기사Id == assigned, ct), "DistributedStockReleaseAssigneeUnknown");
@@ -22,14 +23,15 @@ public sealed partial class 분산물류UseCase
             Require(releases.Count < 200, "DistributedStockReleaseHistoryLimitReached");
             Require(!releases.Any(x => x.LotId == lot!.LotId && x.StatusCode is not "Completed" and not "Cancelled"), "DistributedStockReleaseAlreadyPending");
             var stock = await ReleaseStock(site, lot!, ct);
-            Require(stock.가용수량 >= r.Quantity && stock.예약수량 == 0, "DistributedStockReleaseReservedOrInsufficient");
+            Require(ResolutionQuantity(stock, r.ResolutionKind) >= r.Quantity && stock.예약수량 == 0, "DistributedStockReleaseReservedOrInsufficient");
             await RequireNoPickedCustody(lot!.LotId, ct);
             var release = new StockReleasePlan
             {
                 ReleaseId = "release-" + r.RequestId.ToString("N"), LotId = lot.LotId,
                 LocationId = lot.LocationId, GoodsOwnerUserId = lot.OwnerUserId, SpaceOwnerUserId = site.OwnerUserId,
                 AssignedUserId = assigned, AgreedQuantity = r.Quantity, HandoverTerms = Text(r.HandoverTerms, 500),
-                Reason = Text(r.Reason, 500), CreatedAtUtc = Now
+                Reason = Text(r.Reason, 500), CreatedAtUtc = Now,
+                ResolutionKind = r.ResolutionKind == DistributedStockResolutionKinds.Handover ? null : r.ResolutionKind
             };
             SaveStockRelease(site, release, actor.UserId, "Proposed"); site.Revision++;
             return (siteId, site.Revision, release.StatusCode, (string?)null, 0);
@@ -56,7 +58,7 @@ public sealed partial class 분산물류UseCase
                     var lot = await Query<분산재고LotRecord>().SingleAsync(x => x.LotId == release.LotId && x.SiteId == siteId, ct);
                     Require(lot.OwnerUserId == release.GoodsOwnerUserId, "DistributedInventoryLineageMismatch");
                     var stock = await ReleaseStock(site, lot, ct);
-                    Require(stock.예약수량 == 0 && stock.가용수량 >= release.AgreedQuantity - release.ReleasedQuantity, "DistributedStockReleaseReservedOrInsufficient");
+                    Require(stock.예약수량 == 0 && ResolutionQuantity(stock, release.ResolutionKind) >= release.AgreedQuantity - release.ReleasedQuantity, "DistributedStockReleaseReservedOrInsufficient");
                     await RequireNoPickedCustody(lot.LotId, ct);
                 }
                 if (actor.UserId == release.SpaceOwnerUserId) release.SpaceOwnerConsented = r.Granted;
@@ -77,12 +79,14 @@ public sealed partial class 분산물류UseCase
         Require(release.SpaceOwnerUserId == site.OwnerUserId && release.SpaceOwnerConsented && release.GoodsOwnerConsented
             && release.StatusCode is "Confirmed" or "PartiallyReleased", "DistributedStockReleaseConsentRequired");
         Require(r.Quantity > 0 && r.Quantity <= release.AgreedQuantity - release.ReleasedQuantity, "DistributedStockReleaseQuantityInvalid", 400);
+        if (DistributedStockResolutionKinds.Normalize(release.ResolutionKind) != DistributedStockResolutionKinds.Handover)
+            Text(r.ResolutionEvidenceReference, 500);
         var lot = await Query<분산재고LotRecord>().SingleAsync(x => x.LotId == release.LotId && x.SiteId == siteId, ct);
         Require(lot.OwnerUserId == release.GoodsOwnerUserId && lot.LocationId == release.LocationId, "DistributedInventoryLineageMismatch");
         var location = await Query<분산적재위치Record>().SingleAsync(x => x.LocationId == release.LocationId && x.SiteId == siteId, ct);
         Require(r.LocationBarcode == location.Barcode, "DistributedLocationMismatch");
         var stock = await ReleaseStock(site, lot, ct);
-        Require(stock.예약수량 == 0 && stock.가용수량 >= r.Quantity, "DistributedStockReleaseReservedOrInsufficient");
+        Require(stock.예약수량 == 0 && ResolutionQuantity(stock, release.ResolutionKind) >= r.Quantity, "DistributedStockReleaseReservedOrInsufficient");
         await RequireNoPickedCustody(lot.LotId, ct);
         return new(site, release, lot, stock, location);
     }
@@ -94,16 +98,24 @@ public sealed partial class 분산물류UseCase
             var work = await PrepareStockRelease(actor, siteId, r, ct);
             await BindWork(actor, new() { Kind = "StockRelease", AggregateId = siteId, StockRelease = r }, r.PhotoEvidenceIds, ct);
             var stock = work.Stock;
-            var changed = await db.입고상품.Where(x => x.Id == stock.Id && x.소유자UserId == work.Lot.OwnerUserId
+            var query = db.입고상품.Where(x => x.Id == stock.Id && x.소유자UserId == work.Lot.OwnerUserId
                 && x.판매자UserId == work.Lot.SellerUserId && x.SKU == work.Lot.Sku && x.창고Id == work.Site.WarehouseId
-                && x.보관위치 == work.Location.Barcode && x.가용수량 == stock.가용수량 && x.예약수량 == 0 && x.UpdatedAt == stock.UpdatedAt)
-                .ExecuteUpdateAsync(s => s.SetProperty(x => x.가용수량, x => x.가용수량 - r.Quantity).SetProperty(x => x.UpdatedAt, Now), ct);
+                && x.보관위치 == work.Location.Barcode && x.가용수량 == stock.가용수량 && x.불량수량 == stock.불량수량
+                && x.예약수량 == 0 && x.UpdatedAt == stock.UpdatedAt);
+            var changed = DistributedStockResolutionKinds.UsesDamagedStock(work.Release.ResolutionKind)
+                ? await query.ExecuteUpdateAsync(s => s.SetProperty(x => x.불량수량, x => x.불량수량 - r.Quantity).SetProperty(x => x.UpdatedAt, Now), ct)
+                : await query.ExecuteUpdateAsync(s => s.SetProperty(x => x.가용수량, x => x.가용수량 - r.Quantity).SetProperty(x => x.UpdatedAt, Now), ct);
             Require(changed == 1, "DistributedStockReleaseInventoryChanged");
             work.Release.ReleasedQuantity += r.Quantity;
             work.Release.StatusCode = work.Release.ReleasedQuantity == work.Release.AgreedQuantity ? "Completed" : "PartiallyReleased";
-            SaveStockRelease(work.Site, work.Release, actor.UserId, "HandedOver", r.Quantity); work.Site.Revision++;
-            var history = await InventoryHistory(work.Lot.InboundItemId, actor.UserId, "잔여재고반출", -r.Quantity, PhotoMemo(r.PhotoEvidenceIds), ct);
-            await SaveCompletionLines(actor, r, [new(CompletionLine(actor, "StockRelease", work.Release.ReleaseId, work.Lot, r.Quantity, r.PhotoEvidenceIds), history)], ct);
+            SaveStockRelease(work.Site, work.Release, actor.UserId, "HandedOver", r.Quantity, r.ResolutionEvidenceReference); work.Site.Revision++;
+            var history = await InventoryHistory(work.Lot.InboundItemId, actor.UserId, ResolutionHistoryKind(work.Release.ResolutionKind),
+                -r.Quantity, PhotoMemo(r.PhotoEvidenceIds), ct);
+            if (DistributedStockResolutionKinds.UsesDamagedStock(work.Release.ResolutionKind))
+                history.변경후수량 = stock.불량수량 - r.Quantity;
+            await SaveCompletionLines(actor, r, [new(CompletionLine(actor,
+                DistributedStockResolutionKinds.Normalize(work.Release.ResolutionKind) == DistributedStockResolutionKinds.Handover ? "StockRelease" : "StockResolution",
+                work.Release.ReleaseId, work.Lot, r.Quantity, r.PhotoEvidenceIds), history)], ct);
             return (siteId, work.Site.Revision, work.Release.StatusCode, (string?)null, r.Quantity);
         }, ct);
 
@@ -128,6 +140,15 @@ public sealed partial class 분산물류UseCase
 
     private static void RequireReleaseSite(분산거점Record site)
         => Require(site.StatusCode == "RevocationPendingCustody" && (!site.OwnerConsented || !site.ManagerConsented), "DistributedSiteRevocationRequired");
+    private static int ResolutionQuantity(입고상품 stock, string? kind)
+        => DistributedStockResolutionKinds.UsesDamagedStock(kind) ? stock.불량수량 : stock.가용수량;
+    private static string ResolutionHistoryKind(string? kind) => DistributedStockResolutionKinds.Normalize(kind) switch
+    {
+        DistributedStockResolutionKinds.DamagedDisposal => "불량재고폐기",
+        DistributedStockResolutionKinds.AvailableShortage => "가용재고소실정정",
+        DistributedStockResolutionKinds.DamagedShortage => "불량재고소실정정",
+        _ => "잔여재고반출"
+    };
     private async Task<입고상품> ReleaseStock(분산거점Record site, 분산재고LotRecord lot, CancellationToken ct)
     {
         var stock = await db.입고상품.AsNoTracking().SingleOrDefaultAsync(x => x.Id == lot.InboundItemId, ct);

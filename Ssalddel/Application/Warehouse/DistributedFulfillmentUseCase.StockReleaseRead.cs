@@ -32,13 +32,13 @@ public sealed partial class 분산물류UseCase
             var ready = live && release.SpaceOwnerConsented && release.GoodsOwnerConsented;
             if (ready && actor.UserId == release.AssignedUserId) actions.Add("handover-stock-release");
             var next = release.StatusCode is "Completed" or "Cancelled" ? "정리 기록 확인"
-                : !release.SpaceOwnerConsented ? "공간 제공자 동의" : !release.GoodsOwnerConsented ? "물품 소유자 동의" : "지정 반출 담당자";
+                : !release.SpaceOwnerConsented ? "공간 제공자 동의" : !release.GoodsOwnerConsented ? "물품 소유자 동의" : "지정 처리 담당자";
             var details = ready && actor.UserId == release.AssignedUserId ? Deserialize<DistributedSitePrivate>(site.PrivateDetailsJson) : null;
             return new DistributedStockReleaseDto(release.ReleaseId, site.SiteId, site.PublicLabel, site.Revision, release.LotId,
                 stocks[lot!.InboundItemId].상품명, release.GoodsOwnerUserId, release.SpaceOwnerUserId, release.AssignedUserId,
                 release.StatusCode, release.AgreedQuantity, release.ReleasedQuantity, release.GoodsOwnerConsented,
                 release.SpaceOwnerConsented, release.HandoverTerms, next, actions,
-                details is null ? null : locations[release.LocationId].Barcode, details?.PickupInstructions);
+                details is null ? null : locations[release.LocationId].Barcode, details?.PickupInstructions, release.ResolutionKind);
         }).ToArray();
         if (roleKey is "warehouse" or "shipper")
         {
@@ -46,7 +46,7 @@ public sealed partial class 분산물류UseCase
                 .Select(x => new DistributedPartyCandidateDto(x.기사Id, x.기사명)).ToArrayAsync(ct);
             workspace.StockReleaseCandidates = lots.Where(lot => sites.Any(site => site.SiteId == lot.SiteId && site.StatusCode == "RevocationPendingCustody"
                 && (actor.UserId == site.OwnerUserId || actor.UserId == lot.OwnerUserId))
-                && stocks.TryGetValue(lot.InboundItemId, out var stock) && stock.가용수량 > 0 && stock.예약수량 == 0
+                && stocks.TryGetValue(lot.InboundItemId, out var stock) && (stock.가용수량 > 0 || stock.불량수량 > 0) && stock.예약수량 == 0
                 && !visible.Any(x => x.Release.LotId == lot.LotId && x.Release.StatusCode is not "Completed" and not "Cancelled"))
                 .Select(lot =>
                 {
@@ -55,7 +55,7 @@ public sealed partial class 분산물류UseCase
                         new DistributedPartyCandidateDto(site.ManagerUserId, "공간 관리자"), new DistributedPartyCandidateDto(lot.OwnerUserId, "물품 소유자") };
                     return new DistributedStockReleaseCandidateDto(lot.LotId, site.SiteId, site.PublicLabel, site.Revision,
                         stocks[lot.InboundItemId].상품명, lot.OwnerUserId, stocks[lot.InboundItemId].가용수량,
-                        parties.Concat(drivers).DistinctBy(x => x.UserId).ToArray());
+                        parties.Concat(drivers).DistinctBy(x => x.UserId).ToArray(), stocks[lot.InboundItemId].불량수량);
                 }).ToArray();
         }
         foreach (var site in workspace.Sites.Where(x => sites.Any(s => s.SiteId == x.SiteId && s.OwnerUserId == actor.UserId)

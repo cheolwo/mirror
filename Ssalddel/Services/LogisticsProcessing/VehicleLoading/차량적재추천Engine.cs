@@ -128,10 +128,17 @@ public sealed class 차량적재추천Engine
         var 단일운송불가사유 = new List<string>();
         var 검증경고 = new List<string>();
 
+        if (!차량.추천사용여부)
+        {
+            하드부적합사유.Add("추천 사용이 비활성화된 차량 제원입니다.");
+        }
+
         ValidateCapabilities(차량, 요구사항, 하드부적합사유);
         ValidatePackageDimensions(차량, 요구사항.포장목록, 하드부적합사유, 검증경고);
 
-        var 허용중량Kg = Math.Max(0, 차량.운영권장중량Kg ?? 차량.최대적재중량Kg);
+        var 허용중량Kg = Math.Min(
+            Math.Max(0, 차량.최대적재중량Kg),
+            Math.Max(0, 차량.운영권장중량Kg ?? 차량.최대적재중량Kg));
         var 허용부피Cbm = ResolveAllowedCbm(차량);
         var 적재함바닥면적M2 = CalculateFloorArea(차량);
         var 운행횟수비율 = new List<decimal>();
@@ -142,6 +149,7 @@ public sealed class 차량적재추천Engine
             "중량",
             "kg",
             단일운송불가사유,
+            하드부적합사유,
             검증경고,
             운행횟수비율);
 
@@ -151,6 +159,7 @@ public sealed class 차량적재추천Engine
             "부피",
             "cbm",
             단일운송불가사유,
+            하드부적합사유,
             검증경고,
             운행횟수비율);
 
@@ -160,6 +169,7 @@ public sealed class 차량적재추천Engine
             "팔레트",
             "개",
             단일운송불가사유,
+            하드부적합사유,
             검증경고,
             운행횟수비율);
 
@@ -169,6 +179,7 @@ public sealed class 차량적재추천Engine
             "적층 불가 화물 바닥면적",
             "m²",
             단일운송불가사유,
+            하드부적합사유,
             검증경고,
             운행횟수비율);
 
@@ -259,9 +270,20 @@ public sealed class 차량적재추천Engine
                 warnings.Add($"{ResolvePackageLabel(package)} 포장 치수 일부가 없어 입력된 축만 검증했습니다.");
             }
 
+            var missingAxes = new List<string>();
+            if (package.포장길이Mm > 0 && 차량.적재함길이Mm <= 0) missingAxes.Add("길이");
+            if (package.포장폭Mm > 0 && 차량.적재함폭Mm <= 0) missingAxes.Add("폭");
+            if (package.포장높이Mm > 0 && 차량.적재함높이Mm.GetValueOrDefault() <= 0) missingAxes.Add("높이");
+            if (missingAxes.Count > 0)
+            {
+                var message = $"{ResolvePackageLabel(package)} 포장 치수에 필요한 차량 적재함 {string.Join("·", missingAxes)} 기준이 없어 검증하지 못했습니다.";
+                warnings.Add(message);
+                reasons.Add($"검증 불가: {message}");
+                continue;
+            }
+
             var heightFits = package.포장높이Mm <= 0
-                             || !차량.적재함높이Mm.HasValue
-                             || package.포장높이Mm <= 차량.적재함높이Mm.Value;
+                             || package.포장높이Mm <= 차량.적재함높이Mm.GetValueOrDefault();
             var hasBothBaseDimensions = package.포장길이Mm > 0 && package.포장폭Mm > 0;
             var baseFits = (package.포장길이Mm <= 0 || package.포장길이Mm <= 차량.적재함길이Mm)
                            && (package.포장폭Mm <= 0 || package.포장폭Mm <= 차량.적재함폭Mm);
@@ -274,7 +296,7 @@ public sealed class 차량적재추천Engine
             {
                 var vehicleHeight = 차량.적재함높이Mm.HasValue
                     ? 차량.적재함높이Mm.Value.ToString()
-                    : "개방형";
+                    : "미등록";
                 reasons.Add(
                     $"{ResolvePackageLabel(package)} 포장 규격 " +
                     $"{package.포장길이Mm}×{package.포장폭Mm}×{package.포장높이Mm}mm가 " +
@@ -289,6 +311,7 @@ public sealed class 차량적재추천Engine
         string label,
         string unit,
         ICollection<string> reasons,
+        ICollection<string> unverifiableReasons,
         ICollection<string> warnings,
         ICollection<decimal> tripRatios)
     {
@@ -299,7 +322,9 @@ public sealed class 차량적재추천Engine
 
         if (!capacity.HasValue || capacity.Value <= 0)
         {
-            warnings.Add($"차량의 {label} 적재 기준이 없어 해당 조건을 검증하지 못했습니다.");
+            var message = $"차량의 {label} 적재 기준이 없어 해당 조건을 검증하지 못했습니다.";
+            warnings.Add(message);
+            unverifiableReasons.Add($"검증 불가: {message}");
             return null;
         }
 
@@ -319,6 +344,7 @@ public sealed class 차량적재추천Engine
         string label,
         string unit,
         ICollection<string> reasons,
+        ICollection<string> unverifiableReasons,
         ICollection<string> warnings,
         ICollection<decimal> tripRatios)
         => AddCapacityRatio(
@@ -327,6 +353,7 @@ public sealed class 차량적재추천Engine
             label,
             unit,
             reasons,
+            unverifiableReasons,
             warnings,
             tripRatios);
 
@@ -369,10 +396,7 @@ public sealed class 차량적재추천Engine
             return null;
         }
 
-        return decimal.Round(
-            (차량.적재함길이Mm / 1000m) * (차량.적재함폭Mm / 1000m),
-            3,
-            MidpointRounding.AwayFromZero);
+        return (차량.적재함길이Mm / 1000m) * (차량.적재함폭Mm / 1000m);
     }
 
     public static decimal? ResolveAllowedCbm(차량제원 차량)
@@ -380,22 +404,16 @@ public sealed class 차량적재추천Engine
         decimal? physicalCbm = null;
         if (차량.적재함길이Mm > 0 && 차량.적재함폭Mm > 0 && 차량.적재함높이Mm.GetValueOrDefault() > 0)
         {
-            physicalCbm = decimal.Round(
-                (차량.적재함길이Mm / 1000m)
+            physicalCbm = (차량.적재함길이Mm / 1000m)
                 * (차량.적재함폭Mm / 1000m)
-                * (차량.적재함높이Mm!.Value / 1000m),
-                3,
-                MidpointRounding.AwayFromZero);
+                * (차량.적재함높이Mm!.Value / 1000m);
         }
 
-        if (차량.권장최대CBM is > 0)
-        {
-            return physicalCbm.HasValue
-                ? decimal.Min(physicalCbm.Value, 차량.권장최대CBM.Value)
-                : decimal.Round(차량.권장최대CBM.Value, 3, MidpointRounding.AwayFromZero);
-        }
-
-        return physicalCbm;
+        // 운영 권장값은 확인된 물리 용량을 줄일 수 있지만, 미확인 적재함 치수를 대신하지 않는다.
+        if (!physicalCbm.HasValue) return null;
+        return 차량.권장최대CBM is > 0
+            ? decimal.Min(physicalCbm.Value, 차량.권장최대CBM.Value)
+            : physicalCbm;
     }
 
     private static bool IsFrozen(string? value)

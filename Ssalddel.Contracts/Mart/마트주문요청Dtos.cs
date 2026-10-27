@@ -4,18 +4,24 @@ public static class 마트주문요청상태코드
 {
     public const string 제출됨 = "Submitted";
     public const string 철회됨 = "Withdrawn";
+    public const string 확정확인중 = "ConfirmationPending";
+    public const string 확정됨 = "Confirmed";
 
     public static string 표시명(string? value)
         => value switch
         {
             제출됨 => "접수 대기",
             철회됨 => "철회됨",
+            확정확인중 => "주문 확정 결과 확인 중",
+            확정됨 => "전문 주문으로 연결됨",
             _ => "알 수 없는 상태"
         };
 
     public static bool 지원됨(string? value)
         => string.Equals(value, 제출됨, StringComparison.Ordinal)
-           || string.Equals(value, 철회됨, StringComparison.Ordinal);
+           || string.Equals(value, 철회됨, StringComparison.Ordinal)
+           || string.Equals(value, 확정확인중, StringComparison.Ordinal)
+           || string.Equals(value, 확정됨, StringComparison.Ordinal);
 }
 
 public static class 마트주문요청안내

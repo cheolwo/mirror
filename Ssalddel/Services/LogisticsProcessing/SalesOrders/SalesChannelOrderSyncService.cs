@@ -55,21 +55,35 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
 
         foreach (var account in accounts)
         {
-            var client = _feedClients.FirstOrDefault(x => x.CanFetch(account.채널종류, normalizedScope));
+            // 비어 있는 자리표시자를 실제 채널의 정상 0건 응답으로 사용하지 않습니다.
+            var client = _feedClients.FirstOrDefault(x => x is not EmptySalesChannelOrderFeedClient && x.CanFetch(account.채널종류, normalizedScope));
 
             if (client is null)
             {
+                SalesChannelSyncDiagnostics.Record(account, SalesChannelSyncDiagnostics.ProviderKey,
+                    SalesChannelSyncIssueCodes.ProviderUnavailable, [], now);
                 _logger.LogInformation(
                     "Action={Action} ChannelType={ChannelType} SyncScope={SyncScope} AccountId={AccountId}",
                     "SalesChannelOrderFeedClientMissing",
                     account.채널종류,
                     normalizedScope,
                     account.Id);
+                await _db.SaveChangesAsync(cancellationToken);
                 continue;
             }
 
             var sinceUtc = account.마지막동기화일시 ?? now.AddMinutes(-Math.Max(1, _options.LookbackMinutes));
-            var orders = await client.FetchOrdersAsync(account, sinceUtc, cancellationToken);
+            IReadOnlyList<SalesChannelOrderFeedEntry> orders;
+            try { orders = await client.FetchOrdersAsync(account, sinceUtc, cancellationToken); }
+            catch (Exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                // 외부 예외 원문·주소·토큰은 저장하거나 사용자 진단에 전달하지 않습니다.
+                SalesChannelSyncDiagnostics.Record(account, SalesChannelSyncDiagnostics.ProviderKey,
+                    SalesChannelSyncIssueCodes.FeedReadFailed, [], now);
+                await _db.SaveChangesAsync(cancellationToken);
+                continue;
+            }
+            SalesChannelSyncDiagnostics.Resolve(account, SalesChannelSyncDiagnostics.ProviderKey, now);
             fetchedOrderCount += orders.Count;
             var retryRequired = false;
 
@@ -77,6 +91,10 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
             {
                 var creationResult = await CreateWarehouseOutboundRequestsAsync(account, order, cancellationToken);
                 retryRequired |= creationResult.RetryRequired;
+                var orderKey = SalesChannelSyncDiagnostics.OrderKey(order);
+                if (creationResult.IssueCode is { } issue)
+                    SalesChannelSyncDiagnostics.Record(account, orderKey, issue, SalesChannelSyncDiagnostics.ItemKeys(order), now);
+                else SalesChannelSyncDiagnostics.Resolve(account, orderKey, now);
 
                 if (creationResult.CreatedCount == 0)
                 {
@@ -88,7 +106,7 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                 }
             }
 
-            if (!retryRequired)
+            if (!retryRequired && !SalesChannelSyncDiagnostics.HasHistoryLimit(account))
             {
                 account.마지막동기화일시 = now;
                 account.UpdatedAt = now;
@@ -101,6 +119,8 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                     account.Id,
                     normalizedScope);
             }
+            // 한 계정의 진단·커서는 해당 계정 처리 뒤 보존합니다. 이후 계정의 실패로 지우지 않습니다.
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -118,9 +138,11 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
         SalesChannelOrderFeedEntry order,
         CancellationToken cancellationToken)
     {
-        if (order.Items.Count == 0 || string.IsNullOrWhiteSpace(order.ChannelOrderNo))
+        if (order.Items.Count == 0 || string.IsNullOrWhiteSpace(order.ChannelOrderNo)
+            || !string.Equals(order.ChannelType, account.채널종류, StringComparison.OrdinalIgnoreCase)
+            || order.Items.Any(item => item.Quantity <= 0 || string.IsNullOrWhiteSpace(item.Sku) && string.IsNullOrWhiteSpace(item.ChannelProductNo)))
         {
-            return WarehouseOutboundCreationResult.Skipped;
+            return WarehouseOutboundCreationResult.Failed(SalesChannelSyncIssueCodes.OrderInputInvalid);
         }
 
         var orderReference = CreateOrderReference(order.ChannelType, order.ChannelOrderNo);
@@ -135,18 +157,21 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                 join inboundItem in _db.입고상품 on product.입고상품Id equals inboundItem.Id
                 where listing.판매채널계정Id == account.Id
                       && product.소유자UserId == account.UserId
-                      && (product.판매SKU == item.Sku || listing.채널상품번호 == item.ChannelProductNo)
+                      && ((!string.IsNullOrWhiteSpace(item.Sku) && product.판매SKU == item.Sku)
+                          || (!string.IsNullOrWhiteSpace(item.ChannelProductNo) && listing.채널상품번호 == item.ChannelProductNo))
                 select new { listing, product, inboundItem };
 
             // 예약 재고는 ExecuteUpdateAsync로 직접 갱신되므로 같은 동기화 실행에서
             // 이전 주문의 추적 스냅샷을 재사용하지 않고 최신 DB 값을 다시 읽는다.
-            var mapped = await listingQuery
+            var mappings = await listingQuery
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
-            if (mapped is null)
+                .Take(2).ToArrayAsync(cancellationToken);
+            if (mappings.Length != 1)
             {
-                continue;
+                // 한 품목이라도 연결되지 않으면 나머지 품목만 예약하지 않습니다.
+                return WarehouseOutboundCreationResult.Failed(SalesChannelSyncIssueCodes.ProductMappingMissing);
             }
+            var mapped = mappings[0];
 
             var alreadyExists = await _db.출고예정.AnyAsync(x =>
                 x.주문참조번호 == orderReference
@@ -162,7 +187,7 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
 
             if (!Ssalddel.Contracts.Common.Inbound.입고계약유형코드.CanSellToMarket(mapped.inboundItem.계약유형))
             {
-                continue;
+                return WarehouseOutboundCreationResult.Failed(SalesChannelSyncIssueCodes.ContractNotSellable);
             }
 
             lines.Add(new OutboundBatchPlanLineRequest
@@ -198,7 +223,7 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                 orderReference,
                 plan.UnallocatedLines.Count,
                 plan.Message);
-            return WarehouseOutboundCreationResult.Retry;
+            return WarehouseOutboundCreationResult.Failed(SalesChannelSyncIssueCodes.AllocationIncomplete);
         }
 
         var persisted = await TryPersistCompletePlanAsync(
@@ -215,7 +240,7 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
                 "OutboundInventoryReservationConflict",
                 orderReference,
                 "계획 이후 재고가 변경되어 출고 예약을 원자적으로 확보하지 못했습니다.");
-            return WarehouseOutboundCreationResult.Retry;
+            return WarehouseOutboundCreationResult.Failed(SalesChannelSyncIssueCodes.ReservationConflict);
         }
 
         return new WarehouseOutboundCreationResult(plan.Allocations.Count, RetryRequired: false);
@@ -320,10 +345,10 @@ public sealed class SalesChannelOrderSyncService : ISalesChannelOrderSyncService
     private static string CreateLineKey(string sku, int sequence)
         => $"{sku.Trim()}#{sequence}";
 
-    private readonly record struct WarehouseOutboundCreationResult(int CreatedCount, bool RetryRequired)
+    private readonly record struct WarehouseOutboundCreationResult(int CreatedCount, bool RetryRequired, string? IssueCode = null)
     {
         public static WarehouseOutboundCreationResult Skipped => new(0, RetryRequired: false);
 
-        public static WarehouseOutboundCreationResult Retry => new(0, RetryRequired: true);
+        public static WarehouseOutboundCreationResult Failed(string code) => new(0, RetryRequired: true, code);
     }
 }
