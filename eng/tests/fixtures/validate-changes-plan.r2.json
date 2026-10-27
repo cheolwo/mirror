@@ -1,0 +1,285 @@
+{
+  "Plans": {
+    "docs": {
+      "Level": "Fast",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "docs/README.md"
+      ],
+      "GuidanceOnly": true,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [],
+      "TestPlans": []
+    },
+    "ignored": {
+      "Level": "Fast",
+      "Configuration": "Debug",
+      "ChangedPaths": [],
+      "GuidanceOnly": true,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [],
+      "TestPlans": []
+    },
+    "explicit-filter-and-path-precedence": {
+      "Level": "Fast",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel/Ssalddel.csproj"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Targeted",
+          "Filter": "FullyQualifiedName~ExplicitR2"
+        }
+      ]
+    },
+    "no-related-test": {
+      "Level": "Fast",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel/Ssalddel.csproj"
+      ],
+      "TestPlans": []
+    },
+    "product-task": {
+      "Level": "Task",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v0.0.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "many-projects": {
+      "Level": "Fast",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "OrdererApp/UnknownR2.cs",
+        "SellerApp/UnknownR2.cs",
+        "Ssalddel.Ui.Common/UnknownR2.cs",
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v3.5.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Targeted",
+          "Filter": "FullyQualifiedName~ExplicitR2"
+        }
+      ]
+    },
+    "simulation": {
+      "Level": "Task",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel.Simulation/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v0.0.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "unity": {
+      "Level": "Task",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel.Unity/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": true,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": true,
+      "BuildTargets": [
+        "Ssalddel.Unity.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "shared-metadata": {
+      "Level": "Task",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel.Contracts/Common/Metadata/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v3.5.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "release-default": {
+      "Level": "Release",
+      "Configuration": "Release",
+      "ChangedPaths": [
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v0.0.slnx",
+        "Ssalddel.v0.5.slnx",
+        "Ssalddel.v1.0.slnx",
+        "Ssalddel.v1.5.slnx",
+        "Ssalddel.v3.5.slnx",
+        "Ssalddel.Simulation.slnx",
+        "Ssalddel.Unity.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        },
+        {
+          "Project": "Ssalddel.Simulation.Tests/Ssalddel.Simulation.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        },
+        {
+          "Project": "Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "release-explicit-debug": {
+      "Level": "Release",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v0.0.slnx",
+        "Ssalddel.v0.5.slnx",
+        "Ssalddel.v1.0.slnx",
+        "Ssalddel.v1.5.slnx",
+        "Ssalddel.v3.5.slnx",
+        "Ssalddel.Simulation.slnx",
+        "Ssalddel.Unity.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        },
+        {
+          "Project": "Ssalddel.Simulation.Tests/Ssalddel.Simulation.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        },
+        {
+          "Project": "Ssalddel.Unity.Tests/Ssalddel.Unity.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    },
+    "normalization": {
+      "Level": "Task",
+      "Configuration": "Debug",
+      "ChangedPaths": [
+        "SellerApp/UnknownR2.cs",
+        "Ssalddel/UnknownR2.cs"
+      ],
+      "GuidanceOnly": false,
+      "CodeMapCheck": false,
+      "FoodDriverCodeMapCheck": false,
+      "EvidenceMapCheck": false,
+      "BuildTargets": [
+        "Ssalddel.v0.0.slnx"
+      ],
+      "TestPlans": [
+        {
+          "Project": "Ssalddel.Tests/Ssalddel.Tests.csproj",
+          "Mode": "Full",
+          "Filter": null
+        }
+      ]
+    }
+  },
+  "RelatedTermsLimit": 16,
+  "RelatedTestLimit": 24,
+  "ExplicitFilterPriority": true,
+  "CommandChecks": [
+    {
+      "name": "probe-success",
+      "result": "Passed",
+      "exitCode": 0
+    },
+    {
+      "name": "probe-failure",
+      "result": "Failed",
+      "exitCode": 7
+    }
+  ],
+  "OutputPreserved": true,
+  "FailurePropagated": true
+}

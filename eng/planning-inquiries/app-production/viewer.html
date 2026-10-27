@@ -16,7 +16,7 @@
 <section class="stats" aria-label="목록 범위" id="stats"></section>
 <section class="filters" aria-label="검색과 필터">
 <input id="search" type="search" aria-label="기획 검색" placeholder="기획 이름, ID, 업무로 검색">
-<select id="role" aria-label="역할"><option value="">모든 역할</option><option value="restaurant">음식점</option><option value="orderer">주문자</option><option value="driver">기사</option><option value="admin">운영자</option></select>
+<select id="role" aria-label="역할"><option value="">모든 역할</option><option value="restaurant">음식점</option><option value="orderer">주문자</option><option value="driver">기사</option><option value="admin">운영자</option><option value="shipper">화주</option><option value="warehouse">창고</option></select>
 <select id="category" aria-label="기획 분야"><option value="">모든 분야</option></select>
 <select id="status" aria-label="근거 상태"><option value="">모든 근거</option><option value="detailed">업무 연결 있음</option><option value="unreviewed">업무 연결 미검토</option><option value="stale">재검증 필요</option><option value="missing">근거 없음·미확인</option><option value="failed">실패 기록 있음</option></select>
 <select id="intake-status" aria-label="제작 입력 상태"><option value="">모든 제작 입력</option><option value="NotReviewed">입력 미검토</option><option value="NeedsInformation">입력·검토 보완</option><option value="Confirmed">입력 확인됨 (개발 승인 아님)</option><option value="Changed">입력 변경됨</option></select>
@@ -30,7 +30,7 @@
 <script>
 'use strict';
 const data=JSON.parse(document.getElementById('index-data').textContent);
-const $=id=>document.getElementById(id),roles={restaurant:'음식점',orderer:'주문자',driver:'기사',admin:'운영자'};
+const $=id=>document.getElementById(id),roles={restaurant:'음식점',orderer:'주문자',driver:'기사',admin:'운영자',shipper:'화주',warehouse:'창고'};
 const label={Current:'입력·범위 일치',Stale:'재검증 필요',Unknown:'기준 미확인',Present:'있음',Partial:'일부 있음',Missing:'근거 없음',NotApplicable:'해당 없음',Passed:'통과 기록',Failed:'실패 기록',NotRun:'미실행 기록',O:'코드 있음',X:'범위 내 미발견','?':'미확인'};
 const kindLabel={Validation:'범위 검증',ValidationReport:'과거 검증 보고',BuildAndTestReport:'과거 빌드·시험 보고',AutomatedTest:'자동시험',Build:'빌드',Server:'서버 연결',Ui:'화면',UI:'화면',Screenshot:'화면',Apk:'APK',APK:'APK',ApkPackaging:'APK·AAB 생성',Device:'장치',Deployment:'배포'};
 const intakeLabel={NotReviewed:'미검토',NeedsInformation:'입력·검토 보완',Confirmed:'입력 확인됨',Changed:'입력 변경됨',Incomplete:'보완 필요',Ready:'준비됨',Pending:'검토 대기',NotGranted:'미승인',Declared:'기존 승인 선언 확인',Invalid:'기준 불일치',Unknown:'미확인',Missing:'미준비',NotApplicable:'해당 없음',ExistingConfirmed:'기존 근거 확인',Proposed:'제안',Unresolved:'미정'};

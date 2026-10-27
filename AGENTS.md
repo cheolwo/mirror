@@ -30,7 +30,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 
 1. 시스템/개발자 지침과 현재 스레드의 최신 사용자 요청을 먼저 따른다.
 2. 작업 대상 폴더에 더 가까운 `AGENTS.md`가 있으면 함께 읽고 그 범위에서는 가까운 지침을 우선한다.
-3. 별도 지시가 없으면 [0.0 커뮤니티·공공데이터 집중 로드맵](docs/Versions/v0.0/focus-roadmap.md)을 기본 우선순위로 삼는다.
+3. 별도 지시가 없으면 [통합 앱 1.0 완성 목표](docs/Versions/unified-1.0/README.md)와 [업무별 마감표](docs/Versions/unified-1.0/checklist.md)를 기본 우선순위로 삼는다. 기존 0.0~3.5는 업무 도입 이력·호환 코드이며 독립 제품 출시 순서로 쓰지 않는다.
 4. 문서와 코드가 다르면 실제 route, contract, test, 실행 설정을 확인하고 차이를 알린다. 추측으로 한쪽을 덮지 않는다.
 5. 과거 대화나 오래된 선호보다 현재 저장소 문서와 최신 사용자 요청을 우선한다.
 
@@ -38,6 +38,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 
 | 작업 경로 또는 종류 | 먼저 읽을 지침 | 핵심 기준 |
 | --- | --- | --- |
+| 앱 기능 개발·보완·마감 | `docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md` | 같은 업무의 준비·구현·서버 완주·휴대폰 확인·제한 사용·공개 준비, 앱별 입력과 기존 제작 대장 연결. 기존 자료로 AI가 먼저 작성하고 필요한 제품 선택만 확인 |
 | `Ssalddel/` server·API·Event | `Ssalddel/AGENTS.md` | 업무 실행 책임, Command/Event, metadata |
 | `Ssalddel/Controllers/Common/`, `Ssalddel.Community/`, `Ssalddel.Contracts/Common/Community/` | `Ssalddel/AGENTS.md`, `Ssalddel.Community/AGENTS.md` | Common에 포함되는 커뮤니티 API·contract·규칙 경계 |
 | `Ssalddel/Controllers/Platform/` | `Ssalddel/Controllers/Platform/AGENTS.md` | 업무 공통과 구분되는 플랫폼 기술 API |
@@ -71,8 +72,8 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 ## 제품과 운영 경계
 
 - Ssalddel의 중심은 **정보 공개형 커뮤니티**다. 대화와 모집이 공동 원장·다이어그램으로 이어지고 업무 도구는 그 위에 붙는다.
-- 현재 기본 공개 기준은 `0.0` 커뮤니티·공공데이터 기반이다. 개발은 `3.5` 전체 제품 범위의 페이지·원장·상태 전이를 세로로 계속 완성할 수 있으며, 현재 요청에 대상 버전이 없을 때의 기본 우선순위만 `0.0`으로 둔다. `0.5` 이후 기능은 준비된 capability부터 릴리즈 게이트에 따라 단계적으로 공개하고, 전용 검증 profile과 운영 요건 없이 기본 노출·외부 효과를 켜지 않는다.
-- 최종 배포 목표는 `3.5` 마트·도심 물류다. 현재 완성 단계 `0.0`과 최종 목표를 혼동하지 않으며, 새 페이지는 [전체 로드맵 조화형 페이지 원칙](docs/Architecture/WholeRoadmapPagePrinciple.md)에 따라 `0.0`부터 `3.5`까지의 stable ID, 원장과 역할 인계를 고려한다.
+- 제품 완성 목표는 기존 0.0~3.5 전체 범위를 합친 **통합 앱 `1.0`**이다. 공통 기반·주문·공급·화물·창고·음식·마트·협업을 업무별로 마감한다. 기존 기본 노출·기능 플래그·권한·운영 요건은 목표 통합만으로 바꾸지 않으며, 구현·실제 휴대폰·서버 완주·공개 상태를 따로 기록한다.
+- 새 페이지는 [전체 로드맵 조화형 페이지 원칙](docs/Architecture/WholeRoadmapPagePrinciple.md)에 따라 통합 1.0의 stable ID, 원장과 역할 인계를 고려한다. 기존 버전 폴더와 숫자는 과거 업무 분류·저장/API 호환을 위해 보존하며 옛 공동주문 분류 `1.0`과 통합 제품 목표 `1.0`을 구분한다.
 - 유상 화물 추천, 자동 배차, 계약 중개, 운임 수취, 보관, 정산은 허가·제휴·법률·운영 준비 전 기본 비활성이다.
 - 실행 효과는 `SsalddelExecution:Mode`의 `Simulation`과 `Operational` 경계로만 통제한다. 별도 실행 모드를 화면이나 API마다 만들지 않는다.
 - 개발 검증은 sample data, FakePG, 모의 흐름을 사용한다. 운영 저장이나 API 실패를 sample fallback으로 숨기지 않는다.
@@ -159,7 +160,7 @@ View 캡처(Game View 및 보조 Scene View)의 실행 담당은 `월드·공간
 | --- | --- | --- |
 | 수정 직후 | `powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-changes.ps1 -Level Fast` | 직접 영향 project와 발견된 관련 test |
 | 작업 완료 전 | 같은 명령의 `-Level Task` | 관련 version slice와 targeted/full fallback test |
-| release 또는 명시 요청 | 같은 명령의 `-Level Release` | `0.0`, `0.5`, `1.0`, `1.5` build와 전체 test |
+| release 또는 명시 요청 | 같은 명령의 `-Level Release` | 통합 목표의 실제 검사 계획과 기존 `0.0`~`3.5`·Simulation·Unity 분류의 회귀, 전체 test. 실제 선택 목록을 기록 |
 | 문서·지침만 변경 | 같은 script의 `Fast` | `git diff --check`, build/test 생략 |
 
 - 작업 트리에 다른 스레드 변경이 섞여 있으면 `-Paths <이번 작업 파일들>`로 검증 범위를 명시한다.
@@ -183,7 +184,7 @@ View 캡처(Game View 및 보조 Scene View)의 실행 담당은 `월드·공간
 ## 우선 참고 문서
 
 1. [README](README.md)
-2. [0.0 커뮤니티·공공데이터 집중 로드맵](docs/Versions/v0.0/focus-roadmap.md)
+2. [통합 앱 1.0 완성 목표·업무별 마감](docs/Versions/unified-1.0/README.md)
 3. [커뮤니티 0.0 기반 제품 원칙](docs/Architecture/CommunityFoundationV0Policy.md)
 4. [업무 실행 책임 모델](docs/Architecture/BusinessWorkflowResponsibilityModel.md)
 5. [첨부 문서 목차](docs/ProjectOverview/00-첨부문서목차.md)

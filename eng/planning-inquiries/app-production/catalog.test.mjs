@@ -100,6 +100,22 @@ test('product source existence, test source existence and execution are independ
   assert.deepEqual(index.plans[0].workItemIds, ['menu', 'only-test']);
 });
 
+test('shipper and warehouse are descriptive roles without granting implementation or execution', t => {
+  const { root } = fixture(t, {}, [{
+    id: 'cargo', planRefs: [{ path: PLAN }], roles: ['shipper', 'driver', 'admin', 'warehouse'],
+    roleLinks: [{ role: 'shipper', codeRefs: [], note: '화주 연결 미검토' }, { role: 'warehouse', codeRefs: [], note: '창고 연결 미검토' }]
+  }, { id: 'unknown', roles: ['unregistered-role'], roleLinks: [{ role: 'unregistered-role' }] }]);
+  const index = buildIndex(root), item = index.workItems.find(work => work.id === 'cargo');
+  assert.deepEqual(item.roles, ['driver', 'admin', 'shipper', 'warehouse']);
+  assert.deepEqual(index.plans[0].roles, item.roles);
+  assert.deepEqual(item.roleLinks.map(link => link.role), ['shipper', 'warehouse']);
+  assert.equal(item.codePresence, 'Unknown');
+  assert.equal(item.intake.state, 'NotReviewed');
+  assert.deepEqual(item.evidence, []);
+  assert.ok(!index.diagnostics.some(diagnostic => diagnostic.code === 'UnknownRole' && diagnostic.message.includes('cargo')));
+  assert.ok(index.diagnostics.some(diagnostic => diagnostic.code === 'UnknownRole' && diagnostic.message.includes('unknown')));
+});
+
 test('optional intake exposes readiness and nested source changes in the index without approving execution', t => {
   const { root, write } = fixture(t, { 'App/project.csproj':'<Project />', 'App/source.cs':'// input basis' });
   const source = { path:'App/source.cs',sha256:hashFile(root,'App/source.cs') };

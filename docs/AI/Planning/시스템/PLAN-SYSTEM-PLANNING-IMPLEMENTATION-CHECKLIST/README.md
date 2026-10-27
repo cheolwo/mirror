@@ -1,4 +1,8 @@
-[기획 · 기획·개발·검증 통합 관리 · PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST · r11]
+[기획 · 앱 공통 제작 절차 · PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST · r13]
+
+현행 진입점은 [앱 공통 제작 절차](app-production-input-guide.md)다. [r13 적용 범위](app-common-workflow.r13.md)에서 통합 1.0의 여섯 마감 단계와 기존 제작 대장을 연결하고 화물의 화주·기사·운영자 입력을 첫 사례로 등록한다. r13은 도구·절차·검증 준비이며 실제 화물 서버/휴대폰 완주와 구별한다. 아래 r8~r12의 원본·승인·검증 범위는 보존한다.
+
+[r13 적용 결과](app-common-workflow.r13.result.md): 공통 절차·제작 도구 보완과 화물 입력 등록을 마쳤다. 도구 시험 97/97, 생성 자료·입력 보류·실제 관리 화면을 확인했으며 화물 제품의 서버/휴대폰 실행은 다음 회차다.
 
 현행 보완 순환: [결손 보완과 조건부 제작 규칙 r11](app-production-repair-cycle.r11.md). 새 기능보다 기존 실패/복구를 보완하고 검증 근거와 한계를 함께 축적한다. 아래 r10 문답과 r9 도구 형식은 유지한다.
 

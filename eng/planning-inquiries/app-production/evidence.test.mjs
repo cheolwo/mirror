@@ -243,7 +243,8 @@ test('optional PowerShell validation bridge captures a real scoped diff check wi
   const f = fixture(t);
   const actualRoot = fileURLToPath(new URL('../../../', import.meta.url));
   for (const relative of ['eng/planning-inquiries/app-production/evidence.mjs', 'eng/planning-inquiries/app-production/intake.mjs',
-    'eng/common/planning-evidence.ps1', 'eng/validate-changes.ps1']) {
+    'eng/common/planning-evidence.ps1', 'eng/validate-changes.ps1', 'eng/validation/ChangedFileValidationPlan.ps1',
+    'eng/work-areas/food-driver.json']) {
     f.put(relative, fs.readFileSync(path.join(actualRoot, relative), 'utf8'));
   }
   execFileSync('git', ['init', '--quiet', f.root], { stdio: 'pipe' });

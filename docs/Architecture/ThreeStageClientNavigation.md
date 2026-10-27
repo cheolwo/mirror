@@ -1,5 +1,7 @@
 # 통합 클라이언트 3단계 내비게이션
 
+> 2026-10-22 공통 홈의 범위: 현재 [r10](../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md)의 공개 누적 요약·역할 진입은 아래 업무 탐색 바깥의 공통 셸이다. [운영 요약→세부 내역 조정안 r12](../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/platform-overview-drilldown.r12.md)는 이를 기존 분야·기록·상세로 연결하는 후속 설계이며 모든 역할에 같은 수의 새 페이지나 다이어그램 경유를 강제하는 구현이 아니다. 수행 중 직접 진입과 기존 단일 책임 기준은 유지한다.
+
 > 상태: 목표 구조 확정, 단계별 구현 중  
 > 기준일: 2026-07-13  
 > 관련 문서: [Platform Home Mode](PlatformHomeMode.md), [통합 커뮤니티 클라이언트](../ProjectOverview/unified-community-client.md)

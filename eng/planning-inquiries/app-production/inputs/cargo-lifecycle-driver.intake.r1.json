@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "planning-app-intake.v1",
+  "workItemId": "APP-CARGO-LIFECYCLE-DRIVER",
+  "targetAppIds": [
+    "cargo-driver"
+  ],
+  "impactedRoles": [
+    "shipper",
+    "driver",
+    "admin"
+  ],
+  "sections": {
+    "purpose": {
+      "status": "ExistingConfirmed",
+      "value": "화물 한 건의 화주·전문 기사·운영자 인계에서 이 앱의 기존 책임과 다음 검증을 연결하는 입력 초안이다. r13 승인은 공통 절차/도구·파일럿 준비에 한정한다. 제품 기능/API/권한·운영 모드·금융/배차 정책 변경, 실제 서버 업무·APK 빌드/설치·운영/배포는 이번에 실행하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "information": {
+      "status": "ExistingConfirmed",
+      "value": "같은 합성 운송의 현재 추천 판본·유효기간·차량/적재 조건·수락 상태·도착/상하차·허용 행동·사진 상태·약정 기사 보수와 지급 준비를 대조한다. 본인 권한은 서버가 검사한다. 사진/서명은 별도 암호화 저장이며 일반 복구 기록·제작 입력에 주소/사진/신고 원문·인증값을 복제하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs",
+          "sha256": "D61E390F3882A5EC43FBBB2FAA3491FAFF87449AF0B468E6581AC6E192B373CA"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoPhotoRecoveryStore.cs",
+          "sha256": "267E11F7D8EDD72AFB5AF6ABDFCC3B3BB8ED448ACA9660FC3C6C2F9FEB067EE2"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoCompletionRecovery.cs",
+          "sha256": "B2214AC9912523A039BC84E216DA4016D117672820FD72A433DEEDE10EBD8A77"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoExceptionRecovery.cs",
+          "sha256": "85697F25B4AB6DC687CB6B535079428327983D5D340DE74B6F9B9F85B0DCE18A"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "workflow": {
+      "status": "ExistingConfirmed",
+      "value": "다음 회차는 전문 기사 인증→설정/운행 상태 확인→현재 추천 명시 판단→수락 결과 조회→상차 도착/필수 사진/완료→하차 도착/사진/완료→현재 운송 해제/이력과 화주·운영자 동일 대상 재조회다. 거절·만료와 새 의뢰는 별도 사례이며 제어 추천을 제품 AI 검증으로 승격하지 않는다. 이번 실행은 NotRun이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/Services/DriverRoutes.cs",
+          "sha256": "AE4E1778CA2436BD1C07BF3F24B78E688C0BCC3F4034335D0C46C9748E3BEF1C"
+        },
+        {
+          "path": "DriverApp/Services/DriverTransportApiService.cs",
+          "sha256": "B348B87898FB453347C498F53FFBE936398122B4BE901D33CCB5CAB58D122ED2"
+        },
+        {
+          "path": "Ssalddel/Controllers/Driver/03_Action/기사배차액션Controller.cs",
+          "sha256": "A92292813996057A93651E6B9AC20D78A70E06F9734FD8EB396605AD46840633"
+        },
+        {
+          "path": "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs",
+          "sha256": "D61E390F3882A5EC43FBBB2FAA3491FAFF87449AF0B468E6581AC6E192B373CA"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "uiStates": {
+      "status": "ExistingConfirmed",
+      "value": "공개 탐색·로그인 복원/실패·대기·운행중·현재 추천·거절/만료·수락/상하차 처리 중·사진 실패·미확정·운송 보류·완료/최신 상태 미확인을 구분한다. 기사125의 에뮬레이터 시작/종료 요약 확인을 실기기 재실행·GPS·카메라 성공으로 합산하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/Components/Pages/RootRedirect.razor",
+          "sha256": "C92AD504887D72BB4EDA0272BB2C31D9CC939EED4E413FE0B84D038B8BBD18BE"
+        },
+        {
+          "path": "DriverApp/ViewModels/Driver/Work/기사운행시작PageViewModel.cs",
+          "sha256": "22E3F0CD4F26B89AF859C0CF7B4DAFBD673270CA65816E63A9C78D08EDE1076C"
+        },
+        {
+          "path": "DriverApp/Services/DriverTransportExceptionService.cs",
+          "sha256": "AAB99CE465D9F5A7DB9162D6F03ACE0045295DAF69DE7B119C4C32D28609BD66"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-android-recovery.implementation.r124.md",
+          "sha256": "339370768F21F556EEBC232DCCE99A46FB8D14B62A22B0EF890102C5F6760875"
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "sha256": "1768475555D22B9BD7C90BCD222BE1717B9AC252A8E878DE9729EB2198DDDE70"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "recovery": {
+      "status": "ExistingConfirmed",
+      "value": "기존 완료/신고 보호 저장은 계정·세션·서버·운송·단계를 대조하고 재실행 중복을 막는다. 단말 관측 번호는 서버 멱등 영수증이 아니다. 정본 완료·정확한 미적용/응답과 보호 삭제를 각각 확인하며, 이전 신고 존재로 이번 신고의 성공/미적용을 추정하지 않는다. 사진은 별도 서버 결속 암호화 캐시를 사용한다. 실제 응답 유실·재실행·사진 실패의 현재 APK 검증은 NotRun이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/Services/DriverCargoCompletionRecovery.cs",
+          "sha256": "B2214AC9912523A039BC84E216DA4016D117672820FD72A433DEEDE10EBD8A77"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoExceptionRecovery.cs",
+          "sha256": "85697F25B4AB6DC687CB6B535079428327983D5D340DE74B6F9B9F85B0DCE18A"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoPhotoRecoveryStore.cs",
+          "sha256": "267E11F7D8EDD72AFB5AF6ABDFCC3B3BB8ED448ACA9660FC3C6C2F9FEB067EE2"
+        },
+        {
+          "path": "DriverApp/Services/DriverTransportExceptionService.cs",
+          "sha256": "AAB99CE465D9F5A7DB9162D6F03ACE0045295DAF69DE7B119C4C32D28609BD66"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/CargoNativeIssueDurableRecoveryTests.cs",
+          "sha256": "A2FED872E346E5F171A249EC6336B8A4D873D67A70EA792C7C7562494EE7019A"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "deliverables": {
+      "status": "ExistingConfirmed",
+      "value": "같은 입력/소스/서버/APK와 run→request→transport 연결의 업무시험·API 연결 UI·Android UI·시험 APK를 다음 회차의 독립 증거로 준비한다. APK 파일·설치·에뮬레이터·실기기·HTTP/DB·금융/공개를 분리한다. 이번 회차는 입력/근거 계획만 작성했으며 모든 제품 실행 결과는 NotRun, 환경은 Unknown이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "eng/release/README.mobile-usb-test.md",
+          "sha256": "A101B0FB359D558FD2FD33AC4E092D1876C85C68FDE970A8F7FFDA6F1A0DE1BF"
+        }
+      ]
+    }
+  },
+  "questions": [],
+  "conflicts": [],
+  "deliverables": [
+    {
+      "id": "cargo-driver-business-tests",
+      "kind": "AutomatedTest",
+      "required": true
+    },
+    {
+      "id": "cargo-driver-api-ui",
+      "kind": "ApiConnectedUi",
+      "required": true
+    },
+    {
+      "id": "cargo-driver-android-ui",
+      "kind": "AndroidUi",
+      "required": true
+    },
+    {
+      "id": "cargo-driver-android-package",
+      "kind": "AndroidPackage",
+      "required": true
+    },
+    {
+      "id": "cargo-driver-device-install",
+      "kind": "DeviceInstall",
+      "required": false
+    }
+  ]
+}

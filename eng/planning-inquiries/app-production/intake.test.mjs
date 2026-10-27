@@ -63,6 +63,23 @@ test('AI complete draft does not imply human confirmation or execution approval'
   assert.deepEqual(result.impactedRoles, ['restaurant', 'orderer']);
 });
 
+test('cargo app target stays independent from descriptive shipper and warehouse roles', t => {
+  const f = fixture(t);
+  f.profile.appId = 'cargo-driver';
+  f.intake.targetAppIds = ['cargo-driver'];
+  f.intake.impactedRoles = ['shipper', 'driver', 'admin', 'warehouse'];
+  f.save();
+  const result = f.evaluate();
+  assert.deepEqual(result.targetAppIds, ['cargo-driver']);
+  assert.deepEqual(result.impactedRoles, ['shipper', 'driver', 'admin', 'warehouse']);
+  assert.equal(result.inputState, 'Ready');
+  assert.equal(result.reviewState, 'Pending');
+  assert.equal(result.approval.grantsExecution, false);
+  f.intake.impactedRoles.push('cargo-driver');
+  f.save();
+  assert.ok(f.evaluate().diagnostics.some(diagnostic => diagnostic.code === 'IntakeRolesInvalid'));
+});
+
 test('human-confirmed input remains independently blocked for execution and APK environment', t => {
   const f = fixture(t);
   f.confirm();

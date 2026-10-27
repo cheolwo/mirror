@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "planning-app-intake.v1",
+  "workItemId": "APP-CARGO-LIFECYCLE-SHIPPER",
+  "targetAppIds": [
+    "shipper"
+  ],
+  "impactedRoles": [
+    "shipper",
+    "driver",
+    "admin"
+  ],
+  "sections": {
+    "purpose": {
+      "status": "ExistingConfirmed",
+      "value": "화물 한 건의 화주·전문 기사·운영자 인계에서 이 앱의 기존 책임과 다음 검증을 연결하는 입력 초안이다. r13 승인은 공통 절차/도구·파일럿 준비에 한정한다. 제품 기능/API/권한·운영 모드·금융/배차 정책 변경, 실제 서버 업무·APK 빌드/설치·운영/배포는 이번에 실행하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "information": {
+      "status": "ExistingConfirmed",
+      "value": "동일 실행/의뢰/운송의 합성 표본만 연결한다. 화주 본인 의뢰·수집 동의·원요청 ID·금융/인수증 상태는 서버 권위다. 고객 운임과 기사 보수, 운송 완료·인수·수납·지급을 분리하고 주소/동호수/연락처·키·실계정은 입력에 복제하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs",
+          "sha256": "FBDA38C722A04C591662B5CADF90E0BD4AD4158EAE007BB52CD860266A9DF7BD"
+        },
+        {
+          "path": "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+          "sha256": "4004EF54B0A328CE61F32431C7694B39B37DFF075EE205E7C0522004B46AB177"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "workflow": {
+      "status": "ExistingConfirmed",
+      "value": "다음 회차의 기존 흐름은 화주 인증→조건/동의/접수→동일 원요청 조회→기본 선결제의 확보 또는 명시 승인 후불→기사 수락/상하차 인계→같은 의뢰 진행·인수증 정본 재조회다. 창고 후불 fixture는 기본 신규 선결제의 통과 근거가 아니다. 이번 실행은 NotRun이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/ViewModels/Shipper/ShipperRequestAuthoringPageViewModel.cs",
+          "sha256": "10870CB0CE76B46C9600E17D794BB5143AEB708FFCDA59B7E67A6291FA41C591"
+        },
+        {
+          "path": "SsalddelApp/Components/Pages/ShipperRequestPaymentPage.razor",
+          "sha256": "09161A124400B49F8B852D4B62BF4EFD67802C76968D1EBA29FC1D307E3D8834"
+        },
+        {
+          "path": "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+          "sha256": "4004EF54B0A328CE61F32431C7694B39B37DFF075EE205E7C0522004B46AB177"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "uiStates": {
+      "status": "ExistingConfirmed",
+      "value": "기존 작성·로딩·빈 목록·권한/조회 실패·처리 중·결과 미확정·접수/결제 상태·운송 완료·인수증 등록과 결과 확인을 구분한다. 로그인 후 원업무 복귀, 뒤로/키보드·재실행/계정 전환 때 입력과 대상 보호를 검증한다. 실제 화면 결과는 아직 없다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/Components/Pages/ShipperRequestWizard.razor",
+          "sha256": "94623A517CA3450784A6334D8D4ECDD0CC4C0B8A610E72B67CC1B63857C36F9F"
+        },
+        {
+          "path": "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.Receipt.cs",
+          "sha256": "581AEA43C015C8FE3A3EBB434619087898D03EC1EF131D51FAD17CD6938EFFDA"
+        },
+        {
+          "path": "docs/Architecture/RoleAppVisualDesignStandard.md",
+          "sha256": "BD88EE59B8049E7CF825E4C70B6A1FD7D49339EA032159A80CD6882F2F74254F"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "recovery": {
+      "status": "ExistingConfirmed",
+      "value": "접수는 보호 저장된 client request ID로 동일 원장을 확인한다. 테스트 결제는 계정·서버·의뢰별 보호 기록과 재조회로 처리하며 인증 요청 실패를 로컬 성공으로 바꾸거나 POST를 자동 반복하지 않는다. 인수증은 원 번호 비교 근거 유무와 현재 등록 상태를 구분한다. 앱 재실행·응답 유실·대상/계정/서버 전환의 실제 확인은 NotRun이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/Services/MauiWorkflowRecoveryStore.cs",
+          "sha256": "E9959C81EEA721CB9CA879D56F3DA930A48166CC04DD2079508025DDE1338CFB"
+        },
+        {
+          "path": "SsalddelApp/ViewModels/Shipper/ShipperRequestAuthoringPageViewModel.cs",
+          "sha256": "10870CB0CE76B46C9600E17D794BB5143AEB708FFCDA59B7E67A6291FA41C591"
+        },
+        {
+          "path": "SsalddelApp/Services/FakeShipperPaymentService.cs",
+          "sha256": "60850197D69E52BF3DE4F606717012D28117A64B89443B645C24132C7E9D183E"
+        },
+        {
+          "path": "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.Receipt.cs",
+          "sha256": "581AEA43C015C8FE3A3EBB434619087898D03EC1EF131D51FAD17CD6938EFFDA"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-app-closeout.implementation.r121.md",
+          "sha256": "5AD049E76CEDCD294F9AC8FD8B7C166F3F8E322865DE4483D4B02EB26E4F4C4D"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "deliverables": {
+      "status": "ExistingConfirmed",
+      "value": "같은 입력/소스/서버/APK와 run→request→transport 연결의 업무시험·API 연결 UI·Android UI·시험 APK를 다음 회차의 독립 증거로 준비한다. APK 파일·설치·에뮬레이터·실기기·HTTP/DB·금융/공개를 분리한다. 이번 회차는 입력/근거 계획만 작성했으며 모든 제품 실행 결과는 NotRun, 환경은 Unknown이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "eng/release/README.mobile-usb-test.md",
+          "sha256": "A101B0FB359D558FD2FD33AC4E092D1876C85C68FDE970A8F7FFDA6F1A0DE1BF"
+        }
+      ]
+    }
+  },
+  "questions": [],
+  "conflicts": [],
+  "deliverables": [
+    {
+      "id": "cargo-shipper-business-tests",
+      "kind": "AutomatedTest",
+      "required": true
+    },
+    {
+      "id": "cargo-shipper-api-ui",
+      "kind": "ApiConnectedUi",
+      "required": true
+    },
+    {
+      "id": "cargo-shipper-android-ui",
+      "kind": "AndroidUi",
+      "required": true
+    },
+    {
+      "id": "cargo-shipper-android-package",
+      "kind": "AndroidPackage",
+      "required": true
+    },
+    {
+      "id": "cargo-shipper-device-install",
+      "kind": "DeviceInstall",
+      "required": false
+    }
+  ]
+}

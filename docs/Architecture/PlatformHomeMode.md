@@ -1,5 +1,7 @@
 # Platform Home Mode
 
+> 2026-10-22 현재 구현 구분: 통합앱 `/`와 웹 `/`, `/apps`는 공통 `RoleSelectionHome`의 [누적 성과 홈 r10](../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md)을 소비한다. 아래 역할별 홈 조립·다이어그램은 기존 설계/소비 경로의 설명이며 현재 루트 화면 전체의 구현도는 아니다. 공개 운영 요약→분야 내역→기존 상세 업무의 후속 조정은 [r12](../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/platform-overview-drilldown.r12.md)에서 계획한다. r12 세부 진입은 아직 구현되지 않았다.
+
 Ssalddel 클라이언트는 앱을 역할별로 복제하지 않고 하나의 셸에서 역할과 커뮤니티 문맥을 공유한다. 업무 탐색은 [3단계 내비게이션](ThreeStageClientNavigation.md)에 따라 `사방괘 → 다이어그램 → 구체 데이터 페이지`로 이어진다. 실제 화면과 캡처는 [통합 커뮤니티 클라이언트와 꾸미기 상점](../ProjectOverview/unified-community-client.md)에서 본다.
 
 ## 구조

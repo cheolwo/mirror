@@ -9,7 +9,7 @@ const TREE = 'docs/AI/Planning';
 const SOURCES = 'eng/planning-inquiries/sources.json';
 const OUTPUTS = ['docs/AI/generated/planning-app-production.json', 'docs/AI/generated/planning-app-production.md', 'docs/AI/generated/planning-app-production.html'];
 const TOOLS = ['catalog.mjs', 'evidence.mjs', 'intake.mjs', 'cli.mjs', 'viewer.html'].map(name => `eng/planning-inquiries/app-production/${name}`);
-const ROLES = ['orderer', 'restaurant', 'driver', 'admin'];
+const ROLES = ['orderer', 'restaurant', 'driver', 'admin', 'shipper', 'warehouse'];
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const unique = values => [...new Set(values)].sort(compare);
 const slash = value => value.replaceAll('\\', '/');

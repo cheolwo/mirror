@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const script = fs.readFileSync(fileURLToPath(new URL('../../release/publish-mobile-field-test.ps1', import.meta.url)), 'utf8');
+const common = fs.readFileSync(fileURLToPath(new URL('../../release/MobileFieldTest.Common.ps1', import.meta.url)), 'utf8');
 const quote = value => `'${value.replaceAll("'", "''")}'`;
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'app-package-plan-'));
@@ -18,9 +19,11 @@ function fixture(t) {
   const scriptPath = path.join(root, 'eng/release/publish-mobile-field-test.ps1');
   fs.mkdirSync(path.dirname(scriptPath), { recursive: true });
   fs.writeFileSync(scriptPath, script);
+  fs.writeFileSync(path.join(path.dirname(scriptPath), 'MobileFieldTest.Common.ps1'), common);
   const environment = { ...process.env };
   delete environment.SSALDDEL_ANDROID_KEYSTORE_PASSWORD;
   delete environment.SSALDDEL_ANDROID_KEY_PASSWORD;
+  delete environment.SSALDDEL_MEMBER_FIREBASE_GOOGLE_SERVICES_JSON;
   const run = (args = '', server = 'https://field-test.example.invalid/') => {
     const result = spawnSync('pwsh', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
       `& ${quote(scriptPath)} -ServerBaseAddress ${quote(server)} ${args}`],
@@ -31,11 +34,13 @@ function fixture(t) {
   return { root, outside, run };
 }
 
-test('APK PlanOnly keeps the historical default of all four apps', t => {
+test('APK PlanOnly lists the current seven apps without producing packages', t => {
   const f = fixture(t); const result = f.run('-PlanOnly');
   assert.equal(result.status, 0, result.text);
-  for (const name of ['orderer', 'restaurant', 'driver', 'admin']) assert.match(result.text, new RegExp(`\\b${name}\\b`));
-  assert.match(result.text, /formats=APK\+AAB/);
+  const expectedApps = ['orderer', 'restaurant', 'driver', 'admin', 'shipper', 'cargo-driver', 'warehouse'];
+  for (const name of expectedApps) assert.match(result.text, new RegExp(`^${name}\\s`, 'm'));
+  assert.equal(result.text.split(/\r?\n/).filter(line => /^[a-z][a-z-]*\s+\S/.test(line)).length, expectedApps.length);
+  assert.match(result.text, /format=APK, signed APK verification required/);
   assert.equal(fs.existsSync(path.join(f.root, 'artifacts')), false);
 });
 
@@ -43,7 +48,7 @@ test('APK PlanOnly selects only restaurant and never creates packages or evidenc
   const f = fixture(t); const result = f.run("-PlanOnly -AppNames @('restaurant') -PlanningWorkItemId 'APP-TEST'");
   assert.equal(result.status, 0, result.text);
   assert.match(result.text, /RestaurantDeskApp\/RestaurantDeskApp.csproj/);
-  for (const project of ['OrdererApp', 'FDriverApp', 'SsalddelAdminApp']) assert.equal(result.text.includes(project), false);
+  for (const project of ['OrdererApp', 'FDriverApp', 'SsalddelAdminApp', 'SsalddelApp', 'DriverApp', 'WarehouseManagerApp']) assert.equal(result.text.includes(`${project}/${project}.csproj`), false);
   assert.equal(fs.existsSync(path.join(f.root, 'artifacts')), false);
 });
 

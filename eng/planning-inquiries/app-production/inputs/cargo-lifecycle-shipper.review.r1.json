@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "planning-app-intake-review.v1",
+  "workItemId": "APP-CARGO-LIFECYCLE-SHIPPER",
+  "reviewedInputs": [],
+  "confirmation": {
+    "state": "Pending"
+  },
+  "executionApproval": {
+    "state": "Approved",
+    "workOrderRefs": [
+      {
+        "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.work-order.json",
+        "sha256": "BD507BA67C4FF52EB09333B08EFC4B49EEB6CD5BA226AF5281C3621E0E044CBC"
+      }
+    ]
+  },
+  "environment": [
+    {
+      "id": "isolated-test-tools",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-business-tests"
+      ],
+      "reason": "기존 시험 소스만 대조했다. 현재 SDK·시험 선택/서버 소스와 실행 전후 기준선을 이번 제품 실행으로 확인하지 않았다."
+    },
+    {
+      "id": "isolated-api-db",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-business-tests",
+        "cargo-shipper-api-ui",
+        "cargo-shipper-android-ui"
+      ],
+      "reason": "현재 소유 서버·전용 DB/compose/sample·인증·실제 endpoint 준비를 확인하지 않았다. cargo-journey 5322와 USB 기본5363 및 네 역할 후불 fixture/목표 세 앱 차이를 실행 전에 대조한다."
+    },
+    {
+      "id": "api-screen-runtime",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-api-ui"
+      ],
+      "reason": "같은 파일럿 대상과 API에 연결한 제품 UI를 이번 회차에서 실행하지 않았다. 과거 모의/브라우저/Android 화면은 새 실행을 대체하지 않는다."
+    },
+    {
+      "id": "android-runtime",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-android-ui"
+      ],
+      "reason": "에뮬레이터/실기기 점유·설치 판본·재실행/카메라·GPS를 현재 확인하지 않았다. 에뮬레이터와 실기기는 독립 증거다."
+    },
+    {
+      "id": "android-packaging",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-android-package"
+      ],
+      "reason": "선택 앱·새 출력/판본·서명·ABI·최종 APK endpoint 및 소스 전후 동일성을 현재 확인하지 않았다. USB Debug와 HTTPS Release 포장 절차를 혼합하지 않는다. 비밀 설정은 입력에 보관하지 않는다."
+    },
+    {
+      "id": "owned-device-install",
+      "state": "Unknown",
+      "deliverableIds": [
+        "cargo-shipper-device-install"
+      ],
+      "reason": "설치/데이터 보존 업데이트는 이번 승인 범위 밖이다. 다음에 대상 기기·기존 패키지/서명·APK hash·허용 범위를 확인하며 자동 삭제/설치를 하지 않는다."
+    }
+  ],
+  "scopeNote": "승인 연결은 r13의 공통 절차·도구·파일럿 등록/입력 준비까지만 선언한다. 신규 profile/intake hash에 대한 사람 확인·실제 화물 API/DB·APK 제작/설치·기기/운영 실행 승인이 아니다. 사람 확인은 Pending, 환경은 Unknown, 제품 실행은 NotRun이다."
+}

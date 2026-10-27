@@ -38,6 +38,12 @@ flowchart TD
 테이블 삭제·병합 후보를 뜻하지 않는다. 서로 다른 Context가 같은 테이블을 소유하면 생성기와
 `SsalddelContextModelIsolationTests` 검사가 실패해야 한다.
 
+### 기사 운송 자격 검토 기록 (2026-10-19)
+
+`driver_transport_qualification`은 기존 `SsalddelContext`가 소유하는 기사·실차의 내부 자료 검토 기록이다. 별도 DB를 만들지 않으며 `DriverId`로 기존 기사와 연결하고 `Revision`으로 동시 변경을 보호한다. 자료 근거·이력과 실차 내부 참조는 기존 개인정보 보호 저장 체계를 사용한다. 기사/차량은 aggregate 간 참조이며 제출·검토 UseCase가 본인·프로필·실차의 현재 결속을 확인한다.
+
+이 테이블은 공식기관 인증, 운송 상태 또는 주문·정산 원장의 권위를 소유하지 않는다. 신규 운행·추천·수락·알림의 현재 검토 관문에만 사용하며 이미 맡은 운송의 조회·증빙·완료를 숨기지 않는다. 실제 자료의 보존·삭제 정책 연결과 운영 DB migration 적용은 별도 준비 사항이다. [구현·검증 r71](../../Changes/2026-10-19-freight-registration-readiness-r71.md)을 참조한다.
+
 ## 0.0 migration baseline
 
 0.0 배포 DB가 이미 적용한 마지막 `MigrationId`를 유지하면서 이전 이력을 하나의 baseline으로 합쳤다.

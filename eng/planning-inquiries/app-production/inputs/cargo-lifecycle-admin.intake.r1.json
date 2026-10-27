@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "planning-app-intake.v1",
+  "workItemId": "APP-CARGO-LIFECYCLE-ADMIN",
+  "targetAppIds": [
+    "admin"
+  ],
+  "impactedRoles": [
+    "shipper",
+    "driver",
+    "admin"
+  ],
+  "sections": {
+    "purpose": {
+      "status": "ExistingConfirmed",
+      "value": "화물 한 건의 화주·전문 기사·운영자 인계에서 이 앱의 기존 책임과 다음 검증을 연결하는 입력 초안이다. r13 승인은 공통 절차/도구·파일럿 준비에 한정한다. 제품 기능/API/권한·운영 모드·금융/배차 정책 변경, 실제 서버 업무·APK 빌드/설치·운영/배포는 이번에 실행하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "information": {
+      "status": "ExistingConfirmed",
+      "value": "같은 파일럿 실행/의뢰/운송의 진행·예외·관리자 확인·운행기사와 확인 시점을 읽는다. 서버관리자전용 API 권한을 유지한다. 조회 목록·운송 완료·화주 인수·수납·지급 준비/실지급은 별도이며 원시 context·고객 주소/연락처·실계정·인증값을 입력/공유 결과에 복제하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Services/AdminOperationsService.cs",
+          "sha256": "0975CC04F5A95B1928390F27F21DF9E0A0068ADDB07F7816AE0011D9F690BD29"
+        },
+        {
+          "path": "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs",
+          "sha256": "FF104007D0638E2599B280D4224F05EAF834B0751E10AFF146E3EE57D690A4E6"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "workflow": {
+      "status": "ExistingConfirmed",
+      "value": "다음 회차는 운영자 인증→화물 개요→/operations의 같은 운송/기사 조회→기사·화주 전이 뒤 명시 재조회→필요한 사건/증빙/정산의 기존 웹 상세 인계다. 현재 목록에서 사라진 완료 운송은 기존 허용 상세/API와 대조하며 원장 소실/지급 완료를 추정하지 않는다. 모바일 목록과 웹 상세는 다른 검증 대상이다. 이번 실행은 NotRun이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Components/Pages/CargoOverview.razor",
+          "sha256": "81A5D9A427995EA1B9444F7E53BBE4FAA9DEF8EA4C32D77C9B54BF847AA4607F"
+        },
+        {
+          "path": "SsalddelAdminApp/Components/Pages/Operations.razor",
+          "sha256": "0FF450BB05D19E973678E54DAB478EE7AC030EFE0AED90BB7426BC1EB1AA3E0A"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/TransportWorkflowDetail.razor",
+          "sha256": "5B42173893DC95E724EF033356CFDA40524C4C0A057BB32C7842761266A4C8B9"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/TransportWorkflowSettlement.razor",
+          "sha256": "D45F7C8BE6A93C92AE7F1B866CEC08EC5FCD4BBD135AAD24F0E1B98C11D56CDE"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "uiStates": {
+      "status": "ExistingConfirmed",
+      "value": "인증 복원·로그인 필요/권한 없음·로딩·현재 목록·확인 필요 없음·조회 오류/재시도·동기화 시각을 구분한다. 조회 실패를 0건/업무 종결로 숨기지 않고 계정·대상 전환의 늦은 응답을 별도 확인한다. 웹 사건/정산의 전체 조작을 모바일 완료로 승계하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Components/Pages/Operations.razor",
+          "sha256": "0FF450BB05D19E973678E54DAB478EE7AC030EFE0AED90BB7426BC1EB1AA3E0A"
+        },
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthSession.cs",
+          "sha256": "D097087D5E577905908CE9E98ABC7FCFA71D04E12D30B2FB36AF0660DD2C705D"
+        },
+        {
+          "path": "docs/Architecture/RoleAppVisualDesignStandard.md",
+          "sha256": "BD88EE59B8049E7CF825E4C70B6A1FD7D49339EA032159A80CD6882F2F74254F"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "recovery": {
+      "status": "ExistingConfirmed",
+      "value": "기존 인증 복원/401 갱신·명시 새로고침과 동일 원장 조회를 재사용한다. 결과 미확정 업무를 관리자 목록 존재만으로 성공·미적용으로 판정하거나 재명령하지 않는다. 선택 대상/계정 변경·조회 실패·앱 재실행 뒤 화면과 서버 상태를 대조하는 검증은 NotRun이다. 신규 해제/지급·배차 권한은 추가하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs",
+          "sha256": "C68158A93EA977BB28FFEBF00DDEF963470228070A2BE1E862D4955EF7C8AA52"
+        },
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthService.cs",
+          "sha256": "E8DDE3EFEA43514AE2981F3D7F0080BF0347E2F39A80976607FA3D13E3FAA019"
+        },
+        {
+          "path": "SsalddelAdminApp/Components/Pages/Operations.razor",
+          "sha256": "0FF450BB05D19E973678E54DAB478EE7AC030EFE0AED90BB7426BC1EB1AA3E0A"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Admin/Operations/CargoAcceptanceAdminRecoveryTests.cs",
+          "sha256": "E58975D1F3DF6B2BE6DEC77DCD753FA1D061D15DF67BD659400A959CF33EE53C"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "deliverables": {
+      "status": "ExistingConfirmed",
+      "value": "같은 입력/소스/서버/APK와 run→request→transport 연결의 업무시험·API 연결 UI·Android UI·시험 APK를 다음 회차의 독립 증거로 준비한다. APK 파일·설치·에뮬레이터·실기기·HTTP/DB·금융/공개를 분리한다. 이번 회차는 입력/근거 계획만 작성했으며 모든 제품 실행 결과는 NotRun, 환경은 Unknown이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "eng/release/README.mobile-usb-test.md",
+          "sha256": "A101B0FB359D558FD2FD33AC4E092D1876C85C68FDE970A8F7FFDA6F1A0DE1BF"
+        }
+      ]
+    }
+  },
+  "questions": [],
+  "conflicts": [],
+  "deliverables": [
+    {
+      "id": "cargo-admin-business-tests",
+      "kind": "AutomatedTest",
+      "required": true
+    },
+    {
+      "id": "cargo-admin-api-ui",
+      "kind": "ApiConnectedUi",
+      "required": true
+    },
+    {
+      "id": "cargo-admin-android-ui",
+      "kind": "AndroidUi",
+      "required": true
+    },
+    {
+      "id": "cargo-admin-android-package",
+      "kind": "AndroidPackage",
+      "required": true
+    },
+    {
+      "id": "cargo-admin-device-install",
+      "kind": "DeviceInstall",
+      "required": false
+    }
+  ]
+}

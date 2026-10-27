@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "planning-app-profile.v1",
+  "appId": "shipper",
+  "projectPath": "SsalddelApp/SsalddelApp.csproj",
+  "platforms": [
+    "Android"
+  ],
+  "fields": {
+    "navigation": {
+      "status": "ExistingConfirmed",
+      "value": "통합 앱 안의 화주 업무. ShipperRoutes의 홈/운송 진입, /shipper/request 작성 단계와 /shipper/request/{RequestId}·/timeline·/payment·/proofs를 재사용한다. 같은 앱의 기사 역할과 전문 DriverApp을 구별한다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/Services/ShipperRoutes.cs",
+          "sha256": "B906DA975C64A8F96D398E571BEA41284B45F5790BB272B42FE8F324F389D68B"
+        },
+        {
+          "path": "SsalddelApp/Components/Pages/ShipperRequestWizard.razor",
+          "sha256": "94623A517CA3450784A6334D8D4ECDD0CC4C0B8A610E72B67CC1B63857C36F9F"
+        },
+        {
+          "path": "SsalddelApp/Components/Pages/ShipperRequestProofsPage.razor",
+          "sha256": "42DA1E99FD7C550651A57CAEC683AEF7206969ED49EA442BE1045B4407DAA797"
+        }
+      ]
+    },
+    "presentation": {
+      "status": "ExistingConfirmed",
+      "value": "한국어와 기존 역할 앱 시각 기준·공통 토큰을 유지한다. 현재 상태·핵심 값·다음 행동, 오류/미확정·테스트 결제/실지급 구분을 보존한다. 실제 Android 배치·터치·키보드 검증은 별도다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/Architecture/RoleAppVisualDesignStandard.md",
+          "sha256": "BD88EE59B8049E7CF825E4C70B6A1FD7D49339EA032159A80CD6882F2F74254F"
+        },
+        {
+          "path": "SsalddelApp/Components/Pages/ShipperRequestPaymentPage.razor",
+          "sha256": "09161A124400B49F8B852D4B62BF4EFD67802C76968D1EBA29FC1D307E3D8834"
+        }
+      ]
+    },
+    "authentication": {
+      "status": "ExistingConfirmed",
+      "value": "기존 AuthSession과 인증 API를 재사용하고 서버가 본인 의뢰/인수 권한을 판정한다. 계정·세션·서버가 바뀌면 이전 응답/보호 기록을 다른 대상으로 적용하지 않는다. 인증값·개인정보는 제작 입력에 보관하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/Services/AuthSession.cs",
+          "sha256": "63F37B10ED7935CA69B71BB622F28DB14FEA8ACCE2D413ED3E6B7C3651F155CA"
+        },
+        {
+          "path": "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+          "sha256": "4004EF54B0A328CE61F32431C7694B39B37DFF075EE205E7C0522004B46AB177"
+        },
+        {
+          "path": "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs",
+          "sha256": "FBDA38C722A04C591662B5CADF90E0BD4AD4158EAE007BB52CD860266A9DF7BD"
+        }
+      ]
+    },
+    "server": {
+      "status": "ExistingConfirmed",
+      "value": "MauiProgram의 SsalddelServerEndpoint와 기존 제품 Controller를 소비한다. 화물 파일럿의 실행 대상은 소유를 확인한 Development+Simulation 격리 서버로 제한한다. 기존 cargo-journey 5322와 USB 기본5363 차이는 명시 endpoint 대조로 해소해야 하며 현재 연결 준비를 뜻하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelApp/MauiProgram.cs",
+          "sha256": "A1382FECF2BD5452F231F21B683D422078C83D69195ABAEB7FDBEFAABE996E5E"
+        },
+        {
+          "path": "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs",
+          "sha256": "FBDA38C722A04C591662B5CADF90E0BD4AD4158EAE007BB52CD860266A9DF7BD"
+        },
+        {
+          "path": "eng/Ssalddel.CargoJourneyVerification/README.md",
+          "sha256": "572858CD75FB02FEFAAEEC9B959AB443AFBB710FEBB539F0FEDC38449AFDFDE0"
+        },
+        {
+          "path": "eng/release/README.mobile-usb-test.md",
+          "sha256": "A101B0FB359D558FD2FD33AC4E092D1876C85C68FDE970A8F7FFDA6F1A0DE1BF"
+        }
+      ]
+    },
+    "testEnvironment": {
+      "status": "ExistingConfirmed",
+      "value": "기존 접수/금융·인수증 복구 시험 소스와 r121/r124 과거 결과가 있다. 이번 회차는 입력/파일럿 준비이며 새 제품 시험·HTTP/DB·Android UI·APK/설치를 실행하지 않는다. 환경 준비는 작업 검토표의 Unknown으로 분리한다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/NativeShipperPaymentCloseoutTests.cs",
+          "sha256": "9D4E55CD60E3A0253EEB5CD7124CB86F39596AC111421C249835A6A54133F7BC"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Shipper/Request/CargoRequestCloseoutR69Tests.cs",
+          "sha256": "10DC8167DA02EC216D659B69F1008061EC12DDE189FBA9435546F7AD9C8159CF"
+        },
+        {
+          "path": "docs/Changes/2026-10-25-mobile-app-closeout-r121.md",
+          "sha256": "15E95EC5613FAD9C9E92878D8C6DF0B229F2EE23A7B4BAE5CECF0624AC352E51"
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "sha256": "1768475555D22B9BD7C90BCD222BE1717B9AC252A8E878DE9729EB2198DDDE70"
+        }
+      ]
+    }
+  }
+}

@@ -4,16 +4,23 @@
     {
       "id": "TOOL-APP-PRODUCTION",
       "title": "기획·역할 앱 제작 추적 도구",
-      "planRefs": [{ "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md", "revision": "app-production-intake.r9", "sha256": "c4ca57a2465bdc67761846adcd648cef64e1cc6cbfc6161240752febb87f8e9d" }],
+      "planRefs": [
+        { "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md", "revision": "app-production-intake.r9", "sha256": "c4ca57a2465bdc67761846adcd648cef64e1cc6cbfc6161240752febb87f8e9d" },
+        { "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md", "revision": "app-common-workflow.r13", "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E" }
+      ],
       "roles": [],
       "codeRefs": [],
       "testRefs": ["eng/planning-inquiries/app-production/catalog.test.mjs", "eng/planning-inquiries/app-production/evidence.test.mjs", "eng/planning-inquiries/app-production/cli.test.mjs", "eng/planning-inquiries/app-production/intake.test.mjs", "eng/planning-inquiries/app-production/publish.test.mjs"],
       "roleLinks": [],
-      "workOrderRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.work-order.json"],
+      "workOrderRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.work-order.json",
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.work-order.json"
+      ],
       "resultRefs": ["docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-tracking.r8.result.md", "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.result.md"],
       "evidenceRefs": [
         { "path": "artifacts/local/planning-app-production/r8-20260927-03/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "과거 r8 관리 도구 54/54. 이후 입력·도구 변경으로 재검증 대상이며 원 기록은 보존한다." },
-        { "path": "artifacts/local/planning-app-production/r9-20260927-01/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "r9 관리 도구 93/93. 입력·hash·승인/환경 분리·순수 DOM·로컬 HTTP·APK 계획 출력 시험. 실제 브라우저·제품 업무·APK 생성·장치 실행 아님." }
+        { "path": "artifacts/local/planning-app-production/r9-20260927-01/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "r9 관리 도구 93/93. 입력·hash·승인/환경 분리·순수 DOM·로컬 HTTP·APK 계획 출력 시험. 실제 브라우저·제품 업무·APK 생성·장치 실행 아님." },
+        { "path": "artifacts/local/planning-app-production/r13-20261026-01/tool-tests.json", "kind": "AutomatedTest", "format": "EvidenceManifest", "summary": "r13 관리 도구 97/97·실패/생략 0. 화주/창고 설명 역할, 대상 앱 분리, 현재 검증/포장 의존과 7앱 계획 계약 확인. 실제 화물 API/DB·Android/휴대폰·운영 검증은 미실행." }
       ],
       "remaining": ["관리 도구 검증은 음식 업무·역할 앱·실기기·출시 검증을 대체하지 않음", "나머지 기획의 업무별 코드·검증 연결은 점진적으로 확장"]
     },
@@ -105,6 +112,302 @@
       "roleLinks": [{ "role": "admin", "codeRefs": ["SsalddelAdminApp/Components/Pages/Operations.razor", "SsalddelAdminApp/Components/Routes.razor"], "note": "모바일 운송·기사 현황과 Release 허용 route 존재. SsalddelAdmin 웹의 음식 주문 추적 화면을 모바일에 연결됐다고 간주하지 않음." }],
       "workOrderRefs": [], "resultRefs": [], "evidenceRefs": [],
       "remaining": ["웹 음식 주문 추적과 모바일 route 연결 검토", "외부 서명·HTTPS·실기기 출시 근거", "현재 시험·APK 증거"]
+    },
+    {
+      "id": "APP-CARGO-LIFECYCLE-SHIPPER",
+      "title": "화물 한 건 · 화주 접수·결과 확인 준비",
+      "appProfileRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/shipper.profile.json",
+        "sha256": "86641D70A030505745C38A0E03ACF921F1D0D2093B1D9970D31BB33556E99692"
+      },
+      "intakeRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-shipper.intake.r1.json",
+        "sha256": "0B3F487840758C711631CF0C6C201D26F20E68A7F6DF7FA7C13194963CD75472"
+      },
+      "intakeReviewRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-shipper.review.r1.json",
+        "sha256": "CE927711F573337612C8C4E1940B76D8456F8EACDD63D8F26D045F0D65D3274F"
+      },
+      "planRefs": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "revision": "app-common-workflow.r13",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "revision": "cargo-lifecycle-pilot.evidence.r1",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ],
+      "roles": [
+        "shipper",
+        "driver",
+        "admin"
+      ],
+      "codeRefs": [
+        "SsalddelApp/Services/ShipperRoutes.cs",
+        "SsalddelApp/ViewModels/Shipper/ShipperRequestAuthoringPageViewModel.cs",
+        "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.Receipt.cs",
+        "SsalddelApp/Services/FakeShipperPaymentService.cs",
+        "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+        "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs"
+      ],
+      "testRefs": [
+        "Ssalddel.Tests/Clients/NativeShipperPaymentCloseoutTests.cs",
+        "Ssalddel.Tests/Application/Shipper/Request/CargoRequestCloseoutR69Tests.cs"
+      ],
+      "roleLinks": [
+        {
+          "role": "shipper",
+          "codeRefs": [
+            "SsalddelApp/Services/ShipperRoutes.cs",
+            "SsalddelApp/ViewModels/Shipper/ShipperRequestAuthoringPageViewModel.cs",
+            "SsalddelApp/ViewModels/Shipper/ShipperRequestDetailPageViewModel.Receipt.cs",
+            "SsalddelApp/Services/FakeShipperPaymentService.cs",
+            "SsalddelApp/Services/ServerBackedShipperOperationsService.cs",
+            "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs"
+          ],
+          "note": "통합 앱의 화주 접수·원요청 조회·결제 상태·인수증 복구 소스 연결. 실제 같은 의뢰의 현재 API/DB·휴대폰 수행은 NotRun. 선결제와 승인 후불·운송 완료와 인수/수납을 구분."
+        },
+        {
+          "role": "driver",
+          "codeRefs": [
+            "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        },
+        {
+          "role": "admin",
+          "codeRefs": [
+            "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        }
+      ],
+      "workOrderRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.work-order.json"
+      ],
+      "resultRefs": [
+        "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md"
+      ],
+      "evidenceRefs": [
+        {
+          "path": "docs/Changes/2026-10-25-mobile-app-closeout-r121.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r121 격리 HTTP·서버 재시작 보존과 실제 휴대폰 로그인/초안 복구 보고. 현재 세 앱의 같은 운송 완주·요청별 실금융 증거로 승계하지 않음."
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r124/기사125의 실제 APK 에뮬레이터 설정·거절/만료 복귀·운행 요약 갱신 보고. 현재 전문 앱 전체 흐름·실휴대폰·서버 후속 수정 HTTP 재검증과 별개."
+        }
+      ],
+      "remaining": [
+        "새 입력의 사람 확인 Pending·결과물 환경 Unknown. r13 승인 선언은 절차·도구·파일럿 준비 범위이며 실제 화물 실행 승인이 아님.",
+        "현재 소스·서버·APK와 동일 실행/의뢰/운송을 결속한 API/DB·역할 앱·휴대폰 완주/응답 유실·재실행 복구는 NotRun.",
+        "제한 사용·공개 준비 NotRun. 실제 촬영/GPS·알림·금융·운영 요건은 기존 공개 관문과 별도 근거로 확인."
+      ]
+    },
+    {
+      "id": "APP-CARGO-LIFECYCLE-DRIVER",
+      "title": "화물 한 건 · 전문 기사 수행·복구 준비",
+      "appProfileRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-driver.profile.json",
+        "sha256": "32E85048C85F7DFE17756580288E752D3D2E785ED3AE29E8B8937BCC159A4A76"
+      },
+      "intakeRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-driver.intake.r1.json",
+        "sha256": "5868D34BB9B2522DC97843391703CE6F531DC4FF24C26904A1A62241BEC230FF"
+      },
+      "intakeReviewRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-driver.review.r1.json",
+        "sha256": "DC1ADF6C9FD7732425DF0CC16E3CE9D7F6DFEA951FE34A1B12259543A85D7289"
+      },
+      "planRefs": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "revision": "app-common-workflow.r13",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "revision": "cargo-lifecycle-pilot.evidence.r1",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ],
+      "roles": [
+        "shipper",
+        "driver",
+        "admin"
+      ],
+      "codeRefs": [
+        "DriverApp/Services/DriverRoutes.cs",
+        "DriverApp/Services/DriverTransportApiService.cs",
+        "DriverApp/Services/DriverCargoCompletionRecovery.cs",
+        "DriverApp/Services/DriverCargoExceptionRecovery.cs",
+        "DriverApp/Services/DriverCargoPhotoRecoveryStore.cs",
+        "DriverApp/ViewModels/Driver/Work/기사운행시작PageViewModel.cs",
+        "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs"
+      ],
+      "testRefs": [
+        "Ssalddel.Tests/Clients/CargoCompletionDurableRecoveryTests.cs",
+        "Ssalddel.Tests/Clients/CargoNativeIssueDurableRecoveryTests.cs",
+        "Ssalddel.Tests/Clients/CargoPhotoServerRecoveryTests.cs"
+      ],
+      "roleLinks": [
+        {
+          "role": "driver",
+          "codeRefs": [
+            "DriverApp/Services/DriverRoutes.cs",
+            "DriverApp/Services/DriverTransportApiService.cs",
+            "DriverApp/Services/DriverCargoCompletionRecovery.cs",
+            "DriverApp/Services/DriverCargoExceptionRecovery.cs",
+            "DriverApp/Services/DriverCargoPhotoRecoveryStore.cs",
+            "DriverApp/ViewModels/Driver/Work/기사운행시작PageViewModel.cs",
+            "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs"
+          ],
+          "note": "대상 앱 cargo-driver의 추천·상하차·사진/신고 영속 보호 소스 연결. 현재 API/DB·전문 기사 휴대폰의 동일 운송 완주는 NotRun. 로컬 관측 번호와 서버의 요청별 결과 영수증을 구분."
+        },
+        {
+          "role": "shipper",
+          "codeRefs": [
+            "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        },
+        {
+          "role": "admin",
+          "codeRefs": [
+            "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        }
+      ],
+      "workOrderRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.work-order.json"
+      ],
+      "resultRefs": [
+        "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md"
+      ],
+      "evidenceRefs": [
+        {
+          "path": "docs/Changes/2026-10-25-mobile-app-closeout-r121.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r121 격리 HTTP·서버 재시작 보존과 실제 휴대폰 로그인/초안 복구 보고. 현재 세 앱의 같은 운송 완주·요청별 실금융 증거로 승계하지 않음."
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r124/기사125의 실제 APK 에뮬레이터 설정·거절/만료 복귀·운행 요약 갱신 보고. 현재 전문 앱 전체 흐름·실휴대폰·서버 후속 수정 HTTP 재검증과 별개."
+        }
+      ],
+      "remaining": [
+        "새 입력의 사람 확인 Pending·결과물 환경 Unknown. r13 승인 선언은 절차·도구·파일럿 준비 범위이며 실제 화물 실행 승인이 아님.",
+        "현재 소스·서버·APK와 동일 실행/의뢰/운송을 결속한 API/DB·역할 앱·휴대폰 완주/응답 유실·재실행 복구는 NotRun.",
+        "제한 사용·공개 준비 NotRun. 실제 촬영/GPS·알림·금융·운영 요건은 기존 공개 관문과 별도 근거로 확인."
+      ]
+    },
+    {
+      "id": "APP-CARGO-LIFECYCLE-ADMIN",
+      "title": "화물 한 건 · 운영자 재조회·인계 준비",
+      "appProfileRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/admin.profile.json",
+        "sha256": "88D47852B3FEE9C7446A1820E8F7177C8D5B8F6AA70B76F4813EFB340364BFE7"
+      },
+      "intakeRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-admin.intake.r1.json",
+        "sha256": "8F359E6456EF86BE82B7014C41E4E15BEFB3CF7459580AF220B605DDCA2D970F"
+      },
+      "intakeReviewRef": {
+        "path": "eng/planning-inquiries/app-production/inputs/cargo-lifecycle-admin.review.r1.json",
+        "sha256": "1AC1E805D01CC513CFB0D9AAA2F110E68FD9632722F1B04103EC7E05DA721DF0"
+      },
+      "planRefs": [
+        {
+          "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md",
+          "revision": "app-common-workflow.r13",
+          "sha256": "C70EFAB4AEF1936FC3562F4EECD1696155E18192CF273A04D844985312BB0C2E"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "revision": "cargo-lifecycle-pilot.evidence.r1",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ],
+      "roles": [
+        "shipper",
+        "driver",
+        "admin"
+      ],
+      "codeRefs": [
+        "SsalddelAdminApp/Components/Pages/CargoOverview.razor",
+        "SsalddelAdminApp/Components/Pages/Operations.razor",
+        "SsalddelAdminApp/Services/AdminOperationsService.cs",
+        "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs",
+        "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs"
+      ],
+      "testRefs": [
+        "Ssalddel.Tests/Architecture/AdminMobileOperationsCompositionTests.cs",
+        "Ssalddel.Tests/ApiMetadata/AdminMobileEndpointFeatureMetadataTests.cs",
+        "Ssalddel.Tests/Application/Admin/Operations/CargoAcceptanceAdminRecoveryTests.cs"
+      ],
+      "roleLinks": [
+        {
+          "role": "admin",
+          "codeRefs": [
+            "SsalddelAdminApp/Components/Pages/CargoOverview.razor",
+            "SsalddelAdminApp/Components/Pages/Operations.razor",
+            "SsalddelAdminApp/Services/AdminOperationsService.cs",
+            "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs",
+            "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs"
+          ],
+          "note": "운영자 모바일의 화물/운행기사 현재 조회 소스 연결. 같은 의뢰·운송의 재조회는 NotRun. 관리자 웹 사건·증빙·정산 상세를 모바일 조작 완료로 승계하지 않음."
+        },
+        {
+          "role": "shipper",
+          "codeRefs": [
+            "Ssalddel/Controllers/Shipper/01_Request/화주운송의뢰Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        },
+        {
+          "role": "driver",
+          "codeRefs": [
+            "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs"
+          ],
+          "note": "상대 역할의 기존 서버 계약 참조. 같은 실행·의뢰·운송을 해당 역할 앱에서 재조회한 결과는 NotRun."
+        }
+      ],
+      "workOrderRefs": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.work-order.json"
+      ],
+      "resultRefs": [
+        "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md"
+      ],
+      "evidenceRefs": [
+        {
+          "path": "docs/Changes/2026-10-25-mobile-app-closeout-r121.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r121 격리 HTTP·서버 재시작 보존과 실제 휴대폰 로그인/초안 복구 보고. 현재 세 앱의 같은 운송 완주·요청별 실금융 증거로 승계하지 않음."
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "kind": "ValidationReport",
+          "format": "HistoricalReport",
+          "summary": "과거 r124/기사125의 실제 APK 에뮬레이터 설정·거절/만료 복귀·운행 요약 갱신 보고. 현재 전문 앱 전체 흐름·실휴대폰·서버 후속 수정 HTTP 재검증과 별개."
+        }
+      ],
+      "remaining": [
+        "새 입력의 사람 확인 Pending·결과물 환경 Unknown. r13 승인 선언은 절차·도구·파일럿 준비 범위이며 실제 화물 실행 승인이 아님.",
+        "현재 소스·서버·APK와 동일 실행/의뢰/운송을 결속한 API/DB·역할 앱·휴대폰 완주/응답 유실·재실행 복구는 NotRun.",
+        "제한 사용·공개 준비 NotRun. 실제 촬영/GPS·알림·금융·운영 요건은 기존 공개 관문과 별도 근거로 확인."
+      ]
     }
   ]
 }

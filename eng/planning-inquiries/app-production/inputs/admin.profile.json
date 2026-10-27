@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "planning-app-profile.v1",
+  "appId": "admin",
+  "projectPath": "SsalddelAdminApp/SsalddelAdminApp.csproj",
+  "platforms": [
+    "Android"
+  ],
+  "fields": {
+    "navigation": {
+      "status": "ExistingConfirmed",
+      "value": "모바일 운영자 홈의 화물 개요 /overview/cargo에서 /operations 운송·기사 현황으로 진입한다. 같은 운송을 목록/원장으로 대조한다. SsalddelAdmin 웹 /transports/{RequestId}/events·proofs·settlement 상세는 다른 호스트이며 모바일 완료로 승계하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Components/Pages/CargoOverview.razor",
+          "sha256": "81A5D9A427995EA1B9444F7E53BBE4FAA9DEF8EA4C32D77C9B54BF847AA4607F"
+        },
+        {
+          "path": "SsalddelAdminApp/Components/Pages/Operations.razor",
+          "sha256": "0FF450BB05D19E973678E54DAB478EE7AC030EFE0AED90BB7426BC1EB1AA3E0A"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/TransportWorkflowDetail.razor",
+          "sha256": "5B42173893DC95E724EF033356CFDA40524C4C0A057BB32C7842761266A4C8B9"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/TransportWorkflowSettlement.razor",
+          "sha256": "D45F7C8BE6A93C92AE7F1B866CEC08EC5FCD4BBD135AAD24F0E1B98C11D56CDE"
+        }
+      ]
+    },
+    "presentation": {
+      "status": "ExistingConfirmed",
+      "value": "한국어·기존 MudBlazor 카드/상태 문구와 역할 앱 시각 기준을 재사용한다. 운송 완료·관리자 확인·수납·지급 준비·실지급을 구분하고 조회 실패를 0건/종결로 숨기지 않는다. 실제 Android 화면/터치 검증은 별도다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/Architecture/RoleAppVisualDesignStandard.md",
+          "sha256": "BD88EE59B8049E7CF825E4C70B6A1FD7D49339EA032159A80CD6882F2F74254F"
+        },
+        {
+          "path": "SsalddelAdminApp/Components/Pages/Operations.razor",
+          "sha256": "0FF450BB05D19E973678E54DAB478EE7AC030EFE0AED90BB7426BC1EB1AA3E0A"
+        }
+      ]
+    },
+    "authentication": {
+      "status": "ExistingConfirmed",
+      "value": "AdminAuthSession/기존 인증 갱신과 서버관리자전용 정책을 사용한다. 클라이언트 역할 선택으로 서버관리자 권한을 만들지 않는다. 실제 권한·계정 전환/늦은 응답의 화면 경계는 다음 검증에서 확인하며 인증값은 입력에 보관하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthSession.cs",
+          "sha256": "D097087D5E577905908CE9E98ABC7FCFA71D04E12D30B2FB36AF0660DD2C705D"
+        },
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs",
+          "sha256": "C68158A93EA977BB28FFEBF00DDEF963470228070A2BE1E862D4955EF7C8AA52"
+        },
+        {
+          "path": "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs",
+          "sha256": "FF104007D0638E2599B280D4224F05EAF834B0751E10AFF146E3EE57D690A4E6"
+        }
+      ]
+    },
+    "server": {
+      "status": "ExistingConfirmed",
+      "value": "MauiProgram의 SsalddelServerEndpoint와 AdminOperationsService의 admin/transports·admin/drivers/operating 조회를 재사용한다. 소유 확인된 Development+Simulation 서버를 같은 파일럿 의뢰/운송에 결속한다. 현 모바일 목록 조회를 웹 사건/정산의 쓰기 능력으로 확대하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "SsalddelAdminApp/MauiProgram.cs",
+          "sha256": "A3F6FFBBD21993FF52F7F6CD1BD48E1BA80A66C8C5D3CF367316DC6DC1F18855"
+        },
+        {
+          "path": "SsalddelAdminApp/Services/AdminOperationsService.cs",
+          "sha256": "0975CC04F5A95B1928390F27F21DF9E0A0068ADDB07F7816AE0011D9F690BD29"
+        },
+        {
+          "path": "Ssalddel/Controllers/Admin/03_진행/운송진행관리Controller.cs",
+          "sha256": "FF104007D0638E2599B280D4224F05EAF834B0751E10AFF146E3EE57D690A4E6"
+        },
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        }
+      ]
+    },
+    "testEnvironment": {
+      "status": "ExistingConfirmed",
+      "value": "관리자 모바일 구성·권한 메타데이터와 기사 수락 미확정의 관리자 복구 시험 소스가 있다. 이번 회차의 제품 시험·실제 HTTP/DB·모바일 UI·APK/설치는 NotRun이다. 웹 상세·은행 지급·공개 운영은 별도 근거가 필요하다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "Ssalddel.Tests/Architecture/AdminMobileOperationsCompositionTests.cs",
+          "sha256": "A915CE66BEF0880B8BB86BF76AE54E01D516E11A98D048050A4B822FEC77D060"
+        },
+        {
+          "path": "Ssalddel.Tests/ApiMetadata/AdminMobileEndpointFeatureMetadataTests.cs",
+          "sha256": "A76E9B169F8A4895898AAFCB7AB2EF77589EC80F1A9BED2BF899113FB01D026D"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Admin/Operations/CargoAcceptanceAdminRecoveryTests.cs",
+          "sha256": "E58975D1F3DF6B2BE6DEC77DCD753FA1D061D15DF67BD659400A959CF33EE53C"
+        }
+      ]
+    }
+  }
+}

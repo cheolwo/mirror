@@ -1,6 +1,6 @@
 # 기획에서 역할 앱까지
 
-[현재 대표 실행 r12](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-reference-run.r12.md)는 [r9 입력 형식](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-intake.r9.md)과 r8 추적 기반을 재사용한다. 기존 기획·작업지시서·검증 결과의 정본을 합치거나 운영 DB에 복제하지 않는다. Node.js 표준 라이브러리만 사용하며 패키지 설치가 없다.
+[공통 제작 절차](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md)가 통합 1.0과 역할 앱 작업의 진입점이다. [r13 적용](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md)은 기존 r9 입력·r8 추적에 화물 한 건의 앱별 준비를 연결한다. [음식점 대표 실행 r12](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-reference-run.r12.md)의 범위와 기록은 보존한다. 기존 기획·작업지시서·검증 결과의 정본을 합치거나 운영 DB에 복제하지 않는다. Node.js 표준 라이브러리만 사용하며 패키지 설치가 없다.
 
 ## r9 제작 입력
 
@@ -16,7 +16,7 @@
 
 상태판과 인계에는 허용된 요약만 들어간다. 원시 입력 JSON은 로컬 HTTP로 제공하지 않는다. 명백한 비밀 필드/패턴을 차단하지만 임의 개인정보를 완전히 찾아내는 보안 제품은 아니므로 입력·내보내기를 검토한다. Source anchor는 별도 필드이며 파일 hash와 경로를 검사하고 제목의 의미를 자동 판정하지 않는다.
 
-APK 계획은 `eng/release/publish-mobile-field-test.ps1 -AppNames restaurant -ServerBaseAddress https://example.invalid -PlanOnly`로 음식점 하나만 확인할 수 있다. 생략 시 기존 네 앱 전체이며 실제 생성에는 HTTPS와 저장소 밖 서명키/환경변수 조건이 필요하다. 준비 점검은 서명·포장·설치·배포를 수행하지 않는다.
+APK 계획은 `eng/release/publish-mobile-field-test.ps1 -AppNames restaurant -ServerBaseAddress https://example.invalid -PlanOnly`로 음식점 하나만 확인할 수 있다. 현재 `-AppNames` 생략 시 주문자·음식점·음식 기사·운영자·화주·화물 기사·창고의 7앱이 대상이므로 필요한 앱을 명시한다. 설명용 역할 `driver`와 패키지 대상 `driver`/`cargo-driver`는 구별하며 실제 생성에는 HTTPS와 저장소 밖 서명키/환경변수 조건이 필요하다. 준비 점검은 서명·포장·설치·배포를 수행하지 않는다.
 
 ## 읽기와 생성
 
@@ -83,10 +83,6 @@ APK 계획은 `eng/release/publish-mobile-field-test.ps1 -AppNames restaurant -S
 
 ## 매 작업의 순서
 
-1. 사용자 설명과 기존 기획 접수 → 목록 갱신 → 재사용/결손 대조.
-2. 업무 하나와 역할별 입력·행동·결과·실패·복구를 검토한다.
-3. 사람 승인 → 정확한 기획 판본/hash·기준 commit/로컬 변경·쓰기 경로·검증 상한을 고정한다.
-4. 허용 범위 구현 → 자동시험·서버·실제 UI·테스트 APK를 각각 검증한다.
-5. 해당 실행 증거를 연결 → 목록 재생성/검사 → 사용자에게 결과와 남은 확인을 반환한다.
+[공통 절차의 여섯 단계](../../../docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md#여섯-단계의-처리와-통과-조건)를 따른다. 이 도구는 입력·관계·결과의 현재성을 연결하며 서버·기기·공개 관문을 자동 판정하지 않는다. 입력마다 관련 역할, 정확한 현재 소스/서버/APK와 실패/복구 수단을 결속하고 실행한 종류의 증거만 추가한다. `Write/Validate`는 자료 정합성, 전용 `eng/tests/app-production.ps1`은 도구 동작을 검사한다. 새 화물 입력의 사람 확인/환경이 대기라면 `IntakeCheck` 종료3과 `NeedsInformation`을 그대로 표시한다.
 
 별도 상시 감시/자동 개발/운영 효과는 없다. 작업 범위에 없는 역할의 미확인 연결을 완료로 채우지 않는다. 관리 도구 구현은 네 역할 앱의 재빌드·기기 설치·실결제·출시를 의미하지 않는다.

@@ -161,7 +161,7 @@ export function evaluateIntake(root, item) {
   if (intake) {
     if (intake.workItemId !== item.id) issue('IntakeWorkItemMismatch', 'intake', '작업 입력의 고유 식별자가 대장과 다릅니다.');
     summary.targetAppIds = list(intake.targetAppIds).filter(identity);
-    summary.impactedRoles = list(intake.impactedRoles).filter(role => ['restaurant', 'orderer', 'driver', 'admin'].includes(role));
+    summary.impactedRoles = list(intake.impactedRoles).filter(role => ['restaurant', 'orderer', 'driver', 'admin', 'shipper', 'warehouse'].includes(role));
     if (!Array.isArray(intake.targetAppIds) || !summary.targetAppIds.length || summary.targetAppIds.length !== intake.targetAppIds.length || new Set(summary.targetAppIds).size !== summary.targetAppIds.length) issue('IntakeTargetMissing', 'intake.targetAppIds', '실제 제작 대상 앱을 중복 없이 명시해야 합니다.');
     if (!Array.isArray(intake.impactedRoles) || summary.impactedRoles.length !== intake.impactedRoles.length) issue('IntakeRolesInvalid', 'intake.impactedRoles', '영향받는 역할을 제작 대상 앱과 구별해 기록해야 합니다.');
     if (profile && (summary.targetAppIds.length !== 1 || summary.targetAppIds[0] !== profile.appId)) issue('IntakeTargetProfileMismatch', 'intake.targetAppIds', '이 입력표의 대상 앱은 연결한 앱 공통 프로필 하나와 일치해야 합니다.');

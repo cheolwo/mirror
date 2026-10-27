@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "planning-app-profile.v1",
+  "appId": "cargo-driver",
+  "projectPath": "DriverApp/DriverApp.csproj",
+  "platforms": [
+    "Android"
+  ],
+  "fields": {
+    "navigation": {
+      "status": "ExistingConfirmed",
+      "value": "전문 화물 기사 앱. 인증 복원 뒤 DriverRoutes.HomeSummary 또는 PublicCargo로 진입하며 업무 시작·추천 상세/판단·현재 운송·상차/하차·운송 이력·지급 준비를 기존 경로로 조회한다. 통합 앱 /workspace/cargo-driver 실행과 분리한다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/Components/Pages/RootRedirect.razor",
+          "sha256": "C92AD504887D72BB4EDA0272BB2C31D9CC939EED4E413FE0B84D038B8BBD18BE"
+        },
+        {
+          "path": "DriverApp/Services/DriverRoutes.cs",
+          "sha256": "AE4E1778CA2436BD1C07BF3F24B78E688C0BCC3F4034335D0C46C9748E3BEF1C"
+        },
+        {
+          "path": "DriverApp/MauiProgram.cs",
+          "sha256": "EB19DE70818AEE63A04C5B82558005A9B2580B7EE7933BC346467D2CBE53564C"
+        }
+      ]
+    },
+    "presentation": {
+      "status": "ExistingConfirmed",
+      "value": "한국어·기존 native/공용 Razor·역할 앱 시각 기준을 유지한다. 현재 상태·핵심 조건·다음 행동과 사진/미확정/운송 보류 안내를 보존한다. r125 에뮬레이터 요약 갱신은 실제 휴대폰 전체 수행 근거가 아니다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/Architecture/RoleAppVisualDesignStandard.md",
+          "sha256": "BD88EE59B8049E7CF825E4C70B6A1FD7D49339EA032159A80CD6882F2F74254F"
+        },
+        {
+          "path": "DriverApp/NativeDriverHomePage.xaml",
+          "sha256": "558015927F20655744D5CB6B0947FCCC7584A0DB61B81BB5A2A2489A2910D1B6"
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "sha256": "1768475555D22B9BD7C90BCD222BE1717B9AC252A8E878DE9729EB2198DDDE70"
+        }
+      ]
+    },
+    "authentication": {
+      "status": "ExistingConfirmed",
+      "value": "기존 IAuthSession/AuthSession·기사 권한과 서버 API를 재사용한다. 업무 보호 문맥은 본인·세션·서버·운송·단계에 결속하며 역할 선택으로 기사 자격을 부여하지 않는다. 토큰·개인정보·신고 원문은 입력에 보관하지 않는다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/Services/AuthSession.cs",
+          "sha256": "B28BD11042703F83184BB96943383402BA595E5BAF9180C323AC880202929272"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoCompletionRecovery.cs",
+          "sha256": "B2214AC9912523A039BC84E216DA4016D117672820FD72A433DEEDE10EBD8A77"
+        },
+        {
+          "path": "DriverApp/Services/DriverCargoExceptionRecovery.cs",
+          "sha256": "85697F25B4AB6DC687CB6B535079428327983D5D340DE74B6F9B9F85B0DCE18A"
+        },
+        {
+          "path": "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs",
+          "sha256": "D61E390F3882A5EC43FBBB2FAA3491FAFF87449AF0B468E6581AC6E192B373CA"
+        }
+      ]
+    },
+    "server": {
+      "status": "ExistingConfirmed",
+      "value": "MauiProgram의 SsalddelServerEndpoint와 기존 추천/운송 API를 소비한다. 다음 실제 검증은 소유 확인된 Development+Simulation 서버만 대상이며 APK 실제 endpoint와 USB reverse를 대조한다. cargo-journey 제어 추천은 제품 AI·실운영 추천 검증과 다르다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "DriverApp/MauiProgram.cs",
+          "sha256": "EB19DE70818AEE63A04C5B82558005A9B2580B7EE7933BC346467D2CBE53564C"
+        },
+        {
+          "path": "Ssalddel/Controllers/Driver/05_Settings/기사운송진행Controller.cs",
+          "sha256": "D61E390F3882A5EC43FBBB2FAA3491FAFF87449AF0B468E6581AC6E192B373CA"
+        },
+        {
+          "path": "Ssalddel/Controllers/Driver/03_Action/기사배차액션Controller.cs",
+          "sha256": "A92292813996057A93651E6B9AC20D78A70E06F9734FD8EB396605AD46840633"
+        },
+        {
+          "path": "eng/Ssalddel.CargoJourneyVerification/README.md",
+          "sha256": "572858CD75FB02FEFAAEEC9B959AB443AFBB710FEBB539F0FEDC38449AFDFDE0"
+        }
+      ]
+    },
+    "testEnvironment": {
+      "status": "ExistingConfirmed",
+      "value": "사진·완료·신고 영속보호·인증 복구 시험 소스와 기사124/125 과거 에뮬레이터 결과가 있다. 이번 실행은 NotRun이며 실제 카메라/GPS·Push·단말 재실행·최신 서버와의 전체 수행은 별도 확인 대상이다.",
+      "critical": true,
+      "sources": [
+        {
+          "path": "docs/AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-lifecycle-pilot.evidence.r1.md",
+          "sha256": "CEBE2624C151C4AB44A471A7A2CB464188BAC0DB0C80D2CC734B8B976F6F4689"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/CargoCompletionDurableRecoveryTests.cs",
+          "sha256": "93355B7AC5FB1A95D63A0259580304EBED0B3296EF8F103D15B4FCA28E395FFD"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/CargoNativeIssueDurableRecoveryTests.cs",
+          "sha256": "A2FED872E346E5F171A249EC6336B8A4D873D67A70EA792C7C7562494EE7019A"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/CargoPhotoServerRecoveryTests.cs",
+          "sha256": "945FB5B31B13149EA52D1F06586F3E41CE7FC159603AFAD1C89FE3D00D26CF02"
+        },
+        {
+          "path": "docs/Changes/2026-10-26-cargo-android-recovery-r124.md",
+          "sha256": "1768475555D22B9BD7C90BCD222BE1717B9AC252A8E878DE9729EB2198DDDE70"
+        }
+      ]
+    }
+  }
+}
