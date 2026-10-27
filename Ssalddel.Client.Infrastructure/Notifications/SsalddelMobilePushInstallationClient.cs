@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,9 +19,7 @@ public sealed record SsalddelMobilePushRegistrationResult(
 
 public sealed class SsalddelMobilePushInstallationClient
 {
-    private const string InstallationsPath = "api/v1/mobile/push/installations";
-
-    private readonly HttpClient _httpClient;
+    private readonly SsalddelMobilePushInstallationTransport _transport;
     private readonly ISsalddelMobilePushTokenProvider _pushTokenProvider;
     private readonly Func<string?> _accessTokenProvider;
     private readonly IMemberDeliveryPushStateStore? _stateStore;
@@ -36,7 +32,7 @@ public sealed class SsalddelMobilePushInstallationClient
         ISsalddelMobilePushTokenProvider pushTokenProvider,
         Func<string?> accessTokenProvider)
     {
-        _httpClient = httpClient;
+        _transport = new(httpClient);
         _pushTokenProvider = pushTokenProvider;
         _accessTokenProvider = accessTokenProvider;
     }
@@ -97,21 +93,18 @@ public sealed class SsalddelMobilePushInstallationClient
             }
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, InstallationsPath)
-        {
-            Content = JsonContent.Create(new SsalddelMobilePushInstallationUpsertRequest(
+        using var request = _transport.CreateUpsertRequest(new SsalddelMobilePushInstallationUpsertRequest(
                 snapshot.InstallationId,
                 snapshot.AppKey,
                 snapshot.Platform,
                 snapshot.PushToken,
                 snapshot.AppVersion,
-                snapshot.DeviceModel))
-        };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                snapshot.DeviceModel));
+        SsalddelMobilePushInstallationTransport.ApplyAuthorization(request, accessToken);
 
         try
         {
-            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            using var response = await _transport.SendAsync(request, cancellationToken);
             EnsureOwner(owner, revision, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
@@ -178,10 +171,9 @@ public sealed class SsalddelMobilePushInstallationClient
         }, cancellationToken);
         var accessToken = _accessTokenProvider();
         if (string.IsNullOrWhiteSpace(accessToken)) return new(SsalddelMobilePushRegistrationState.AuthenticationRequired);
-        using var request = new HttpRequestMessage(HttpMethod.Delete,
-            $"{InstallationsPath}/{Uri.EscapeDataString(state.DeviceInstallationId)}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var request = _transport.CreateDeleteRequest(state.DeviceInstallationId);
+        SsalddelMobilePushInstallationTransport.ApplyAuthorization(request, accessToken);
+        using var response = await _transport.SendAsync(request, cancellationToken);
         EnsureOwner(owner, revision, cancellationToken);
         if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.NotFound)
             return new(SsalddelMobilePushRegistrationState.Failed, "알림 해제를 확인하지 못했습니다. 같은 계정으로 다시 연결하면 재시도합니다.");

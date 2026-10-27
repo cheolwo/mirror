@@ -1,0 +1,116 @@
+.role-login {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 420px;
+    margin: 32px auto;
+    padding: 24px;
+    color: var(--ss-ink, #172b36);
+}
+
+.role-login h1 {
+    margin: 0 0 24px;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.role-login__form,
+.role-login__field,
+.role-login__actions {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.role-login__form { gap: 20px; }
+.role-login__field { gap: 8px; }
+.role-login__actions { gap: 12px; }
+
+.role-login__field label {
+    display: block;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+}
+
+.role-login__input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 11px 16px;
+    border: 1px solid var(--ss-control-border, #788c97);
+    border-radius: var(--ss-radius-control, 12px);
+    background: var(--ss-surface, #fff);
+    color: var(--ss-ink, #172b36);
+    font: inherit;
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.role-login__actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 11px 16px;
+    border: 1px solid var(--ss-control-border, #788c97);
+    border-radius: var(--ss-radius-control, 12px);
+    font: inherit;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    white-space: normal;
+    cursor: pointer;
+}
+
+.role-login__actions .role-login__submit {
+    background: var(--ss-accent, #0f766e);
+    border-color: var(--ss-accent, #0f766e);
+    color: #fff;
+}
+
+.role-login__cancel {
+    background: var(--ss-surface, #fff);
+    color: var(--ss-ink, #172b36);
+}
+
+.role-login__input:focus-visible,
+.role-login__actions button:focus-visible {
+    outline: 3px solid var(--ss-accent, #0f766e);
+    outline-offset: 3px;
+}
+
+.role-login__input:disabled {
+    background: var(--ss-canvas, #f5f7fa);
+    color: var(--ss-muted, #586b78);
+}
+
+.role-login__actions button:disabled {
+    opacity: .65;
+    cursor: progress;
+}
+
+.role-login__error {
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid #b42318;
+    border-radius: var(--ss-radius-control, 12px);
+    background: #fff4f1;
+    color: #b42318;
+    font-size: 16px;
+    line-height: 24px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+    .role-login {
+        margin: 0 auto;
+        padding: 24px 16px;
+    }
+}

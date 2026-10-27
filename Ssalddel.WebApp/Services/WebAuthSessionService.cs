@@ -7,7 +7,7 @@ using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.WebApp.Services;
 
-public sealed class WebAuthSessionService : ISsalddelAccessTokenProvider
+public sealed class WebAuthSessionService : ISsalddelAccessTokenProvider, ISsalddel현재사용자변경알림
 {
     private const string StorageKey = "ssalddel.web.auth.v1";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

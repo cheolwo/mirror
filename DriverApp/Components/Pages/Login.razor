@@ -16,9 +16,9 @@
                          상태메시지="@_statusMessage"
                          상태Severity="@_statusSeverity"
                          일반로그인버튼텍스트="@(_isLoggedIn ? "세션 갱신" : "로그인")"
+                         소셜로그인표시="false"
                          IsBusy="@_isBusy"
-                         OnPasswordLogin="LoginAsync"
-                         OnSocialLogin="SocialLoginAsync">
+                         OnPasswordLogin="LoginAsync">
             @if (!string.IsNullOrWhiteSpace(복귀화면안내))
             {
                 <MudText Typo="Typo.caption" Color="Color.Primary">로그인 후 @복귀화면안내 화면으로 돌아갑니다.</MudText>
@@ -29,6 +29,10 @@
                        FullWidth="true"
                        OnClick="GoBackOrHome">
                 @(_isLoggedIn && 안전한복귀경로 is not null ? "요청한 업무로 돌아가기" : "기사 홈으로")
+            </MudButton>
+
+            <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true" Href="@DriverRoutes.PublicCargo">
+                로그인 없이 화물 목록 둘러보기
             </MudButton>
 
             @if (_isLoggedIn)
@@ -125,7 +129,7 @@
         catch
         {
             _statusSeverity = Severity.Error;
-            _statusMessage = "Ssalddel 서버에 연결하지 못했습니다. 서버 실행 상태와 HTTPS 포트를 확인해 주세요.";
+            _statusMessage = "서비스에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 로그인해 주세요.";
             return;
         }
         finally
@@ -133,13 +137,6 @@
             _isBusy = false;
         }
 
-    }
-
-    private Task SocialLoginAsync(공통소셜로그인요청 request)
-    {
-        _statusSeverity = Severity.Info;
-        _statusMessage = $"{request.ProviderDisplayName} 요청을 받았습니다. ProviderId={request.ProviderId}. 서버 OAuth 설정이 준비되면 이 버튼에서 인증 흐름을 시작합니다.";
-        return Task.CompletedTask;
     }
 
     private async Task Logout()

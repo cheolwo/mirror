@@ -52,7 +52,7 @@ public sealed class FoodRecommendationPushInstallationTests
         Assert.True(message.HighPriority);
         Assert.Equal(string.Empty, message.Title);
         Assert.Equal(string.Empty, message.Body);
-        Assert.Equal(new[] { "appKey", "expiresAtUtc", "offerId", "type", "userId" }, message.Data.Keys.OrderBy(x => x));
+        Assert.Equal(new[] { "appKey", "expiresAtUtc", "offerId", "type", "userId", "workKind" }, message.Data.Keys.OrderBy(x => x));
         Assert.Equal("FoodDeliveryRecommendation", message.Data["type"]);
         Assert.Equal(기사앱식별자.FoodDeliveryDriverApp, message.Data["appKey"]);
         Assert.Equal("same-driver", message.Data["userId"]);
@@ -179,7 +179,8 @@ public sealed class FoodRecommendationPushInstallationTests
         현재추천대상기사Id = driverId, 추천라운드 = 1, 추천만료시각 = DateTime.UtcNow.AddMinutes(5)
     };
     private static 배차추천알림Service CreateService(SsalddelContext db, IDriverPushTokenStore tokens, IFcmPushService push)
-        => new(db, tokens, push, NullLogger<배차추천알림Service>.Instance);
+        => new(db, tokens, push, NullLogger<배차추천알림Service>.Instance,
+            notificationSettings: new Ssalddel.Tests.Support.ExplicitOptInNotificationSettingsStore());
 
     private sealed class LegacyCargoTokens : IDriverPushTokenStore
     {

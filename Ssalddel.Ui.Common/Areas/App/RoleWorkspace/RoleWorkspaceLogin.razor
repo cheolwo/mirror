@@ -3,26 +3,43 @@
 @inject IRoleWorkspaceAccess Access
 @inject NavigationManager Navigation
 
-<main class="role-login" style="max-width:420px;margin:48px auto;padding:20px">
-    <h1>@(RoleWorkspaceCatalog.Find(RoleKey)?.Label ?? "활동") 로그인</h1>
-    <form @onsubmit="SignIn" @onsubmit:preventDefault="true">
-        <label>아이디<input autocomplete="username" @bind="_name" disabled="@_busy" style="display:block;width:100%;min-height:48px" /></label>
-        <label>비밀번호<input type="password" autocomplete="current-password" @bind="_password" disabled="@_busy" style="display:block;width:100%;min-height:48px" /></label>
-        @if (_error is not null) { <p role="alert">@_error</p> }
-        <button type="submit" disabled="@_busy" style="min-height:48px">@(_busy ? "로그인 중" : "로그인")</button>
-        <button type="button" @onclick="Cancel" style="min-height:48px">취소</button>
+<main class="role-login">
+    <h1 id="@TitleId">@(RoleWorkspaceCatalog.Find(RoleKey)?.Label ?? "활동") 로그인</h1>
+    <form class="role-login__form" aria-labelledby="@TitleId" aria-busy="@(_busy ? "true" : "false")"
+          @onsubmit="SignIn" @onsubmit:preventDefault="true">
+        <div class="role-login__field">
+            <label for="@NameId">아이디</label>
+            <input id="@NameId" class="role-login__input" name="username" type="text" autocomplete="username"
+                   autocapitalize="none" spellcheck="false" @bind="_name" disabled="@_busy"
+                   aria-describedby="@(_error is not null ? ErrorId : null)" />
+        </div>
+        <div class="role-login__field">
+            <label for="@PasswordId">비밀번호</label>
+            <input id="@PasswordId" class="role-login__input" name="password" type="password" autocomplete="current-password"
+                   @bind="_password" disabled="@_busy" aria-describedby="@(_error is not null ? ErrorId : null)" />
+        </div>
+        @if (_error is not null) { <p id="@ErrorId" class="role-login__error" role="alert">@_error</p> }
+        <div class="role-login__actions">
+            <button class="role-login__submit" type="submit" disabled="@_busy">@(_busy ? "로그인 중" : "로그인")</button>
+            <button class="role-login__cancel" type="button" @onclick="Cancel">취소</button>
+        </div>
     </form>
 </main>
 @code {
     [Parameter] public string RoleKey { get; set; } = "community";
     [Parameter] public string? ReturnUrl { get; set; }
+    private readonly string _formId = "role-login-" + Guid.NewGuid().ToString("N");
+    private string TitleId => _formId + "-title";
+    private string NameId => _formId + "-name";
+    private string PasswordId => _formId + "-password";
+    private string ErrorId => _formId + "-error";
     private string _name = "", _password = "";
     private string? _error;
     private bool _busy, _disposed;
     private readonly CancellationTokenSource _lifetime = new();
     private string ReturnPath => SafeReturn(ReturnUrl) ?? $"/workspace/{RoleWorkspaceCatalog.Find(RoleKey)?.Key ?? "community"}";
-    private static string? SafeReturn(string? path) => path is not null && path.StartsWith("/workspace/", StringComparison.Ordinal)
-        && !path.Contains("//", StringComparison.Ordinal) && !path.Contains('\\') && !path.Any(char.IsControl) ? path : null;
+    private string? SafeReturn(string? path)
+        => Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoPublicBrowseNavigation.LoginReturn(RoleKey, path);
     private async Task SignIn()
     {
         if (_busy || _disposed) return;

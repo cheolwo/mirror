@@ -1,15 +1,25 @@
 @page "/"
 @inject NavigationManager NavigationManager
+@inject IAuthSession Session
 
-<PageTitle>기사 홈으로 이동</PageTitle>
+<PageTitle>화물 목록으로 이동</PageTitle>
 
 <MudStack Class="pa-4" AlignItems="AlignItems.Center" Justify="Justify.Center">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
 </MudStack>
 
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        NavigationManager.NavigateTo(DriverRoutes.HomeSummary, replace: true);
+        try
+        {
+            await Session.RestoreAsync();
+            NavigationManager.NavigateTo(Session.IsAuthenticated ? DriverRoutes.HomeSummary : DriverRoutes.PublicCargo, replace: true);
+        }
+        catch
+        {
+            // 인증 저장소 오류 때문에 공개 탐색까지 막지 않습니다. 개인 업무는 별도 인증 경계가 확인합니다.
+            NavigationManager.NavigateTo(DriverRoutes.PublicCargo, replace: true);
+        }
     }
 }

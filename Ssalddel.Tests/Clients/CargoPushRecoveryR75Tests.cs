@@ -255,6 +255,57 @@ public sealed class CargoPushRecoveryR75Tests
         Assert.Equal(0, f.Store.Writes); Assert.Equal(0, f.Samples.Reads);
     }
 
+    [Fact]
+    public async Task BackgroundOsAlertReceivesOnlyTheFreshCanonicalRecommendation()
+    {
+        var f = await Fixture.CreateAsync(); var offer = Offer(); f.Samples.Items = [offer];
+        f.Alerts = new(); f.Recovery = f.NewRecovery();
+        var data = Data(); data["title"] = "untrusted payload"; data["amount"] = "1";
+        await f.Recovery.CaptureAsync(data, false);
+        Assert.Equal(DriverRecommendationPushRecoveryStatus.Ready, (await f.Recovery.RecoverAsync()).Status);
+        Assert.Same(offer, Assert.Single(f.Alerts.Requests)); Assert.Single(f.Notifications.Published);
+    }
+
+    [Fact]
+    public async Task UnconfirmedCanonicalReadDoesNotCallOsPublisher()
+    {
+        var f = await Fixture.CreateAsync(); f.Samples.Fail = true;
+        f.Alerts = new(); f.Recovery = f.NewRecovery();
+        await f.Recovery.CaptureAsync(Data(), false);
+        Assert.Equal(DriverRecommendationPushRecoveryStatus.RetryableFailure, (await f.Recovery.RecoverAsync()).Status);
+        Assert.Empty(f.Alerts.Requests);
+    }
+
+    [Fact]
+    public async Task NotificationOpenDoesNotPostAnotherOsAlert()
+    {
+        var f = await Fixture.CreateAsync(); f.Samples.Items = [Offer()];
+        f.Alerts = new(); f.Recovery = f.NewRecovery();
+        await f.Recovery.CaptureAsync(Data(), true);
+        Assert.Equal(DriverRecommendationPushRecoveryStatus.Ready, (await f.Recovery.RecoverAsync()).Status);
+        Assert.Empty(f.Alerts.Requests);
+    }
+
+    [Fact]
+    public async Task SettingsReadFailureKeepsThePointerForForegroundRetry()
+    {
+        var f = await Fixture.CreateAsync(); f.Samples.Items = [Offer()];
+        f.Alerts = new() { Wait = () => throw new HttpRequestException("fixture unavailable") }; f.Recovery = f.NewRecovery();
+        await f.Recovery.CaptureAsync(Data(), false);
+        Assert.Equal(DriverRecommendationPushRecoveryStatus.RetryableFailure, (await f.Recovery.RecoverAsync()).Status);
+        Assert.NotNull(f.Store.Value); Assert.Empty(f.Notifications.Published);
+    }
+
+    [Fact]
+    public async Task SameOwnerReloginDuringAlertReadCannotPublishBannerOrKeepOldPointer()
+    {
+        var f = await Fixture.CreateAsync(); f.Samples.Items = [Offer()];
+        f.Alerts = new() { Wait = () => f.Session.ApplyAsync(Snapshot("driver-a")) }; f.Recovery = f.NewRecovery();
+        await f.Recovery.CaptureAsync(Data(), false);
+        Assert.Equal(DriverRecommendationPushRecoveryStatus.SessionChanged, (await f.Recovery.RecoverAsync()).Status);
+        Assert.Null(f.Store.Value); Assert.Empty(f.Notifications.Published);
+    }
+
     private static Dictionary<string, string> Data() => new() { ["type"] = "DriverDispatchRecommendation", ["requestId"] = "request-1" };
     private static DriverRequestItem Offer() => new() { 의뢰Id = "request-1", 화물종류 = "synthetic cargo",
         추천시작시각 = Now.AddSeconds(-10).UtcDateTime, 추천만료시각 = Now.AddMinutes(2).UtcDateTime,
@@ -268,13 +319,22 @@ public sealed class CargoPushRecoveryR75Tests
         public Samples Samples { get; } = new(); public Map Map { get; } = new();
         public Notifications Notifications { get; } = new(); public Store Store { get; } = new();
         public Clock Time { get; } = new();
-        public DriverRecommendationPushRecovery Recovery { get; private set; } = null!;
-        public DriverRecommendationPushRecovery NewRecovery() => new(Session, Samples, Map, Notifications, Store, Time);
+        public DriverRecommendationPushRecovery Recovery { get; set; } = null!;
+        public CargoAlerts? Alerts;
+        public DriverRecommendationPushRecovery NewRecovery() => new(Session, Samples, Map, Notifications, Store, Time, Alerts);
         public static async Task<Fixture> CreateAsync()
         { var f = new Fixture(); await f.Session.ApplyAsync(Snapshot("driver-a")); f.Recovery = f.NewRecovery(); return f; }
     }
     private sealed class Clock : TimeProvider
     { public DateTimeOffset UtcNow { get; set; } = Now; public override DateTimeOffset GetUtcNow() => UtcNow; }
+    private sealed class CargoAlerts : IDriverCargoRecommendationAlertService
+    {
+        public List<DriverRequestItem> Requests { get; } = []; public Func<Task>? Wait;
+        public async Task<bool> TryPublishAsync(string owner, long revision, DriverRequestItem request,
+            CancellationToken cancellationToken = default)
+        { Requests.Add(request); if (Wait is not null) await Wait(); return true; }
+        public void Cancel() { }
+    }
     private sealed class Store : IDriverRecommendationPushTargetStore
     {
         public DriverRecommendationPushTarget? Value; public int Writes; public bool ReadFailure;

@@ -17,6 +17,7 @@ public partial class NativeDriverHomePage : ContentPage
     private readonly DriverNativeHomeWorkspaceState _workspaceState;
     private readonly IServiceProvider _services;
     private readonly 기사위치표시설정Service _locationDisplayPreferences;
+    private readonly DriverForegroundRecommendationSignal _recommendationSignal;
     private long _pageRefreshGeneration;
     private bool _isSubscribed;
     private DriverRequestItem? _incomingRecommendationRequest;
@@ -51,6 +52,8 @@ public partial class NativeDriverHomePage : ContentPage
         _locationDisplayPreferences = locationDisplayPreferences;
         _workspaceState = workspaceState;
         _services = services;
+        _recommendationSignal = new(services.GetRequiredService<IAuthSession>(),
+            services.GetRequiredService<IDriverCargoRecommendationAlertService>());
         ApplyOperatingProfile();
     }
 
@@ -58,6 +61,7 @@ public partial class NativeDriverHomePage : ContentPage
     {
         base.OnAppearing();
         _foreground = true;
+        _recommendationSignal.Resume();
         ApplyDirectionSettings();
         SubscribeEvents();
         ObserveWindow();
@@ -71,15 +75,18 @@ public partial class NativeDriverHomePage : ContentPage
         if (!_isSubscribed || !_foreground || _workspaceRefreshing || _recommendationCommandBusy) return;
         _workspaceRefreshing = true;
         var generation = ++_pageRefreshGeneration;
+        var signalTicket = _recommendationSignal.BeginRefresh();
         try
         {
             TransportFooterBar.IsEnabled = false;
             ApplyReceptionControl();
             if (!_workspaceState.IsActive) await _workspaceState.ActivateAsync();
-            else if (periodic) await _workspaceState.PollAsync();
+            else if (periodic) { if (!await _workspaceState.PollAsync()) return; }
             else await _workspaceState.RefreshAsync();
             if (!_isSubscribed || !_foreground || generation != _pageRefreshGeneration) return;
             ApplyCurrentWorkspaceDisplay();
+            if (_workspaceState.CanRespondToRecommendation)
+                _ = _recommendationSignal.TryPublishAsync(signalTicket, _incomingRecommendationRequest);
         }
         finally
         {
@@ -136,6 +143,7 @@ public partial class NativeDriverHomePage : ContentPage
     {
         ++_pageRefreshGeneration;
         _foreground = false;
+        _recommendationSignal.Pause();
         MapView.IsDirectionTrackingActive = false;
         StopWorkspaceRefresh();
         StopObservingWindow();
@@ -171,6 +179,7 @@ public partial class NativeDriverHomePage : ContentPage
     {
         if (!_isSubscribed || _foreground) return;
         _foreground = true;
+        _recommendationSignal.Resume();
         ApplyDirectionSettings();
         await RefreshCurrentWorkspaceAsync(); StartWorkspaceRefresh();
     }
@@ -179,6 +188,7 @@ public partial class NativeDriverHomePage : ContentPage
     {
         if (!_isSubscribed || !_foreground) return;
         _foreground = false; ++_pageRefreshGeneration;
+        _recommendationSignal.Pause();
         MapView.IsDirectionTrackingActive = false;
         StopWorkspaceRefresh(); StopRecommendationCountdown(); _workspaceState.Pause();
         TransportFooterBar.IsEnabled = false;
@@ -229,9 +239,16 @@ public partial class NativeDriverHomePage : ContentPage
     private async void OnReceptionToggled(object? sender, ToggledEventArgs args)
     {
         if (!_foreground || !_workspaceState.CanChangeReception || args.Value == _workspaceState.ReceivesNewDispatches) return;
+        var generation = ++_pageRefreshGeneration;
+        var signalTicket = _recommendationSignal.BeginRefresh();
         var task = _workspaceState.ToggleReceptionAsync(); ApplyReceptionControl();
         await task;
-        if (_isSubscribed && _foreground) ApplyCurrentWorkspaceDisplay();
+        if (_isSubscribed && _foreground && generation == _pageRefreshGeneration)
+        {
+            ApplyCurrentWorkspaceDisplay();
+            if (_workspaceState.CanRespondToRecommendation)
+                _ = _recommendationSignal.TryPublishAsync(signalTicket, _incomingRecommendationRequest);
+        }
     }
 
     private async void OnRetryWorkspaceClicked(object? sender, EventArgs e)
@@ -250,6 +267,7 @@ public partial class NativeDriverHomePage : ContentPage
 
     private void ClearCurrentWorkspaceDisplay()
     {
+        _recommendationSignal.Invalidate();
         _recommendationCommandBusy = false;
         StopRecommendationCountdown();
         _currentTransport = null;
@@ -313,6 +331,8 @@ public partial class NativeDriverHomePage : ContentPage
             StopRecommendationCountdown(); return;
         }
         var visual = request.OfferVisual;
+        RecommendationWorkIcon.Data = (Microsoft.Maui.Controls.Shapes.Geometry)
+            new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString(visual.IconPath)!;
         RecommendationPrimaryBar.Color = Color.FromArgb(visual.PrimaryColor);
         RecommendationSecondaryBar.IsVisible = visual.IsCombined;
         RecommendationSecondaryBar.Color = Color.FromArgb(visual.SecondaryColor ?? DriverOfferPresentation.WarehouseColor);

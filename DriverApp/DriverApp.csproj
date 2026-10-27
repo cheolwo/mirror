@@ -50,6 +50,11 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<!-- 명시적으로 선택한 Debug APK에만 기기 알림 화면 확인 도구를 포함한다. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(SsalddelNotificationVisualCheck)' == 'true'">
+		<DefineConstants>$(DefineConstants);DRIVER_NOTIFICATION_VISUAL_CHECK</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup Condition="'$(SsalddelServerBaseAddress)' != ''">
 		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
 			<_Parameter1>SsalddelServerBaseAddress</_Parameter1>

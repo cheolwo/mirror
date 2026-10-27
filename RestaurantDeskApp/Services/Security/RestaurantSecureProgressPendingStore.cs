@@ -1,4 +1,4 @@
-using System.Text.Json;
+using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Food;
 
 namespace RestaurantDeskApp.Services.Security;
@@ -6,53 +6,24 @@ namespace RestaurantDeskApp.Services.Security;
 public sealed class RestaurantSecureProgressPendingStore : IRestaurantProgressPendingStore
 {
     private const string Key = "ssalddel.restaurant.progress-pending.v1";
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly ProtectedPendingSnapshotStore<RestaurantProgressPendingSnapshot> _store = new(
+        Key,
+        key => Microsoft.Maui.Storage.SecureStorage.Default.GetAsync(key),
+        (key, json) => Microsoft.Maui.Storage.SecureStorage.Default.SetAsync(key, json),
+        key => Microsoft.Maui.Storage.SecureStorage.Default.Remove(key),
+        Validate,
+        value => value.OwnerId,
+        "진행 요청 기록을 읽을 수 없습니다.",
+        "진행 요청 기록을 지우지 못했습니다.");
 
-    public async Task<RestaurantProgressPendingSnapshot?> LoadAsync(CancellationToken cancellationToken = default)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try { var result = await ReadAsync(); cancellationToken.ThrowIfCancellationRequested(); return result; }
-        finally { _gate.Release(); }
-    }
+    public Task<RestaurantProgressPendingSnapshot?> LoadAsync(CancellationToken cancellationToken = default)
+        => _store.LoadAsync(cancellationToken);
 
-    public async Task SaveAsync(RestaurantProgressPendingSnapshot snapshot, CancellationToken cancellationToken = default)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            Validate(snapshot);
-            await Microsoft.Maui.Storage.SecureStorage.Default.SetAsync(Key, JsonSerializer.Serialize(snapshot, JsonOptions));
-            cancellationToken.ThrowIfCancellationRequested();
-        }
-        finally { _gate.Release(); }
-    }
+    public Task SaveAsync(RestaurantProgressPendingSnapshot snapshot, CancellationToken cancellationToken = default)
+        => _store.SaveAsync(snapshot, cancellationToken);
 
-    public async Task ClearAsync(string ownerId, CancellationToken cancellationToken = default)
-    {
-        await _gate.WaitAsync(cancellationToken);
-        try
-        {
-            if ((await ReadAsync())?.OwnerId == ownerId)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!Microsoft.Maui.Storage.SecureStorage.Default.Remove(Key))
-                    throw new IOException("진행 요청 기록을 지우지 못했습니다.");
-            }
-        }
-        finally { _gate.Release(); }
-    }
-
-    private static async Task<RestaurantProgressPendingSnapshot?> ReadAsync()
-    {
-        var json = await Microsoft.Maui.Storage.SecureStorage.Default.GetAsync(Key);
-        if (string.IsNullOrWhiteSpace(json)) return null;
-        var result = JsonSerializer.Deserialize<RestaurantProgressPendingSnapshot>(json, JsonOptions)
-            ?? throw new InvalidDataException("진행 요청 기록을 읽을 수 없습니다.");
-        Validate(result);
-        return result;
-    }
+    public Task ClearAsync(string ownerId, CancellationToken cancellationToken = default)
+        => _store.ClearAsync(ownerId, cancellationToken);
 
     private static void Validate(RestaurantProgressPendingSnapshot value)
     {

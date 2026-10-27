@@ -101,6 +101,8 @@ public sealed class DriverRouteAuthenticationState : IDisposable
     public static bool IsDriverRoute(string? route)
     {
         var path = RoutePath(route);
+        // 공개 요약 한 화면만 예외로 둡니다. 개인 목록과 추천·수락 route는 그대로 보호합니다.
+        if (path.Equals(DriverRoutes.PublicCargo, StringComparison.OrdinalIgnoreCase)) return false;
         return path.Equals("/driver", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/driver/", StringComparison.OrdinalIgnoreCase);
     }

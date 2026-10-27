@@ -114,7 +114,9 @@ public sealed class 기사알림UseCase : I기사알림UseCase
             request.소리사용,
             request.진동사용,
             request.야간알림제한,
-            request.정차후모아보기);
+            request.정차후모아보기,
+            request.음식배달추천알림사용,
+            request.화물운송추천알림사용);
 
         await _notificationSettingsStore.SetAsync(기사Id, settings);
         로그기록("NotificationSettingsUpdated", 기사Id);
@@ -194,6 +196,8 @@ public sealed class 기사알림UseCase : I기사알림UseCase
         {
             DriverId = 기사Id,
             배차추천알림사용 = settings.배차추천알림사용,
+            음식배달추천알림사용 = settings.음식배달추천알림사용,
+            화물운송추천알림사용 = settings.화물운송추천알림사용,
             운전중푸시만사용 = settings.운전중푸시만사용,
             소리사용 = settings.소리사용,
             진동사용 = settings.진동사용,

@@ -8,6 +8,9 @@ using 살뜰.도메인.설정;
 using 살뜰.Services.Notifications;
 using 살뜰.Services.Storage.Local;
 using 살뜰.도메인.운송;
+using Ssalddel.Services.Dispatch.Compliance;
+using Ssalddel.Services.Dispatch.Participation;
+using 살뜰.Services.Dispatch.Common;
 
 namespace 살뜰.Services.Dispatch.Notification
 {
@@ -23,19 +26,27 @@ namespace 살뜰.Services.Dispatch.Notification
         private readonly IFcmPushService _fcmPushService;
         private readonly ILogger<배차추천알림Service> _logger;
         private readonly TimeProvider _clock;
+        private readonly I신규화물업무자격Guard? _신규업무자격;
+        private readonly DriverRecommendationNotificationGate _알림허용;
 
         public 배차추천알림Service(
             SsalddelContext db,
             IDriverPushTokenStore pushTokenStore,
             IFcmPushService fcmPushService,
             ILogger<배차추천알림Service> logger,
-            TimeProvider? clock = null)
+            TimeProvider? clock = null,
+            I신규화물업무자격Guard? 신규업무자격 = null,
+            IDriverNotificationSettingsStore? notificationSettings = null,
+            ISharedDriverWorkAdmissionService? sharedAdmission = null,
+            I운영배차공통UseCase? availability = null)
         {
             _db = db;
             _pushTokenStore = pushTokenStore;
             _fcmPushService = fcmPushService;
             _logger = logger;
             _clock = clock ?? TimeProvider.System;
+            _신규업무자격 = 신규업무자격;
+            _알림허용 = new(db, notificationSettings, sharedAdmission, _clock, availability);
         }
 
         public async Task 추천알림요청생성Async(long 배차대기Id, string 의뢰Id, string 기사Id, int 추천라운드, CancellationToken cancellationToken = default)
@@ -59,6 +70,7 @@ namespace 살뜰.Services.Dispatch.Notification
             var queue = await _db.운송원장.AsNoTracking().SingleOrDefaultAsync(
                 x => x.Id == 배차대기Id && x.의뢰Id == 의뢰Id, cancellationToken);
             var isFood = queue?.배차업무유형 == 상태값.배차업무유형.음식배달;
+            if (!isFood && !await 신규화물알림가능Async(기사Id, 의뢰Id, cancellationToken)) return;
             if (isFood && !FoodRecommendationNotificationRecoveryPolicy.IsCurrentRecommendation(queue!,
                 new 배차추천알림Outbox { 배차대기Id = 배차대기Id, 의뢰Id = 의뢰Id, 기사Id = 기사Id, 추천라운드 = 추천라운드 }, now))
                 return;
@@ -78,8 +90,8 @@ namespace 살뜰.Services.Dispatch.Notification
                 의뢰Id = 의뢰Id,
                 기사Id = 기사Id,
                 추천라운드 = 추천라운드,
-                제목 = "새로운 배차 추천",
-                본문 = isFood ? "새 음식 배달 추천을 확인해 주세요." : "근처 운송의뢰가 도착했습니다.",
+                제목 = isFood ? "음식 배달 · 새 배차 추천" : "화물 운송 · 새 배차 추천",
+                본문 = isFood ? "앱에서 새 음식 배달 추천을 확인해 주세요." : "앱에서 새 화물 운송 추천을 확인해 주세요.",
                 DataJson = dataJson,
                 발송상태 = 상태_대기,
                 CreatedAt = now,
@@ -128,14 +140,26 @@ namespace 살뜰.Services.Dispatch.Notification
                 cancellationToken.ThrowIfCancellationRequested();
                 processed++;
 
-                var now = DateTime.UtcNow;
+                var now = _clock.GetUtcNow().UtcDateTime;
                 item.시도횟수 += 1;
                 item.마지막시도시각 = now;
                 item.UpdatedAt = now;
 
                 try
                 {
-                    var token = await _pushTokenStore.GetForAppAsync(item.기사Id, appKey, cancellationToken);
+                    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    timeout.CancelAfter(TimeSpan.FromSeconds(FoodRecommendationNotificationRecoveryPolicy.SendTimeoutSeconds));
+                    var sendToken = timeout.Token;
+                    var queue = await _알림허용.CurrentAsync(item, 상태값.배차업무유형.용달운송, sendToken);
+                    if (queue is null) { item.발송상태 = "Obsolete"; continue; }
+                    if (!await _알림허용.AllowedAsync(queue, item.기사Id, sendToken).WaitAsync(sendToken))
+                    { item.발송상태 = "Suppressed"; continue; }
+                    if (!await 신규화물알림가능Async(item.기사Id, item.의뢰Id, sendToken))
+                    {
+                        item.발송상태 = "Cancelled";
+                        continue;
+                    }
+                    var token = await _pushTokenStore.GetForAppAsync(item.기사Id, appKey, sendToken).WaitAsync(sendToken);
                     if (string.IsNullOrWhiteSpace(token))
                     {
                         item.발송상태 = 상태_실패;
@@ -148,22 +172,53 @@ namespace 살뜰.Services.Dispatch.Notification
                         continue;
                     }
 
+                    // 토큰 조회를 기다리는 동안 정지·만료된 자격으로 알리지 않는다.
+                    queue = await _알림허용.CurrentAsync(item, 상태값.배차업무유형.용달운송, sendToken);
+                    if (queue is null) { item.발송상태 = "Obsolete"; continue; }
+                    if (!await 신규화물알림가능Async(item.기사Id, item.의뢰Id, sendToken))
+                    {
+                        item.발송상태 = "Cancelled";
+                        continue;
+                    }
+
                     // Keep the existing cargo event type and external payload.
                     var data = JsonSerializer.Deserialize<Dictionary<string, string>>(item.DataJson, JsonOptions)
                                ?? new Dictionary<string, string>();
-                    var sent = await _fcmPushService.SendToTokenAsync(token, item.제목, item.본문, data, cancellationToken);
+                    if (!기사배차추천알림계약.Is배차추천(data.GetValueOrDefault("type"))
+                        || data.GetValueOrDefault("requestId") != item.의뢰Id
+                        || data.GetValueOrDefault("dispatchWaitingId") != item.배차대기Id.ToString(CultureInfo.InvariantCulture)
+                        || data.GetValueOrDefault("recommendationRound") != item.추천라운드.ToString(CultureInfo.InvariantCulture))
+                    { item.발송상태 = "Obsolete"; continue; }
+                    data["appKey"] = appKey;
+                    data["userId"] = item.기사Id;
+                    data["workKind"] = SharedDriverWorkAdmissionService.ResolveWorkKind(queue);
+                    data["expiresAtUtc"] = DateTime.SpecifyKind(queue.추천만료시각!.Value, DateTimeKind.Utc).ToString("O", CultureInfo.InvariantCulture);
+                    if (!await _알림허용.AllowedAsync(queue, item.기사Id, sendToken).WaitAsync(sendToken))
+                    { item.발송상태 = "Suppressed"; continue; }
+                    // 표시·소리·진동은 현재 계정의 앱 설정과 OS 허용을 거친 로컬 게시가 담당합니다.
+                    var sent = await _fcmPushService.SendAsync(new FcmPushMessage(token, "", "", data,
+                        HighPriority: true, DataOnly: true), sendToken).WaitAsync(sendToken);
 
                     item.발송상태 = sent ? 상태_성공 : 상태_실패;
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception)
                 {
                     item.발송상태 = 상태_실패;
-                    _logger.LogWarning(ex, "배차추천 알림 발송 실패. OutboxId={OutboxId} DriverId={DriverId}", item.Id, item.기사Id);
+                    _logger.LogWarning("배차추천 알림 발송 실패. OutboxId={OutboxId}", item.Id);
                 }
             }
 
             await _db.SaveChangesAsync(cancellationToken);
             return processed;
+        }
+
+        private async Task<bool> 신규화물알림가능Async(string driverId, string requestId, CancellationToken ct)
+        {
+            if (!(await 신규화물업무자격검사.평가Async(_신규업무자격, driverId, ct)).CanReceiveNewWork) return false;
+            if (_신규업무자격?.RequiresCargoEvidence == false) return true;
+            var request = await _db.화주운송의뢰.AsNoTracking().SingleOrDefaultAsync(x => x.의뢰Id == requestId, ct);
+            return request is not null && 신규화물업무자격검사.화물정보완료(_신규업무자격, request);
         }
 
         private static Dictionary<string, string> FoodRecommendationData(운송원장 queue, string driverId)
@@ -173,6 +228,7 @@ namespace 살뜰.Services.Dispatch.Notification
                 ["appKey"] = 기사앱식별자.FoodDeliveryDriverApp,
                 ["userId"] = driverId,
                 ["offerId"] = queue.의뢰Id,
+                ["workKind"] = SharedDriverWorkAdmissionService.ResolveWorkKind(queue),
                 ["expiresAtUtc"] = DateTime.SpecifyKind(queue.추천만료시각!.Value, DateTimeKind.Utc)
                     .ToString("O", CultureInfo.InvariantCulture)
             };

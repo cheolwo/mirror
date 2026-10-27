@@ -153,15 +153,8 @@ public sealed class AdminAuthenticatedApiClient
         {
             using var document = JsonDocument.Parse(content);
             if (document.RootElement.ValueKind != JsonValueKind.Object) return string.Empty;
-            foreach (var name in new[] { "detail", "message", "title" })
-            {
-                if (document.RootElement.TryGetProperty(name, out var value)
-                    && value.ValueKind == JsonValueKind.String
-                    && !string.IsNullOrWhiteSpace(value.GetString()))
-                {
-                    return value.GetString()!;
-                }
-            }
+            var message = Ssalddel.Client.Infrastructure.Http.ProblemMessagePropertyReader.Read(document.RootElement);
+            if (message is not null) return message;
         }
         catch (JsonException)
         {

@@ -65,17 +65,23 @@ public sealed partial class 배차추천알림Service
                 {
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
                     timeout.CancelAfter(TimeSpan.FromSeconds(FoodRecommendationNotificationRecoveryPolicy.SendTimeoutSeconds));
-                    var token = await _pushTokenStore.GetForAppAsync(item.기사Id, 기사앱식별자.FoodDeliveryDriverApp, timeout.Token)
-                        .WaitAsync(timeout.Token);
-                    // Re-read after asynchronous token lookup before advertising the offer.
-                    q = await CurrentFoodRecommendationAsync(item, timeout.Token);
-                    if (q is null) status = "Obsolete";
-                    else if (!string.IsNullOrWhiteSpace(token))
+                    if (!await _알림허용.AllowedAsync(q, item.기사Id, timeout.Token).WaitAsync(timeout.Token))
+                    { status = "Suppressed"; }
+                    else
                     {
-                        var sent = await _fcmPushService.SendAsync(new FcmPushMessage(token, "", "",
-                            FoodRecommendationData(q, item.기사Id), HighPriority: true, DataOnly: true), timeout.Token)
+                        var token = await _pushTokenStore.GetForAppAsync(item.기사Id, 기사앱식별자.FoodDeliveryDriverApp, timeout.Token)
                             .WaitAsync(timeout.Token);
-                        status = sent ? "Succeeded" : "Failed";
+                        // Re-read after asynchronous token lookup before advertising the offer.
+                        q = await CurrentFoodRecommendationAsync(item, timeout.Token);
+                        if (q is null) status = "Obsolete";
+                        else if (!await _알림허용.AllowedAsync(q, item.기사Id, timeout.Token).WaitAsync(timeout.Token)) status = "Suppressed";
+                        else if (!string.IsNullOrWhiteSpace(token))
+                        {
+                            var sent = await _fcmPushService.SendAsync(new FcmPushMessage(token, "", "",
+                                FoodRecommendationData(q, item.기사Id), HighPriority: true, DataOnly: true), timeout.Token)
+                                .WaitAsync(timeout.Token);
+                            status = sent ? "Succeeded" : "Failed";
+                        }
                     }
                 }
             }

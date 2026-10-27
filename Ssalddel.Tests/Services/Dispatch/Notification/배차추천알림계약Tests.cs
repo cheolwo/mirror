@@ -29,7 +29,8 @@ public sealed class 배차추천알림계약Tests
             db,
             new NoOpPushTokenStore(),
             new NoOpFcmPushService(),
-            NullLogger<배차추천알림Service>.Instance);
+            NullLogger<배차추천알림Service>.Instance,
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance);
 
         await service.추천알림요청생성Async(
             배차대기Id: 10,

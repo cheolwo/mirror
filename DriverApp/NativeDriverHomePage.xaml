@@ -99,7 +99,7 @@
                     <Grid ColumnDefinitions="4,4,24,*,Auto" ColumnSpacing="6">
                         <BoxView x:Name="RecommendationPrimaryBar" Color="#64748B" />
                         <BoxView x:Name="RecommendationSecondaryBar" Grid.Column="1" Color="#DC2626" IsVisible="False" />
-                        <Path Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
+                        <Path x:Name="RecommendationWorkIcon" Grid.Column="2" Data="M3 7 L12 2 L21 7 L21 17 L12 22 L3 17 Z M3 7 L12 12 L21 7 M12 12 L12 22"
                               Stroke="#172B36" StrokeThickness="1.6" Aspect="Uniform" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" />
                         <VerticalStackLayout Grid.Column="3" Spacing="2">
                             <Label x:Name="RecommendationWorkLabel" Text="신규 배차 추천" FontAttributes="Bold" FontSize="15" TextColor="#172B36" LineBreakMode="WordWrap" />

@@ -243,7 +243,8 @@ public sealed class FoodRecommendationNotificationRecoveryTests
         public async Task<int> RunAsync(CancellationToken ct = default)
         {
             await using var db = Context();
-            return await new 배차추천알림Service(db, Tokens, Push, NullLogger<배차추천알림Service>.Instance, Clock)
+            return await new 배차추천알림Service(db, Tokens, Push, NullLogger<배차추천알림Service>.Instance, Clock,
+                notificationSettings: new Ssalddel.Tests.Support.ExplicitOptInNotificationSettingsStore())
                 .업무유형별대기알림발송Async(상태값.배차업무유형.음식배달, cancellationToken: ct);
         }
         public async Task<배차추천알림Outbox> RowAsync() { await using var db = Context(); return await db.배차추천알림Outbox.SingleAsync(); }

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Ssalddel.Client.Infrastructure.Security;
 
 namespace RestaurantDeskApp.Services.Security;
@@ -6,46 +5,21 @@ namespace RestaurantDeskApp.Services.Security;
 public sealed class RestaurantMauiSecureTokenStore : IClientSecureTokenStore
 {
     private const string StorageKey = "ssalddel.restaurant.authToken.v1";
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly ClientAuthTokenJsonStore _store = new(
+        StorageKey,
+        key => SecureStorage.Default.GetAsync(key),
+        (key, json) => SecureStorage.Default.SetAsync(key, json),
+        key => SecureStorage.Default.Remove(key));
 
-    public async Task<ClientAuthTokenSnapshot?> LoadAsync(
-        CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+    public Task<ClientAuthTokenSnapshot?> LoadAsync(CancellationToken cancellationToken = default)
+        => _store.LoadAsync(cancellationToken);
 
-        var json = await SecureStorage.Default.GetAsync(StorageKey);
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<ClientAuthTokenSnapshot>(json, JsonOptions);
-        }
-        catch (JsonException)
-        {
-            SecureStorage.Default.Remove(StorageKey);
-            return null;
-        }
-    }
-
-    public async Task SaveAsync(
-        ClientAuthTokenSnapshot snapshot,
-        CancellationToken cancellationToken = default)
+    public async Task SaveAsync(ClientAuthTokenSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        await SecureStorage.Default.SetAsync(
-            StorageKey,
-            JsonSerializer.Serialize(snapshot, JsonOptions));
+        await _store.SaveAsync(snapshot, cancellationToken);
     }
 
     public Task ClearAsync(CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        SecureStorage.Default.Remove(StorageKey);
-        return Task.CompletedTask;
-    }
+        => _store.ClearAsync(cancellationToken);
 }

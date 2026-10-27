@@ -62,10 +62,10 @@
 
             NavigateAfterLogin();
         }
-        catch (Exception ex)
+        catch
         {
             statusSeverity = Severity.Error;
-            statusMessage = $"로그인 처리 중 오류가 발생했습니다: {ex.Message}";
+            statusMessage = "로그인을 완료하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.";
         }
         finally
         {

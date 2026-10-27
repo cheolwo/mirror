@@ -1,29 +1,23 @@
-﻿@page "/driver/notifications/push"
-@using DriverApp.ViewModels.Driver.Notification
-@inherits DriverApp.Components.MvvmComponentBase<기사푸시설정PageViewModel>
-
-<PageTitle>푸시설정</PageTitle>
+@page "/driver/notifications/push"
+<PageTitle>휴대폰 알림 안내</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Spacing="3">
         <MudPaper Class="pa-4" Elevation="1">
             <MudStack Spacing="1">
-                <MudText Typo="Typo.h4">푸시 설정</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">FCM 토큰 등록과 테스트 발송 흐름을 붙일 자리다.</MudText>
+                <MudText Typo="Typo.h4">휴대폰 알림 안내</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">새 배차 알림을 받으려면 휴대폰에서 앱 알림을 허용해 주세요.</MudText>
             </MudStack>
         </MudPaper>
 
         <MudPaper Class="pa-4" Elevation="2">
             <MudStack Spacing="2">
-                <MudText Typo="Typo.h6">푸시 상태</MudText>
-                <MudText Typo="Typo.body1">안 읽은 알림: @ViewModel.안읽은알림수 건</MudText>
-                <MudAlert Severity="Severity.Info">기기 권한 확인 → 토큰 등록 → 테스트 알림 발송 순서로 붙이면 된다.</MudAlert>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="/driver/notifications/settings">알림 설정으로</MudButton>
+                <MudText Typo="Typo.h6">휴대폰에서 확인할 내용</MudText>
+                <MudText Typo="Typo.body1">휴대폰 설정 → 앱 → 살뜰 기사 → 알림에서 알림 허용과 소리를 확인해 주세요.</MudText>
+                <MudAlert Severity="Severity.Info">이 화면에서는 휴대폰의 알림 허용·소리 설정이나 실제 수신 여부를 확인할 수 없습니다.</MudAlert>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.Notifications">알림함 보기</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Href="@DriverRoutes.NotificationSettings">알림 안내로 돌아가기</MudButton>
             </MudStack>
         </MudPaper>
     </MudStack>
 </MudContainer>
-
-@code {
-    protected override Task OnInitializedAsync() => ViewModel.초기화Async();
-}

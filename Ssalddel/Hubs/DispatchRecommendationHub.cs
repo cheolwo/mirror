@@ -172,8 +172,23 @@ namespace Ssalddel.Hubs
         public string? WorkKind { get; set; }
         public IReadOnlyList<string> AssignedActivities { get; set; } = [];
         public Ssalddel.Contracts.Common.Drivers.DriverOfferPricingDto? Pricing { get; set; }
+        /// <summary>원의뢰의 확인된 기사 약정액입니다. 고객 청구액·예상 수익·입금 완료 금액과 구분합니다.</summary>
+        public decimal? 기사지급예정운임 { get; set; }
+        /// <summary>지급 예정액의 원장 근거입니다. 근거 없는 금액은 투영하지 않습니다.</summary>
+        public string? 기사지급예정운임근거 { get; set; }
         public string 의뢰Id { get; set; } = string.Empty;
         public string 화물종류 { get; set; } = string.Empty;
+        /// <summary>원의뢰에 입력된 운송 방식입니다. 표시 명칭과 별개로 원문을 보존합니다.</summary>
+        public string? 운송방식 { get; set; }
+        public string? 차량종류 { get; set; }
+        public decimal? 화물중량Kg { get; set; }
+        public int? 화물수량 { get; set; }
+        /// <summary>원의뢰의 UTC 상차 시간창입니다. null은 시간 미확인입니다.</summary>
+        public DateTime? 상차시간창시작일시 { get; set; }
+        public DateTime? 상차시간창종료일시 { get; set; }
+        /// <summary>원의뢰의 UTC 하차 시간창입니다. null은 시간 미확인입니다.</summary>
+        public DateTime? 하차시간창시작일시 { get; set; }
+        public DateTime? 하차시간창종료일시 { get; set; }
         public string 운송의뢰유형코드 { get; set; } = "GeneralCargoTransport";
         public string 운송의뢰유형표시 { get; set; } = "일반 화물";
         public bool 공동주문운송여부 { get; set; }
@@ -231,8 +246,19 @@ namespace Ssalddel.Hubs
         public bool 차량적합여부 { get; set; } = true;
         public string[] 차량부적합사유 { get; set; } = Array.Empty<string>();
         public string[] 차량경고 { get; set; } = Array.Empty<string>();
-        public DateTime? 추천시작시각 { get; set; }
-        public DateTime? 추천만료시각 { get; set; }
+        private DateTime? _추천시작시각;
+        private DateTime? _추천만료시각;
+        /// <summary>DB에서 Kind 없이 읽힌 추천 원장의 UTC 의미를 JSON 응답에서도 보존합니다.</summary>
+        public DateTime? 추천시작시각
+        {
+            get => _추천시작시각;
+            set => _추천시작시각 = Ssalddel.Contracts.Driver.Recommendation.기사추천시각Policy.Utc로정규화(value);
+        }
+        public DateTime? 추천만료시각
+        {
+            get => _추천만료시각;
+            set => _추천만료시각 = Ssalddel.Contracts.Driver.Recommendation.기사추천시각Policy.Utc로정규화(value);
+        }
         public int 추천라운드 { get; set; }
 
         public new decimal? 직선거리Km

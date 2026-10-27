@@ -3,7 +3,7 @@ using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace SellerApp.Services;
 
-public sealed class SellerAuthSession : ISsalddelAccessTokenProvider
+public sealed class SellerAuthSession : ISsalddelAccessTokenProvider, ISsalddel현재사용자변경알림
 {
     private readonly IClientSecureTokenStore tokenStore;
     private readonly IClientSessionGuard sessionGuard;
