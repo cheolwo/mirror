@@ -17,7 +17,7 @@ namespace Ssalddel.Simulation.Application
         "Solo LocalProcess에서 공통 Simulation Core의 WI와 Session 명령을 실행한다.",
         Boundary = "Unity GameObject가 아니라 Local Runtime이 권위 상태를 변경한다.",
         SubmoduleKey = SsalddelEvidenceSubmoduleKeys.E2로컬권위Adapter)]
-    public sealed class LocalSimulationRuntime : ISimulationRuntimeModules,
+    public sealed partial class LocalSimulationRuntime : ISimulationRuntimeModules,
         ISimulationSessionRuntime, ISimulationNatureSurvivalRuntime,
         ISimulationSessionGameplayRuntime, ISimulationWorldInteractionRuntime,
         ISimulationBattleRuntime, ISimulationActorEquipmentRuntime,

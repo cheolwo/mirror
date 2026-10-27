@@ -203,6 +203,7 @@ namespace Ssalddel.Simulation.Contracts
             SeasonalOperationsCampaign { get; set; }
         public 프랜차이즈공급망StateSnapshot? FranchiseSupply
             { get; set; }
+        public SimulationFulfillmentStateSnapshot? Fulfillment { get; set; }
     }
 
     public sealed class SimulationWorldContextSnapshot

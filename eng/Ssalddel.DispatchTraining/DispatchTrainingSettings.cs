@@ -15,7 +15,7 @@ internal sealed class DispatchTrainingSettings
     internal required string AccountPassword { get; init; }
     internal required IReadOnlyDictionary<string, string?> Configuration { get; init; }
 
-    internal static DispatchTrainingSettings Load()
+    internal static DispatchTrainingSettings Load(bool cargoCandidateAI = false)
     {
         var root = FindRoot();
         var artifacts = Path.Combine(root, "artifacts", "local", "dispatch-training-r58");
@@ -30,6 +30,8 @@ internal sealed class DispatchTrainingSettings
             ["ConnectionStrings:DefaultConnection"] = sql.ConnectionString,
             ["MongoDb:ConnectionString"] = MongoConnection, ["MongoDb:Database"] = DatabaseName,
             ["TransientState:Provider"] = "Memory", ["SsalddelExecution:Mode"] = "Simulation",
+            // Development·loopback·전용 DB 호스트의 합성 기사 시험만 우회하며 실제 자격 승인으로 저장하지 않는다.
+            ["TransportQualification:AllowSimulationBypass"] = "true",
             ["SsalddelExecution:DevelopmentReadOnly"] = "false", ["ObjectStorage:Provider"] = "Local",
             ["ObjectStorage:Local:RootPath"] = Path.Combine(artifacts, "photos"),
             ["DatabaseInitialization:RunAtStartup"] = "false", ["PersonalDataProtection:RequireCertificate"] = "false",
@@ -46,6 +48,8 @@ internal sealed class DispatchTrainingSettings
             ["VersionFeatureFlags:FoodDeliveryWorkflow"] = "false",
             ["VersionFeatureFlags:OperationalWorldObservationWorkflow"] = "false",
             ["FoodDispatchOllama:Enabled"] = "false", ["MobileFieldTest:Enabled"] = "false",
+            ["CargoDispatchOllama:Enabled"] = cargoCandidateAI ? "true" : "false",
+            ["CargoDispatchOllama:TimeoutSeconds"] = cargoCandidateAI ? "5" : "2",
             ["ObservableOperationsVerification:Enabled"] = "false", ["FoodObserverVerification:Enabled"] = "false",
             ["AgriculturalFisheriesBatch:Enabled"] = "false", ["CommunityPostEmailNotifications:Enabled"] = "false",
             ["Logging:LogLevel:Default"] = "Critical", ["Serilog:MinimumLevel:Default"] = "Fatal",
@@ -67,6 +71,7 @@ internal sealed class DispatchTrainingSettings
     {
         var sql = new MySqlConnectionStringBuilder(config.GetConnectionString("DefaultConnection") ?? "");
         if (!environment.IsDevelopment() || config["SsalddelExecution:Mode"] != "Simulation"
+            || !config.GetValue<bool>("TransportQualification:AllowSimulationBypass")
             || sql.Server != "127.0.0.1" || sql.Port != 13312 || sql.Database != DatabaseName || sql.UserID != "dispatch_training"
             || config["MongoDb:ConnectionString"] != MongoConnection || config["MongoDb:Database"] != DatabaseName
             || config["ObjectStorage:Provider"] != "Local" || config.GetValue<bool>("DatabaseInitialization:RunAtStartup"))

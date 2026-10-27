@@ -1,0 +1,315 @@
+@namespace SsalddelAdmin.Components.DispatchTraining
+@using System.Globalization
+@using Microsoft.AspNetCore.Components
+@using Ssalddel.Contracts.Admin.DispatchTraining
+@implements IDisposable
+
+<section class="cargo-training" aria-labelledby="cargo-training-title" aria-busy="@Busy.ToString().ToLowerInvariant()">
+    <header class="training-header">
+        <div><p class="eyebrow">화물 배차 · 학습 준비</p><h1 id="cargo-training-title">법정동별 배차 사례 검토</h1>
+            <p class="intro">주문 조건과 기사 후보를 비교하고, 적절한 판단을 기록합니다.</p></div>
+        <button type="button" class="button secondary" disabled="@Busy" @onclick="ReloadAsync">최신 기록 확인</button>
+    </header>
+    <p class="boundary">가상 주문·기사로 검토합니다. 모델 비교와 검토 저장은 실제 배차나 모델 학습 완료를 뜻하지 않습니다.</p>
+    @if (_error is not null)
+    { <div class="notice error" role="alert"><strong>@_error</strong><p>작성한 의견은 이 화면에 보관됩니다. 최신 기록을 확인한 뒤 다시 판단해 주세요.</p>
+        <button type="button" class="button secondary" disabled="@Busy" @onclick="ReloadAsync">최신 기록 다시 확인</button></div> }
+    @if (_message is not null) { <p class="notice" role="status">@_message</p> }
+    @if (_loading) { <p class="loading" role="status">사례와 저장된 검토를 확인하고 있습니다.</p> }
+    else if (_workspace is null)
+    { <div class="empty"><h2>사례를 불러오지 못했습니다</h2><p>연결을 확인하고 최신 기록을 다시 확인해 주세요.</p></div> }
+    else if (_workspace.Cases.Count == 0)
+    { <div class="empty"><h2>아직 검토할 사례가 없습니다</h2><p>학습 준비 자료가 연결되면 이곳에서 확인할 수 있습니다.</p></div> }
+    else
+    {
+        <div class="overview" aria-label="현재 검토 현황">
+            <span>전체 <strong>@_workspace.Cases.Count</strong>건</span><span>사람 검토 <strong>@_workspace.Cases.Count(c => c.Review is not null)</strong>건</span>
+            <span>학습 후보 <strong>@_workspace.TrainingEligibleCount</strong>건</span><span>모델 학습 <strong>@(_workspace.WeightsTrained ? "실행 기록 있음" : "아직 실행하지 않음")</strong></span>
+        </div>
+        <div class="training-layout">
+            <aside class="case-panel" aria-label="배차 사례 목록">
+                <h2>검토할 사례</h2>
+                <div class="filters">
+                    <label>픽업 법정동<select value="@_region" disabled="@Busy" @onchange="ChangeRegion"><option value="">모든 법정동</option>
+                        @foreach (var region in Regions) { <option value="@region.LegalDongCode">@region.DisplayName</option> }</select></label>
+                    <label>자료 구분<select value="@_split" disabled="@Busy" @onchange="ChangeSplit"><option value="">전체</option><option value="review">학습 전 검토</option><option value="holdout">독립 평가</option></select></label>
+                    <label class="check"><input type="checkbox" checked="@_pendingOnly" disabled="@Busy" @onchange="ChangePending" />미검토만 보기</label>
+                </div>
+                <p class="muted">@VisibleCases.Count 건 표시</p>
+                <ol class="case-list">
+                    @foreach (var listedCase in VisibleCases)
+                    {
+                        <li><button type="button" class="case-button @(listedCase.CaseId == _selectedId ? "selected" : "")" disabled="@Busy" aria-current="@(listedCase.CaseId == _selectedId ? "true" : null)" @onclick="() => SelectCase(listedCase.CaseId)">
+                            <span class="case-title">@listedCase.Title</span><span class="case-place">@listedCase.PickupRegion.DisplayName → @listedCase.DropoffRegion.DisplayName</span>
+                            <span class="case-meta">@SplitLabel(listedCase.Split) · @CurrentReviewLabel(listedCase)</span></button></li>
+                    }
+                </ol>
+                @if (VisibleCases.Count == 0) { <p class="empty-list">이 조건에 맞는 사례가 없습니다. 필터를 바꿔 주세요.</p> }
+            </aside>
+            <main class="case-detail">
+                @if (Selected is { } item && CurrentDraft is { } draft)
+                {
+                    <section class="surface" aria-labelledby="selected-case-title">
+                        <div class="section-heading"><div><p class="eyebrow">@SplitLabel(item.Split) · @item.CaseId</p><h2 id="selected-case-title">@item.Title</h2></div><span class="status">@CurrentReviewLabel(item)</span></div>
+                        @if (item.Split == "holdout") { <p class="holdout-note">독립 평가 사례입니다. 검토해도 학습 자료 내보내기에서 제외됩니다.</p> }
+                        <p>@item.Situation</p>
+                        <dl class="order-facts"><div><dt>픽업 법정동</dt><dd>@item.PickupRegion.DisplayName</dd></div><div><dt>전달 법정동</dt><dd>@item.DropoffRegion.DisplayName</dd></div>
+                            <div><dt>픽업 마감</dt><dd>@Number(item.PickupDeadlineMinutes)분 이내</dd></div><div><dt>물품</dt><dd>@Number(item.WeightKg)kg · @Number(item.VolumeLiters)L</dd></div><div><dt>운임</dt><dd>@item.Fare.ToString("N0", CultureInfo.InvariantCulture)원</dd></div></dl>
+                    </section>
+                    <section class="surface" aria-labelledby="candidate-title"><h2 id="candidate-title">@(item.PlanSetSha256 is null ? "후보 기사" : "후보 수행 계획")</h2><p class="muted">@(item.PlanSetSha256 is null ? "기존 약속과 적재 조건을 충족하는지 먼저 확인합니다. 도착 예상은 현재 업무 종료 뒤의 이동을 포함합니다." : "개별 주문의 가능 여부와 여러 주문을 함께 수행할 수 있는지는 다릅니다. 확인된 계획만 선택할 수 있습니다.")</p>
+                        <div class="table-scroll" tabindex="0" role="region" aria-label="후보 기사 조건 비교 표">
+                            <table><caption class="sr-only">선택 사례의 기사별 적격 여부와 도착·대기·가용 지역·적재 조건</caption><thead><tr><th scope="col">기사·차량</th><th scope="col">가능 여부</th><th scope="col">도착 예상</th><th scope="col">대기</th><th scope="col">업무 종료·가용 지역</th><th scope="col">적재 여력</th></tr></thead><tbody>
+                                @foreach (var candidate in item.Candidates)
+                                { <tr class="@(!candidate.IsFeasibleChoice ? "excluded" : "")"><th scope="row">@candidate.Id<small>@candidate.Vehicle</small></th><td><span class="@(candidate.IsFeasibleChoice ? "eligible-label" : "excluded-label")">@(candidate.IsFeasibleChoice ? "가능" : "제외")</span>
+                                        @if (candidate.ExclusionReasons.Count > 0) { <ul class="reason-list">@foreach (var reason in candidate.ExclusionReasons) { <li>@ReasonLabel(reason)</li> }</ul> }</td>
+                                    <td>@Minutes(candidate.PickupEtaMinutes)<small>현재 업무 @Number(candidate.AvailableAfterMinutes)분 후 종료</small></td><td>@Number(candidate.IdleWaitMinutes)분</td>
+                                    <td>@candidate.AvailableRegion.DisplayName<small>현재: @candidate.CurrentRegion.DisplayName</small></td><td>@Number(candidate.CapacityKg)kg<small>@Number(candidate.CapacityLiters)L</small></td></tr> }
+                            </tbody></table>
+                        </div>
+                        <details class="evidence"><summary>후보별 점수·추가 조건</summary>@foreach (var candidate in item.Candidates)
+                            { <div class="score-row"><strong>@candidate.Id · 총점 @Number(candidate.Score)</strong><p>위치 @Number(candidate.LocationAgeMinutes)분 전 · 신규 수신 @(candidate.Receiving ? "켜짐" : "꺼짐") · 기존 약속 @(candidate.CommitmentsFeasible ? "유지 가능" : "유지 불가") · 복귀 방향 @(candidate.ReturnDirection ? "맞음" : "해당 없음")</p>
+                                <dl class="score-parts">@foreach (var part in candidate.ScoreParts) { <div><dt>@ReasonLabel(part.Key)</dt><dd>@Number(part.Value)</dd></div> }</dl><p>조건 근거 코드: @candidate.Eligibility<br />제외 근거 코드: @(candidate.ExclusionReasons.Count == 0 ? "없음" : string.Join(", ", candidate.ExclusionReasons))</p></div> }</details>
+                    </section>
+                    @if (item.PlanSetSha256 is not null)
+                    {
+                        <section class="surface plan-evidence" aria-labelledby="plan-title">
+                            <h2 id="plan-title">상하차 순서와 약속 확인</h2>
+                            <p class="muted">가상 입력으로 기존 일정·구간 적재 검사를 실행한 결과입니다. 실제 도로 소요시간과 운영 중인 기사 상태는 아닙니다.</p>
+                            @foreach (var candidate in item.Candidates.Where(x => x.Plan is not null))
+                            {
+                                var plan = candidate.Plan!;
+                                <article class="plan-choice" data-plan-candidate="@candidate.Id">
+                                    <div class="section-heading"><h3>@candidate.Id · @plan.RequestIds.Count 건 수행</h3><span class="@(candidate.IsFeasibleChoice ? "eligible-label" : "excluded-label")">@(candidate.IsFeasibleChoice ? "가능" : plan.Verified ? "불가" : "정보 부족")</span></div>
+                                    <p class="plan-summary">@PlanReason(plan) · 총 @Minutes(plan.TotalMinutes) · 합의 보수 @(plan.AgreedDriverCompensation is { } reward ? Number(reward) + "원" : "미확인")</p>
+                                    <ol class="plan-stops" aria-label="@(candidate.Id + " 상하차 순서")">
+                                        @foreach (var stop in plan.Stops.OrderBy(x => x.Sequence))
+                                        {
+                                            <li><strong>@stop.RequestId @(stop.Kind == "pickup" ? "상차" : "하차")</strong><span>도착 @Minutes(stop.ArrivalMinutes) · 작업 @Minutes(stop.HandlingMinutes) · 완료 @Minutes(stop.FinishMinutes)</span></li>
+                                        }
+                                    </ol>
+                                    <details class="evidence"><summary>구간별 적재·계획 근거</summary>
+                                        <ul class="plan-segments">@foreach (var segment in plan.Segments)
+                                            { <li>@(segment.Kind == "initial" ? "처음 적재" : segment.RequestId + (segment.Kind == "pickup" ? " 상차 후" : " 하차 전")) · @Number(segment.WeightKg)kg · @Number(segment.VolumeCbm * 1000)L · @segment.Pallets 팔레트</li> }</ul>
+                                        <dl class="plan-identities"><div><dt>기사</dt><dd>@plan.DriverId</dd></div><div><dt>계획 SHA-256</dt><dd>@plan.PlanSha256</dd></div><div><dt>계획 입력 SHA-256</dt><dd>@plan.InputSha256</dd></div><div><dt>탐색 범위</dt><dd>@plan.SearchScope</dd></div></dl>
+                                    </details>
+                                </article>
+                            }
+                        </section>
+                    }
+                    <section class="surface" aria-labelledby="decision-title"><div class="section-heading"><h2 id="decision-title">판단 비교</h2><button type="button" class="button secondary" disabled="@(Busy || item.PlanSetSha256 is not null && !item.Candidates.Any(c => c.IsFeasibleChoice))" @onclick="CompareAsync">@(_comparing ? "모델 비교 중…" : "이 사례 모델과 비교")</button></div>
+                        @if (item.PlanSetSha256 is not null && !item.Candidates.Any(c => c.IsFeasibleChoice)) { <p class="notice warning">확인된 가능 계획이 없어 모델 비교를 시작하지 않습니다. 부족한 정보를 확인하거나 배차 보류 의견을 남겨 주세요.</p> }
+                        <p class="muted">모델 응답에 시간이 걸릴 수 있습니다. 비교 결과는 별도로 남고 실제 배차를 바꾸지 않습니다.</p>
+                        <div class="decision-grid"><div><h3>기존 규칙</h3><p class="decision-value">@DecisionLabel(item.Engine)</p><p class="muted">@Reasons(item.Engine)</p></div><div><h3>모델</h3><p class="decision-value">@DecisionLabel(item.Ai)</p><p class="muted">@Reasons(item.Ai)</p>
+                                @if (item.Ai.ElapsedMilliseconds is { } elapsed) { <p class="muted">응답 @elapsed.ToString("N0", CultureInfo.InvariantCulture)ms</p> }</div><div><h3>저장된 사람 의견</h3><p class="decision-value">@ReviewLabel(item.Review?.Outcome)</p><p>@SavedChoice(item.Review)</p>
+                                @if (item.Review is { } review) { <p class="muted">검토 @review.Revision 차 · @review.RecordedAtUtc.ToLocalTime().ToString("MM-dd HH:mm")</p> }</div></div>
+                        @if (item.CodexOpinion is { } codex) { <div class="codex-opinion"><h3>코덱스 의견</h3><p>@DecisionLabel(codex)</p><p class="muted">@Reasons(codex) · 사람 승인과 별개입니다.</p></div> }
+                        @if (item.Ai.RawResponse is not null)
+                        { <details class="evidence"><summary>모델 원응답과 검증 결과</summary><p>응답 구조 @(item.Ai.StructureValid == true ? "확인" : "사용 불가") · 사실 근거 @(item.Ai.FactsValid == true ? "확인" : "사용 불가")</p><pre class="model-response">@item.Ai.RawResponse</pre></details> }
+                    </section>
+                    <section class="surface review-editor" aria-labelledby="review-title"><h2 id="review-title">내 검토</h2><p class="muted">@(item.PlanSetSha256 is null ? "둘 이상이 적절하면 여러 기사를 함께 선택할 수 있습니다." : "여러 대안이 적절하면 함께 선택합니다. 선택한 계획들을 동시에 배차한다는 뜻은 아닙니다.")</p>
+                        @if (item.Review is not null && !item.ReviewCurrent) { <p class="notice warning">저장된 의견 이후 모델 비교가 바뀌었습니다. 다시 검토하기 전에는 학습 후보로 내보내지 않습니다.</p> }
+                        @if (_requiresReload) { <p class="notice warning" role="status">저장 결과 또는 동시 변경을 먼저 확인해야 합니다. 위의 ‘최신 기록 확인’을 눌러 주세요.</p> }
+                        <fieldset disabled="@Busy"><legend>검토 결과</legend><div class="outcome-options">
+                            @foreach (var outcome in Outcomes) { <label class="check"><input type="radio" name="cargo-review-outcome" value="@outcome.Code" checked="@(draft.Outcome == outcome.Code)" @onchange="() => SetOutcome(outcome.Code)" />@outcome.Label</label> }
+                        </div></fieldset>
+                        <fieldset disabled="@(Busy || draft.Outcome == "defer")"><legend>허용할 배차 결과</legend><div class="candidate-options">
+                            @foreach (var candidate in item.Candidates) { <label class="check candidate-option @(!candidate.IsFeasibleChoice ? "not-eligible" : "")"><input type="checkbox" checked="@draft.Candidates.Contains(candidate.Id)" disabled="@(!candidate.IsFeasibleChoice)" @onchange="args => ToggleCandidate(candidate.Id, args)" />@candidate.Id <span class="muted">@(candidate.IsFeasibleChoice ? candidate.Vehicle : "제외된 후보")</span></label> }
+                            <label class="check"><input type="checkbox" checked="@draft.AcceptHold" @onchange="SetAcceptHold" />기사 배정 없이 보류하는 것도 허용</label>
+                        </div></fieldset>
+                        <label class="note-label">검토 메모<textarea rows="3" maxlength="1000" disabled="@Busy" value="@draft.Note" @oninput="SetNote" placeholder="왜 이 기사 또는 보류가 적절한지 적어 주세요. 개인정보는 입력하지 마세요."></textarea></label>
+                        <div class="save-row"><button type="button" class="button primary" disabled="@(!CanSave)" @onclick="SaveAsync">@(_saving ? "저장 확인 중…" : "검토 저장")</button><p class="muted" role="status">@SaveHelp</p></div>
+                    </section>
+                    <details class="surface provenance"><summary>자료 출처·판본 확인</summary><dl><div><dt>자료</dt><dd>@_workspace.DataSource</dd></div><div><dt>법정동 자료</dt><dd>@_workspace.RegionSnapshotDate</dd></div><div><dt>자료 묶음</dt><dd>@_workspace.DatasetId</dd></div>
+                        <div><dt>자료 SHA-256</dt><dd>@_workspace.DatasetSha256</dd></div><div><dt>정책 SHA-256</dt><dd>@_workspace.PolicySha256</dd></div><div><dt>법정동 출처 SHA-256</dt><dd>@_workspace.RegionSourceSha256</dd></div><div><dt>입력 SHA-256</dt><dd>@item.InputSha256</dd></div>
+                        @if (item.PlanSetSha256 is not null) { <div><dt>계획 후보 묶음 SHA-256</dt><dd>@item.PlanSetSha256</dd></div> }
+                        <div><dt>모델</dt><dd>@(item.Ai.Model ?? "미실행")</dd></div><div><dt>모델 지문</dt><dd>@(item.Ai.ModelDigest ?? "미확인")</dd></div><div><dt>프롬프트 SHA-256</dt><dd>@(item.Ai.PromptSha256 ?? "미실행")</dd></div><div><dt>모델 입력 SHA-256</dt><dd>@(item.Ai.InputSha256 ?? "미실행")</dd></div>
+                        <div><dt>기존 규칙 근거 코드</dt><dd>@string.Join(", ", item.Engine.ReasonCodes)</dd></div><div><dt>모델 근거 코드</dt><dd>@(item.Ai.ReasonCodes.Count == 0 ? "없음" : string.Join(", ", item.Ai.ReasonCodes))</dd></div><div><dt>모델 실행 상태·오류 코드</dt><dd>@item.Ai.Status · @(item.Ai.ErrorCode ?? "없음")</dd></div></dl></details>
+                }
+                else { <div class="empty"><h2>사례를 선택해 주세요</h2><p>왼쪽 목록에서 검토할 주문을 선택합니다.</p></div> }
+            </main>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ICargoRegionalTrainingReviewClient Client { get; set; } = default!;
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly Dictionary<string, Draft> _drafts = new(StringComparer.Ordinal);
+    private CargoTrainingWorkspace? _workspace;
+    private string? _selectedId, _error, _message;
+    private string _region = "", _split = "";
+    private bool _pendingOnly, _loading = true, _saving, _comparing, _requiresReload, _disposed;
+    private CargoTrainingReviewCommand? _uncertainCommand;
+    private static readonly (string Code, string Label)[] Outcomes = [("pending", "미검토"), ("approve", "적절함"), ("correct", "수정 의견"), ("defer", "판단 보류")];
+    private bool Busy => _loading || _saving || _comparing;
+    private CargoTrainingCase? Selected => _workspace?.Cases.FirstOrDefault(c => c.CaseId == _selectedId);
+    private Draft? CurrentDraft => Selected is { } c ? GetDraft(c) : null;
+    private List<CargoTrainingRegion> Regions => _workspace?.Cases.Select(c => c.PickupRegion).DistinctBy(r => r.LegalDongCode).OrderBy(r => r.DisplayName, StringComparer.Ordinal).ToList() ?? [];
+    private List<CargoTrainingCase> VisibleCases => _workspace?.Cases.Where(c => (_region.Length == 0 || c.PickupRegion.LegalDongCode == _region) && (_split.Length == 0 || c.Split == _split) && (!_pendingOnly || !c.ReviewCurrent || c.Review?.Outcome == "pending")).ToList() ?? [];
+    private bool CanSave => !Busy && !_requiresReload && Selected is { } item && CurrentDraft is { } d && d.InputSha256 == item.InputSha256 && d.ObservedModelRunId == item.Ai.RunId && (d.Outcome is "approve" or "correct" or "defer")
+        && (d.Outcome == "defer" ? d.Candidates.Count == 0 && !d.AcceptHold : d.AcceptHold || d.Candidates.Any(id => item.Candidates.Any(c => c.Id == id && c.IsFeasibleChoice)));
+    private string SaveHelp => _requiresReload ? "최신 기록을 확인해 주세요." : CurrentDraft?.Outcome == "pending" ? "검토 결과를 선택해 주세요." : CurrentDraft is { } d && (d.Outcome is "approve" or "correct") && d.Candidates.Count == 0 && !d.AcceptHold ? "허용할 기사 또는 배차 보류를 선택해 주세요." : "저장은 실제 배차나 모델 학습을 실행하지 않습니다.";
+    protected override async Task OnInitializedAsync() => await LoadAsync(false);
+    private async Task ReloadAsync() { if (!Busy) await LoadAsync(true); }
+    private async Task LoadAsync(bool preserveDraft)
+    {
+        _loading = true; _error = null; _message = null;
+        try
+        {
+            var next = await Client.LoadAsync(_lifetime.Token);
+            if (_disposed) return;
+            var oldDataset = _workspace?.DatasetSha256;
+            _workspace = next;
+            if (!preserveDraft) _drafts.Clear();
+            if (oldDataset is not null && oldDataset != next.DatasetSha256)
+            { _drafts.Clear(); _uncertainCommand = null; _message = "자료 판본이 바뀌었습니다. 새 조건으로 다시 판단해 주세요."; }
+            else if (_uncertainCommand is { } pending)
+            {
+                var saved = next.Cases.FirstOrDefault(c => c.CaseId == pending.CaseId)?.Review;
+                if (saved?.RequestId == pending.RequestId)
+                { _drafts.Remove(pending.CaseId); _message = "앞선 저장을 최신 기록에서 확인했습니다."; }
+                else _message = "최신 기록을 불러왔습니다. 저장된 의견과 보관한 입력을 비교하고 다시 판단해 주세요.";
+                _uncertainCommand = null;
+            }
+            foreach (var item in next.Cases)
+                if (_drafts.TryGetValue(item.CaseId, out var draft))
+                {
+                    if (draft.InputSha256 != item.InputSha256) _drafts.Remove(item.CaseId);
+                    else
+                    {
+                        draft.ExpectedRevision = item.ReviewRevision;
+                        if (draft.ObservedModelRunId != item.Ai.RunId)
+                        { draft.Outcome = "pending"; draft.ObservedModelRunId = item.Ai.RunId; _message = "모델 비교 기록이 바뀌었습니다. 보관한 의견을 확인하고 검토 결과를 다시 선택해 주세요."; }
+                    }
+                }
+            _requiresReload = false;
+            KeepSelection();
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (CargoTrainingReviewException ex) { if (!_disposed) _error = ReviewError(ex.Code); }
+        catch { if (!_disposed) _error = "사례 조회에 실패했습니다."; }
+        finally { if (!_disposed) _loading = false; }
+    }
+    private void KeepSelection() { if (!VisibleCases.Any(c => c.CaseId == _selectedId)) _selectedId = VisibleCases.FirstOrDefault()?.CaseId; }
+    private void SelectCase(string id) { if (!Busy) { _selectedId = id; _message = null; } }
+    private void ChangeRegion(ChangeEventArgs e) { if (!Busy) { _region = e.Value?.ToString() ?? ""; KeepSelection(); } }
+    private void ChangeSplit(ChangeEventArgs e) { if (!Busy) { _split = e.Value?.ToString() ?? ""; KeepSelection(); } }
+    private void ChangePending(ChangeEventArgs e) { if (!Busy) { _pendingOnly = e.Value is true; KeepSelection(); } }
+    private Draft GetDraft(CargoTrainingCase c)
+    {
+        if (!_drafts.TryGetValue(c.CaseId, out var draft))
+        {
+            draft = new() { InputSha256 = c.InputSha256, ObservedModelRunId = c.Ai.RunId, ExpectedRevision = c.ReviewRevision, Outcome = c.ReviewCurrent ? c.Review!.Outcome : "pending", Note = c.Review?.Note ?? "", AcceptHold = c.Review?.AcceptHold ?? false };
+            foreach (var id in c.Review?.AcceptableCandidateIds ?? []) if (c.Candidates.Any(candidate => candidate.Id == id && candidate.IsFeasibleChoice)) draft.Candidates.Add(id);
+            _drafts[c.CaseId] = draft;
+        }
+        return draft;
+    }
+    private void SetOutcome(string outcome)
+    {
+        if (!Busy && CurrentDraft is { } d)
+        {
+            d.Outcome = outcome;
+            if (outcome == "defer") { d.Candidates.Clear(); d.AcceptHold = false; }
+        }
+    }
+    private void ToggleCandidate(string id, ChangeEventArgs e)
+    { if (!Busy && CurrentDraft is { } d && Selected!.Candidates.Any(c => c.Id == id && c.IsFeasibleChoice)) { if (e.Value is true) d.Candidates.Add(id); else d.Candidates.Remove(id); } }
+    private void SetAcceptHold(ChangeEventArgs e) { if (!Busy && CurrentDraft is { } d) d.AcceptHold = e.Value is true; }
+    private void SetNote(ChangeEventArgs e) { if (!Busy && CurrentDraft is { } d) d.Note = e.Value?.ToString() ?? ""; }
+    private async Task SaveAsync()
+    {
+        if (!CanSave || Selected is not { } item || CurrentDraft is not { } draft || _workspace is null) return;
+        var command = new CargoTrainingReviewCommand { RequestId = Guid.NewGuid().ToString("N"), DatasetSha256 = _workspace.DatasetSha256, CaseId = item.CaseId, InputSha256 = item.InputSha256,
+            PlanSetSha256 = item.PlanSetSha256, ExpectedRevision = draft.ExpectedRevision, ObservedModelRunId = draft.ObservedModelRunId, Outcome = draft.Outcome, AcceptableCandidateIds = draft.Candidates.OrderBy(id => id, StringComparer.Ordinal).ToList(), AcceptHold = draft.AcceptHold, Note = draft.Note };
+        _saving = true; _error = null; _message = null;
+        try
+        {
+            var next = await Client.RecordAsync(command, _lifetime.Token);
+            if (_disposed) return;
+            _workspace = next;
+            if (next.Cases.FirstOrDefault(c => c.CaseId == command.CaseId)?.Review?.RequestId != command.RequestId)
+            { _requiresReload = true; _uncertainCommand = command; _error = "저장된 검토를 아직 확인하지 못했습니다."; return; }
+            _drafts.Remove(item.CaseId); _message = "검토를 저장하고 최신 기록을 확인했습니다."; _requiresReload = false; _uncertainCommand = null;
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (CargoTrainingReviewException ex) { if (!_disposed) { _requiresReload = true; _uncertainCommand = command; _error = ReviewError(ex.Code); } }
+        catch { if (!_disposed) { _requiresReload = true; _uncertainCommand = command; _error = "저장 결과를 확인하지 못했습니다. 다른 창에서 검토가 바뀌었을 수도 있습니다."; } }
+        finally { if (!_disposed) _saving = false; }
+    }
+    private async Task CompareAsync()
+    {
+        if (Busy || Selected is not { } item) return;
+        _comparing = true; _error = null; _message = "한 사례의 모델 판단을 기다리고 있습니다. 실제 배차는 바뀌지 않습니다.";
+        try
+        {
+            var next = await Client.CompareAsync(item.CaseId, item.InputSha256, _lifetime.Token);
+            if (!_disposed)
+            {
+                _workspace = next;
+                var changed = next.Cases.FirstOrDefault(c => c.CaseId == item.CaseId);
+                if (changed is not null && _drafts.TryGetValue(item.CaseId, out var draft) && draft.ObservedModelRunId != changed.Ai.RunId)
+                { draft.Outcome = "pending"; draft.ObservedModelRunId = changed.Ai.RunId; }
+                _message = "모델 비교 기록을 확인했습니다. 판단과 실행 상태를 보고 검토 결과를 다시 선택해 주세요.";
+            }
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (CargoTrainingReviewException ex) { if (!_disposed) { _message = null; _error = ReviewError(ex.Code); } }
+        catch { if (!_disposed) { _message = null; _error = "모델 비교 결과를 불러오지 못했습니다. 작성한 검토 의견은 유지됩니다."; } }
+        finally { if (!_disposed) _comparing = false; }
+    }
+    private static string Number(decimal value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string PlanReason(CargoTrainingPlan plan) => plan.ReasonCode switch
+    {
+        "CargoPlan.Verified" => "순서·작업시간·구간 적재 확인",
+        "FreightSegment.CapacityExceeded" => "함께 싣는 구간에서 적재 한도 초과",
+        "CargoPlan.DeadlineExceeded" => "작업 완료가 약속 시간 초과",
+        "CargoPlan.HandlingTimeMissing" => "상하차 작업시간 미확인",
+        _ => plan.Verified ? "수행 조건을 충족하지 못함" : "필요한 근거 미확인"
+    };
+    private static string Minutes(decimal? value) => value is { } v ? Number(v) + "분" : "미확인";
+    private static string SplitLabel(string split) => split == "holdout" ? "독립 평가" : "학습 전 검토";
+    private static string ReviewLabel(string? outcome) => outcome switch { "approve" => "적절함", "correct" => "수정 의견", "defer" => "판단 보류", _ => "미검토" };
+    private static string CurrentReviewLabel(CargoTrainingCase item) => item.Review is not null && !item.ReviewCurrent ? "다시 검토 필요" : ReviewLabel(item.Review?.Outcome);
+    private static string SavedChoice(CargoTrainingReview? review)
+    {
+        if (review is null) return "아직 의견이 없습니다.";
+        var choice = string.Join(" · ", review.AcceptableCandidateIds.Concat(review.AcceptHold ? ["배차 보류 허용"] : Array.Empty<string>()));
+        return choice.Length > 0 ? choice : "허용 결과 미지정";
+    }
+    private static string DecisionLabel(CargoTrainingDecision decision) => decision.Status switch
+    { "not_run" when decision.Source == "plan_checks_only" => "계획 검사만 실행 · 배정 선택 미실행", "not_run" => "아직 실행하지 않음", "hold" or "held" or "deferred" => "배차 보류", "invalid" => "판단 결과 사용 불가 · 응답 검증 실패", "timeout" => "판단 결과 없음 · 응답 시간 초과", "failed" or "error" or "unavailable" => "판단 결과 없음 · 실행 실패", "valid" when decision.CandidateId is null => "배차 보류", _ => decision.CandidateId is { Length: > 0 } id ? id + " 선택" : "판단 결과 미확인" };
+    private static string Reasons(CargoTrainingDecision decision) => decision.Source == "plan_checks_only" ? "권역·대기·수익을 포함한 배정 선택 규칙은 실행하지 않았습니다." : decision.Status == "not_run" ? "비교 전입니다." : decision.ErrorCode is { Length: > 0 } ? "모델 실행이 완료되지 않았습니다. 기존 규칙과 별도로 기록합니다." : string.Join(" · ", decision.ReasonCodes.Select(ReasonLabel));
+    private static string ReviewError(string code) => code switch
+    {
+        "RevisionConflict" => "다른 창에서 검토가 바뀌었습니다.", "ModelResultChanged" => "모델 비교 기록이 바뀌었습니다.", "InputChanged" or "DatasetChanged" => "자료 또는 주문 조건의 판본이 바뀌었습니다.",
+        "PlanEvidenceChanged" => "계획 후보나 근거의 판본이 바뀌었습니다. 최신 기록으로 다시 검토해 주세요.",
+        "NoFeasiblePlan" => "확인된 가능 계획이 없어 모델 비교를 시작하지 않았습니다.",
+        "RequestConflict" => "앞선 저장 요청을 다시 확인해야 합니다.", "NoDecision" => "허용할 기사 또는 배차 보류를 선택해 주세요.", "Unavailable" => "지금은 검토 기록을 처리할 수 없습니다.",
+        "SourceManifestChanged" or "RegionArchiveChanged" => "근거 자료가 바뀌어 이전 판본을 확인해야 합니다.", "ReviewBusy" => "다른 검토 처리가 진행 중입니다. 잠시 뒤 최신 기록을 확인해 주세요.",
+        "ModelInputOrRunMismatch" => "모델 비교의 입력과 실행 기록이 맞지 않아 결과를 사용할 수 없습니다.", "ModelDeadlineExceeded" => "모델 응답 시간이 초과되었습니다. 기존 규칙과 별도로 기록합니다.", _ => "요청을 처리하지 못했습니다. 최신 기록을 다시 확인해 주세요."
+    };
+    private static string ReasonLabel(string code) => code.StartsWith("algorithm:", StringComparison.Ordinal) ? "기존 화물 규칙" : code switch
+    {
+        "distance" => "이동 거리", "waiting" or "wait" or "aging" => "대기 가점", "return" or "returnDirection" => "복귀 방향", "region" or "sameRegion" => "권역", "eta" => "도착 예상", "capacity" => "적재 조건", "base" => "기본 점수",
+        "not_receiving" or "receiving_off" => "신규 수신 꺼짐", "capacity_exceeded" => "적재 여력 부족", "insufficient_remaining_weight" => "남은 중량 여력 부족", "insufficient_remaining_volume" => "남은 부피 여력 부족",
+        "pickup_deadline_exceeded" or "pickup_late" or "pickup_deadline_not_feasible" => "픽업 마감 준수 불가", "stale_location" => "위치 정보 오래됨", "fixture_location_age_over_5_minutes" => "위치 확인 5분 초과",
+        "commitments_infeasible" or "existing_commitment_conflict" => "기존 약속 유지 불가", "missing_eta" or "pickup_eta_unknown" => "도착 예상 미확인",
+        "fixture_base" => "기본 점수", "fixture_wait_minutes_capped_40" => "대기 가점 · 최대 40점", "fixture_eta_penalty" => "도착 시간 감점", "fixture_return_direction_bonus" => "복귀 방향 가점",
+        "synthetic_input_projection" => "가상 조건 비교", "educational_fixture_gate_not_production_guard" => "사례의 마감·적재 조건 확인", "current_policy_baseline_not_optimal_label" => "현재 규칙의 비교 기준 · 최적해 미확인",
+        "LONG_WAIT" => "긴 대기 우선", "MEETS_DEADLINE" => "픽업 마감 충족", "CAPACITY_OK" => "적재 가능", "RETURN_DIRECTION" => "복귀 방향 일치", "LAST_DESTINATION" => "현재 업무의 마지막 목적지 기준",
+        "PLAN_VERIFIED" => "전체 계획 확인", "TIMING_VERIFIED" => "작업시간과 약속 확인", "LOAD_VERIFIED" => "구간별 적재 확인", "synthetic_plan_checks" => "가상 입력으로 일정·구간 적재 검사",
+        "NEAR_PICKUP" => "픽업 도착 예상이 짧음", "REGION_MATCH" => "가용 지역과 픽업 법정동 일치", "NO_ELIGIBLE" => "적격 기사 없음", "MISSING_DATA" => "판단 자료 부족", "REVIEW_NEEDED" => "사람의 검토 필요", _ => "추가 근거 · 상세 확인"
+    };
+    public void Dispose() { if (_disposed) return; _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); }
+    private sealed class Draft
+    {
+        public string InputSha256 { get; set; } = "";
+        public string? ObservedModelRunId { get; set; }
+        public long ExpectedRevision { get; set; }
+        public string Outcome { get; set; } = "pending";
+        public HashSet<string> Candidates { get; } = new(StringComparer.Ordinal);
+        public bool AcceptHold { get; set; }
+        public string Note { get; set; } = "";
+    }
+}

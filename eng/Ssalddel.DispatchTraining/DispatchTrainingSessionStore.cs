@@ -131,7 +131,7 @@ public sealed class DispatchTrainingSessionStore
         }
     }
 
-    private static void Validate(DispatchTrainingSessionState state)
+    internal static void Validate(DispatchTrainingSessionState state)
     {
         if (state.SchemaVersion != 1 || state.Revision < 0 || state.EventSequence < 0)
             throw new InvalidDataException("지원하지 않거나 손상된 훈련 기록입니다. 자동 초기화하지 않았습니다.");

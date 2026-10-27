@@ -123,11 +123,15 @@ public sealed class DispatchTrainingShadowAI : IDisposable
             using var envelope = JsonDocument.Parse(bytes.ToArray(), new JsonDocumentOptions { MaxDepth = 12 });
             RejectDuplicateProperties(envelope.RootElement);
             if (envelope.RootElement.ValueKind != JsonValueKind.Object
+                || !envelope.RootElement.TryGetProperty("model", out var model)
+                || model.ValueKind != JsonValueKind.String || model.GetString() != Model
+                || !envelope.RootElement.TryGetProperty("done", out var done) || done.ValueKind != JsonValueKind.True
                 || !envelope.RootElement.TryGetProperty("message", out var message)
                 || message.ValueKind != JsonValueKind.Object
-                || !message.TryGetProperty("role", out var role) || role.GetString() != "assistant"
+                || !message.TryGetProperty("role", out var role)
+                || role.ValueKind != JsonValueKind.String || role.GetString() != "assistant"
                 || !message.TryGetProperty("content", out var content) || content.ValueKind != JsonValueKind.String
-                || message.TryGetProperty("tool_calls", out var calls)
+                || message.TryGetProperty("tool_calls", out var calls) && calls.ValueKind != JsonValueKind.Null
                     && (calls.ValueKind != JsonValueKind.Array || calls.GetArrayLength() != 0))
                 return Unavailable("InvalidResponse");
             using var decision = JsonDocument.Parse(content.GetString()!, new JsonDocumentOptions { MaxDepth = 4 });

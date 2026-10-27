@@ -12,6 +12,8 @@ namespace Ssalddel.Simulation.Domain
     {
         public static string Calculate(SimulationSessionSavePackage package)
         {
+            if (SimulationFulfillmentSaveReplay.IsEnabled(package))
+                return SimulationFulfillmentSaveReplay.CalculateHash(package);
             if (string.Equals(package.SchemaVersion,
                     SimulationSaveSchemaVersions.V33,
                     StringComparison.Ordinal))
@@ -605,6 +607,12 @@ namespace Ssalddel.Simulation.Domain
                     Add(canonical, 경영SimulationSessionAggregate
                         .BuildSeasonalOperationsCampaignStatePayloadKey(
                             entry.SeasonalOperationsCampaignState));
+                }
+                if (entry.FulfillmentCommand != null)
+                {
+                    Add(canonical, entry.FulfillmentCommand.CommandId);
+                    Add(canonical, entry.FulfillmentCommand.ExpectedRevision);
+                    Add(canonical, SimulationFulfillmentEngine.BuildCommandKey(entry.FulfillmentCommand));
                 }
                 if (entry.FranchiseSupplyState != null)
                 {

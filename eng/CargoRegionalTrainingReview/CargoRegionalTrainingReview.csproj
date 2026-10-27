@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../Ssalddel/Ssalddel.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Content Include="../../SsalddelAdmin/Components/DispatchTraining/CargoRegionalTrainingReview.razor" Link="LinkedAdmin/CargoRegionalTrainingReview.razor" />
+    <Content Include="../../SsalddelAdmin/Components/DispatchTraining/CargoRegionalTrainingReview.razor.css" Link="LinkedAdmin/CargoRegionalTrainingReview.razor.css" />
+  </ItemGroup>
+</Project>

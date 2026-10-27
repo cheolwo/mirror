@@ -1,4 +1,16 @@
-# [기획 · 배달 플랫폼 운영 캠페인 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · 문답·개발 인계 r108]
+# [기획 · 배달 플랫폼 운영 캠페인 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · 문답·개발 인계 r114]
+
+[건물별 상세 외형 교체 r114](detailed-building-representation.r114.md)는 기존 건물·영상 근거를 재사용하는 독립 상세 표현 구조와 사진 참조 세 전면 모델을 연결했다. Unity143/143·최종32PNG/4시점exact복구·16초 비교 MP4와 원본 보존을 확인했고 [변경 기록](../../../../Changes/2026-10-26-detailed-building-representation-r114.md)에 초기 실패와 현재 비실측/전면 한정·불투명 유리·스트리밍/Game View/FPS 상한을 남긴다. 정본0·운영/공개 미실행이다.
+
+[디오라마 재질·조명 현실감 비교 r113](diorama-realism-preview.r113.md)은 기존 동일 입력을 opt-in 스타일 사본으로 표현한 비공개 연구다. Unity111/111·20PNG/정확한 복구·원본14파일 보존·16초 비교 영상 디코딩을 확인했다. [최종 변경 기록](../../../../Changes/2026-10-26-diorama-realism-r113.md)에 근접2/원거리2의 그림자 경계와 남은 실측/유리/기호형 geometry 결손을 남긴다. 정본·Game View·운영·공개로 승격하지 않는다.
+
+[영상→선분→디오라마 통합 시안 r112](video-segment-diorama-visual-demo.r112.md)은 같은 0111 관측과 선분 후보·공개외관 3곳을 동네 배경에서 비교한 비공개 시각 결과다. 106/106·12PNG 전후/복구·약32초 설명 MP4를 검증했고 [변경 기록](../../../../Changes/2026-10-26-video-segment-diorama-demo-r112.md)에 실패·수정·남은 한계를 남겼다. 원본/정본/Scene/승인은 보존하고 Game View·실측·전체 경로·공개는 미검증이다.
+
+[영상 위치 판독과 일일 연결 구현 r111](video-diorama-daily-connection.implementation.r111.md)은 r110에서 남긴 정수 시계·결과 결속/재개·건물 대응 후보를 보완했다. 통합 160/160과 실제 0112 사진 12장 판독·기존 13개 접수의 중복 없는 재검사를 확인했다. 실제 전체 경로/GPS·정본 적용·Unity 실행은 미확정이며 [변경 기록](../../../../Changes/2026-10-26-video-diorama-daily-connection-r111.md)에서 근거를 구분한다.
+
+[매일 영상에서 디오라마 자료 누적 r110](daily-video-diorama-accumulation.r110.md)은 접수·OCR·시간순 판독 뒤 도로 선분과 건물 외관을 나눠 쌓는 운영 기준이다. 배달 작업공간의 공통 절차와 단계/기록 JSON을 정본으로 연결하고 실제 PTS 출력·실행 영수증 연결·신규 입력·정본 건물 대응의 미해결을 기록했다. 새 자동 실행기나 추가 Unity 반영 완료는 아니다.
+
+[영상 근거와 건물별 외관 보완 r109](video-facade-refinement.implementation.r109.md)는 2026-10-26 직접 사용자 요청으로 승인한 좁은 재개 범위다. 기존 공간 배치·ID를 유지하는 표현 경계, 실제 PTS·보호 근거와 공개 외관 3건을 연결하며, 결과는 [변경·검증 기록](../../../../Changes/2026-10-26-sagajeong-video-facade-r109.md)에 남긴다. 현재 Overture 지도와 세 GIS 대상이 직접 대응하지 않아 별도 비공개 연구와 정본 적용을 구분한다. 전체 경영 게임·운영·학습의 보류를 해제하지 않는다.
 
 - 기획 ID: `PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION`
 - 기획 분야: 운영·시뮬레이션
@@ -10,6 +22,24 @@
 - 관련 결정: 기존 서버·Simulation·Unity 권위 분리 원칙 재사용
 - 관련 WI·PlayableLoop: `WI-OPS-SEASONAL-CAMPAIGN-ADVANCE` / 선택적 PlayableLoop 미등록
 - 플레이 순서: 자유
+
+## 별도 제안 — 플레이 경험의 AI 학습 환류 (2026-10-25)
+
+[디오라마 운영 지도 방향 r9](diorama-operating-map.direction.r9.md)은 디오라마를 운영 상황을 파악하는 맵으로 두고 장소·사람·업무 선택에서 기존 앱 상세로 이어지는 방향이다. 모바일·데스크톱 업무 완성을 우선하고 기존 원장·모의/운영 분리를 유지한다. 이번은 방향 정리이며 추가 Unity 구현·실행을 재개하지 않았다. [r8 첫 가상 출고 플레이와 후속 보류](multi-center-fulfillment.unity.r8.md)는 별도 근거로 보존한다.
+
+[다중 센터·위치 출고 첫 구현 r7](multi-center-fulfillment.implementation.r7.md)은 같은 Simulation 세션에서 센터·선반·담당 후보→예약→피킹·포장 준비와 저장/재생을 연결했다. Fast 320+54, Task Simulation/Unity 3,044 회귀를 통과했다. 실제 Unity View/Scene·Play Mode와 운영 출고는 미검증이며 전체 경영 게임 완료와 구분한다. r5/r6의 구현 보류는 이 첫 범위에서 해제했다.
+
+[센터→적재 위치→직원 작업의 다단계 출고 제안 r6](multi-center-fulfillment-decisions.proposal.r6.md)는 물류 판단의 범위 기준이다. 여러 센터의 적격 재고·내부 처리 가능성과 운송 조건을 비교한 뒤 위치별 재고와 담당 작업을 연결하고, 하위 병목은 센터 재선정·분할·일정 조정에 환류한다. r7을 넘어서는 재계획·운송·장면 연결은 후속이다.
+
+[위치 바코드·적치·출고 피킹 제안 r5](location-barcode-outbound-picking.proposal.r5.md)는 현장 물류 상세 기준이다. 선반 위치별 재고를 출고 재고 선택과 직원 피킹 지시에 연결하고 위치·물품·실제 수량 확인 및 부족/변경 시 보류·재배정을 구분한다. 현재 구현은 r7의 가상 상태 범위이며 실제 스캔·운영 재고·Unity 장면 연동 완료를 뜻하지 않는다.
+
+[공간·공급 계약·고용·입출고 통합 경영 제안 r4](space-supply-workforce-logistics.proposal.r4.md)를 최신 범위 제안으로 따른다. 건물주와 공간 계약·공급 계약/발주·현장 직원 고용/근무·입고부터 출고 인계까지를 핵심 경영에 포함한다. 기존 음식·화물·거점의 전문 조건과 수익·품질·보수 균형을 유지하며 이번에는 문서만 보완한다.
+
+[다섯 지역 플랫폼 경영 방향 r3](regional-platform-management-direction.r3.md)를 현재 방향으로 따른다. 플레이 중심은 중랑구·동대문구·광진구·구리시·노원구의 음식·화물 플랫폼 운영이며 주행 영상과 디오라마는 그 안에서 현장을 이해하고 판단하는 데 연결한다. 경영 경험을 축적하되 구현 보류와 기존 승인/운영 경계는 유지한다.
+
+[영상·디오라마·플레이의 공간 연결 제안 r2](video-diorama-play-experience.proposal.r2.md)는 공간 연결의 상세 제안으로 유지한다. 사용자가 구현보다 세 자료가 하나로 연결되는 방안부터 정리하도록 정정해 현재 구현은 보류한다. 기존 승인 판본·실제 원장·Scene·학습 상태는 바꾸지 않는다.
+
+[게임 경험→검토·학습→운영 추천 제안 r1](gameplay-experience-learning.proposal.r1.md)은 사용자의 통합 경영 게임 방향과 수익·배송 품질·참여자 보수의 균형 선택을 기록한다. 게임 측 경험 수집은 이 PLAN, 학습 내보내기·평가·운영 AI 소비는 기존 배차 코어 기획에 연결한다. `ProposedDesign / CaptureAdapterNotImplemented / WeightTrainingNotStarted`이며 아래 기존 문답·승인·구현 판본이나 실제 운영 권위를 승계하지 않는다.
 
 ## 문답 r107 — 긍정 맥락을 살린 선제 예외 안내
 

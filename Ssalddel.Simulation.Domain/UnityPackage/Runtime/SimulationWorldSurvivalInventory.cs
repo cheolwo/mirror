@@ -560,7 +560,8 @@ namespace Ssalddel.Simulation.Domain
                 || HasAppliedActorEquipmentCommand(commandId)
                 || appliedRegionalIncidentResponseCommands.ContainsKey(commandId)
                 || appliedIntegratedWorldCommands.ContainsKey(commandId)
-                || HasAppliedFranchiseSupplyCommand(commandId);
+                || HasAppliedFranchiseSupplyCommand(commandId)
+                || HasAppliedFulfillmentCommand(commandId);
 
         private static bool CanAcquire(
             SimulationWorldContainerSnapshot container,

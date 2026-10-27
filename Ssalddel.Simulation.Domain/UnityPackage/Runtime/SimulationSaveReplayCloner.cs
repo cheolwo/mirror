@@ -39,6 +39,8 @@ namespace Ssalddel.Simulation.Domain
                     source.SeasonalOperationsCampaignBaseSchemaVersion,
                 FranchiseSupplyBaseSchemaVersion =
                     source.FranchiseSupplyBaseSchemaVersion,
+                FulfillmentBaseSchemaVersion = source.FulfillmentBaseSchemaVersion,
+                Fulfillment = SimulationFulfillmentEngine.Clone(source.Fulfillment),
                 SessionCreateRequest = CloneCreateRequest(source.SessionCreateRequest),
                 Snapshot = 경영SimulationSessionAggregate.Clone(source.Snapshot),
                 WorldInventory = 경영SimulationSessionAggregate.CloneWorldInventory(
@@ -353,6 +355,8 @@ namespace Ssalddel.Simulation.Domain
                     경영SimulationSessionAggregate
                         .CloneSeasonalOperationsCampaignState(
                             source.SeasonalOperationsCampaignState),
+                FulfillmentCommand = source.FulfillmentCommand == null ? null
+                    : SimulationFulfillmentEngine.CloneCommand(source.FulfillmentCommand),
                 FranchiseSupplyClientRequestId =
                     source.FranchiseSupplyClientRequestId,
                 FranchiseSupplyCommandSignature =

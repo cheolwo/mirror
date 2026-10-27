@@ -8,7 +8,7 @@ namespace Ssalddel.WorkflowRules
     public static class 업무흐름규칙Catalog
     {
         private const string 기존RuleRevision = "workflow-rules.v1";
-        private const string 음식배달RuleRevision = "food-delivery.v6";
+        private const string 음식배달RuleRevision = "food-delivery.v7";
         private const string 창고입고RuleRevision = "warehouse-inbound.v1";
 
         private static readonly IReadOnlyDictionary<string, 업무흐름규칙Snapshot> 규칙목록 =
@@ -69,6 +69,9 @@ namespace Ssalddel.WorkflowRules
                     new[]
                     {
                         Transition(음식배달상태코드.주문대기, 음식배달상태코드.주문확인),
+                        // 전문 취소 합의 UseCase가 조리 전·기사 미확정과 양측 조건 동의를 검증한다.
+                        // 주문자의 직접 취소·음식점 진행 명령의 기존 입력/권한 가드는 유지한다.
+                        Transition(음식배달상태코드.주문확인, 음식배달상태코드.취소),
                         Transition(음식배달상태코드.주문확인, 음식배달상태코드.기사배정),
                         Transition(음식배달상태코드.기사배정, 음식배달상태코드.주문확인),
                         // 과거 Simulation/저장 계약의 읽기·재생 호환입니다.

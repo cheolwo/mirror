@@ -398,6 +398,7 @@ namespace Ssalddel.Simulation.Domain
                 SeasonalOperationsCampaign =
                     CloneSeasonalOperationsCampaignState(
                         seasonalOperationsCampaignState),
+                Fulfillment = SimulationFulfillmentEngine.Clone(fulfillmentState),
                 FranchiseSupply = CloneFranchiseSupplyState(
                     franchiseSupplyState),
             };
@@ -524,6 +525,7 @@ namespace Ssalddel.Simulation.Domain
                 SeasonalOperationsCampaign =
                     CloneSeasonalOperationsCampaignState(
                         source.SeasonalOperationsCampaign),
+                Fulfillment = SimulationFulfillmentEngine.Clone(source.Fulfillment),
                 FranchiseSupply = CloneFranchiseSupplyState(
                     source.FranchiseSupply),
             };

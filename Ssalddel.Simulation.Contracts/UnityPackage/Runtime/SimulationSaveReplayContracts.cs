@@ -43,6 +43,7 @@ namespace Ssalddel.Simulation.Contracts
         public const string V31 = "simulation-save.v31";
         public const string V32 = "simulation-save.v32";
         public const string V33 = "simulation-save.v33";
+        public const string V34 = "simulation-save.v34";
     }
 
     public static class SimulationReplayHashAlgorithmCodes
@@ -52,6 +53,7 @@ namespace Ssalddel.Simulation.Contracts
 
     public static class SimulationCommandTypeCodes
     {
+        public const string FulfillmentConfirm = "FulfillmentConfirm";
         public const string DecisionConfirm = "DecisionConfirm";
         public const string HarvestDispositionImpactConfirm = "HarvestDispositionImpactConfirm";
         public const string LogisticsMovementConfirm = "LogisticsMovementConfirm";
@@ -126,6 +128,7 @@ namespace Ssalddel.Simulation.Contracts
 
     public sealed class SimulationCommandLogEntrySnapshot
     {
+        public SimulationFulfillmentCommand? FulfillmentCommand { get; set; }
         public long Sequence { get; set; }
         public string CommandTypeCode { get; set; } = string.Empty;
         public int AppliedWorldTick { get; set; }
@@ -207,6 +210,8 @@ namespace Ssalddel.Simulation.Contracts
 
     public sealed class SimulationSessionSavePackage
     {
+        public string FulfillmentBaseSchemaVersion { get; set; } = string.Empty;
+        public SimulationFulfillmentStateSnapshot? Fulfillment { get; set; }
         public string TickRuleRevision { get; set; } = string.Empty;
         public string SchemaVersion { get; set; } = SimulationSaveSchemaVersions.V2;
         public string SaveStableId { get; set; } = string.Empty;

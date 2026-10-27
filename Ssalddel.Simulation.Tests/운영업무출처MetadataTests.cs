@@ -91,8 +91,10 @@ public sealed class 운영업무출처MetadataTests
         var steps = 실제단계().ToDictionary(step => step.StepKey, StringComparer.Ordinal);
 
         AssertSharedRuleStep(steps["domain.food-dispatch-shared-rule"]);
-        AssertSourceContains(root, "Ssalddel/Services/Dispatch/Queue/음식배달배차업무정책.cs",
-            "음식배달픽업평가Policy");
+        AssertSourceContains(root, "Ssalddel/Services/Dispatch/Queue/음식배달후보평가Service.cs",
+            "음식배달픽업평가Policy.판정(");
+        AssertSourceContains(root, "Ssalddel/Services/Dispatch/Queue/음식배달후보순위Policy.cs",
+            "음식배달픽업평가Policy.정렬(");
         AssertSourceContains(root, "Ssalddel.Simulation.Domain/UnityPackage/Runtime/가상배달대기.cs",
             "음식배달픽업평가Policy");
 

@@ -59,7 +59,8 @@ namespace Ssalddel.Simulation.Domain
         {
                 if (appliedCommands.ContainsKey(request.CommandId)
                     || appliedTurnClosingCommands.ContainsKey(request.CommandId)
-                    || HasAppliedNpcPolicyCommand(request.CommandId))
+                    || HasAppliedNpcPolicyCommand(request.CommandId)
+                    || HasAppliedFulfillmentCommand(request.CommandId))
                     throw new SimulationConflictException("SimulationCommandKindConflict");
                 var payloadKey = BuildDecisionPayloadKey(request.Preview);
                 if (appliedDecisionCommands.TryGetValue(request.CommandId, out var applied))
@@ -291,7 +292,8 @@ namespace Ssalddel.Simulation.Domain
                 || HasAppliedNatureSurvivalCommand(commandId)
                 || appliedRegionalIncidentResponseCommands.ContainsKey(commandId)
                 || HasAppliedTaskCancelCommand(commandId)
-                || HasAppliedFranchiseSupplyCommand(commandId);
+                || HasAppliedFranchiseSupplyCommand(commandId)
+                || HasAppliedFulfillmentCommand(commandId);
 
         private SimulationDecisionPreviewSnapshot CreateDecisionPreview(
             SimulationDecisionPreviewRequest request)

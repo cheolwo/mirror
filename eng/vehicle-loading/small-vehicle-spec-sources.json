@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "small-vehicle-loading-spec-sources.v1",
+  "revision": "r73",
+  "reviewedDate": "2026-10-19",
+  "purpose": "오토바이·다마스 제원의 확인 범위와 미확인 상태를 보존하는 출처 대장",
+  "seedCatalogPath": "Ssalddel.Infrastructure/Persistence/소형차제원SeedCatalog.cs",
+  "productionDatabaseExecuted": false,
+  "operationalDispatchEnabled": false,
+  "sourcePolicy": {
+    "domesticModelSpecificationConfirmed": false,
+    "foreignModelValuesMayPopulateDomesticSeed": false,
+    "equipmentValuesMayPopulateGenericMotorcycleSeed": false,
+    "unspecifiedDimensionKindMayBeTreatedAsInternal": false,
+    "zeroInRequiredSeedIntegerMeans": "unknown_not_a_measured_allowance",
+    "operatorMeasuredValuesPreservedByReseeding": true,
+    "contentHashes": "원문 파일을 내려받지 않았으므로 null입니다. URL 확인을 파일 무결성 확인으로 표시하지 않습니다."
+  },
+  "templates": [
+    {
+      "vehicleCode": "오토바이",
+      "recommendationEnabled": false,
+      "status": "UnverifiedVehicleAndMountedEquipment",
+      "market": "KR",
+      "modelYear": null,
+      "modelName": null,
+      "mountedEquipmentId": null,
+      "confirmedLoadingEnvelope": {
+        "internalLengthMm": null,
+        "internalWidthMm": null,
+        "internalHeightMm": null,
+        "openingDimensionsMm": null,
+        "maximumCargoWeightKg": null,
+        "recommendedCargoCbm": null
+      },
+      "sourceIds": ["honda-kr-pcx-top-box-35l", "givi-2026-equipment-catalog", "honda-pcx-2022-regional-manual"],
+      "requirementsBeforeUse": [
+        "실차 모델·연식·판매 시장과 차량의 허용 중량을 확인합니다.",
+        "실제 장착 배달통·랙의 모델, 허용 중량, 내부와 입구 치수를 확인합니다.",
+        "운전자·장비·화물의 중량 조건과 장착 제한을 함께 확인합니다.",
+        "장비 용량이나 표시 크기만으로 개별 포장 적재 가능성을 확정하지 않습니다."
+      ]
+    },
+    {
+      "vehicleCode": "다마스",
+      "recommendationEnabled": false,
+      "status": "DomesticVanLoadingSpecificationNotConfirmed",
+      "market": "KR",
+      "modelYear": null,
+      "modelName": null,
+      "seatVariant": null,
+      "confirmedLoadingEnvelope": {
+        "internalLengthMm": null,
+        "internalWidthMm": null,
+        "internalHeightMm": null,
+        "openingDimensionsMm": null,
+        "maximumCargoWeightKg": null,
+        "recommendedCargoCbm": null
+      },
+      "sourceIds": ["gm-kr-2015-new-damas-variants", "chevrolet-uz-damas-brochure"],
+      "requirementsBeforeUse": [
+        "국내 실차의 연식·좌석 수·밴 모델과 등록 서류를 확인합니다.",
+        "적재함 내부와 출입구 치수 및 허용 적재중량을 확인합니다.",
+        "승합 모델 또는 해외 밴 자료를 국내 모든 다마스의 공통 제원으로 사용하지 않습니다."
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "sourceId": "honda-kr-pcx-top-box-35l",
+      "publisher": "혼다코리아",
+      "title": "커스터마이징 · TOP BOX(35L) · PCX 순정품",
+      "url": "https://www.hondakorea.co.kr/motorcycle/news/JoyRidingDetailList.do",
+      "market": "KR",
+      "modelYear": null,
+      "publicationDate": null,
+      "checkedDate": "2026-10-19",
+      "observationMethod": "official_web_search_body_excerpt; direct_open_was_dynamic_empty_content",
+      "downloadedDocumentSha256": null,
+      "appliesTo": "순정 TOP BOX 품번 08L71-KZL-861ZA와 BASE 품번 08L71-K35-J01",
+      "observations": {
+        "approximateEquipmentVolumeLitres": 35,
+        "equipmentMaximumLoadKg": 3.0,
+        "approximateDisplayedDimensionsMm": [472, 480, 300],
+        "displayedDimensionKind": "Unspecified",
+        "internalDimensionsMm": null,
+        "openingDimensionsMm": null
+      },
+      "limitations": [
+        "3.0kg은 해당 장비의 허용 적재량 표제이며 차량 공통 한도나 장비 자체중량이 아닙니다.",
+        "표시 크기의 내측·외측 구분과 입구 크기가 확인되지 않았습니다.",
+        "적용 연식과 실제 장착 장비를 확인하기 전 실차 제원으로 적용하지 않습니다."
+      ],
+      "usedForNumericSeed": false
+    },
+    {
+      "sourceId": "givi-2026-equipment-catalog",
+      "publisher": "GIVI",
+      "title": "GIVI 2026 장비 카탈로그",
+      "url": "https://magazine.givi.it/Givi-EICMA25/",
+      "market": "InternationalEquipment",
+      "modelYear": 2026,
+      "publicationDate": null,
+      "checkedDate": "2026-10-19",
+      "observationMethod": "official_web_catalog_research",
+      "downloadedDocumentSha256": null,
+      "appliesTo": "V49N AIR, ALP44B2, ALP44A2 장비",
+      "observations": {
+        "V49NAir": { "equipmentVolumeLitres": 49, "equipmentMaximumLoadKg": 10 },
+        "ALP44": { "equipmentVolumeLitres": 44, "equipmentMaximumLoadKg": 3 }
+      },
+      "limitations": [
+        "비슷한 용량의 장비도 모델별 허용 중량이 다르다는 근거입니다.",
+        "실차의 장착 가능 여부·랙 한도·차량 한도·내부와 입구 치수는 별도 확인 대상입니다."
+      ],
+      "usedForNumericSeed": false
+    },
+    {
+      "sourceId": "gm-kr-2015-new-damas-variants",
+      "publisher": "한국GM 공식 블로그",
+      "title": "2015 뉴 다마스 모델 구분 자료",
+      "url": "https://blog.gm-korea.co.kr/4504",
+      "market": "KR",
+      "modelYear": 2015,
+      "publicationDate": "2014-11-17",
+      "checkedDate": "2026-10-19",
+      "observationMethod": "official_web_article_research",
+      "downloadedDocumentSha256": null,
+      "appliesTo": "2015 뉴 다마스 국내 모델",
+      "observations": {
+        "twoSeatVanVariants": ["DLX", "SUPER"],
+        "fiveSeatPassengerVariants": ["Libig", "Super"],
+        "domesticLoadingDimensionsMm": null,
+        "domesticMaximumCargoWeightKg": null
+      },
+      "limitations": [
+        "국내 밴과 승합 모델이 구분된다는 근거이며 국내 밴 적재 수치 확인 자료는 아닙니다.",
+        "다른 연식 또는 모든 다마스 차량에 같은 제원을 전파하지 않습니다."
+      ],
+      "usedForNumericSeed": false
+    },
+    {
+      "sourceId": "chevrolet-uz-damas-brochure",
+      "publisher": "Chevrolet Uzbekistan",
+      "title": "Damas 공식 브로슈어",
+      "url": "https://chevrolet.uz/storage/images/catalog_auto/2/broshura-chevrolet-damas.pdf",
+      "market": "UZ",
+      "modelYear": null,
+      "publicationDate": null,
+      "checkedDate": "2026-10-19",
+      "observationMethod": "official_foreign_market_brochure_research",
+      "downloadedDocumentSha256": null,
+      "appliesTo": "우즈베키스탄 시장 Damas VAN과 DELUX",
+      "observations": {
+        "vanMaximumCargoWeightKg": 450,
+        "deluxPassengerCount": 7
+      },
+      "limitations": [
+        "해외 시장 자료입니다. 450kg을 국내 다마스 공통 적재한도로 사용하지 않습니다.",
+        "밴과 승합 구성의 차이를 유지합니다."
+      ],
+      "usedForNumericSeed": false
+    },
+    {
+      "sourceId": "honda-pcx-2022-regional-manual",
+      "publisher": "Honda MotoPub",
+      "title": "PCX WW150N 2022 지역별 사용자 설명서",
+      "url": "https://2rom-prd-data.hondamotopub.com/om/NCXCAE/PCX_EN/2022/22PCX_4PK1ZG10_0_%20EN.pdf",
+      "market": ["KH", "LA", "MM"],
+      "modelYear": 2022,
+      "publicationDate": null,
+      "checkedDate": "2026-10-19",
+      "observationMethod": "official_regional_manual_research",
+      "downloadedDocumentSha256": null,
+      "appliesTo": "Cambodia·Laos·Myanmar 지역 WW150N 모델",
+      "observations": {
+        "accessoriesPrintedPage": 10,
+        "loadingPrintedPage": 11,
+        "domesticVehicleMaximumCargoWeightKg": null
+      },
+      "limitations": [
+        "차량·장비·시장별 설명서를 확인해야 한다는 참고 근거입니다.",
+        "국내 PCX 또는 모든 오토바이의 공통 적재 수치로 사용하지 않습니다."
+      ],
+      "usedForNumericSeed": false
+    }
+  ]
+}

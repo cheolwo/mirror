@@ -81,5 +81,16 @@ namespace Ssalddel.Simulation.Application
         public SimulationSpatialCompositionStateSnapshot GetSpatialComposition(
             string sessionStableId, string areaCode)
             => sessions.Require(sessionStableId).GetSpatialComposition(areaCode);
+
+        public SimulationFulfillmentStateSnapshot? GetFulfillmentState(string sessionStableId)
+            => sessions.Require(sessionStableId).GetFulfillmentState();
+
+        public SimulationFulfillmentPlanSnapshot PreviewFulfillment(
+            string sessionStableId, SimulationFulfillmentOrderRequest request)
+            => sessions.Require(sessionStableId).PreviewFulfillment(request);
+
+        public 경영SimulationSessionSnapshot ConfirmFulfillment(
+            string sessionStableId, SimulationFulfillmentCommand request)
+            => sessions.Require(sessionStableId).ConfirmFulfillment(request);
     }
 }

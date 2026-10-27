@@ -43,10 +43,20 @@ public sealed class SimulationServerHttpBoundaryTests
                 ?? Array.Empty<string>())
             .OrderBy(value => value, StringComparer.Ordinal)
             .ToArray();
+        var fulfillmentRoutes = new[]
+        {
+            "GET api/simulation/v1/sessions/{sessionStableId}/fulfillment",
+            "POST api/simulation/v1/sessions/{sessionStableId}/fulfillment/confirm",
+            "POST api/simulation/v1/sessions/{sessionStableId}/fulfillment/previews",
+        };
+        Assert.All(fulfillmentRoutes, route => Assert.Contains(route, manifest));
+        // 신규 경로 세 개만 추가하고 종전 192개 경로의 호환 hash는 그대로 검사한다.
+        var compatibilityManifest = manifest.Except(fulfillmentRoutes).ToArray();
         var hash = Convert.ToHexString(SHA256.HashData(
-                Encoding.UTF8.GetBytes(string.Join("\n", manifest))))
+                Encoding.UTF8.GetBytes(string.Join("\n", compatibilityManifest))))
             .ToLowerInvariant();
-        Assert.Equal(192, manifest.Length);
+        Assert.Equal(192, compatibilityManifest.Length);
+        Assert.Equal(195, manifest.Length);
         Assert.Contains(
             "GET api/simulation/v1/sessions/{sessionStableId}/nature-survival/observation",
             manifest);

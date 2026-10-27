@@ -172,20 +172,29 @@ internal sealed class DispatchTrainingControl(DispatchTrainingReadiness ready, D
     };
 }
 
-internal sealed class DispatchTrainingHttpGuard : IHttpMessageHandlerBuilderFilter
+internal sealed class DispatchTrainingHttpGuard(DispatchTrainingSettings settings) : IHttpMessageHandlerBuilderFilter
 {
     public Action<HttpMessageHandlerBuilder> Configure(Action<HttpMessageHandlerBuilder> next) => builder =>
     {
         next(builder);
         if (builder.PrimaryHandler is HttpClientHandler client) { client.AllowAutoRedirect = false; client.UseProxy = false; }
         if (builder.PrimaryHandler is SocketsHttpHandler sockets) { sockets.AllowAutoRedirect = false; sockets.UseProxy = false; }
-        builder.AdditionalHandlers.Insert(0, new Guard());
+        builder.AdditionalHandlers.Insert(0, new Guard(settings.Configuration.GetValueOrDefault("CargoDispatchOllama:Enabled") == "true"));
     };
-    private sealed class Guard : DelegatingHandler
+    internal static bool Allowed(HttpRequestMessage request, bool cargoCandidateAI)
+    {
+        if (request.RequestUri is not { IsAbsoluteUri: true }) return false;
+        return request.RequestUri is { Scheme: "http", IsLoopback: true, Port: DispatchTrainingSettings.HostPort }
+            || cargoCandidateAI && request.Method == HttpMethod.Post
+                && request.RequestUri is { Scheme: "http", Host: "127.0.0.1", Port: 12681,
+                    AbsolutePath: "/api/chat", Query: "", Fragment: "", UserInfo: "" };
+    }
+
+    private sealed class Guard(bool cargoCandidateAI) : DelegatingHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
-            if (request.RequestUri is not { Scheme: "http", IsLoopback: true, Port: DispatchTrainingSettings.HostPort })
+            if (!Allowed(request, cargoCandidateAI))
                 throw new HttpRequestException("DispatchTrainingExternalHttpDisabled");
             return base.SendAsync(request, ct);
         }

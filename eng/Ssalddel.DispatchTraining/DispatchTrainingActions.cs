@@ -80,18 +80,7 @@ internal sealed class DispatchTrainingActions(DispatchTrainingSettings settings,
                     new 신청개인정보동의기록Request { 증적Id = consent, 업무Code = 신청개인정보업무Codes.운송대행,
                         출처Code = 신청개인정보출처Codes.생활교류, 동의문버전 = 신청개인정보동의정책.현재버전,
                         수집이용동의 = true, 연령요건확인 = true }, ct);
-            var input = new NeighborhoodDeliveryRequest
-            {
-                ClientRequestId = requestId, CargoName = $"가상 소형 상자 {index + 1:00}", Quantity = 1,
-                WeightKg = 1, VehicleType = DispatchTrainingSeed.VehicleName,
-                PrivacyConsentEvidenceId = consent, DispatchRequested = true, DirectPaymentAgreed = true,
-                DispatchMode = "automatic", Notes = "합성 운영 연습. 실제 물품·주문·지급이 아닙니다.",
-                Pickup = new() { 주소 = new() { 도로명주소 = $"가상 픽업 {index + 1:00}" },
-                    연락처 = new() { 이름 = "가상 발송인", 전화번호 = "010-0000-0000" },
-                    시간창 = new() { 시작일시 = order.CreatedAtUtc.AddMinutes(-1), 종료일시 = order.CreatedAtUtc.AddHours(2) } },
-                Dropoff = new() { 주소 = new() { 도로명주소 = $"가상 전달 {index + 1:00}" },
-                    연락처 = new() { 이름 = "가상 수령인", 전화번호 = "010-0000-0001" } }
-            };
+            var input = DispatchTrainingOrderFixture.Create(index, requestId, consent, order.CreatedAtUtc);
             var quote = await ApiAsync(DispatchTrainingSeed.ShipperId, HttpMethod.Post, NeighborhoodDeliveryRoutes.Api + "/quote", input, ct);
             input.AgreedFareKrw = Decimal(Node(quote, "fare"), "최종운임");
             order.SubmissionStarted = true; await SaveAsync(ct);
@@ -191,7 +180,11 @@ internal sealed class DispatchTrainingActions(DispatchTrainingSettings settings,
             var mapped = allowed.OrderBy(x => x.기사Id == baseline ? 0 : 1).Take(30).ToArray();
             var watch = System.Diagnostics.Stopwatch.StartNew();
             DispatchTrainingShadowResult result;
-            if (mapped.Length > 1 && journal.AiAttempts >= 15)
+            var primaryAIProfile = settings.Configuration.GetValueOrDefault("CargoDispatchOllama:Enabled") == "true";
+            // 실제 선택을 검증하는 프로필에서는 별도 비교 요청으로 같은 모델을 다시 호출/해제하지 않는다.
+            if (primaryAIProfile)
+                result = new("NotRunPrimarySelectionProfile", null, false);
+            else if (mapped.Length > 1 && journal.AiAttempts >= 15)
                 result = new("BudgetExhausted", null, false);
             else
             {
@@ -208,7 +201,8 @@ internal sealed class DispatchTrainingActions(DispatchTrainingSettings settings,
             var decision = new DispatchTrainingDecisionDto { DecisionId = Guid.NewGuid().ToString("N"),
                 OrderId = order.CanonicalId, RecordedAtUtc = DateTime.UtcNow,
                 RuleStatusCode = baseline is null ? "NoEligibleCandidate" : "Selected", RuleDriverLabel = Label(baseline),
-                AiResult = ai, Summary = $"기존 규칙 후보 {allowed.Length}명 · 선택 {Label(baseline) ?? "대기"} · AI는 비교만 수행",
+                AiResult = ai, Summary = $"기존 규칙 후보 {allowed.Length}명 · 기준 {Label(baseline) ?? "대기"} · "
+                    + (primaryAIProfile ? "그림자 비교 미실행 · 실제 선택은 정본 감사에서 확인" : "그림자 AI 비교 · 실제 추천 적용은 정본 감사에서 별도 확인"),
                 Candidates = trace.후보목록.Select((x, i) => new DispatchTrainingDecisionCandidateDto
                 { Token = Array.FindIndex(mapped, p => p.기사Id == x.기사Id) is var tokenIndex && tokenIndex >= 0 ? $"C{tokenIndex + 1}" : $"X{i + 1}",
                     DriverLabel = Label(x.기사Id) ?? "미확인", EligibilityCode = x.판정Code,
@@ -310,7 +304,7 @@ internal sealed class DispatchTrainingActions(DispatchTrainingSettings settings,
             var offers = await ApiAsync(driver, HttpMethod.Get, "api/v1/driver/recommendations", null, ct) as JsonArray;
             var offer = offers?.FirstOrDefault(x => Text(x, "의뢰Id") == q.의뢰Id);
             if (offer is null || (int?)Node(offer, "추천라운드") != q.추천라운드) return;
-            var warnings = (Node(offer, "경고") as JsonArray ?? []).Select(x => x?.ToString()).Where(x => x is not null).ToArray();
+            var warnings = VehicleWarningAcknowledgements(offer);
             await OnceAsync(order, "accept:" + q.추천라운드, driver, HttpMethod.Post,
                 $"api/v1/driver/dispatch-actions/{q.의뢰Id}/accept", new { ExpectedRecommendationRound = q.추천라운드,
                     AcknowledgedWarningCodes = warnings }, ct);
@@ -361,11 +355,16 @@ internal sealed class DispatchTrainingActions(DispatchTrainingSettings settings,
         await OnceAsync(order, step, actor, HttpMethod.Post, $"api/v1/driver/transports/{q.Id}/{step}", body, ct);
     }
 
+    // Match the role UI's stable acknowledgement contract. Generic recommendation text is not a code.
+    internal static string[] VehicleWarningAcknowledgements(JsonNode? offer) =>
+        Node(offer, "차량경고") is JsonArray { Count: > 0 } ? ["FreightVehicleAdvisory"] : [];
+
     private async Task<bool> OnceAsync(ActorOrder order, string key, string actor, HttpMethod method, string path, object? body, CancellationToken ct)
     {
         if (order.Commands.TryGetValue(key, out var outcome))
         {
-            if (outcome != "Confirmed") Incident(order, "CommandUnknown", "미확정 명령은 정본 확인 전 다음 단계로 진행하지 않습니다.");
+            if (outcome == "Rejected") Incident(order, "CommandRejected", "거부된 명령은 다시 전송하지 않고 추천 판본과 입력 조건을 검토합니다.");
+            else if (outcome != "Confirmed") Incident(order, "CommandUnknown", "미확정 명령은 정본 확인 전 다음 단계로 진행하지 않습니다.");
             return outcome == "Confirmed";
         }
         order.Commands[key] = "Unknown"; await SaveAsync(ct);
