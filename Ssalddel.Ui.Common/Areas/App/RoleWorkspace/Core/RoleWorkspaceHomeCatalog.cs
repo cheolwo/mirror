@@ -11,6 +11,7 @@ public static class RoleWorkspaceHomeCatalog
         [
             Entry(RoleWorkspaceCatalog.Shipper),
             Entry(RoleWorkspaceCatalog.CargoDriver),
+            Entry(RoleWorkspaceCatalog.FreightBroker),
             Entry(RoleWorkspaceCatalog.Operator, "화물 관리자", "운송 진행·배차·예외 확인", BusinessPackageCatalog.FreightDelivery)
         ])),
         new(BusinessPackageCatalog.FoodDelivery, "음식 배달", Array.AsReadOnly<RoleWorkspaceHomeEntry>(

@@ -40,7 +40,7 @@ public static class MauiProgram
         // Photos/signatures never enter the general workflow recovery store.
         var photoRecoveryRoot = Path.Combine(FileSystem.AppDataDirectory, "cargo-photo-recovery-v1");
         var photoKeyGate = new SemaphoreSlim(1, 1);
-        builder.Services.AddSingleton<IDriverCargoPhotoRecoveryStore>(_ => new DriverCargoPhotoRecoveryStore(
+        builder.Services.AddSingleton<DriverCargoPhotoRecoveryStore>(_ => new DriverCargoPhotoRecoveryStore(
             photoRecoveryRoot,
             async () =>
             {
@@ -65,6 +65,8 @@ public static class MauiProgram
                 }
                 finally { photoKeyGate.Release(); }
             }));
+        builder.Services.AddScoped<IDriverCargoPhotoRecoveryStore>(services => new DriverCargoServerPhotoRecoveryStore(
+            services.GetRequiredService<DriverCargoPhotoRecoveryStore>(), services.GetRequiredService<IWorkflowRecoveryContext>()));
 #if DEBUG || SSALDDEL_USB_FIELD_TEST
 		const bool allowInsecureDebugEndpoint = true;
 #else

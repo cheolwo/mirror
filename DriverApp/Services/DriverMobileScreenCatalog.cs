@@ -51,8 +51,8 @@ public static class DriverMobileScreenCatalog
                 "음식 배달"),
             DriverRoutes.CurrentTransport => new(
                 "04.08",
-                "진행 중 운송",
-                "현재 운송의 다음 행동과 확인할 업무 상태를 봅니다.",
+                "현재 운송",
+                string.Empty,
                 "진행"),
             DriverRoutes.DeliveryHistory => new(
                 "04.11",
@@ -72,7 +72,7 @@ public static class DriverMobileScreenCatalog
             DriverRoutes.BankAccount => new(
                 "04.14",
                 "계좌 정보",
-                "정산 상대에게 제공할 계좌 정보와 본인 확인 상태를 관리합니다.",
+                "정산 계좌의 확인 가능 여부와 운송대금 조회 경로를 안내합니다.",
                 "보안"),
             DriverRoutes.Notifications => new(
                 "04.15",
@@ -106,8 +106,8 @@ public static class DriverMobileScreenCatalog
             {
                 return new(
                     "04.09",
-                    "상차 기록",
-                    "화물·수량·인계자를 확인하고 상차 증빙을 기록합니다.",
+                    "상차",
+                    string.Empty,
                     "상차");
             }
 
@@ -115,8 +115,8 @@ public static class DriverMobileScreenCatalog
             {
                 return new(
                     "04.10",
-                    "하차 기록",
-                    "도착지·수령자·수량을 확인하고 인수 증빙을 기록합니다.",
+                    "하차",
+                    string.Empty,
                     "하차");
             }
         }

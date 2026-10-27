@@ -13,12 +13,12 @@ namespace Ssalddel.Tests.Ui.Common;
 public sealed class RoleSelectionBusinessR9Tests
 {
     [Fact]
-    public void 화물세역할과_음식네역할_생활창고를_기존업무코드로_구분한다()
+    public void 화물네역할과_음식네역할_생활창고를_기존업무코드로_구분한다()
     {
         var groups = RoleWorkspaceHomeCatalog.Groups;
         Assert.Equal(new[] { BusinessPackageCatalog.FreightDelivery, BusinessPackageCatalog.FoodDelivery, "other" }, groups.Select(group => group.Key));
         Assert.Equal(new[] { "화물 운송", "음식 배달", "생활·창고" }, groups.Select(group => group.Label));
-        Assert.Equal(new[] { RoleWorkspaceCatalog.Shipper, RoleWorkspaceCatalog.CargoDriver, RoleWorkspaceCatalog.Operator }, groups[0].Entries.Select(entry => entry.RoleKey));
+        Assert.Equal(new[] { RoleWorkspaceCatalog.Shipper, RoleWorkspaceCatalog.CargoDriver, RoleWorkspaceCatalog.FreightBroker, RoleWorkspaceCatalog.Operator }, groups[0].Entries.Select(entry => entry.RoleKey));
         Assert.Equal(new[] { RoleWorkspaceCatalog.Orderer, RoleWorkspaceCatalog.Restaurant, RoleWorkspaceCatalog.FoodDriver, RoleWorkspaceCatalog.Operator }, groups[1].Entries.Select(entry => entry.RoleKey));
         Assert.Equal(new[] { RoleWorkspaceCatalog.Community, RoleWorkspaceCatalog.Warehouse }, groups[2].Entries.Select(entry => entry.RoleKey));
         Assert.Equal(RoleWorkspaceCatalog.Roles.Select(role => role.Key).Order(),
@@ -30,7 +30,7 @@ public sealed class RoleSelectionBusinessR9Tests
     {
         var html = await RenderAsync();
         var entries = Links(html);
-        Assert.Equal(9, entries.Count);
+        Assert.Equal(10, entries.Count);
         var administrators = entries.Where(entry => Attribute(entry, "data-role") == RoleWorkspaceCatalog.Operator).ToArray();
         Assert.Equal(2, administrators.Length);
         Assert.Contains(administrators, entry => Attribute(entry, "href") == "http://localhost/preview/workspace/operator?business=freight-delivery");

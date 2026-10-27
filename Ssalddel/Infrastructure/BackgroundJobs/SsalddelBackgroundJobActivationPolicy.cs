@@ -11,6 +11,7 @@ public static class SsalddelBackgroundWorkloadKeys
     public const string DomesticTransportDispatch = nameof(DomesticTransportDispatch);
     public const string CustomsStatusSync = nameof(CustomsStatusSync);
     public const string SalesChannelOrderSync = nameof(SalesChannelOrderSync);
+    public const string WeeklyStatementPreparation = nameof(WeeklyStatementPreparation);
 }
 
 public static class SsalddelBackgroundWorkloadActivationCodes
@@ -103,6 +104,8 @@ public sealed class SsalddelBackgroundJobActivationPolicy : ISsalddelBackgroundJ
             SsalddelBackgroundWorkloadKeys.FoodDeliveryDispatch =>
                 VersionFeatureFlagKeys.FoodDeliveryWorkflow,
             SsalddelBackgroundWorkloadKeys.DomesticTransportDispatch =>
+                VersionFeatureFlagKeys.DomesticTransportWorkflow,
+            SsalddelBackgroundWorkloadKeys.WeeklyStatementPreparation =>
                 VersionFeatureFlagKeys.DomesticTransportWorkflow,
             SsalddelBackgroundWorkloadKeys.CustomsStatusSync =>
                 VersionFeatureFlagKeys.CustomsAndTradeDataWorkflow,

@@ -6,6 +6,28 @@ public sealed class RoleWorkspaceCapabilityTests
     [Theory]
     [InlineData(SsalddelPageAppCodes.IntegratedWeb)]
     [InlineData(SsalddelPageAppCodes.Shipper)]
+    public void Recommendation_alert_preferences_require_authentication_and_only_persist_own_settings(string app)
+    {
+        Assert.True(SsalddelPageCapabilityCatalog.TryResolve(app, "/driver/notifications/settings", out var settings));
+        Assert.True(settings.RequiresAuthentication);
+        Assert.Equal(PageInteractionBoundary.PlatformPersistence, settings.Boundary);
+        Assert.Equal(PageCapabilityStage.Beta, settings.Stage);
+    }
+
+    [Theory]
+    [InlineData(SsalddelPageAppCodes.IntegratedWeb)]
+    [InlineData(SsalddelPageAppCodes.Shipper)]
+    public void Current_driver_work_is_authenticated_read_only_without_new_execution_permission(string app)
+    {
+        Assert.True(SsalddelPageCapabilityCatalog.TryResolve(app, "/driver/current-work", out var current));
+        Assert.Equal(PageInteractionBoundary.ReadOnly, current.Boundary);
+        Assert.Equal(PageCapabilityStage.Beta, current.Stage);
+        Assert.True(current.RequiresAuthentication);
+    }
+
+    [Theory]
+    [InlineData(SsalddelPageAppCodes.IntegratedWeb)]
+    [InlineData(SsalddelPageAppCodes.Shipper)]
     public void Role_workspace_preserves_food_community_and_authentication_boundaries(string app)
     {
         Assert.True(SsalddelPageCapabilityCatalog.TryResolve(app, "/workspace/community", out var community));

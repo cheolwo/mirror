@@ -913,6 +913,8 @@ namespace 살뜰.Data
                 db.차량제원.Add(spec);
             }
 
+            AddUnverifiedSmallVehicleTemplates(db, 기존차량코드셋);
+
             await db.SaveChangesAsync();
         }
 
@@ -1041,6 +1043,17 @@ namespace 살뜰.Data
             assignment.WorkScheduleEnabled = false;
             assignment.WorksiteIpRestrictionEnabled = false;
             assignment.UpdatedAt = DateTime.UtcNow;
+        }
+
+        private static void AddUnverifiedSmallVehicleTemplates(SsalddelContext db, ISet<string> existingVehicleCodes)
+        {
+            // 일반 시드의 추천 활성화/CBM 추정 기본값을 적용하지 않습니다.
+            // 같은 코드에 운영자가 실측값이나 사용 여부를 저장했다면 모든 필드와 수정 시각을 보존합니다.
+            foreach (var template in 소형차제원SeedCatalog.CreateUnverifiedTemplates())
+            {
+                if (existingVehicleCodes.Add(template.차량코드))
+                    db.차량제원.Add(template);
+            }
         }
 
         private static void ApplyVehicleRecommendationDefaults(차량제원 spec, int priority)

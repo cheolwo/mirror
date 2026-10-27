@@ -9,5 +9,6 @@ public sealed class 판매채널계정Configuration : IEntityTypeConfiguration<�
     public void Configure(EntityTypeBuilder<판매채널계정> builder)
     {
         builder.HasIndex(x => new { x.UserId, x.채널종류, x.상점명 });
+        builder.Property(x => x.동기화진단Json).HasColumnType("longtext");
     }
 }

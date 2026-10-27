@@ -672,11 +672,14 @@ public sealed class SsalddelApiVersionAttributeTests
             .GetCustomAttribute<SsalddelApiFeatureAttribute>(inherit: true);
         var warehouseFeature = typeof(창고작업Controller)
             .GetCustomAttribute<SsalddelApiFeatureAttribute>(inherit: true);
+        var spaceOrderFeature = typeof(공간공동운영주문Controller)
+            .GetCustomAttribute<SsalddelApiFeatureAttribute>(inherit: true);
         var foodVersion = typeof(Ssalddel.Controllers.Food.음식주문Controller)
             .GetCustomAttribute<SsalddelApiVersionAttribute>(inherit: true);
 
         Assert.Equal(VersionFeatureFlagKeys.DomesticTransportWorkflow, cargoFeature?.FeatureKey);
         Assert.Equal(VersionFeatureFlagKeys.WarehouseFulfillmentWorkflow, warehouseFeature?.FeatureKey);
+        Assert.Equal(VersionFeatureFlagKeys.SsalddelMartWorkflow, spaceOrderFeature?.FeatureKey);
         Assert.Equal(VersionFeatureFlagKeys.FoodDeliveryWorkflow, foodVersion?.FeatureKey);
     }
 

@@ -16,6 +16,65 @@ public static partial class ServiceCollectionExtensions
 {
     private static IServiceCollection AddSsalddelCommunityDomainServices(this IServiceCollection services)
     {
+        services.Add커뮤니티원장Services();
+        services.Add커뮤니티활동게시Services();
+        services.Add게시글원장ContextServices();
+        services.AddSingleton<IAzureTranslatorAccessTokenProvider, AzureTranslatorAccessTokenProvider>();
+        services.Add생활협업Services();
+        services.AddOptions<살뜰.Services.Options.화물정보공고Options>()
+            .BindConfiguration(살뜰.Services.Options.화물정보공고Options.SectionName);
+        services.AddScoped<I화물정보공고Store, Mongo화물정보공고Store>();
+        services.AddScoped<I화물정보공고UseCase, 화물정보공고UseCase>();
+        services.AddScoped<I공간공동운영Store, 공간공동운영원장Store>();
+        services.AddScoped<I공간공동운영전문업무Bridge, Ssalddel.Application.Warehouse.공간공동운영전문업무Bridge>();
+        services.AddScoped<공간공동운영UseCase>();
+        services.AddScoped<I공간공동운영UseCase>(provider => provider.GetRequiredService<공간공동운영UseCase>());
+        services.AddScoped<I공간공동운영연결Query>(provider => provider.GetRequiredService<공간공동운영UseCase>());
+        services.AddScoped<Ssalddel.Application.Mart.I공간공동운영주문UseCase, Ssalddel.Application.Mart.공간공동운영주문UseCase>();
+        services.AddScoped<I공간공동운영통합Query, 공간공동운영통합Query>();
+        services.AddScoped<I공간공동운영업무연락Query, 공간공동운영업무연락Query>();
+        services.AddScoped<I공간공동운영예약UseCase, 공간공동운영예약UseCase>();
+        services.AddScoped<ICommunityPostTranslationService, CommunityPostTranslationService>();
+        services.Add커뮤니티기회탐색Services();
+        services.Add지도원장신청Services();
+        services.Add원장투영OutboxServices();
+        services.AddSingleton<I교육기관제출대기열, Mongo교육기관제출대기열>();
+        services.AddScoped<I현장체험활동UseCase, 현장체험활동UseCase>();
+        services.AddScoped<I교육과정정의Service, 교육과정정의Service>();
+        services.AddScoped<I교육과정참여Service, 교육과정참여Service>();
+        services.AddScoped<ITypecast음성카탈로그저장소, EfTypecast음성카탈로그저장소>();
+        services.AddScoped<ITypecast음성카탈로그Service, Typecast음성카탈로그Service>();
+        services.Add커뮤니티정보작성Services();
+        services.Add홍익학당카드Services();
+        services.Add커뮤니티알림Services();
+        services.Add게시글음성Services();
+        services.AddScoped<ICommunityScheduledPostPublicationProcessor, CommunityScheduledPostPublicationProcessor>();
+        services.AddHostedService<교육기관제출Worker>();
+        services.AddHostedService<CommunityScheduledPostPublicationWorker>();
+        services.AddHostedService<커뮤니티게시글음성Worker>();
+        services.AddHostedService<CommunityKeywordNotificationWorker>();
+        services.AddHostedService<CommunityPostEmailNotificationWorker>();
+        services.AddHostedService<CommunityActivityBoardContentWorker>();
+        services.AddHostedService<커뮤니티원장투영Worker>();
+        services.AddHostedService<CommunityGroupPurchaseDemandOutboxWorker>();
+        services.AddScoped<I인증UseCase, 인증UseCase>();
+        services.AddScoped<I커뮤니티대화UseCase, 커뮤니티대화UseCase>();
+        services.AddScoped<I공동구매자동집단화UseCase, 공동구매자동집단화UseCase>();
+        services.AddScoped<I공동구매커머스이행계획UseCase, 공동구매커머스이행계획UseCase>();
+        services.AddScoped<I공동구매해외선적통관동기화Service, 공동구매해외선적통관동기화Service>();
+        services.AddSingleton<I공동구매수입물류정규화Service, 공동구매수입물류정규화Service>();
+        services.AddSingleton<IVersionFeatureFlagService, VersionFeatureFlagService>();
+        services.AddScoped<ISsalddelFoodOrderStore, EfSsalddelFoodOrderStore>();
+        services.AddScoped<I음식점조리시간Service, 음식점조리시간Service>();
+        services.AddScoped<I음식주문메뉴검증Service, 음식주문메뉴검증Service>();
+        services.AddSingleton<배차주소Store>();
+        services.AddScoped<I음식점주문실시간알림Service, 음식점주문SignalR알림Service>();
+
+        return services;
+    }
+
+    private static void Add커뮤니티원장Services(this IServiceCollection services)
+    {
         services.AddSingleton<Mongo커뮤니티원장저장소>();
         services.AddSingleton<I커뮤니티원장투영작업저장소, Mongo커뮤니티원장투영작업저장소>();
         services.AddSingleton<I커뮤니티원장저장소, 이벤트발행커뮤니티원장저장소>();
@@ -39,6 +98,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I커뮤니티원장상태이벤트Service, 커뮤니티원장상태이벤트Service>();
         services.AddScoped<ICommunityLedgerCompletionPostStore, EfCommunityLedgerCompletionPostStore>();
         services.AddScoped<ICommunityLedgerCompletionPostService, CommunityLedgerCompletionPostService>();
+    }
+
+    private static void Add커뮤니티활동게시Services(this IServiceCollection services)
+    {
         services.AddScoped<ICommunityAutomatedPostPublisher, EfCommunityAutomatedPostPublisher>();
         services.AddScoped<I커뮤니티활동공개ProjectionRecorder, 커뮤니티활동공개ProjectionRecorder>();
         services.AddScoped<ICommunityActivityPostPublisher, CommunityActivityPostPublisher>();
@@ -53,6 +116,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ICommunityAutomatedPostSource, CommunityPrajnaPostSource>();
         services.AddScoped<I같이수입원장관세사알림Service, 같이수입원장관세사알림Service>();
         services.AddScoped<I공동구매원장관계자알림Service, 공동구매원장관계자알림Service>();
+    }
+
+    private static void Add게시글원장ContextServices(this IServiceCollection services)
+    {
         services.AddScoped<게시글원장선택조회Service>();
         services.AddScoped<I게시글원장선택조회Service>(provider =>
             provider.GetRequiredService<게시글원장선택조회Service>());
@@ -64,7 +131,10 @@ public static partial class ServiceCollectionExtensions
             provider.GetRequiredService<I게시글원장표시ContextService>()));
         services.AddScoped<I게시글원장ContextService>(provider =>
             provider.GetRequiredService<게시글원장ContextService>());
-        services.AddSingleton<IAzureTranslatorAccessTokenProvider, AzureTranslatorAccessTokenProvider>();
+    }
+
+    private static void Add생활협업Services(this IServiceCollection services)
+    {
         services.AddSingleton<I생활교류공개지역Source, Official생활교류공개지역Source>();
         services.AddScoped<I생활교류지도조회UseCase, 생활교류지도조회UseCase>();
         services.AddScoped<I생활협업Store, Mongo생활협업Store>();
@@ -81,7 +151,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<생활보관인계정보Protection>();
         services.AddScoped<I생활보관공간Service, 생활보관공간Service>();
         services.AddScoped<I생활보관협업ContextSource, 생활보관협업ContextSource>();
-        services.AddScoped<ICommunityPostTranslationService, CommunityPostTranslationService>();
+    }
+
+    private static void Add커뮤니티기회탐색Services(this IServiceCollection services)
+    {
         services.AddSingleton<ICommunityPostOpportunityAnalyzer, CommunityPostOpportunityAnalyzer>();
         services.AddSingleton<ICommunityDynamicTopicClassifier, CommunityDynamicTopicClassifier>();
         services.AddScoped<ICommunityPostOpportunityStore, EfCommunityPostOpportunityStore>();
@@ -93,10 +166,18 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ICommunityPostMeatImportReadinessUseCase, CommunityPostMeatImportReadinessUseCase>();
         services.AddScoped<ICommunityPostParticipationUseCase, CommunityPostParticipationUseCase>();
         services.AddScoped<ICommunityPostOpportunityService, CommunityPostOpportunityService>();
+    }
+
+    private static void Add지도원장신청Services(this IServiceCollection services)
+    {
         services.AddScoped<I지도신청가원장UseCase, 지도신청가원장UseCase>();
         services.AddSingleton<I커뮤니티세계지도원장ProjectionCache, 커뮤니티세계지도원장ProjectionCache>();
         services.AddScoped<I커뮤니티세계지도원장ProjectionUseCase, 커뮤니티세계지도원장ProjectionUseCase>();
         services.AddScoped<I지도신청운송취소검토AdminWorkflow, 지도신청운송취소검토AdminWorkflow>();
+    }
+
+    private static void Add원장투영OutboxServices(this IServiceCollection services)
+    {
         services.AddScoped<I원장다이어그램실시간알림Service, 원장다이어그램SignalR알림Service>();
         services.AddScoped<I커뮤니티원장업무투영동기화Service, 커뮤니티원장업무투영동기화Service>();
         services.AddScoped<I원장업무투영동기화Handler, 운송원장업무투영Handler>();
@@ -109,12 +190,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식마트원장동기화복구Service>(sp => sp.GetRequiredService<음식마트원장동기화OutboxService>());
         services.AddScoped<I음식기사후속OutboxService>(sp => sp.GetRequiredService<음식마트원장동기화OutboxService>());
         services.AddScoped<I음식배차요청OutboxService, 음식배차요청OutboxService>();
-        services.AddSingleton<I교육기관제출대기열, Mongo교육기관제출대기열>();
-        services.AddScoped<I현장체험활동UseCase, 현장체험활동UseCase>();
-        services.AddScoped<I교육과정정의Service, 교육과정정의Service>();
-        services.AddScoped<I교육과정참여Service, 교육과정참여Service>();
-        services.AddScoped<ITypecast음성카탈로그저장소, EfTypecast음성카탈로그저장소>();
-        services.AddScoped<ITypecast음성카탈로그Service, Typecast음성카탈로그Service>();
+    }
+
+    private static void Add커뮤니티정보작성Services(this IServiceCollection services)
+    {
         services.AddScoped<IYouTube채널감시저장소, EfYouTube채널감시저장소>();
         services.AddScoped<IYouTube채널감시Service, YouTube채널감시Service>();
         services.AddScoped<ICommunityInformationCandidateSource, CommunityYouTubeInformationCandidateSource>();
@@ -140,6 +219,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IYouTube음식상품발견Service, YouTube음식상품발견Service>();
         services.AddScoped<IYouTube영상재료인지Engine, YouTube영상재료인지Engine>();
         services.AddScoped<IYouTube영상재료자동인지Service, YouTube영상재료자동인지Service>();
+    }
+
+    private static void Add홍익학당카드Services(this IServiceCollection services)
+    {
         services.AddSingleton<IHongikHakdangCardPageParser, HongikHakdangCardPageParser>();
         services.AddSingleton<IHongikHakdangCardImageStore, HongikHakdangCardImageStore>();
         services.AddSingleton<IHongikHakdangCardVariantRenderer, HongikHakdangCardVariantRenderer>();
@@ -149,6 +232,10 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IHongikHakdangCardService, HongikHakdangCardService>();
         services.AddScoped<IHongikHakdangCardVariantService, HongikHakdangCardVariantService>();
         services.AddScoped<IHongikHakdangCardDeliveryService, HongikHakdangCardDeliveryService>();
+    }
+
+    private static void Add커뮤니티알림Services(this IServiceCollection services)
+    {
         services.AddScoped<ISsalddelMobilePushInstallationService, SsalddelMobilePushInstallationService>();
         services.AddSingleton<ICommunityKeywordMatcher, CommunityKeywordMatcher>();
         services.AddSingleton<ICommunityDriverAvailabilityClock, SystemCommunityDriverAvailabilityClock>();
@@ -161,33 +248,14 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<ICommunityPostEmailNotificationOutboxStore, CommunityPostEmailNotificationOutboxStore>();
         services.AddScoped<ICommunityPostEmailSender, GmailCommunityPostEmailSender>();
         services.AddScoped<ICommunityPostEmailNotificationProcessor, CommunityPostEmailNotificationProcessor>();
+    }
+
+    private static void Add게시글음성Services(this IServiceCollection services)
+    {
         services.AddSingleton<I커뮤니티게시글음성본문분할기, 커뮤니티게시글음성본문분할기>();
         services.AddSingleton<I커뮤니티게시글음성작업예약Service, 커뮤니티게시글음성작업예약Service>();
         services.AddSingleton<I커뮤니티게시글음성작업신호, 커뮤니티게시글음성작업신호>();
         services.AddScoped<I커뮤니티게시글음성작업Processor, 커뮤니티게시글음성작업Processor>();
         services.AddScoped<I커뮤니티게시글음성조회Service, 커뮤니티게시글음성조회Service>();
-        services.AddScoped<ICommunityScheduledPostPublicationProcessor, CommunityScheduledPostPublicationProcessor>();
-        services.AddHostedService<교육기관제출Worker>();
-        services.AddHostedService<CommunityScheduledPostPublicationWorker>();
-        services.AddHostedService<커뮤니티게시글음성Worker>();
-        services.AddHostedService<CommunityKeywordNotificationWorker>();
-        services.AddHostedService<CommunityPostEmailNotificationWorker>();
-        services.AddHostedService<CommunityActivityBoardContentWorker>();
-        services.AddHostedService<커뮤니티원장투영Worker>();
-        services.AddHostedService<CommunityGroupPurchaseDemandOutboxWorker>();
-        services.AddScoped<I인증UseCase, 인증UseCase>();
-        services.AddScoped<I커뮤니티대화UseCase, 커뮤니티대화UseCase>();
-        services.AddScoped<I공동구매자동집단화UseCase, 공동구매자동집단화UseCase>();
-        services.AddScoped<I공동구매커머스이행계획UseCase, 공동구매커머스이행계획UseCase>();
-        services.AddScoped<I공동구매해외선적통관동기화Service, 공동구매해외선적통관동기화Service>();
-        services.AddSingleton<I공동구매수입물류정규화Service, 공동구매수입물류정규화Service>();
-        services.AddSingleton<IVersionFeatureFlagService, VersionFeatureFlagService>();
-        services.AddScoped<ISsalddelFoodOrderStore, EfSsalddelFoodOrderStore>();
-        services.AddScoped<I음식점조리시간Service, 음식점조리시간Service>();
-        services.AddScoped<I음식주문메뉴검증Service, 음식주문메뉴검증Service>();
-        services.AddSingleton<배차주소Store>();
-        services.AddScoped<I음식점주문실시간알림Service, 음식점주문SignalR알림Service>();
-
-        return services;
     }
 }

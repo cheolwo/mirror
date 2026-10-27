@@ -21,6 +21,9 @@ public sealed class SsalddelBackgroundJobActivationPolicyTests
     [InlineData(
         SsalddelBackgroundWorkloadKeys.SalesChannelOrderSync,
         VersionFeatureFlagKeys.SalesChannelFulfillmentWorkflow)]
+    [InlineData(
+        SsalddelBackgroundWorkloadKeys.WeeklyStatementPreparation,
+        VersionFeatureFlagKeys.DomesticTransportWorkflow)]
     public void Operational이고_해당Workflow가활성화되면_실행을허용한다(
         string workloadKey,
         string featureKey)
@@ -52,6 +55,17 @@ public sealed class SsalddelBackgroundJobActivationPolicyTests
         Assert.Equal(
             SsalddelBackgroundWorkloadActivationCodes.OperationalModeRequired,
             result.Code);
+    }
+
+    [Theory]
+    [InlineData(SsalddelExecutionMode.Simulation, true, "OperationalModeRequired")]
+    [InlineData(SsalddelExecutionMode.Operational, false, "FeatureDisabled")]
+    public void 주간자동명세Job은모드와업무기능을각각검사한다(SsalddelExecutionMode mode, bool enabled, string code)
+    {
+        var policy = CreatePolicy(mode, enabled ? [VersionFeatureFlagKeys.DomesticTransportWorkflow] : [], true);
+        var result = policy.Evaluate(SsalddelBackgroundWorkloadKeys.WeeklyStatementPreparation);
+        Assert.False(result.IsEnabled);
+        Assert.Equal(code, result.Code);
     }
 
     [Theory]

@@ -42,6 +42,7 @@
         new("직접 피킹·배송 순회", "/driver/distributed/round", "work"),
         new("운행 시작", DriverRoutes.WorkStart, "work"),
         new("받을 업무·적재 설정", "/driver/work/settings", "settings"),
+        new("운송 자격 확인", "/driver/qualification", "person"),
         new("보낸 탐색 문의함", DriverRoutes.ExplorationCampaigns, "outbox"),
         new("음식 배달 업무", DriverRoutes.FoodDeliveries, "food"),
         new("배달 내역", DriverRoutes.DeliveryHistory, "history"),
@@ -80,7 +81,8 @@
 
     private static string GetGroupId(string route)
     {
-        if (route.Equals(DriverRoutes.WorkStart, StringComparison.OrdinalIgnoreCase)
+        if (route.Equals("/driver/qualification", StringComparison.OrdinalIgnoreCase)
+            || route.Equals(DriverRoutes.WorkStart, StringComparison.OrdinalIgnoreCase)
             || route.Equals(DriverRoutes.Reservations, StringComparison.OrdinalIgnoreCase))
         {
             return "driver-menu-prepare";

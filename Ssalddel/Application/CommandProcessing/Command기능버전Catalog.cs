@@ -11,7 +11,9 @@ public sealed record Command기능버전정보(
 public static class Command기능버전Catalog
 {
     public const string CurrentRelease = SsalddelProductRoadmapCatalog.CurrentVersion;
-    public const string DeploymentTarget = SsalddelProductRoadmapCatalog.DeploymentTargetVersion;
+    [Obsolete("단일 완성 목표는 UnifiedDeploymentTarget을 사용하세요. Get은 기존 Command 분류를 유지합니다.")]
+    public const string DeploymentTarget = SsalddelProductRoadmapCatalog.UnifiedReleaseVersion;
+    public static SsalddelUnifiedReleaseTarget UnifiedDeploymentTarget => SsalddelProductRoadmapCatalog.UnifiedReleaseTarget;
 
     private static readonly IReadOnlyDictionary<string, Command기능버전정보> Versions =
         SsalddelProductRoadmapCatalog.All.ToDictionary(

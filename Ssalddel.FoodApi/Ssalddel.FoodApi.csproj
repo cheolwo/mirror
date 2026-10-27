@@ -16,4 +16,7 @@
 	<PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\eng\shared-services\Kakao주소조회Client.cs" Link="Services\Shared\Kakao주소조회Client.cs" />
+  </ItemGroup>
 </Project>

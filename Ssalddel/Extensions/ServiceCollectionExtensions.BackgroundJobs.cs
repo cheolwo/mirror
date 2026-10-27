@@ -143,6 +143,12 @@ public static partial class ServiceCollectionExtensions
                 .WithIdentity("DriverPayoutOutboxProcess-trigger")
                 .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromSeconds(Math.Max(5, jobOptions.결제승인Outbox발행주기초))).RepeatForever()));
 
+            var weeklyStatementJobKey = new JobKey("WeeklyStatementPreparation");
+            q.AddJob<주간정산명세준비Job>(opts => opts.WithIdentity(weeklyStatementJobKey));
+            q.AddTrigger(opts => opts.ForJob(weeklyStatementJobKey)
+                .WithIdentity("WeeklyStatementPreparation-trigger")
+                .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromMinutes(15)).RepeatForever()));
+
             var foodMartLedgerOutboxJobKey = new JobKey("FoodMartLedgerSyncOutboxProcess");
             q.AddJob<음식마트원장동기화Outbox처리Job>(opts => opts.WithIdentity(foodMartLedgerOutboxJobKey));
             q.AddTrigger(opts => opts

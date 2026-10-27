@@ -29,6 +29,18 @@ public static partial class ServiceCollectionExtensions
 {
     private static IServiceCollection AddSsalddelOperationsDomainServices(this IServiceCollection services)
     {
+        services.AddOptions<Ssalddel.Application.Driver.Qualification.운송자격Options>()
+            .BindConfiguration(Ssalddel.Application.Driver.Qualification.운송자격Options.SectionName);
+        services.AddScoped<Ssalddel.Application.Driver.Qualification.운송자격UseCase>();
+        services.AddScoped<Ssalddel.Application.Driver.Qualification.I운송자격UseCase>(sp =>
+            sp.GetRequiredService<Ssalddel.Application.Driver.Qualification.운송자격UseCase>());
+        services.AddScoped<Ssalddel.Application.Driver.Qualification.I기사운송자격Service>(sp =>
+            sp.GetRequiredService<Ssalddel.Application.Driver.Qualification.운송자격UseCase>());
+        services.AddOptions<화물플랫폼등록준비Options>()
+            .BindConfiguration(화물플랫폼등록준비Options.SectionName);
+        services.AddScoped<I화물플랫폼등록준비Service, 화물플랫폼등록준비Service>();
+        services.AddScoped<Ssalddel.Services.Dispatch.Compliance.I신규화물업무자격Guard,
+            Ssalddel.Services.Dispatch.Compliance.신규화물업무자격Guard>();
         services.AddOptions<Ssalddel.Services.Commerce.외부개인정보처리Options>();
         Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<Ssalddel.Services.Commerce.I외부개인정보처리Guard,
             Ssalddel.Services.Commerce.외부개인정보처리Guard>(services);
@@ -119,7 +131,9 @@ public static partial class ServiceCollectionExtensions
         services.AddOptions<DriverPayoutBatchOptions>()
             .BindConfiguration(DriverPayoutBatchOptions.SectionName);
         services.AddScoped<Ssalddel.Application.Shipper.Payment.토스결제입금재조회UseCase>();
-        services.AddScoped<I배송료정산배치UseCase, 배송료정산배치UseCase>();
+        services.AddScoped<배송료정산배치UseCase>();
+        services.AddScoped<I배송료정산배치UseCase>(sp => sp.GetRequiredService<배송료정산배치UseCase>());
+        services.AddScoped<I배송료주간자동준비Service>(sp => sp.GetRequiredService<배송료정산배치UseCase>());
         services.AddScoped<I소형배송기사제안요금Service, 소형배송기사제안요금Service>();
         services.AddScoped<Ssalddel.Application.Driver.Participation.IDriverWorkParticipationUseCase,
             Ssalddel.Application.Driver.Participation.DriverWorkParticipationUseCase>();
@@ -162,6 +176,11 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I배달권기반배차조율계획Service, 배달권기반배차조율계획Service>();
         services.AddScoped<I배달권기반배차조율실행Service, 배달권기반배차조율실행Service>();
         services.AddScoped<I국내화물배차조율입력Factory, 국내화물배차조율입력Factory>();
+        services.AddScoped<I화물배차상태SnapshotService, 화물배차상태SnapshotService>();
+        services.AddScoped<I국내화물추천재검증Service, 국내화물추천재검증Service>();
+        services.AddScoped<I기사실차적재근거조회Service, 기사실차적재근거조회Service>();
+        services.AddScoped<I국내화물배차계획검증Service, 국내화물배차계획검증Service>();
+        services.AddScoped<화물구간적재검증Service>();
         services.AddSingleton<File배차AI판단사례LedgerStore>();
         services.AddSingleton<I배차AI판단사례LedgerStore>(sp => sp.GetRequiredService<File배차AI판단사례LedgerStore>());
         services.AddSingleton<I배차AI판단근거Source>(sp => sp.GetRequiredService<File배차AI판단사례LedgerStore>());
@@ -177,6 +196,17 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<용달운송배차업무정책>();
         services.AddScoped<I배차업무정책>(provider => provider.GetRequiredService<용달운송배차업무정책>());
         services.AddScoped<I용달운송대상후보Service>(provider => provider.GetRequiredService<용달운송배차업무정책>());
+        services.AddOptions<CargoDispatchOllamaOptions>().BindConfiguration(CargoDispatchOllamaOptions.SectionName)
+            .Validate(x => x.Validate(), "CargoDispatchOllamaConfigurationInvalid").ValidateOnStart();
+        services.AddSingleton<CargoDispatchAIInferenceGate>();
+        services.AddHttpClient<ICargoDispatchCandidateAI, OllamaCargoDispatchCandidateAI>(client =>
+            client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                UseProxy = false,
+                AllowAutoRedirect = false,
+                UseCookies = false
+            });
         services.AddScoped<I배차업무정책, 음식배달배차업무정책>();
         services.AddOptions<FoodDispatchOllamaOptions>().BindConfiguration(FoodDispatchOllamaOptions.SectionName)
             .Validate(x => x.Validate(), "FoodDispatchOllamaConfigurationInvalid").ValidateOnStart();

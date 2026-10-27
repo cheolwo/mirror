@@ -42,6 +42,7 @@ public static class RoleWorkspaceActionPolicy
 
             (RoleWorkspaceCatalog.Shipper, "create" or "timeline" or "payment" or "proofs") => RoleWorkspaceActionUsage.OptionalTool,
             (RoleWorkspaceCatalog.CargoDriver, "arrive-pickup" or "pickup" or "arrive-dropoff" or "dropoff") => RoleWorkspaceActionUsage.Required,
+            (RoleWorkspaceCatalog.CargoDriver, CargoDriverWorkSession.WorkSettings) => RoleWorkspaceActionUsage.OptionalTool,
             (RoleWorkspaceCatalog.CargoDriver, "offer" or "issue" or CargoDriverWorkSession.StartWork or CargoDriverWorkSession.StopWork
                 or CargoDriverWorkSession.EnableDispatch or CargoDriverWorkSession.DisableDispatch or CargoDriverWorkSession.CheckLocation) => RoleWorkspaceActionUsage.Conditional,
             (RoleWorkspaceCatalog.Warehouse, "inbound" or "inspection" or "put-away" or "picking"

@@ -7,6 +7,23 @@ namespace Ssalddel.Tests.WebApp;
 public sealed class IntegratedBetaCatalogTests
 {
     [Theory]
+    [InlineData("/community/space-cooperations", WebInteractionBoundary.ReadOnly, false)]
+    [InlineData("/community/space-cooperations/new", WebInteractionBoundary.PlatformPersistence, true)]
+    [InlineData("/community/space-cooperations/hub", WebInteractionBoundary.PlatformPersistence, false)]
+    [InlineData("/community/space-cooperations/hub/work/inbound?cycle=c1", WebInteractionBoundary.ReadOnly, true)]
+    [InlineData("/community/space-cooperations/{LedgerId}/work/{StageKey}", WebInteractionBoundary.ReadOnly, true)]
+    public void 공동운영은_공개소개와_인증후명령과_읽기전용업무상세를_구분한다(
+        string href, WebInteractionBoundary expectedBoundary, bool expectedAuthentication)
+    {
+        var state = IntegratedBetaCatalog.Resolve(href);
+
+        Assert.True(state.IsCataloged);
+        Assert.Equal(IntegratedBetaStage.Beta, state.Stage);
+        Assert.Equal(expectedBoundary, state.Boundary);
+        Assert.Equal(expectedAuthentication, state.RequiresAuthentication);
+    }
+
+    [Theory]
     [InlineData("/community")]
     [InlineData("/ko/community")]
     [InlineData("/en/community")]

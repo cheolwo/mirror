@@ -20,7 +20,9 @@
         <span class="community-mobile-shell__sync" aria-label="동기화됨">
             <MudIcon Icon="@Icons.Material.Filled.Sync" Size="Size.Small" />
         </span>
-        <span class="community-mobile-shell__avatar" aria-label="방문자">방</span>
+        <a class="community-mobile-shell__avatar" href="@CommunityPageRoutes.Personal" aria-label="내 정보">
+            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+        </a>
     </header>
 
     @if (_drawerOpen)

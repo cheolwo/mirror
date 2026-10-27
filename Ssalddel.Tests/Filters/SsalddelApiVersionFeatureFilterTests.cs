@@ -12,11 +12,50 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using 살뜰.Services.Options;
 using 살뜰.Services.Versioning;
+using VehicleRecommendationController = Ssalddel.Controllers.Admin.Master06.차량추천관리Controller;
 
 namespace Ssalddel.Tests.Filters;
 
 public sealed class SsalddelApiFeatureBoundaryFilterTests
 {
+    [Theory]
+    [InlineData(nameof(VehicleRecommendationController.추천기준목록조회), false)]
+    [InlineData(nameof(VehicleRecommendationController.추천기준목록조회), true)]
+    [InlineData(nameof(VehicleRecommendationController.추천기준수정), false)]
+    [InlineData(nameof(VehicleRecommendationController.추천기준수정), true)]
+    [InlineData(nameof(VehicleRecommendationController.추천시뮬레이션), false)]
+    [InlineData(nameof(VehicleRecommendationController.추천시뮬레이션), true)]
+    [InlineData(nameof(VehicleRecommendationController.실차적재조회), false)]
+    [InlineData(nameof(VehicleRecommendationController.실차적재조회), true)]
+    [InlineData(nameof(VehicleRecommendationController.실차적재수정), false)]
+    [InlineData(nameof(VehicleRecommendationController.실차적재수정), true)]
+    public async Task 차량추천관리의기존세동작과실차두동작은_관리자권한을유지하며_국내화물게이트로열고닫는다(string action, bool enabled)
+    {
+        Assert.Contains(typeof(VehicleRecommendationController)
+            .GetCustomAttributes<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>(inherit: true),
+            x => x.Policy == "서버관리자전용");
+        var context = CreateContext<VehicleRecommendationController>(action);
+        var flags = enabled ? new RecordingFeatureFlagService(VersionFeatureFlagKeys.DomesticTransportWorkflow)
+            : new RecordingFeatureFlagService(VersionFeatureFlagKeys.FoodDeliveryWorkflow, VersionFeatureFlagKeys.OperationalDispatchCore);
+        var nextCalled = false;
+        await new SsalddelApiFeatureBoundaryFilter(flags).OnActionExecutionAsync(context, () =>
+        {
+            nextCalled = true;
+            return Task.FromResult(new ActionExecutedContext(context, [], new object()));
+        });
+        Assert.Equal(enabled, nextCalled);
+        Assert.Equal([VersionFeatureFlagKeys.DomesticTransportWorkflow], flags.CheckedFeatureKeys);
+        if (enabled) Assert.Null(context.Result);
+        else
+        {
+            var result = Assert.IsType<ObjectResult>(context.Result);
+            Assert.Equal(StatusCodes.Status404NotFound, result.StatusCode);
+            var problem = Assert.IsType<ProblemDetails>(result.Value);
+            Assert.Equal("FeatureDisabled", problem.Extensions["errorCode"]);
+            Assert.Equal(VersionFeatureFlagKeys.DomesticTransportWorkflow, problem.Extensions["featureKey"]);
+        }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

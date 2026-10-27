@@ -212,6 +212,11 @@ namespace FDriverApp.Pages
 
         protected override bool OnBackButtonPressed()
         {
+            if (BindingContext is MainPageModel { Completion.HasNotice: true } completionModel)
+            {
+                completionModel.Completion.Dismiss();
+                return true;
+            }
             if (BindingContext is MainPageModel { IsAuthenticated: true } editorModel && editorModel.ExceptionEditor.IsOpen)
             {
                 if (!editorModel.IsBusy) editorModel.CloseInterruptionCommand.Execute(null);

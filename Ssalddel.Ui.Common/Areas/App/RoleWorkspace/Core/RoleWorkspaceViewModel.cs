@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Ssalddel.Contracts.Common.Metadata;
 using Ssalddel.Ui.Common.Areas.App.Models;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Completion;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
@@ -33,6 +34,8 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
     public bool FoodDispatchStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { PreferenceStateUnconfirmed: true };
     public bool FoodStartStateUnconfirmed => _adapter is IRoleWorkspaceRecovery { StartStateUnconfirmed: true };
     public string? DispatchReceptionNotice => (_adapter as IRoleWorkspaceDispatchReceptionState)?.DispatchReceptionNotice;
+    public WorkflowCompletionFeedback? CompletionFeedback => !_disposed && !_suspended && IsAuthenticated
+        ? (_adapter as IRoleWorkspaceCompletionFeedback)?.CompletionFeedback : null;
 
     public RoleWorkspaceViewModel(IEnumerable<IRoleWorkspaceAdapter> adapters, IRoleWorkspaceAccess access, RoleWorkspaceState state,
         TimeProvider? clock = null)
@@ -399,11 +402,25 @@ public sealed class RoleWorkspaceViewModel : ObservableObject, IDisposable
         var expired = false;
         var items = _snapshot.Items.Select(item =>
         {
+            var fieldExpired = false;
+            RoleWorkspaceField? ExpireField(RoleWorkspaceField? field)
+            {
+                if (field?.ValueExpiresAtUtc is not { } expiry || expiry > _clock.GetUtcNow()) return field;
+                fieldExpired = true;
+                return field with { Value = field.ExpiredValue ?? "위치 갱신 지연 · 현재 위치 확인 필요", ValueExpiresAtUtc = null };
+            }
+            var sections = item.Sections?.Select(section => section with
+                { Fields = section.Fields.Select(field => ExpireField(field)!).ToArray() }).ToArray();
+            var summary = item.Summary is { } original ? original with
+            {
+                Metrics = original.Metrics?.Select(field => ExpireField(field)!).ToArray(),
+                Request = ExpireField(original.Request)
+            } : null;
             var markers = item.Markers?.Where(marker => IsUnexpired(marker.ExpiresAt)).ToArray();
             var routes = item.Routes?.Where(route => IsUnexpired(route.ExpiresAt)).ToArray();
-            if (markers?.Length == item.Markers?.Count && routes?.Length == item.Routes?.Count) return item;
+            if (!fieldExpired && markers?.Length == item.Markers?.Count && routes?.Length == item.Routes?.Count) return item;
             expired = true;
-            return item with { Markers = markers, Routes = routes };
+            return item with { Markers = markers, Routes = routes, Sections = sections, Summary = summary };
         }).ToArray();
         if (!expired) return;
         _snapshot = _snapshot with { Items = items };

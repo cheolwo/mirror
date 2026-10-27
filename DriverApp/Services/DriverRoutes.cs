@@ -3,6 +3,7 @@ namespace DriverApp.Services;
 public static class DriverRoutes
 {
     public const string Login = "/login";
+    public const string PublicCargo = "/driver/public-cargo";
     public const string Home = "/driver/home";
     public const string HomeSummary = "/driver/home/summary";
     public const string Menu = "/driver/menu";

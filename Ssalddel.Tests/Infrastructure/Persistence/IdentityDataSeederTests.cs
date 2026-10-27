@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Ssalddel.Contracts.Food;
+using System.Text.Json;
 using 살뜰.Data;
 using 살뜰.Infrastructure.Security;
+using 살뜰.도메인.차량;
 
 namespace Ssalddel.Tests.Infrastructure.Persistence;
 
@@ -82,8 +84,80 @@ public sealed class IdentityDataSeederTests
         Assert.Equal(1, await db.Users.CountAsync());
     }
 
+    [Fact]
+    public async Task 기본시드는_소형차미확인템플릿을_비활성으로한번만추가한다()
+    {
+        await using var fixture = await IdentitySeedFixture.CreateAsync();
+
+        await IdentityDataSeeder.SeedAsync(fixture.Services);
+        await IdentityDataSeeder.SeedAsync(fixture.Services);
+
+        var templates = await fixture.Db.차량제원.AsNoTracking()
+            .Where(x => x.차량코드 == 소형차제원SeedCatalog.오토바이코드 || x.차량코드 == 소형차제원SeedCatalog.다마스코드)
+            .ToArrayAsync();
+        Assert.Equal(2, templates.Length);
+        Assert.All(templates, item =>
+        {
+            Assert.False(item.추천사용여부);
+            Assert.Equal(0, item.적재함길이Mm);
+            Assert.Equal(0, item.적재함폭Mm);
+            Assert.Null(item.적재함높이Mm);
+            Assert.Equal(0, item.최대적재중량Kg);
+            Assert.Null(item.운영권장중량Kg);
+            Assert.Null(item.권장최대CBM);
+        });
+        Assert.True(await fixture.Db.차량제원.AsNoTracking()
+            .Where(x => x.차량코드 == "1톤 카고").Select(x => x.추천사용여부).SingleAsync());
+    }
+
+    [Theory]
+    [InlineData(소형차제원SeedCatalog.오토바이코드, true)]
+    [InlineData(소형차제원SeedCatalog.오토바이코드, false)]
+    [InlineData(소형차제원SeedCatalog.다마스코드, true)]
+    [InlineData(소형차제원SeedCatalog.다마스코드, false)]
+    public async Task 반복시드는_기존소형차의실측값과사용여부와수정시각을보존한다(string code, bool enabled)
+    {
+        await using var fixture = await IdentitySeedFixture.CreateAsync();
+        var observedAt = new DateTime(2026, 10, 18, 1, 2, 3, DateTimeKind.Utc);
+        fixture.Db.차량제원.Add(new 차량제원
+        {
+            차량코드 = code,
+            차량명 = "합성 실측 검증 차량",
+            제조사 = "시험 제조사",
+            모델명 = "시험 실차",
+            차급 = "시험 차급",
+            차체형태 = "시험 적재함",
+            적재함길이Mm = 800,
+            적재함폭Mm = 500,
+            적재함높이Mm = 500,
+            최대적재중량Kg = 20,
+            운영권장중량Kg = 15,
+            권장최대CBM = 0.1m,
+            팔레트적재개수 = 0,
+            추천사용여부 = enabled,
+            추천우선순위 = 7,
+            비눈보호가능 = true,
+            장점메모 = "가상 시험용 확인 기록",
+            단점메모 = "실제 운영 제원 아님",
+            CreatedAt = observedAt,
+            UpdatedAt = observedAt
+        });
+        await fixture.Db.SaveChangesAsync();
+        var before = JsonSerializer.Serialize(await fixture.Db.차량제원.AsNoTracking().SingleAsync(x => x.차량코드 == code));
+
+        await IdentityDataSeeder.SeedAsync(fixture.Services);
+        await IdentityDataSeeder.SeedAsync(fixture.Services);
+
+        var after = await fixture.Db.차량제원.AsNoTracking().SingleAsync(x => x.차량코드 == code);
+        Assert.Equal(before, JsonSerializer.Serialize(after));
+        Assert.Equal(2, await fixture.Db.차량제원.AsNoTracking()
+            .CountAsync(x => x.차량코드 == 소형차제원SeedCatalog.오토바이코드 || x.차량코드 == 소형차제원SeedCatalog.다마스코드));
+    }
+
     private sealed class IdentitySeedFixture : IAsyncDisposable
     {
+        // EF 내부 provider는 공유하고, 각 시험의 데이터는 고유 databaseName으로 분리합니다.
+        private static readonly InMemoryDatabaseRoot DatabaseRoot = new();
         private readonly ServiceProvider provider;
 
         private IdentitySeedFixture(ServiceProvider provider)
@@ -107,14 +181,13 @@ public sealed class IdentityDataSeederTests
             Action<IdentitySeedOptions>? configure = null)
         {
             var services = new ServiceCollection();
-            var databaseRoot = new InMemoryDatabaseRoot();
             var databaseName = $"identity-seed-{Guid.NewGuid():N}";
             services.AddLogging();
             services.AddSingleton<IPersonalDataEncryptionService, DummyPersonalDataEncryptionService>();
             services.AddDbContext<SsalddelContext>(options =>
                 options.UseInMemoryDatabase(
                     databaseName,
-                    databaseRoot));
+                    DatabaseRoot));
             services.Configure<IdentitySeedOptions>(options => configure?.Invoke(options));
             services
                 .AddIdentityCore<ApplicationUser>(options =>

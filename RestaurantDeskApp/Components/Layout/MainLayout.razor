@@ -5,6 +5,7 @@
 @inject I음식점주문SignalRClientService RestaurantRealtimeService
 @using Microsoft.AspNetCore.Components.Routing
 
+<div class="restaurant-layout @(AuthService.Session.IsAuthenticated ? "restaurant-layout--authenticated" : null)">
 <MudLayout>
     <MudAppBar Dense="true" Elevation="0" Color="Color.Primary" Class="restaurant-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
@@ -13,7 +14,7 @@
                        aria-label="뒤로가기"
                        OnClick="GoBack"
                        Class="back-nav-button" />
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="탐색 메뉴" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="탐색 메뉴" Class="restaurant-menu-toggle" />
         <MudText Typo="Typo.h6" Class="ml-2 restaurant-appbar-title">살뜰 식당</MudText>
         <MudSpacer />
         <RoleAppLifecycleIndicator />
@@ -28,14 +29,25 @@
         <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Class="restaurant-appbar-chip">주문 수신 데스크</MudChip>
     </MudAppBar>
 
-    <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="0" ClipMode="DrawerClipMode.Always" @onclick="CloseDrawer">
-        <NavMenu />
-    </MudDrawer>
+    <div class="restaurant-mobile-navigation">
+        <MudDrawer Open="@_drawerOpen" Variant="DrawerVariant.Temporary" Elevation="0" ClipMode="DrawerClipMode.Always" @onclick="CloseDrawer">
+            <NavMenu />
+        </MudDrawer>
+    </div>
+
+    @if (AuthService.Session.IsAuthenticated)
+    {
+        <aside class="restaurant-desktop-navigation" aria-label="음식점 업무 탐색">
+            <NavMenu />
+        </aside>
+    }
 
     <MudMainContent>
+        <div class="restaurant-body">
         <MobileFieldTestBanner AppVersion="0.1.0" />
         <div class="pa-4 restaurant-main-content">
             @Body
+        </div>
         </div>
     </MudMainContent>
     @if (AuthService.Session.IsAuthenticated)
@@ -43,6 +55,7 @@
         <음식점하단탐색 />
     }
 </MudLayout>
+</div>
 
 @code {
     private bool _drawerOpen;

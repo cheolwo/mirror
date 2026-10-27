@@ -28,6 +28,8 @@ public sealed class 기사운송대금지급요청Configuration
         builder.Property(x => x.Simulation검증일시Utc).HasColumnName("simulation_verified_at_utc");
         builder.Property(x => x.마지막처리코드).HasColumnName("last_result_code").HasMaxLength(80);
         builder.Property(x => x.마지막처리메시지).HasColumnName("last_result_message").HasMaxLength(500);
+        builder.Property(x => x.자동명세검토시각Utc).HasColumnName("automatic_statement_reviewed_at_utc");
+        builder.Property(x => x.자동명세검토코드).HasColumnName("automatic_statement_review_code").HasMaxLength(80);
         builder.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         builder.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
 

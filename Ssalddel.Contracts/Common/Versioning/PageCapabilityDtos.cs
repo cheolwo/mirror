@@ -325,6 +325,14 @@ public static partial class SsalddelPageCapabilityCatalog
             PageInteractionBoundary.Simulation, true, "2.5", "수입 주문 원장의 연결 구조를 체험합니다.", true,
             [GroupPurchase, Customs], ["GroupPurchaseImport", "CustomsAndTradeData"]),
 
+        Exact("community-cargo-notices", SsalddelPageAppCodes.IntegratedWeb, "/community/cargo-notices", PageCapabilityStage.Beta,
+            PageInteractionBoundary.ReadOnly, false, "0.0",
+            "기본 비활성인 정보 공고에서 공개에 동의하고 만료되지 않은 화물 조건만 조회합니다. 운송 의뢰·배차·계약·결제를 생성하지 않습니다.",
+            featureKeys: [Community], workflowCodes: ["CommunityTrust"]),
+        Exact("shipper-cargo-notices", SsalddelPageAppCodes.IntegratedWeb, "/shipper/cargo-notices", PageCapabilityStage.Beta,
+            PageInteractionBoundary.PlatformPersistence, true, "0.0",
+            "로그인한 작성자가 별도 정보 공고를 초안 저장·명시적 동의 후 게시·수정·철회합니다. 서버의 소유권·만료·기본 비활성 설정을 따르며 운송 업무를 생성하지 않습니다.",
+            featureKeys: [Community], workflowCodes: ["CommunityTrust"]),
         Prefix("shipper-public-cargo", SsalddelPageAppCodes.IntegratedWeb, "/shipper/public-cargo", PageCapabilityStage.Beta,
             PageInteractionBoundary.ReadOnly, false, SsalddelProductRoadmapCatalog.TransportVersion,
             "화주가 공개에 동의한 비식별 화물 정보만 조회합니다.",
@@ -364,6 +372,10 @@ public static partial class SsalddelPageCapabilityCatalog
         Exact("shipper-request-detail-lookup", SsalddelPageAppCodes.IntegratedWeb, ShipperRequestDetailPageRoutes.LegacyLookup, PageCapabilityStage.Beta,
             PageInteractionBoundary.ReadOnly, true, SsalddelProductRoadmapCatalog.TransportVersion,
             "stable 운송 의뢰 ID를 입력해 책임별 상세 화면으로 이동합니다.", false,
+            [DomesticTransport], ["DomesticTransport"]),
+        Exact("shipper-request-receipt", SsalddelPageAppCodes.IntegratedWeb, ShipperRequestDetailPageRoutes.ProofsTemplate, PageCapabilityStage.Beta,
+            PageInteractionBoundary.PlatformPersistence, true, SsalddelProductRoadmapCatalog.TransportVersion,
+            "같은 의뢰의 증빙을 조회하고 권한과 운송 완료 조건을 확인한 인수증만 명시적으로 등록합니다. 입금·정산·실제 지급은 별도입니다.", false,
             [DomesticTransport], ["DomesticTransport"]),
         Prefix("shipper-request-detail", SsalddelPageAppCodes.IntegratedWeb, ShipperRequestPageRoutes.Root, PageCapabilityStage.Beta,
             PageInteractionBoundary.ReadOnly, true, SsalddelProductRoadmapCatalog.TransportVersion,
@@ -1034,10 +1046,24 @@ public static partial class SsalddelPageCapabilityCatalog
     }
 
     private static bool Matches(SsalddelPageCapabilityRule rule, string route)
-        => rule.MatchKind == PageCapabilityMatchKind.Exact
+        => rule.PageKey is "community-space-cooperation-work" or "shipper-space-cooperation-work"
+            ? MatchesSpaceCooperationWorkRoute(route)
+            : rule.PageKey == "shipper-request-receipt"
+            ? MatchesShipperReceiptRoute(route)
+            : rule.MatchKind == PageCapabilityMatchKind.Exact
             ? string.Equals(rule.RoutePattern, route, StringComparison.OrdinalIgnoreCase)
             : string.Equals(rule.RoutePattern, route, StringComparison.OrdinalIgnoreCase)
               || route.StartsWith($"{rule.RoutePattern}/", StringComparison.OrdinalIgnoreCase);
+
+    // 인수증 한 건의 고정 suffix만 변경 경계입니다. 일반 상세·결제와 그 하위 경로를 넓히지 않습니다.
+    private static bool MatchesShipperReceiptRoute(string route)
+    {
+        var prefix = ShipperRequestPageRoutes.Root + "/";
+        if (!route.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
+        var segments = route[prefix.Length..].Split('/');
+        return segments.Length == 2 && segments[0].Length > 0
+            && segments[1].Equals("proofs", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static string NormalizeRoute(string? route)
     {

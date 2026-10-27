@@ -33,6 +33,9 @@ public class 판매채널계정
     [Column("마지막동기화일시")]
     public DateTime? 마지막동기화일시 { get; set; }
 
+    [Column("동기화진단_json")]
+    public string? 동기화진단Json { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

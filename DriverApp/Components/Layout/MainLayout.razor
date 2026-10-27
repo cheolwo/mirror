@@ -78,12 +78,21 @@
         @if (CurrentScreen is not null)
         {
             <header class="driver-mobile-shell__screen-header">
-                <span>기사 업무 · @CurrentScreen.ScreenCode</span>
+                @if (!IsCargoExecutionScreen)
+                {
+                    <span>기사 업무 · @CurrentScreen.ScreenCode</span>
+                }
                 <div>
                     <h1>@CurrentScreen.Title</h1>
-                    <small>@CurrentScreen.Badge</small>
+                    @if (!IsCargoExecutionScreen)
+                    {
+                        <small>@CurrentScreen.Badge</small>
+                    }
                 </div>
-                <p>@CurrentScreen.Description</p>
+                @if (!string.IsNullOrWhiteSpace(CurrentScreen.Description))
+                {
+                    <p>@CurrentScreen.Description</p>
+                }
             </header>
         }
 
@@ -131,6 +140,9 @@
 
     private DriverMobileScreenDefinition? CurrentScreen
         => DriverMobileScreenCatalog.Resolve(CurrentPath);
+
+    private bool IsCargoExecutionScreen
+        => CurrentScreen?.ScreenCode is "04.08" or "04.09" or "04.10";
 
     private static IReadOnlyList<DriverDrawerItem> DrawerItems =>
     [

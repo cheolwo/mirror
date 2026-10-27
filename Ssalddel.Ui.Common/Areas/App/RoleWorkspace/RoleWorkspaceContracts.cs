@@ -3,7 +3,11 @@ using Ssalddel.Contracts.Common.Metadata;
 
 namespace Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 
-public sealed record RoleWorkspaceField(string Label, string Value);
+public sealed record RoleWorkspaceField(string Label, string Value)
+{
+    public DateTimeOffset? ValueExpiresAtUtc { get; init; }
+    public string? ExpiredValue { get; init; }
+}
 public sealed record RoleWorkspaceSection(string Title, IReadOnlyList<RoleWorkspaceField> Fields);
 /// <summary>펼치지 않아도 현재 판단·수행에 필요한 목적지와 짧은 핵심 정보입니다.</summary>
 public sealed record RoleWorkspaceSummary(string DestinationLabel, string Destination,
@@ -14,7 +18,8 @@ public sealed record RoleWorkspaceAction(string Key, string Label, string? Route
 public sealed record RoleWorkspaceItem(string Id, string Title, string Status, string? Subtitle = null,
     IReadOnlyList<RoleWorkspaceSection>? Sections = null, IReadOnlyList<RoleWorkspaceAction>? Actions = null,
     IReadOnlyList<NeighborhoodMapMarker>? Markers = null, IReadOnlyList<NeighborhoodMapRoute>? Routes = null,
-    bool IsCurrent = false, RoleWorkspaceSummary? Summary = null);
+    bool IsCurrent = false, RoleWorkspaceSummary? Summary = null,
+    IReadOnlyList<RoleWorkspaceField>? ComparisonFields = null);
 public sealed record RoleWorkspaceSnapshot(string RoleKey, IReadOnlyList<RoleWorkspaceItem> Items,
     string? Message = null, string? SelectedId = null, IReadOnlyList<RoleWorkspaceAction>? EmptyActions = null);
 public sealed record RoleWorkspaceIdentity(string? OwnerId, long Revision, bool IsAuthenticated);

@@ -6,6 +6,43 @@ namespace Ssalddel.Tests.Contracts.Common;
 public sealed class PageCapabilityCatalogTests
 {
     [Theory]
+    [InlineData("/community/cargo-notices", "community-cargo-notices", PageInteractionBoundary.ReadOnly, false)]
+    [InlineData("/shipper/cargo-notices", "shipper-cargo-notices", PageInteractionBoundary.PlatformPersistence, true)]
+    public void 화물정보공고는_운송업무와_분리된_정확경로와_인증경계로_분류한다(
+        string route, string pageKey, PageInteractionBoundary boundary, bool requiresAuthentication)
+    {
+        Assert.True(SsalddelPageCapabilityCatalog.TryResolve(SsalddelPageAppCodes.IntegratedWeb, route, out var capability));
+        Assert.Equal(pageKey, capability.PageKey);
+        Assert.Equal(route, capability.RoutePattern);
+        Assert.Equal(PageCapabilityMatchKind.Exact, capability.MatchKind);
+        Assert.Equal(PageCapabilityStage.Beta, capability.Stage);
+        Assert.Equal(boundary, capability.Boundary);
+        Assert.Equal(requiresAuthentication, capability.RequiresAuthentication);
+        Assert.False(capability.HasExternalEffects);
+        Assert.Equal(["CommunityTrustWorkflow"], capability.FeatureKeys);
+        Assert.Equal(["CommunityTrust"], capability.WorkflowCodes);
+        Assert.Contains("기본 비활성", capability.Notice);
+        Assert.Single(SsalddelPageCapabilityCatalog.GetAll(), rule => rule.AppCode == SsalddelPageAppCodes.IntegratedWeb
+            && rule.RoutePattern == route && rule.MatchKind == PageCapabilityMatchKind.Exact);
+    }
+
+    [Theory]
+    [InlineData("/services")]
+    [InlineData("/quick")]
+    public void 서비스소개와호환주소는_익명읽기전용이며_업무실행권한을주지않는다(string route)
+    {
+        foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
+        {
+            Assert.True(SsalddelPageCapabilityCatalog.TryResolve(app, route, out var capability));
+            Assert.Equal(PageInteractionBoundary.ReadOnly, capability.Boundary);
+            Assert.False(capability.RequiresAuthentication);
+            Assert.False(capability.HasExternalEffects);
+            Assert.Contains("준비 상태", capability.Notice);
+            Assert.Empty(capability.FeatureKeys);
+        }
+    }
+
+    [Theory]
     [InlineData("/activity-settlements")]
     [InlineData("/activity-settlements/agreement-1")]
     public void 활동정산_목록과상세는_Web과통합앱에서_인증필수3점5BetaSimulation으로분류한다(string route)
@@ -38,7 +75,7 @@ public sealed class PageCapabilityCatalogTests
             SsalddelProductRoadmapCatalog.All.Select(stage => stage.Version));
         Assert.Equal("0.0", SsalddelProductRoadmapCatalog.CurrentVersion);
         Assert.Equal("0.0", SsalddelProductRoadmapCatalog.CurrentDeliveryVersion);
-        Assert.Equal("3.5", SsalddelProductRoadmapCatalog.DeploymentTargetVersion);
+        Assert.Equal("1.0", SsalddelProductRoadmapCatalog.DeploymentTargetVersion);
         Assert.Equal(
             SsalddelProductRoadmapCatalog.FoundationVersion,
             Assert.Single(SsalddelProductRoadmapCatalog.All, stage => stage.IsCurrent).Version);

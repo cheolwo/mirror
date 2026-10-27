@@ -163,7 +163,7 @@ public sealed class OrdererMartAuthenticationSeparationTests
         Assert.Contains("/food/mart?q=rice", html);
         Assert.Contains("합성 본문", html);
         Assert.Equal(!authenticationOnly, html.Contains("mart-product-nav", StringComparison.Ordinal));
-        Assert.Equal(!authenticationOnly, html.Contains("공개 상품과 마지막 투영 시각", StringComparison.Ordinal));
+        Assert.Equal(!authenticationOnly, html.Contains("재고는 마지막 확인 시점 기준입니다.", StringComparison.Ordinal));
         Assert.Equal(0, fixture.Orders.SubmitCalls);
     }
 

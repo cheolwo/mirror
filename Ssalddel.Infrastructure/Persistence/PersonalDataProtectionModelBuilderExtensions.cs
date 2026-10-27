@@ -12,6 +12,8 @@ namespace 살뜰.Infrastructure.Persistence
     {
         public static void ApplyPersonalDataProtection(this ModelBuilder modelBuilder, IPersonalDataEncryptionService protector)
         {
+            modelBuilder.Entity<살뜰.도메인.판매.판매채널계정>().Property(x => x.동기화진단Json)
+                .HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
             modelBuilder.Entity<살뜰.도메인.마트.마트배송시도>().Property(x => x.고객수령근거Json)
                 .HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
             modelBuilder.Entity<살뜰.도메인.창고.피킹포장작업>().Property(x => x.완료근거Json)
@@ -63,11 +65,17 @@ namespace 살뜰.Infrastructure.Persistence
             ArgumentNullException.ThrowIfNull(modelBuilder);
             ArgumentNullException.ThrowIfNull(protector);
 
+            modelBuilder.Entity<운송자격Record>().Property(x => x.PrivateDetailsJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
+            modelBuilder.Entity<운송자격Record>().Property(x => x.HistoryJson)
+                .HasConversion(v => protector.Protect(v)!, v => protector.Unprotect(v)!);
             modelBuilder.Entity<용달기사>().Property(x => x.현재실차참조)
                 .HasMaxLength(1000).HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
             modelBuilder.Entity<용달기사>().Property(x => x.실차적재제원Json)
                 .HasColumnType("longtext").HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
             modelBuilder.Entity<용달기사>().Property(x => x.실차적재판본).IsConcurrencyToken();
+            modelBuilder.Entity<배달기사>().Property(x => x.현재실차참조)
+                .HasMaxLength(1000).HasConversion(v => protector.Protect(v), v => protector.Unprotect(v));
 
             ConfigurePersonalData(modelBuilder, protector);
         }

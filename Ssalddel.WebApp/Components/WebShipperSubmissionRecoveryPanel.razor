@@ -1,0 +1,43 @@
+@if (PageModel.HasSubmission || PageModel.IsBusy)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-4" role="status" aria-live="polite">
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h6">@PageModel.SubmissionState</MudText>
+            <MudText>@PageModel.StatusMessage</MudText>
+            @if (PageModel.SubmissionNumber is not null)
+            {
+                <MudText Typo="Typo.caption">접수 번호: @PageModel.SubmissionNumber</MudText>
+            }
+            @if (PageModel.SubmissionRejectedStatus is not null)
+            {
+                <MudText Typo="Typo.body2">서버에서 등록 요청을 거절한 응답을 받았습니다. 이 응답이나 조회 미발견만으로 미접수를 확정하지 않습니다.</MudText>
+            }
+            @if (!PageModel.CanStartNewRequest)
+            {
+                <MudText Typo="Typo.body2">결과를 다시 확인해도 해결되지 않으면 위 접수 번호로 운영자에게 확인을 요청해 주세요. 다른 번호로 중복 등록하지 마세요.</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary">미확정 접수는 다시 보내지 않습니다. 다시 열 때 72시간이 지난 주소·연락처 초안은 지우며 결과 조회용 접수 번호는 유지합니다.</MudText>
+            <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                           Disabled="PageModel.IsBusy" OnClick="() => PageModel.RecoverSubmissionAsync()">
+                    @(PageModel.CanStartNewRequest ? "등록된 의뢰 보기" : "등록 결과 다시 확인")
+                </MudButton>
+                @if (PageModel.CanStartNewRequest)
+                {
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add"
+                               Disabled="PageModel.IsBusy" OnClick="StartNewAsync">새 의뢰 작성</MudButton>
+                }
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+
+@code {
+    [Parameter, EditorRequired] public ShipperRequestAuthoringPageViewModel PageModel { get; set; } = default!;
+    [Parameter] public EventCallback NewRequestStarted { get; set; }
+    private async Task StartNewAsync()
+    {
+        await PageModel.ResetAsync();
+        if (!PageModel.HasSubmission) await NewRequestStarted.InvokeAsync();
+    }
+}

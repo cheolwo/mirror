@@ -119,7 +119,7 @@ public sealed class RoleWorkspaceAuthenticationRenderTests
     }
 
     [Fact]
-    public async Task 금지403은_로그인오류로바꾸지않고_역할선택으로_안내한다()
+    public async Task 금지403은_업무를숨긴채_역할선택과_계정전환을_제공한다()
     {
         await using var fixture = new Fixture(true);
         fixture.Adapter.StatusCode = 403;
@@ -128,7 +128,9 @@ public sealed class RoleWorkspaceAuthenticationRenderTests
         Assert.Contains("역할 선택으로", html);
         Assert.Contains("역할 권한을 확인해 주세요.", html);
         Assert.DoesNotContain("로그인이 필요합니다", html);
-        Assert.DoesNotContain("/workspace-login/", html);
+        Assert.Contains("다른 계정으로 로그인", html);
+        Assert.Contains("/workspace-login/food-driver?returnUrl=%2Fworkspace%2Ffood-driver%3Fselected%3Dwork-a", html);
+        Assert.Contains("로그아웃", html);
         AssertNoWorkspace(html);
         var initialHides = fixture.Map.Hides;
         await fixture.AfterRenderAsync();

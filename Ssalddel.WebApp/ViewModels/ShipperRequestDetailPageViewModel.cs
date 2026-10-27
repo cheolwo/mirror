@@ -9,7 +9,7 @@ namespace Ssalddel.WebApp.ViewModels;
 /// Web 상세 route의 인증, feature flag와 서버 원장 재조회를 담당합니다.
 /// 표현과 책임별 화면은 Ui.Common Screen이 맡습니다.
 /// </summary>
-public sealed class ShipperRequestDetailPageViewModel : IDisposable
+public sealed partial class ShipperRequestDetailPageViewModel : IDisposable
 {
     private const string DomesticTransportFeatureKey = "DomesticTransportWorkflow";
 
@@ -27,10 +27,22 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         화주결제정산Service settlementService,
         WebAuthSessionService authSession,
         ICommunityProcurementClient workflowMetadata)
+        : this(settlementService, authSession, workflowMetadata, new VolatileWorkflowRecoveryStore(), null)
+    {
+    }
+
+    public ShipperRequestDetailPageViewModel(
+        화주결제정산Service settlementService,
+        WebAuthSessionService authSession,
+        ICommunityProcurementClient workflowMetadata,
+        IWorkflowRecoveryStore receiptRecovery,
+        IWorkflowRecoveryContext? receiptContext)
     {
         _settlementService = settlementService;
         _authSession = authSession;
         _workflowMetadata = workflowMetadata;
+        _receiptRecovery = receiptRecovery;
+        _receiptContext = receiptContext;
         _observedSession = CurrentSession();
         _authSession.Changed += OnSessionChanged;
     }
@@ -44,7 +56,8 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         string? requestId,
         bool created = false,
         bool showMessage = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool receiptContext = false)
     {
         if (cancellationToken.IsCancellationRequested) return;
         var normalized = NormalizeRequestId(requestId);
@@ -54,6 +67,11 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         lock (_queryGate)
         {
             if (_disposed) return;
+            if (receiptContext && _receiptMode && string.Equals(State.LookupRequestId, normalized, StringComparison.Ordinal)
+                && (ReceiptSubmitting || ReceiptChecking)) return;
+            if (!receiptContext || !string.Equals(State.LookupRequestId, normalized, StringComparison.Ordinal))
+                ClearReceiptState();
+            _receiptMode = receiptContext;
             previous = _pendingQuery;
             query = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _pendingQuery = query;
@@ -93,6 +111,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
             {
                 if (!string.Equals(source.의뢰Id, normalized, StringComparison.Ordinal))
                     throw new InvalidOperationException("조회한 의뢰가 선택한 의뢰와 다릅니다.");
+                _receiptMode = receiptContext;
                 State.Request = ShipperRequestDetailSnapshot.FromContract(source);
                 State.QueryError = null;
                 SetStatus(string.Empty, ShipperRequestDetailMessageTone.Success);
@@ -171,6 +190,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
             var session = CurrentSession();
             if (_disposed || session == _observedSession) return;
             _observedSession = session;
+            ClearReceiptState();
             // 첫 Restore는 현재 조회의 인증을 확립한다. 소유자 확정 뒤의 변경은 이전 조회를 무효화한다.
             if (_queryOwner is null) return;
             ++_queryRevision;
@@ -185,6 +205,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
                 : "운송 의뢰 상세는 로그인 후 조회할 수 있습니다.", ShipperRequestDetailMessageTone.Warning);
         }
         Cancel(previous);
+        StateChanged?.Invoke();
     }
 
     public void Dispose()
@@ -194,6 +215,7 @@ public sealed class ShipperRequestDetailPageViewModel : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
+            ClearReceiptState();
             ++_queryRevision;
             previous = _pendingQuery;
             _pendingQuery = null;

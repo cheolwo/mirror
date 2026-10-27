@@ -4,11 +4,12 @@
 
 <main class="role-selection-home">
     <header class="role-selection-home__header">
-        <span>Mirror · 거울</span>
-        <h1>함께 만든 성과</h1>
+        <h1>생산에 참여해 보세요.</h1>
     </header>
     <HomeParticipationOverview DetailsHref="@Href("/overview/participation")" />
+    <공간공동운영HomeOverview DetailsHref="@Href(공간공동운영Routes.Home)" />
     <h2 id="role-work-entry-title" class="role-selection-home__entry-title">업무 시작</h2>
+    <a class="role-selection-home__driver-work" href="@Href("/driver/current-work")"><MudIcon Icon="@Icons.Material.Filled.Assignment" />기사 · 지금 할 일<MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" /></a>
     <nav class="role-selection-home__groups" aria-label="활동 역할 선택" aria-describedby="role-work-entry-title">
         @foreach (var group in RoleWorkspaceHomeCatalog.Groups)
         {

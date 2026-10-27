@@ -9,6 +9,10 @@ public partial class MainPage : ContentPage
     public MainPage(string startPath)
     {
         InitializeComponent();
+#if ANDROID
+        // 시스템 표시줄과 키보드의 안전 영역은 WebView 바깥 호스트에서 확보합니다.
+        SafeAreaEdges = Microsoft.Maui.SafeAreaEdges.All;
+#endif
         WorkspaceWebView.StartPath = startPath;
     }
 

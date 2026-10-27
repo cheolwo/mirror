@@ -1,8 +1,9 @@
 .role-selection-home { max-width: 1040px; margin: 0 auto; padding: 32px 20px 40px; color: var(--ss-ink, #172b36); }
 .role-selection-home__header { margin-bottom: 20px; }
-.role-selection-home__header > span { color: var(--ss-accent, #0f766e); font-size: 14px; font-weight: 600; }
 .role-selection-home__header h1 { margin: 8px 0 0; font-size: 28px; line-height: 1.3; font-weight: 600; }
 .role-selection-home__entry-title { margin: 32px 0 16px; font-size: 18px; line-height: 1.45; font-weight: 600; }
+.role-selection-home__driver-work { display:flex; align-items:center; gap:12px; min-height:48px; margin:0 0 16px; color:var(--ss-accent,#0f766e); font-size:16px; font-weight:600; text-decoration:none; }
+.role-selection-home__driver-work:focus-visible { outline:3px solid var(--ss-accent-strong,#0b5c56); outline-offset:3px; }
 .role-selection-home__footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--ss-border, #dce5e9); }
 .role-selection-home__commerce { margin: 8px 0 0; color: var(--ss-muted, #586b78); font-size: 14px; line-height: 1.5; }
 .role-selection-home__commerce a { color:var(--ss-accent,#0f766e); display:inline-flex; min-height:48px; align-items:center; }

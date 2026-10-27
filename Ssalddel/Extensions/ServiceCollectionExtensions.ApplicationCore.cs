@@ -50,6 +50,7 @@ using Ssalddel.Services.LogisticsProcessing.Warehouse;
 using Ssalddel.Services.LogisticsProcessing.VehicleLoading;
 using Ssalddel.Services.Localization;
 using Ssalddel.Application.Driver.Transport;
+using Ssalddel.Application.Driver.DispatchAction;
 using 살뜰.Services.Transport;
 
 namespace Ssalddel.Extensions;
@@ -95,6 +96,9 @@ public static partial class ServiceCollectionExtensions
         services.AddOptions<CargoCompletionRecoveryOptions>().BindConfiguration(CargoCompletionRecoveryOptions.SectionName);
         services.AddScoped<ICargoCompletionRecoveryService, CargoCompletionRecoveryService>();
         services.AddHostedService<CargoCompletionRecoveryWorker>();
+        services.AddOptions<CargoAcceptanceRecoveryOptions>().BindConfiguration(CargoAcceptanceRecoveryOptions.SectionName);
+        services.AddScoped<ICargoAcceptanceRecoveryService, CargoAcceptanceRecoveryService>();
+        services.AddHostedService<CargoAcceptanceRecoveryWorker>();
         services.AddScoped<ICommand기능설정Resolver, Command기능설정Resolver>();
         services.AddScoped<ICommand기능CatalogResolver, Command기능CatalogResolver>();
         services.AddScoped<IWorkRelationshipSnapshotCollector, WorkRelationshipSnapshotCollector>();
@@ -132,6 +136,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<I음식주문기사정산UseCase, 음식주문기사정산UseCase>();
         services.AddScoped<IFoodDeliveryDriverRouteService, FoodDeliveryDriverRouteService>();
         services.AddScoped<I음식주문접수UseCase, 음식주문접수UseCase>();
+        services.AddScoped<I음식주문취소합의UseCase, 음식주문취소합의UseCase>();
         services.AddScoped<I주문자음식주문조회UseCase, 주문자음식주문조회UseCase>();
         services.AddScoped<I음식주문운영추적UseCase, 음식주문운영추적UseCase>();
         services.AddScoped<I음식주문지원후속UseCase, 음식주문지원후속UseCase>();

@@ -7049,6 +7049,15 @@ namespace Ssalddel.Migrations
                         .HasColumnType("varchar(128)")
                         .HasColumnName("request_id");
 
+                    b.Property<DateTime?>("자동명세검토시각Utc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("automatic_statement_reviewed_at_utc");
+
+                    b.Property<string>("자동명세검토코드")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("automatic_statement_review_code");
+
                     b.Property<decimal>("지급예정금액")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
@@ -7323,6 +7332,10 @@ namespace Ssalddel.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("차량");
 
+                    b.Property<string>("현재실차참조")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
                     b.HasKey("Id");
 
                     b.ToTable("배달기사");
@@ -7387,6 +7400,23 @@ namespace Ssalddel.Migrations
                     b.ToTable("배차계획신청");
                 });
 
+            modelBuilder.Entity("살뜰.도메인.기사.운송자격Record", b =>
+                {
+                    b.Property<string>("DriverId").HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.Property<int>("Revision").IsConcurrencyToken().HasColumnType("int");
+                    b.Property<string>("Status").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<string>("PolicyVersion").IsRequired().HasMaxLength(80).HasColumnType("varchar(80)");
+                    b.Property<string>("VehicleKind").IsRequired().HasMaxLength(32).HasColumnType("varchar(32)");
+                    b.Property<string>("VehicleProfileValue").IsRequired().HasMaxLength(150).HasColumnType("varchar(150)");
+                    b.Property<string>("PrivateDetailsJson").IsRequired().HasColumnType("longtext");
+                    b.Property<string>("HistoryJson").IsRequired().HasColumnType("longtext");
+                    b.Property<DateTime>("SubmittedAtUtc").HasPrecision(6).HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("ReviewedAtUtc").HasPrecision(6).HasColumnType("datetime(6)");
+                    b.Property<DateTime?>("RecheckAtUtc").HasPrecision(6).HasColumnType("datetime(6)");
+                    b.Property<string>("ReviewerId").HasMaxLength(191).HasColumnType("varchar(191)");
+                    b.HasKey("DriverId");
+                    b.ToTable("driver_transport_qualification");
+                });
             modelBuilder.Entity("살뜰.도메인.기사.용달기사", b =>
                 {
                     b.Property<long>("Id")
@@ -12823,6 +12853,81 @@ namespace Ssalddel.Migrations
                     b.ToTable("음식주문상품", (string)null);
                 });
 
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문취소합의", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("비용근거참조")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("영수증Json")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("음식점동의")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal>("음식점부담액")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long>("음식주문Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("주문번호")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("주문상태")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("주문자동의")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal>("주문자부담액")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long>("주문판본")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("취소반영시각Utc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("합의StableId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("합의StableId")
+                        .IsUnique();
+
+                    b.HasIndex("음식주문Id", "CreatedAtUtc");
+
+                    b.ToTable("음식주문취소합의", (string)null);
+                });
+
             modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodInventoryCostAttributionRecord", b =>
                 {
                     b.Property<string>("AttributionId")
@@ -17017,6 +17122,10 @@ namespace Ssalddel.Migrations
                         .HasColumnType("varchar(450)")
                         .HasColumnName("user_id");
 
+                    b.Property<string>("동기화진단Json")
+                        .HasColumnType("longtext")
+                        .HasColumnName("동기화진단_json");
+
                     b.Property<DateTime?>("마지막동기화일시")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("마지막동기화일시");
@@ -18259,6 +18368,15 @@ namespace Ssalddel.Migrations
                         .IsRequired();
 
                     b.Navigation("음식주문");
+                });
+
+            modelBuilder.Entity("살뜰.도메인.음식.음식주문취소합의", b =>
+                {
+                    b.HasOne("살뜰.도메인.음식.음식주문", null)
+                        .WithMany()
+                        .HasForeignKey("음식주문Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("살뜰.도메인.정산.NeighborhoodSettlementAgreementVersionRecord", b =>

@@ -47,6 +47,7 @@ namespace 살뜰.Data
         public DbSet<업체> 업체 { get; set; } = null!;
         public DbSet<배달기사> 배달기사 { get; set; } = null!;
         public DbSet<용달기사> 용달기사 { get; set; } = null!;
+        public DbSet<운송자격Record> 운송자격 { get; set; } = null!;
         public DbSet<기사근무> 기사근무 { get; set; } = null!;
         public DbSet<기사위치기록> 기사위치기록 { get; set; } = null!;
         public DbSet<기사월정산> 기사월정산 { get; set; } = null!;

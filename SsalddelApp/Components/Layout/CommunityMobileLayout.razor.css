@@ -295,6 +295,11 @@
     padding: 0 0 100px;
 }
 
+.community-mobile-shell ::deep .exchange-page {
+    /* 고정 하단 메뉴 위로 마지막 행동까지 스크롤할 공간을 확보한다. */
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+}
+
 .community-mobile-shell ::deep .community-route-page__context {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

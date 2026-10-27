@@ -4,15 +4,15 @@
   "physicalDatabasePolicy": "\uD558\uB098\uC758 MySQL \uB370\uC774\uD130\uBCA0\uC774\uC2A4, Context\uBCC4 \uB3C5\uB9BD migration history",
   "deletionOrMergeIncluded": false,
   "contextCount": 4,
-  "modeledTableCount": 236,
+  "modeledTableCount": 289,
   "migrationHistoryTableCount": 4,
-  "physicalTableCountExpected": 240,
+  "physicalTableCountExpected": 293,
   "contexts": [
     {
       "context": "SsalddelContext",
       "responsibility": "Identity\u00B7\uCEE4\uBBA4\uB2C8\uD2F0\u00B7\uC5C5\uBB34 \uC2E4\uD589\u00B7\uC548\uC815 \uD22C\uC601",
       "migrationHistoryTable": "__EFMigrationsHistory",
-      "tableCount": 178,
+      "tableCount": 231,
       "tables": [
         {
           "table": "AspNetRoleClaims",
@@ -60,6 +60,30 @@
           "table": "Command_\uC54C\uB9BC_Outbox",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC124\uC815.Command\uC54C\uB9BCOutbox"
+          ]
+        },
+        {
+          "table": "NeighborhoodInventoryCostAttributions",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodInventoryCostAttributionRecord"
+          ]
+        },
+        {
+          "table": "agreed_rate_table_receipts",
+          "entityTypes": [
+            "Ssalddel.Domain.Pricing.AgreedRateTableCommandReceipt"
+          ]
+        },
+        {
+          "table": "agreed_rate_table_selections",
+          "entityTypes": [
+            "Ssalddel.Domain.Pricing.AgreedRateTableSelectionRecord"
+          ]
+        },
+        {
+          "table": "agreed_rate_tables",
+          "entityTypes": [
+            "Ssalddel.Domain.Pricing.AgreedRateTableRecord"
           ]
         },
         {
@@ -159,6 +183,72 @@
           ]
         },
         {
+          "table": "distributed_inbound_plans",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC785\uACE0\uACC4\uD68DRecord"
+          ]
+        },
+        {
+          "table": "distributed_locations",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC801\uC7AC\uC704\uCE58Record"
+          ]
+        },
+        {
+          "table": "distributed_lots",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC7AC\uACE0LotRecord"
+          ]
+        },
+        {
+          "table": "distributed_orders",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uBC30\uC1A1\uC8FC\uBB38Record"
+          ]
+        },
+        {
+          "table": "distributed_photo_evidence",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC0AC\uC9C4\uC99D\uBE59Record"
+          ]
+        },
+        {
+          "table": "distributed_photo_holds",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC0AC\uC9C4\uBCF4\uC874\uC815\uC9C0Record"
+          ]
+        },
+        {
+          "table": "distributed_receipts",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uBB3C\uB958CommandReceipt"
+          ]
+        },
+        {
+          "table": "distributed_reservations",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uC7AC\uACE0\uC608\uC57DRecord"
+          ]
+        },
+        {
+          "table": "distributed_sites",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uAC70\uC810Record"
+          ]
+        },
+        {
+          "table": "distributed_storage_agreements",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uBCF4\uAD00\uD569\uC758Record"
+          ]
+        },
+        {
+          "table": "distributed_waves",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uCC3D\uACE0.\uBD84\uC0B0\uBC30\uC1A1WaveRecord"
+          ]
+        },
+        {
           "table": "driver_location_history",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC704\uCE58\uAE30\uB85D"
@@ -168,6 +258,24 @@
           "table": "driver_shifts",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uADFC\uBB34"
+          ]
+        },
+        {
+          "table": "driver_transport_qualification",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uC6B4\uC1A1\uC790\uACA9Record"
+          ]
+        },
+        {
+          "table": "driver_work_participation",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.DriverWorkParticipationRecord"
+          ]
+        },
+        {
+          "table": "driver_work_start_followups",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uD589\uC2DC\uC791\uD6C4\uC18D"
           ]
         },
         {
@@ -210,6 +318,24 @@
           "table": "education_courses",
           "entityTypes": [
             "Ssalddel.Domain.Education.\uAD50\uC721\uACFC\uC815"
+          ]
+        },
+        {
+          "table": "fulfillment_mock_jobs",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.FulfillmentMockJobRecord"
+          ]
+        },
+        {
+          "table": "fulfillment_routing_consents",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.AutoFulfillmentConsentRecord"
+          ]
+        },
+        {
+          "table": "fulfillment_routing_outbox",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.AutoFulfillmentOutboxRecord"
           ]
         },
         {
@@ -306,6 +432,114 @@
           "table": "hs_code_platform_agency_experiences",
           "entityTypes": [
             "Ssalddel.Domain.HsCodes.HsCodePlatformAgencyExperience"
+          ]
+        },
+        {
+          "table": "neighborhood_fulfillment",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodFulfillmentRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_fulfillment_attempts",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodFulfillmentAttemptRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_fulfillment_quotes",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodFulfillmentQuoteRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_member_delivery",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodMemberDelivery"
+          ]
+        },
+        {
+          "table": "neighborhood_member_offer",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodMemberOffer"
+          ]
+        },
+        {
+          "table": "neighborhood_member_participation",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodMemberParticipation"
+          ]
+        },
+        {
+          "table": "neighborhood_member_photo",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodMemberPhoto"
+          ]
+        },
+        {
+          "table": "neighborhood_member_receipt",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.NeighborhoodMemberReceipt"
+          ]
+        },
+        {
+          "table": "neighborhood_settlement_agreements",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodSettlementAgreementRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_settlement_entries",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodSettlementEntryRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_settlement_payments",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodSettlementPaymentRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_settlement_receipts",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodSettlementCommandReceiptRecord"
+          ]
+        },
+        {
+          "table": "neighborhood_settlement_versions",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC815\uC0B0.NeighborhoodSettlementAgreementVersionRecord"
+          ]
+        },
+        {
+          "table": "operations_alert_checkpoints",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.OperationsAlertCheckpoint"
+          ]
+        },
+        {
+          "table": "operations_alert_outbox",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.OperationsAlertOutbox"
+          ]
+        },
+        {
+          "table": "operations_alert_receipts",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.OperationsAlertReceipt"
+          ]
+        },
+        {
+          "table": "operations_alerts",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.OperationsAlert"
+          ]
+        },
+        {
+          "table": "operations_budget_usage",
+          "entityTypes": [
+            "Ssalddel.Domain.Notifications.OperationsBudgetUsage"
           ]
         },
         {
@@ -429,6 +663,12 @@
           ]
         },
         {
+          "table": "restaurant_fulfillment_supports",
+          "entityTypes": [
+            "Ssalddel.Domain.Community.RestaurantFulfillmentSupportRecord"
+          ]
+        },
+        {
           "table": "shipper_requests",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uD654\uC8FC.\uD654\uC8FC\uC6B4\uC1A1\uC758\uB8B0"
@@ -525,6 +765,18 @@
           ]
         },
         {
+          "table": "\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC815\uC0B0\uBC30\uCE58",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC815\uC0B0\uBC30\uCE58"
+          ]
+        },
+        {
+          "table": "\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC815\uC0B0\uBC30\uCE58\uD589",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC815\uC0B0\uBC30\uCE58\uD589"
+          ]
+        },
+        {
           "table": "\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC9C0\uAE09\uC694\uCCAD",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uAE30\uC0AC.\uAE30\uC0AC\uC6B4\uC1A1\uB300\uAE08\uC9C0\uAE09\uC694\uCCAD"
@@ -591,6 +843,24 @@
           ]
         },
         {
+          "table": "\uB9C8\uD2B8\uAE30\uC0AC\uC694\uCCAD\uC601\uC218\uC99D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uAE30\uC0AC\uC694\uCCAD\uC601\uC218\uC99D"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uAE30\uC0AC\uD6C4\uC18DOutbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uAE30\uC0AC\uD6C4\uC18DOutbox"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uBC30\uC1A1\uC2DC\uB3C4",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uBC30\uC1A1\uC2DC\uB3C4"
+          ]
+        },
+        {
           "table": "\uB9C8\uD2B8\uC8FC\uBB38",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uC8FC\uBB38"
@@ -606,6 +876,12 @@
           "table": "\uB9C8\uD2B8\uC8FC\uBB38\uC694\uCCAD",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uC8FC\uBB38\uC694\uCCAD"
+          ]
+        },
+        {
+          "table": "\uB9C8\uD2B8\uD3EC\uC7A5\uC804\uD45C",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uB9C8\uD2B8.\uB9C8\uD2B8\uD3EC\uC7A5\uC804\uD45C"
           ]
         },
         {
@@ -813,6 +1089,24 @@
           ]
         },
         {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8Fact",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8Fact"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8\uACF5\uC720\uC124\uC815",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8\uACF5\uC720\uC124\uC815"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8\uC644\uB8CCOutbox",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uACBD\uD5D8\uC644\uB8CCOutbox"
+          ]
+        },
+        {
           "table": "\uC74C\uC2DD\uBC30\uB2EC\uC2DC\uB3C4",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uC2DC\uB3C4"
@@ -822,6 +1116,12 @@
           "table": "\uC74C\uC2DD\uBC30\uB2EC\uC644\uB8CC_WorldSnapshot",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uC644\uB8CCWorldSnapshot"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uBC30\uB2EC\uC804\uB2EC\uC9C0\uC5EDSnapshot",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uBC30\uB2EC\uC804\uB2EC\uC9C0\uC5EDSnapshot"
           ]
         },
         {
@@ -861,6 +1161,18 @@
           ]
         },
         {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38\uAE30\uC0AC\uC815\uC0B0",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uAE30\uC0AC\uC815\uC0B0"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38\uAE30\uC0AC\uC9C0\uAE09\uAC80\uC99D",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uAE30\uC0AC\uC9C0\uAE09\uAC80\uC99D"
+          ]
+        },
+        {
           "table": "\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD0DC\uC774\uB825",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD0DC\uC774\uB825"
@@ -870,6 +1182,12 @@
           "table": "\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD488",
           "entityTypes": [
             "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uC0C1\uD488"
+          ]
+        },
+        {
+          "table": "\uC74C\uC2DD\uC8FC\uBB38\uCDE8\uC18C\uD569\uC758",
+          "entityTypes": [
+            "\uC0B4\uB730.\uB3C4\uBA54\uC778.\uC74C\uC2DD.\uC74C\uC2DD\uC8FC\uBB38\uCDE8\uC18C\uD569\uC758"
           ]
         },
         {

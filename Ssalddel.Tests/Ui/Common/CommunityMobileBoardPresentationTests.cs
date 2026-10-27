@@ -127,7 +127,7 @@ public sealed class CommunityMobileBoardPresentationTests
     }
 
     [Fact]
-    public void MauiApp은_역할선택홈에서_여덟역할로진입하고_개별주문에서_주문자App원장으로이어진다()
+    public void MauiApp은_역할선택홈에서_주선업무를포함한아홉역할로진입하고_개별주문에서_주문자App원장으로이어진다()
     {
         var root = FindRepositoryRoot();
         var mainPageSource = File.ReadAllText(Path.Combine(root, "SsalddelApp", "MainPage.xaml"));
@@ -161,7 +161,7 @@ public sealed class CommunityMobileBoardPresentationTests
         Assert.Contains("<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleSelectionHome", unifiedHomeSource);
         Assert.Contains("@page \"/workspace/{RoleKey}\"", roleWorkspaceSource);
         Assert.Equal(
-            ["community", "orderer", "restaurant", "food-driver", "shipper", "cargo-driver", "warehouse", "operator"],
+            ["community", "orderer", "restaurant", "food-driver", "shipper", "cargo-driver", "freight-broker", "warehouse", "operator"],
             RoleWorkspaceCatalog.Roles.Select(role => role.Key).ToArray());
         Assert.All(RoleWorkspaceCatalog.Roles, role => Assert.Equal("/workspace/" + role.Key, role.Href));
         Assert.Contains("<CommunityIndividualOrderJourneyPanel", communityHomeSource);

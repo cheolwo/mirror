@@ -87,6 +87,28 @@ public sealed class UnifiedRoleWorkspaceAccessTests
         Assert.DoesNotContain("private detail", error.Message);
         Assert.Equal(1, count);
     }
+    [Theory]
+    [InlineData("api/v1/driver/work/start", "Rejected", true)]
+    [InlineData("api/v1/driver/work/start", "Unknown", false)]
+    [InlineData("api/v1/driver/work/start", "Rejected,Rejected", false)]
+    [InlineData("api/v1/driver/transports/1/complete", "Rejected", false)]
+    public async Task 화물_시작의_명시적_거절_헤더만_요청아이디와_함께_보존한다(string path, string outcome, bool preserved)
+    {
+        var id = Guid.NewGuid(); var calls = 0;
+        using var http = new HttpClient(new Handler((_, _) =>
+        {
+            calls++;
+            var response = new HttpResponseMessage(HttpStatusCode.Conflict) { Content = JsonContent.Create(new { errorCode = "WorkStartRejected" }) };
+            response.Headers.TryAddWithoutValidation("X-Mirror-Work-Start-Outcome", outcome.Split(','));
+            response.Headers.TryAddWithoutValidation("X-Mirror-Work-Start-Request-Id", id.ToString("D"));
+            return Task.FromResult(response);
+        })) { BaseAddress = new Uri("https://local.test/") };
+        using var access = new RoleWorkspaceAccess(http, new Primary(), new Stores());
+        var failure = await Assert.ThrowsAsync<RoleWorkspaceAccessException>(() => access.PostAsync<Reply>("cargo-driver", path, new { }, default));
+        Assert.Equal(preserved ? id : (Guid?)null, failure.RejectedWorkStartRequestId);
+        Assert.Equal(1, calls);
+    }
+
     private sealed record Reply(string Value);
     private static 토큰응답 Token(string token) => new() { AccessToken = token, AccessTokenExpiresAtUtc = DateTime.UtcNow.AddHours(1), RefreshToken = "refresh", RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddDays(1), UserId = "owner", UserName = "person", Roles = ["음식점"] };
     private sealed class Handler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> respond) : HttpMessageHandler

@@ -6,6 +6,38 @@ namespace Ssalddel.Tests.Ui.Common;
 public sealed class RoleWorkspaceReliabilityR16Tests
 {
     [Fact]
+    public async Task 위치_만료는_요약과_상세의_최신_표시도_함께_바꾸며_다른_정보는_보존한다()
+    {
+        var clock = new Clock();
+        var expiry = clock.GetUtcNow().AddSeconds(30);
+        var location = new RoleWorkspaceField("어떤 표시 이름", "최신 위치 · 10/05 19:00")
+            { ValueExpiresAtUtc = expiry, ExpiredValue = "위치 갱신 지연" };
+        var unchanged = new RoleWorkspaceField("운임", "30,000원");
+        var first = Snapshot("shipper", "order", expiry) with
+        {
+            Items = [Item("order") with
+            {
+                Markers = [new("order|driver", "기사", NeighborhoodMapMarkerKinds.Driver, 37.5, 127, ExpiresAt: expiry)],
+                Summary = new("하차지", "장소", [location, unchanged], location),
+                Sections = [new("상세", [location, unchanged])]
+            }]
+        };
+        var adapter = new Adapter("shipper") { Reply = () => Task.FromResult(first) };
+        using var model = new RoleWorkspaceViewModel([adapter], new Access(), new(), clock);
+        await model.InitializeAsync("shipper");
+        clock.Advance(30);
+        await model.TickAsync(false);
+        var item = Assert.Single(model.Items);
+        Assert.Empty(item.Markers!);
+        Assert.Equal("위치 갱신 지연", item.Summary!.Request!.Value);
+        Assert.Equal("위치 갱신 지연", item.Summary.Metrics![0].Value);
+        Assert.Equal("위치 갱신 지연", item.Sections![0].Fields[0].Value);
+        Assert.Equal(unchanged, item.Sections[0].Fields[1]);
+        Assert.Equal(unchanged, item.Summary.Metrics[1]);
+        Assert.Equal(1, adapter.Reads); // 새 서버 응답을 기다리거나 문구의 Label을 파싱하지 않는다.
+    }
+
+    [Fact]
     public async Task 위치_만료는_갱신응답을_기다리지_않고_핀과_연결경로를_제거한다()
     {
         var clock = new Clock();

@@ -41,6 +41,7 @@ public static class MauiProgram
 		builder.Services.AddMudServices();
 		builder.Services.AddMauiBlazorWebView();
         builder.Services.AddSingleton<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment.I업무사진촬영Adapter, Ssalddel.Client.Infrastructure.Native.Maui업무사진촬영Adapter>();
+        builder.Services.AddSingleton<I업무전화앱Adapter, SsalddelApp.Infrastructure.Maui업무전화앱Adapter>();
         builder.Services.AddSingleton<NeighborhoodNativeMapBridge>();
         builder.Services.AddScoped<INeighborhoodMapHost, MauiNeighborhoodMapHost>();
         builder.Services.AddScoped<INeighborhoodMapPreferenceStore, NeighborhoodMapPreferenceStore>();

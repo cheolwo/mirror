@@ -26,6 +26,7 @@ builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedg
 builder.Services.AddSingleton<IPlatformCommunityNodeNavigationResolver, WebPlatformCommunityNodeNavigationResolver>();
 builder.Services.AddSingleton<IPlatformHomeWorkspaceNavigationResolver, WebPlatformHomeWorkspaceNavigationResolver>();
 builder.Services.AddSsalddelUiCommonAppServices<WebAuthSessionService>();
+builder.Services.AddScoped<IWorkflowRecoveryStore, BrowserWorkflowRecoveryStore>();
 builder.Services.AddTransient<화주Controller기능모음ViewModel>();
 builder.Services.AddSsalddelDocumentOutputServices();
 builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();

@@ -11,6 +11,7 @@ public static class RoleWorkspaceCatalog
     public const string FoodDriver = "food-driver";
     public const string Shipper = "shipper";
     public const string CargoDriver = "cargo-driver";
+    public const string FreightBroker = "freight-broker";
     public const string Warehouse = "warehouse";
     public const string Operator = "operator";
 
@@ -22,6 +23,7 @@ public static class RoleWorkspaceCatalog
         new(FoodDriver, "음식기사", "배달 요청을 확인하고 음식 픽업·전달하기", Icons.Material.Filled.DeliveryDining),
         new(Shipper, "화주", "보낼 물건의 운송을 요청하고 진행 확인하기", Icons.Material.Filled.Inventory2),
         new(CargoDriver, "화물기사", "추천 운송을 확인하고 상차·하차하기", Icons.Material.Filled.LocalShipping),
+        new(FreightBroker, "운송주선업무", "본인 화물원장과 정보공고 확인하기", Icons.Material.Filled.BusinessCenter),
         new(Warehouse, "창고", "물품을 받아 검수하고 보관·출고하기", Icons.Material.Filled.Warehouse),
         new(Operator, "운영자", "음식 주문의 진행과 예외 확인하기", Icons.Material.Filled.ManageAccounts)
     ]);

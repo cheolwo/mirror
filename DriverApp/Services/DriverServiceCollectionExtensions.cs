@@ -51,6 +51,7 @@ public static class DriverServiceCollectionExtensions
                 () => client.BaseAddress);
         });
         services.AddScoped<IDriverCargoCompletionRecovery, DriverCargoCompletionRecovery>();
+        services.AddScoped<IDriverCargoExceptionRecovery, DriverCargoExceptionRecovery>();
         services.AddSingleton<AuthApiService>();
         services.AddSingleton(provider =>
         {
@@ -91,6 +92,10 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<IDriverCommandFeatureSettingsApiService, DriverCommandFeatureSettingsApiService>();
         services.AddSingleton<IDriverDevelopmentApiService, DriverDevelopmentApiService>();
         services.AddSingleton<I기사푸시토큰등록Service, 기사푸시토큰등록Service>();
+        services.AddSingleton(provider => new DriverLocationTransmissionSession(
+            provider.GetRequiredService<IAuthSession>(),
+            provider.GetRequiredService<IDriverWorkApiService>(),
+            () => provider.GetRequiredService<HttpClient>().BaseAddress));
 #if ANDROID
         services.AddSingleton<I기사위치송신Service, Android기사위치송신Service>();
 #else
@@ -100,6 +105,12 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<DriverRecommendationDecisionService>();
         services.AddSingleton<IDriverRecommendationDecisionService>(sp => sp.GetRequiredService<DriverRecommendationDecisionService>());
         services.AddSingleton<IDriverRecommendationNotificationService, SampleDriverRecommendationNotificationService>();
+#if ANDROID
+        services.AddSingleton<IDriverCargoRecommendationAlertPublisher, DriverApp.Platforms.Android.DriverCargoRecommendationAlertPublisher>();
+#else
+        services.AddSingleton<IDriverCargoRecommendationAlertPublisher, NoopDriverCargoRecommendationAlertPublisher>();
+#endif
+        services.AddSingleton<IDriverCargoRecommendationAlertService, DriverCargoRecommendationAlertService>();
         services.AddSingleton<IDriverRecommendationPushTargetStore, DriverRecommendationPushTargetStore>();
         services.AddSingleton<DriverRecommendationPushRecovery>();
         services.AddSingleton<기사샘플데이터Service>();
@@ -110,8 +121,8 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<IDriverNativeMapNavigator, DriverNativeMapNavigator>();
         services.AddSingleton<IDriverTransportApiService, DriverTransportApiService>();
         services.AddSingleton<IDriverFreightWorkspaceStore, DriverFreightWorkspaceStore>();
-        services.AddSingleton<HttpDriverTransportCompletionPhotoService>();
-        services.AddSingleton<IDriverTransportCompletionPhotoService>(sp => sp.GetRequiredService<HttpDriverTransportCompletionPhotoService>());
+        services.AddScoped<HttpDriverTransportCompletionPhotoService>();
+        services.AddScoped<IDriverTransportCompletionPhotoService>(sp => sp.GetRequiredService<HttpDriverTransportCompletionPhotoService>());
         services.AddSingleton<HttpDriverTransportExceptionService>();
         services.AddSingleton<IDriverTransportExceptionService>(sp => sp.GetRequiredService<HttpDriverTransportExceptionService>());
         services.AddScoped<IApiClient, ApiClient>();

@@ -100,7 +100,7 @@ public sealed class HomeParticipationUiR10Tests
     }
 
     [Fact]
-    public async Task 조회가끝나기전에도_기존9개역할진입은즉시사용할수있다()
+    public async Task 조회가끝나기전에도_주선업무를포함한10개역할진입은즉시사용할수있다()
     {
         var pending = new TaskCompletionSource<HomeParticipationSummaryResponse?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var client = new ScriptedClient((_, ct) => pending.Task.WaitAsync(ct));
@@ -213,7 +213,7 @@ public sealed class HomeParticipationUiR10Tests
 
     private static void AssertAllRoleLinks(IReadOnlyList<RoleLink> links)
     {
-        Assert.Equal(9, links.Count);
+        Assert.Equal(10, links.Count);
         foreach (var entry in RoleWorkspaceHomeCatalog.Groups.SelectMany(group => group.Entries))
             Assert.Contains(links, link => link.Role == entry.RoleKey && link.Href == "http://localhost/preview" + entry.Href);
     }
@@ -300,7 +300,11 @@ public sealed class HomeParticipationUiR10Tests
         }
         internal Task ClickRetry()
         {
-            foreach (var tree in Trees())
+            // 공동운영 등 다른 홈 영역의 같은 문구 버튼을 누르지 않고 실제 현황 컴포넌트만 검사합니다.
+            var summary = Assert.Single(Trees().SelectMany(componentFrames => componentFrames)
+                .Where(frame => frame.FrameType == RenderTreeFrameType.Component && frame.Component is HomeParticipationSummary));
+            var frames = GetCurrentRenderTreeFrames(summary.ComponentId);
+            var tree = frames.Array.Take(frames.Count).ToArray();
             for (var i = 0; i < tree.Length; i++)
             {
                 if (tree[i].FrameType != RenderTreeFrameType.Element || tree[i].ElementName != "button") continue;

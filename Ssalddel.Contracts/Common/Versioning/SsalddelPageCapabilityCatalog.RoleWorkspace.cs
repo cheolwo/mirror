@@ -8,6 +8,14 @@ public static partial class SsalddelPageCapabilityCatalog
         foreach (var app in new[] { SsalddelPageAppCodes.IntegratedWeb, SsalddelPageAppCodes.Shipper })
         {
             var prefix = app == SsalddelPageAppCodes.IntegratedWeb ? "web" : "shipper";
+            if (app == SsalddelPageAppCodes.Shipper)
+                rules.Add(Exact(prefix + "-driver-recommendation-alert-settings", app, "/driver/notifications/settings", PageCapabilityStage.Beta,
+                    PageInteractionBoundary.PlatformPersistence, true, "3.5",
+                    "현재 기사 본인의 음식·화물 추천 알림 허용과 소리·진동·야간 무음을 저장하고 재조회합니다. 배차 수락·현재 수행·운영 권한은 변경하지 않습니다."));
+            rules.Add(Exact(prefix + "-driver-current-work", app, "/driver/current-work", PageCapabilityStage.Beta,
+                PageInteractionBoundary.ReadOnly, true, "3.5",
+                "같은 계정의 음식·화물·직접 피킹 현재 업무를 조회하고 기존 전문 화면으로 이동합니다. 수락·완료·위치 갱신·권한 변경은 수행하지 않습니다.",
+                workflowCodes: ["FoodDelivery", "DomesticTransport", "WarehouseFulfillment"]));
             rules.Add(Exact(prefix + "-home-participation-details", app, "/overview/participation", PageCapabilityStage.Live,
                 PageInteractionBoundary.ReadOnly, false, "0.0",
                 "공개 화물 참여 집계의 누적·월별 수치와 기준만 조회합니다. 개인 원장과 업무 처리는 기존 로그인·역할 권한을 따릅니다."));

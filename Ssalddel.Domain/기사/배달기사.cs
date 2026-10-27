@@ -27,6 +27,9 @@ namespace 살뜰.도메인.기사
         [Column("차량")]
         public string 차량 { get; set; } = "오토바이";
 
+        /// <summary>선택한 실차의 비공개 내부 참조. 차량번호 원문을 저장하지 않는다.</summary>
+        public string? 현재실차참조 { get; set; }
+
         [Column("운행상태")]
         public string 운행상태 { get; set; } = 상태값.기사운행상태.대기;
 

@@ -159,6 +159,25 @@ public sealed class 화주결제정산Service
             cancellationToken);
     }
 
+    /// <summary>명시적으로 확인한 계정의 인수증만 한 번 전송합니다. 결과 확정은 같은 의뢰 GET이 담당합니다.</summary>
+    public async Task 인수증단일등록Async(string requestId, string receiptNo, string? memo,
+        string expectedOwner, string expectedToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(requestId) || string.IsNullOrWhiteSpace(receiptNo))
+            throw new InvalidOperationException("의뢰와 인수증 번호를 확인해 주세요.");
+        using var request = await CreateAuthorizedRequestAsync(HttpMethod.Post,
+            $"api/v1/shipper/requests/{Uri.EscapeDataString(requestId.Trim())}/settlement/receipt", cancellationToken);
+        if (_authSession.UserId != expectedOwner || _authSession.AccessToken != expectedToken)
+            throw new InvalidOperationException("로그인 정보가 변경되었습니다. 같은 의뢰를 다시 확인해 주세요.");
+        request.Content = JsonContent.Create(new 화주운송의뢰인수증등록요청
+        {
+            인수증번호 = receiptNo.Trim(), 등록메모 = memo
+        });
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, "인수증 등록", cancellationToken);
+        // POST 응답 본문·observer는 성공 표시의 근거로 삼지 않습니다.
+    }
+
     public async Task<string> 후불승인Async(
         string requestId,
         string? memo,

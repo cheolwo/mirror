@@ -123,7 +123,30 @@ public static class SsalddelUiCommonServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddScoped<INeighborhoodExchangeClient, NeighborhoodExchangeClient>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.I공개화물Client,
+            Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.공개화물Client>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.공개화물목록ViewModel>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.ICargoNoticeClient,
+            Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoNoticeClient>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoNoticeDraftSession>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoNoticeListViewModel>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.CargoNoticeManageViewModel>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.IFreightBrokerWorkspaceClient,
+            Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.FreightBrokerWorkspaceClient>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Cargo.FreightBrokerWorkspaceViewModel>();
         services.TryAddScoped<INeighborhoodCollaborationClient, NeighborhoodCollaborationClient>();
+        services.TryAddScoped<I공간공동운영Client, 공간공동운영Client>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영DraftSession>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영PageViewModel>();
+        services.TryAddScoped<I공간공동운영주문Client, 공간공동운영주문Client>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영주문Session>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영주문ViewModel>();
+        services.TryAddScoped<I공간공동운영통합Client, 공간공동운영통합Client>();
+        services.TryAddScoped<I공간공동운영업무연락Client, 공간공동운영업무연락Client>();
+        services.TryAddSingleton<I업무전화앱Adapter, 미지원업무전화앱Adapter>();
+        services.TryAddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영업무상세ViewModel>();
+        services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영통합Session>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.공간공동운영통합ViewModel>();
         services.TryAddScoped<INeighborhoodStorageClient, NeighborhoodStorageClient>();
         services.TryAddScoped<I활동정산Client, 활동정산Client>();
         services.TryAddScoped<Ssalddel.Ui.Common.Areas.App.ViewModels.활동정산Session>();

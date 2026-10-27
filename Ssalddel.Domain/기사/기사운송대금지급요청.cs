@@ -38,6 +38,10 @@ public sealed class 기사운송대금지급요청
 
     public string 마지막처리메시지 { get; set; } = string.Empty;
 
+    /// <summary>자동 명세 후보 점검의 진행 표시입니다. 승인·지급·Provider 처리 결과가 아닙니다.</summary>
+    public DateTime? 자동명세검토시각Utc { get; set; }
+    public string? 자동명세검토코드 { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
