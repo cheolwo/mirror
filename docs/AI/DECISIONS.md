@@ -1,5 +1,29 @@
 # Ssalddel AI Shared Decisions
 
+## 2026-10-26 앱 개발은 같은 업무의 준비부터 복구와 마감까지 연결한다
+
+상태: `ApprovedByUser / WorkflowToolingScope / OperationalDisabled`. 사용자는 앱 개발을 공통 처리 절차로 정리하는 제안 뒤 작업 진행을 요청했다. [공통 제작 절차](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md)를 기존 제작 대장과 통합 1.0 업무별 마감표의 진입점으로 사용한다. AI가 기존 자료로 입력을 먼저 작성하고 제품 선택이 필요한 부분만 확인하며, 동일 업무의 원장·역할 인계·결과 재조회·미확정/재실행 복구를 묶어 마감한다.
+
+준비·구현·서버 완주·휴대폰 확인·제한 사용·공개 준비는 실제 근거별로 판정한다. 새 입력의 사람 확인, 도구 검사, 코드 존재나 과거 판본의 통과를 최신 앱 실행으로 승격하지 않는다. 첫 [r13 적용](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md)은 공통 절차/제작 도구와 화물 앱별 입력·검증 계획이며 실제 화물/기기/운영 실행은 그 범위에 포함하지 않는다. 기존 승인·기능 플래그·공개 관문·제품 원장은 유지한다.
+
+## 2026-10-25 기존 제품 범위를 단일 통합 1.0 목표로 묶는다
+
+상태: `ApprovedByUser / ImplementationInProgress / OperationalDisabled`. 사용자는 기존 0.0~3.5로 나눈 제품 범위를 모두 합쳐 하나의 1.0으로 완성하도록 정정했다. [통합 앱 1.0](../Versions/unified-1.0/README.md)이 현행 제품 목표이며 공통 기반·화물·음식·창고·마트·협업·운영을 업무별로 마감한다. 기존 전문 앱은 보존하고 통합 공개 r105의 역할 범위와 운영 요건을 유지한다.
+
+기존 숫자 분류·stable ID·기능 도입 이력·API·원장은 호환을 위해 보존하며 옛 공동주문 분류 1.0과 통합 릴리스 1.0을 구분한다. 목표 정정만으로 기능 플래그·권한·기본 노출·운영 배차·결제·지급을 활성화하지 않는다. 구현·서버 완주·실제 휴대폰·공개 상태는 [업무별 마감표](../Versions/unified-1.0/checklist.md)에서 따로 확인한다.
+
+## 2026-10-24 동네 공간 공동운영은 기존 전문 원장의 연결로 구성한다
+
+상태: `Approved / ImplementedLocally / OperationalDeferred`. 공개 모집·개인 소개는 별도 동의이며 비공개 참여를 공개 인원에 합산하지 않는다. 공간 제공자의 운영 담당은 본인 수락이 필요하고 인계는 양측 확인으로 한다. 공동운영 회차는 기존 입고·주문·배송·정산 참조와 판본을 연결하며 일반 메모로 전문 완료를 만들지 않는다. 주문은 양측의 같은 조건 동의 뒤 판매자의 명시 인계에서만 기존 예약으로 이어진다. 시험 집계는 운영 실적에서 제외하고 기존 전문 기능 관문을 유지한다. [구현·검증과 제한](../Changes/2026-10-24-community-space-cooperation-r104.md)을 따른다.
+
+## 2026-10-24 화물 기사 위치는 현재 운행과 배정에 연결한다
+
+상태: `AcceptedDirection / ImplementedLocally / PhysicalStateUiVerified / MapAuthenticationAndLiveGpsPending`. 사용자는 주기적으로 서버에 전송한 기사 위치를 화주·관리자가 지도에서 확인하는 방향을 요청했다. 기존 위치 API와 역할 지도 안에서 현재 배정·수락·활성 근무 이후의 위치만 표시하고 미수신·지연·종료를 구분한다. 전문 Android의 명시적 운행 송신은 계정·세션·서버·근무 수명을 따르며 운행 종료/로그아웃/권한 철회와 함께 중지한다. 실제 휴대폰 상태 UI는 합성 응답으로 확인했으며 네이버 인증401로 지도·핀과 실제 운행 GPS는 아직 확인 전이다. 위치 이력 공개·자동 업무 완료·운영 활성화와 구별하며 [표시·수명·검증](../Changes/2026-10-24-cargo-driver-tracking-r1.md)을 따른다.
+
+## 2026-10-24 기사 추천은 현재 제안 한 건에 집중한다
+
+상태: `AcceptedDirection / NativeSinglePresentationImplemented / GlobalQueueIssuancePending`. 사용자는 추천 목록을 넘기는 방식보다 현재 한 건을 제안받아 수락·거절하는 흐름을 원했다. 전문 Native 추천 화면은 화살표·목록 번호 없이 한 건을 표시하고 최신 조회에도 같은 원장 ID·차수가 남아 있으면 검토 대상을 유지한다. 조율 batch의 기본 잠금/검토 입력은1건으로 맞추지만 명시적인 다건 설정·기존 원장은 보존한다. 실제 Queue 전역의 기사별 동시1건 강제·운영 활성화·실제 배차는 이번에 완료한 것으로 보지 않는다. [적용 범위와 검증](../Changes/2026-10-24-cargo-single-recommendation.md)을 따른다.
+
 ## 2026-10-22 역할 앱 서버의 다음 배포 후보는 네이버 클라우드로 잡는다
 
 상태: `AcceptedDirection / DeploymentNotStarted`. 사용자 선호에 따라 [역할 앱 서버 배포 방향 r13](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/naver-cloud-role-hosting.r13.md)은 NCP 한국 VPC Linux를 우선 검토한다. Maps·서버·사진·FCM·AI를 별도 책임으로 유지하고 기존 컨테이너/전문 원장·GCS를 재사용한다. 기존 Azure 리소스·Unity 전용 배포·영상 저장소를 자동 이전/삭제하는 결정이 아니며, 유료 자원 생성·비밀값 변경·데이터 이전·운영 활성화는 아직 실행하지 않았다. 기존 운영/시험 경계와 실제 비용 확인·백업 복구·기기 통신 검증을 거친다.
@@ -9,8 +33,19 @@
 
 상태: Accepted / CompletedLocalValidation / FinancialAggregateAndOtherBusinessCountsPending. [r10 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/home-participation.r10.md)에 따라 현황을 역할 진입보다 먼저 배치한다. 확정 금액과 실제 지급액의 공개 집계 근거가 없으면 미집계다. 화물 완료 참여는 하차 완료 기록·실재 계정 기준이며 가입자/온라인 수·상호 수령·정산과 다르다. 관리자 대리 접수자를 화주로 대체하지 않으며 역할 수를 전체 인원으로 합산하지 않는다.
 
+## 2026-10-18 화주 PC는 기존 Windows MAUI를 우선 활용한다
 
+상태: `Accepted / ImplementedLocally / NativeRuntimeDeferred`. 기기별 분담 r111을 유지하면서 사용자 요청에 따라 실제 호스트를 재확인했다. PC 화주는 기존 `SsalddelApp`의 Windows .NET MAUI를 우선 활용하고 별도 `Ssalddel.Web.ShipperApp`은 브라우저 소비자로 유지한다. 기사 제품은 모바일 우선이다. 새 PC 앱·원장·권한을 만들지 않으며 [r112 조사·변경 범위](../Changes/2026-10-18-shipper-pc-closeout-r112.md)와 기존 페이지 책임을 따른다. Windows target 선언·현재 소스 빌드·공통 UI 브라우저 렌더·실제 Windows 창 및 서버 업무 완주는 서로 다른 증거로 관리한다.
 
+## 2026-10-18 퀵 마감은 기사 모바일·화주 모바일/데스크톱으로 나눈다
+
+상태: `Accepted / PlanningUpdated`. 사용자는 기사에게는 모바일 수행을 우선하고 기사 데스크톱의 별도 개발을 이번 마감 범위에서 제외하도록 했다. 화주는 모바일과 데스크톱을 모두 지원하며 데스크톱의 주요 사용자로 본다. [기기별 책임·집중 순서 r111](../ProjectOverview/page-docs/quick-driver-usability-r110.md#기기별-마감-범위-r111--2026-10-18-사용자-확정)이 구체 범위를 소유한다. 기존 코드·route를 삭제하거나 실제 공개 운영을 켜는 결정은 아니다. PC의 공통 UI 검토와 기사 휴대폰의 알림·위치·사진·수행 검증을 구분한다.
+
+## 2026-10-16 전체 국내 역할을 함께 공개하는 준비 기준
+
+상태: `Approved / ImplementationInProgress / OperationalDisabled`. 사용자는 퀵 우선 공개 대신 음식·퀵·화물·공간·현장 작업을 함께 준비하는 [통합 공개 r105](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/integrated-public-release.r105.md)를 승인했다. 웹·통합 Android 앱을 중심으로 기존 전문 앱을 보존한다. 정상 업무는 서버와 당사자가 처리하고 미해결 신고·금전·안전 문제만 비상 담당자에게 인계한다. 서버는24시간 유지하고 실제 작업 시간은 참여자가 설정한다.
+
+첫 수납 범위는 배송·피킹·포장 등 합의된 서비스 비용이며 상품·음식 대금은 당사자 직접 거래다. 완료 주 기준 수요일~화요일 실적과 목요일09시 지급 예정을 연결하되 공급자 계약·가용 재원·은행 영업일·최종 결과 확인 전 실지급하지 않는다. 현행 직접 지급 기록을 실수납으로 소급 변경하지 않는다. 기존0.0 기본 공개 설정·전문 workflow·Simulation 제한은 증거 없이 일괄 활성화하지 않는다. Unity·해외 업무·새 인사급여 기능을 추가하거나 로컬 시험을 운영 완료로 승격하지 않는다.
 
 ## 2026-10-09 일반 회원의 선택 배송 참여와 수수료 없는 제안
 
@@ -84,11 +119,10 @@
 사용자 요청에 따라 [스토리 영감과 플레이 진행 분리](../Architecture/스토리영감과플레이진행분리.md) `story-inspiration.r1`을 공통 기준으로 채택했으나, 2026-09-07부터 신규 역경 스토리 공부·저작 순서는 `hexagram-line-study.r1`이 대체한다. 자유 이야기 씨앗 보존, 실제 플레이 순서와 저작 순서의 분리, 기존 PLAN·HEX·API·저장 식별자와 승인 사건의 호환 경계는 계속 유효하다.
 
 > GPT Chat과 Codex가 공통으로 따라야 하는 장기 결정을 기록한다. 현재 진행 상황은 [CURRENT_WORK.md](CURRENT_WORK.md)에 둔다. 기존 결정을 바꿀 때는 원문을 삭제하지 않고 상태를 `Superseded`로 바꾼 뒤 대체 결정 ID를 연결한다.
+
 ## 2026-10-22 화물3역할·음식4역할은 같은 앱 안에서 독립 운영 문맥으로 묶는다
 
 상태: `Accepted / ImplementedLocally / OperationalDisabled`. 사용자는 화주·화물기사·관리자의 화물 묶음과 주문자·음식점·음식기사·관리자의 음식 묶음을 각각 독립 관리하고 추후 병합을 검토하도록 했다. [r9 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/business-role-bundles.r9.md)과 [구현·검증](../Changes/2026-10-22-business-role-bundles-r9.md)을 따른다. 기존 앱·서버·DB·전문 원장과 operator 권한을 재사용하며 홈 한 화면의 두 그룹과 별도 생활/창고 진입을 유지한다. 관리자 업무 query·조회·선택·지도·오류·미확정 요청·복귀를 분리하되 새 관리자 자격이나 혼합 배차·원장 병합을 만들지 않는다. 구판 operator URL은 음식 기본으로 호환한다. 실제 운영·지도 인증·음식 지도 API분류·신규 전체 여정 검증은 별도다.
-
-
 
 ## 상태 코드
 

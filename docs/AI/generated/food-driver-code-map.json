@@ -360,7 +360,7 @@
           "componentType": "\uC0B4\uB730.Services.Dispatch.Recommendation.\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service.cs",
-          "sourceLine": 13,
+          "sourceLine": 14,
           "responsibility": "\uC800\uC7A5\uD55C \uAE30\uC0AC \uC694\uAE08 \uADFC\uAC70\uC640 \uC2E4\uC81C \uBD84\uC0B0 \uD53C\uD0B9 \uCC45\uC784\uC744 \uC81C\uC548 \uD45C\uC2DC\uB85C \uC77D\uB294\uB2E4.",
           "effects": [
             "PersistentRead"
@@ -455,7 +455,7 @@
           "contractType": "Ssalddel.Application.Driver.Work.\uC6B4\uD589\uC2DC\uC791Command",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC2DC\uC791CommandHandler.cs",
-          "sourceLine": 29,
+          "sourceLine": 30,
           "responsibility": "\uAD8C\uD55C\uACFC \uC694\uCCAD \uC18C\uC720\uAD8C\uC744 \uAC80\uC99D\uD574 \uADFC\uBB34\uC640 \uC74C\uC2DD \uC6B4\uD589 \uC2DC\uC791 \uD6C4\uC18D \uC758\uB3C4\uB97C \uD568\uAED8 \uD655\uC815\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -540,7 +540,7 @@
           "contractType": "Ssalddel.Application.Driver.Work.\uC704\uCE58\uAC31\uC2E0Command",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Application/Driver/Work/Handlers/\uC704\uCE58\uAC31\uC2E0CommandHandler.cs",
-          "sourceLine": 24,
+          "sourceLine": 26,
           "responsibility": "\uD604\uC7AC \uADFC\uBB34\u00B7\uC571 \uC18C\uC720\uAD8C\uC744 \uAC80\uC99D\uD574 GPS \uD22C\uC601\uACFC \uC811\uADFC\u00B7\uC704\uCE58 \uD6C4\uC18D\uC744 \uAC31\uC2E0\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -734,7 +734,7 @@
           "contractType": "\uC0B4\uB730.Services.Dispatch.Recommendation.I\uC74C\uC2DD\uBC30\uB2EC\uAE30\uC0AC\uC5C5\uBB34Service",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
-          "sourceLine": 41,
+          "sourceLine": 43,
           "responsibility": "\uD655\uC815\uB41C \uAE30\uC0AC \uC0C1\uD0DC \uBCC0\uACBD\uC758 \uC6D0\uC7A5 \uB3D9\uAE30\uD654\u00B7\uC54C\uB9BC\u00B7\uD65C\uB3D9\u00B7\uC815\uC0B0 \uD6C4\uC18D\uC744 \uC804\uB2EC\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -794,7 +794,7 @@
           "contractType": "Ssalddel.Services.Community.I\uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18DOutboxService",
           "assembly": "Ssalddel",
           "sourcePath": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
-          "sourceLine": 60,
+          "sourceLine": 55,
           "responsibility": "\uAE30\uC0AC \uD6C4\uC18D \uC758\uB3C4\uB97C \uAE30\uC874 SQL Outbox\uC5D0\uC11C \uBA71\uB4F1 \uC608\uC57D\uD558\uACE0 \uCD5C\uC2E0 \uC6D0\uCC9C\uC73C\uB85C \uCC98\uB9AC\uD55C\uB2E4.",
           "effects": [
             "NetworkCall",
@@ -884,7 +884,7 @@
           "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceAdapter",
           "assembly": "Ssalddel.Ui.Common",
           "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
-          "sourceLine": 25,
+          "sourceLine": 30,
           "responsibility": "\uACF5\uD1B5 \uC5ED\uD560 \uC178\uC774 \uC870\uD68C\u00B7\uD589\uB3D9\u00B7\uCD08\uAE30\uD654\uB97C \uC704\uC784\uD558\uB294 \uD3EC\uD2B8",
           "effects": [],
           "readsFrom": [],
@@ -900,7 +900,7 @@
           "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.IRoleWorkspaceRecovery",
           "assembly": "Ssalddel.Ui.Common",
           "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
-          "sourceLine": 25,
+          "sourceLine": 30,
           "responsibility": "\uBBF8\uD655\uC815 \uD589\uB3D9\uACFC \uC815\uBCF8 \uC870\uD68C \uBCF5\uAD6C\uB97C \uACF5\uD1B5 \uC178\uC5D0 \uC81C\uACF5\uD558\uB294 \uD3EC\uD2B8",
           "effects": [],
           "readsFrom": [],
@@ -1007,7 +1007,7 @@
           "contractType": "Ssalddel.Contracts.Driver.Food.FoodDeliveryDriverCurrentWorkDto",
           "assembly": "Ssalddel.Ui.Common",
           "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs",
-          "sourceLine": 16,
+          "sourceLine": 18,
           "responsibility": "\uC74C\uC2DD \uAE30\uC0AC \uD604\uC7AC \uC870\uD68C\u00B7\uC6B4\uD589 \uC2DC\uC791\u00B7\uC218\uC2E0 \uC758\uC0AC\u00B7\uC218\uD589 \uBA85\uB839\uACFC \uC815\uBCF8 \uBCF5\uAD6C\uB97C \uC870\uB9BD",
           "effects": [
             "NetworkCall",
@@ -1073,7 +1073,7 @@
           "componentType": "Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core.RoleWorkspaceViewModel",
           "assembly": "Ssalddel.Ui.Common",
           "sourcePath": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs",
-          "sourceLine": 10,
+          "sourceLine": 11,
           "responsibility": "\uC5ED\uD560 \uD3EC\uD2B8\uC758 \uC870\uD68C\u00B7\uC120\uD0DD\u00B7\uACC4\uC815 \uC218\uBA85\u00B7\uC790\uB3D9 \uD655\uC778\uACFC \uD45C\uC2DC \uC0C1\uD0DC\uB97C \uC870\uC728",
           "effects": [
             "NetworkCall",
@@ -1255,7 +1255,7 @@
             {
               "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs",
               "symbol": "StepKey = \u0022ui.workspace-view-model\u0022",
-              "line": 10
+              "line": 11
             }
           ]
         },
@@ -1271,7 +1271,7 @@
             {
               "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs",
               "symbol": "StepKey = \u0022ui.food-driver-adapter\u0022",
-              "line": 16
+              "line": 18
             }
           ]
         },
@@ -1368,7 +1368,7 @@
             {
               "path": "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
               "symbol": "StepKey = \u0022contract.workspace-port\u0022",
-              "line": 25
+              "line": 30
             }
           ]
         },
@@ -1498,7 +1498,7 @@
             {
               "path": "Ssalddel/Application/Driver/Work/Handlers/\uC6B4\uD589\uC2DC\uC791CommandHandler.cs",
               "symbol": "StepKey = \u0022application.work-start\u0022",
-              "line": 29
+              "line": 30
             }
           ]
         },
@@ -1530,7 +1530,7 @@
             {
               "path": "Ssalddel/Application/Driver/Work/Handlers/\uC704\uCE58\uAC31\uC2E0CommandHandler.cs",
               "symbol": "StepKey = \u0022application.work-location\u0022",
-              "line": 24
+              "line": 26
             }
           ]
         },
@@ -1579,7 +1579,27 @@
             {
               "path": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
               "symbol": "StepKey = \u0022infrastructure.driver-followup-outbox\u0022",
-              "line": 60
+              "line": 55
+            },
+            {
+              "path": "Ssalddel/Services/Community/\uC74C\uC2DD\uC8FC\uBB38\uC6D0\uC7A5\uB3D9\uAE30\uD654PayloadHandler.cs",
+              "symbol": "internal sealed class \uC74C\uC2DD\uC8FC\uBB38\uC6D0\uC7A5\uB3D9\uAE30\uD654PayloadHandler",
+              "line": 9
+            },
+            {
+              "path": "Ssalddel/Services/Community/\uCC3D\uACE0\uCD9C\uACE0\uC6D0\uC7A5\uB3D9\uAE30\uD654PayloadHandler.cs",
+              "symbol": "internal sealed class \uCC3D\uACE0\uCD9C\uACE0\uC6D0\uC7A5\uB3D9\uAE30\uD654PayloadHandler",
+              "line": 11
+            },
+            {
+              "path": "Ssalddel/Services/Community/\uC74C\uC2DD\uD569\uC758\uCDE8\uC18C\uD22C\uC601PayloadHandler.cs",
+              "symbol": "internal sealed class \uC74C\uC2DD\uD569\uC758\uCDE8\uC18C\uD22C\uC601PayloadHandler",
+              "line": 13
+            },
+            {
+              "path": "Ssalddel/Services/Community/\uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18DPayloadHandler.cs",
+              "symbol": "internal sealed class \uC74C\uC2DD\uAE30\uC0AC\uD6C4\uC18DPayloadHandler",
+              "line": 13
             }
           ]
         },
@@ -1644,7 +1664,7 @@
             {
               "path": "Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs",
               "symbol": "StepKey = \u0022application.driver-followups\u0022",
-              "line": 41
+              "line": 43
             }
           ]
         },
@@ -1714,7 +1734,12 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.cs",
               "symbol": "private async Task LoadWorkspaceAsync",
-              "line": 719
+              "line": 716
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs",
+              "symbol": "internal sealed class FDriverWorkspaceRefreshSession",
+              "line": 6
             }
           ]
         },
@@ -1753,16 +1778,47 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
               "symbol": "private async Task RestorePendingOperationsAsync",
-              "line": 33
+              "line": 28
             },
             {
               "path": "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
               "symbol": "private async Task PersistPendingOperationsAsync",
-              "line": 86
+              "line": 66
             },
             {
               "path": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
               "symbol": "public sealed class FDriverSecurePendingOperationStore",
+              "line": 5
+            },
+            {
+              "path": "Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs",
+              "symbol": "public sealed class ProtectedPendingSnapshotStore\u003CTSnapshot\u003E",
+              "line": 6
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs",
+              "symbol": "internal sealed class FDriverPendingOperationCoordinator",
+              "line": 8
+            }
+          ]
+        },
+        {
+          "featureKey": "food-driver-work",
+          "key": "native.location-transmission",
+          "relatedStepKeys": [
+            "application.work-location"
+          ],
+          "responsibility": "\uC9C0\uB3C4 GPS\uC640 \uBD84\uB9AC\uB41C \uC6B4\uD589 \uC704\uCE58 \uC804\uC1A1\uC758 \uCDE8\uC18C\u00B7\uC138\uB300\u00B7heartbeat \uC218\uBA85",
+          "boundary": "\uC804\uC1A1 \uC644\uB8CC \uC2DC\uAC01\uACFC \uC9C0\uB3C4 \uD68D\uB4DD \uC218\uBA85\uC744 \uAD6C\uBD84\uD558\uBA70 \uC2E4\uC81C GPS\u00B7\uAE30\uAE30 \uD1B5\uC2E0 \uAC80\uC99D\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uB294\uB2E4.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.LocationTransmission.cs",
+              "symbol": "private async Task\u003CFDriverLocationSnapshot?\u003E CaptureLocationAsync",
+              "line": 19
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverLocationTransmissionSession.cs",
+              "symbol": "internal sealed class FDriverLocationTransmissionSession",
               "line": 5
             }
           ]
@@ -1826,7 +1882,7 @@
             {
               "path": "FDriverApp/PageModels/MainPageModel.cs",
               "symbol": "private async Task ResumeForegroundWorkspaceAsync",
-              "line": 193
+              "line": 192
             },
             {
               "path": "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
@@ -1879,7 +1935,7 @@
             {
               "path": "Ssalddel/Services/Dispatch/Recommendation/\uAE30\uC0AC\uC81C\uC548\uD45C\uC2DC\uADFC\uAC70Service.cs",
               "symbol": "StepKey = \u0022application.driver-offer-evidence\u0022",
-              "line": 13
+              "line": 14
             }
           ]
         }
@@ -1900,6 +1956,13 @@
       "featureKey": "food-driver",
       "stepKey": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
       "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 2\uAC1C: FoodDeliveryDriverApiService, IFoodDeliveryDriverApiService"
+    },
+    {
+      "severity": "Warning",
+      "code": "CODEMAP100",
+      "featureKey": "food-driver",
+      "stepKey": "Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs",
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 1\uAC1C: ProtectedPendingSnapshotStore"
     },
     {
       "severity": "Warning",

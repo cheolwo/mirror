@@ -93,6 +93,7 @@
      소스 결속 · native.current-work
      소스 결속 · native.automatic-start
      소스 결속 · native.pending-recovery
+     소스 결속 · native.location-transmission
      소스 결속 · native.work-screen
      소스 결속 · native.profile-settlement
      소스 결속 · native.foreground-notification
@@ -221,7 +222,7 @@
   - 부수효과: `None`
   - 경계: 후보 생성은 자동 수락·배차 확정·영속 저장이 아니다.
   - 먼저 읽을 단계: contract.offer
-- **053 application.driver-offer-evidence** — [기사제안표시근거Service](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L13) · 저장한 기사 요금 근거와 실제 분산 피킹 책임을 제안 표시로 읽는다.
+- **053 application.driver-offer-evidence** — [기사제안표시근거Service](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L14) · 저장한 기사 요금 근거와 실제 분산 피킹 책임을 제안 표시로 읽는다.
   - 계층/단계: `Application / Projection`
   - 읽기/쓰기: `OperationalState → None`
   - 부수효과: `PersistentRead`
@@ -246,7 +247,7 @@
   - 부수효과: `PersistentWrite`
   - 경계: SQL 잠금 행만 갱신한다. 전문 원장·차량 적합성·완료·정산·지급 권위를 대체하지 않는다.
   - 먼저 읽을 단계: None
-- **070 application.work-start** — [운행시작CommandHandler](../../../Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs#L29) · 권한과 요청 소유권을 검증해 근무와 음식 운행 시작 후속 의도를 함께 확정한다.
+- **070 application.work-start** — [운행시작CommandHandler](../../../Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs#L30) · 권한과 요청 소유권을 검증해 근무와 음식 운행 시작 후속 의도를 함께 확정한다.
   - 계층/단계: `Application / Confirm`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | MayIncurExternalCost | StateMutation`
@@ -267,7 +268,7 @@
   - 경계: 시작·GPS·후속과 같은 기사 잠금을 사용한다. 인덱스 정리 실패는 로그에 남기고 SQL 종료를 보존하며 기존 명시적 수신 OFF와 업무 완료를 합치지 않는다.
   - 주 계약: `Ssalddel.Application.Driver.Work.운행종료Command`
   - 먼저 읽을 단계: application.work-transition-lock | domain.driver-shift
-- **085 application.work-location** — [위치갱신CommandHandler](../../../Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs#L24) · 현재 근무·앱 소유권을 검증해 GPS 투영과 접근·위치 후속을 갱신한다.
+- **085 application.work-location** — [위치갱신CommandHandler](../../../Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs#L26) · 현재 근무·앱 소유권을 검증해 GPS 투영과 접근·위치 후속을 갱신한다.
   - 계층/단계: `Application / Projection`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | MayIncurExternalCost | StateMutation`
@@ -316,7 +317,7 @@
   - 경계: 다른 기사의 정산 존재 여부나 고객 정보를 공개하지 않는다. 조회 중 기한 경과도 다시 차단하며 완료 상세 조회는 현재 업무나 실제 지급 판정이 아니다.
   - 주 계약: `Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase`
   - 먼저 읽을 단계: contract.food-workspace-port
-- **140 application.driver-followups** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs#L41) · 확정된 기사 상태 변경의 원장 동기화·알림·활동·정산 후속을 전달한다.
+- **140 application.driver-followups** — [음식배달기사업무Service](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs#L43) · 확정된 기사 상태 변경의 원장 동기화·알림·활동·정산 후속을 전달한다.
   - 계층/단계: `Application / Projection`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | PersistentRead | PersistentWrite | StateMutation`
@@ -330,7 +331,7 @@
   - 경계: 종료·새 근무 뒤의 오래된 작업은 인덱스를 되살리지 않는다. 같은 근무 GPS·Aging을 초기화하지 않으며 수신 의사·추천은 변경하지 않는다. SQL과 Redis는 별도 경계다.
   - 주 계약: `살뜰.Services.Dispatch.Queue.I기사운행시작후속Service`
   - 먼저 읽을 단계: application.work-start | application.work-transition-lock | contract.work-start-followup-port | infrastructure.work-start-followup-mapping
-- **160 infrastructure.driver-followup-outbox** — [음식마트원장동기화OutboxService](../../../Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs#L60) · 기사 후속 의도를 기존 SQL Outbox에서 멱등 예약하고 최신 원천으로 처리한다.
+- **160 infrastructure.driver-followup-outbox** — [음식마트원장동기화OutboxService](../../../Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs#L55) · 기사 후속 의도를 기존 SQL Outbox에서 멱등 예약하고 최신 원천으로 처리한다.
   - 계층/단계: `Infrastructure / Persistence`
   - 읽기/쓰기: `OperationalState → OperationalState`
   - 부수효과: `NetworkCall | PersistentRead | PersistentWrite | StateMutation`
@@ -350,13 +351,13 @@
   - 경계: workspace/current는 정산 없는 조회이며 호환 workspace·정산은 별도다. 하위 SQL·Mongo·Redis·알림·경로 API 효과를 위임하며 서버 권한·Revision·개인정보와 Operational/Simulation 게이트를 보존한다.
   - 주 계약: `Ssalddel.Application.Driver.Food.IFoodDeliveryDriverWorkspaceUseCase`
   - 먼저 읽을 단계: application.completed-detail | application.current-work | application.daily-settlement | application.driver-actions | application.legacy-workspace | application.work-location | application.work-start | application.work-status | application.work-stop
-- **190 contract.workspace-port** — [IRoleWorkspaceAdapter](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L25) · 공통 역할 셸이 조회·행동·초기화를 위임하는 포트
+- **190 contract.workspace-port** — [IRoleWorkspaceAdapter](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L30) · 공통 역할 셸이 조회·행동·초기화를 위임하는 포트
   - 계층/단계: `Contract / Definition`
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
   - 경계: 역할별 구현의 내부 저장소·권한을 소유하지 않는 호출 계약이다.
   - 먼저 읽을 단계: None
-- **191 contract.recovery-port** — [IRoleWorkspaceRecovery](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L25) · 미확정 행동과 정본 조회 복구를 공통 셸에 제공하는 포트
+- **191 contract.recovery-port** — [IRoleWorkspaceRecovery](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L30) · 미확정 행동과 정본 조회 복구를 공통 셸에 제공하는 포트
   - 계층/단계: `Contract / Definition`
   - 읽기/쓰기: `None → None`
   - 부수효과: `None`
@@ -386,7 +387,7 @@
   - 부수효과: `None`
   - 경계: 조회·명령·장치·영속 저장을 소유하지 않는다. 미확인 거리와 0을 구분하며 정산을 현재 조회에 섞지 않는다.
   - 먼저 읽을 단계: contract.current-work | ui.food-presentation | ui.stage-presentation
-- **210 ui.food-driver-adapter** — [FoodDriverRoleWorkspaceAdapter](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs#L16) · 음식 기사 현재 조회·운행 시작·수신 의사·수행 명령과 정본 복구를 조립
+- **210 ui.food-driver-adapter** — [FoodDriverRoleWorkspaceAdapter](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs#L18) · 음식 기사 현재 조회·운행 시작·수신 의사·수행 명령과 정본 복구를 조립
   - 계층/단계: `ClientAdapter / Confirm`
   - 읽기/쓰기: `OperationalState | ClientPresentation → OperationalState | ClientPresentation`
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | UiStateMutation | MayIncurExternalCost | StateMutation`
@@ -399,7 +400,7 @@
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | UiStateMutation | MayIncurExternalCost | StateMutation`
   - 경계: 기사 중단 등 확인 입력의 클라이언트 조율이며 서버 권한·상태 원장을 대체하지 않는다. 다른 음식 역할과 공유한다.
   - 먼저 읽을 단계: api.food-driver | ui.food-presentation
-- **220 ui.workspace-view-model** — [RoleWorkspaceViewModel](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs#L10) · 역할 포트의 조회·선택·계정 수명·자동 확인과 표시 상태를 조율
+- **220 ui.workspace-view-model** — [RoleWorkspaceViewModel](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs#L11) · 역할 포트의 조회·선택·계정 수명·자동 확인과 표시 상태를 조율
   - 계층/단계: `ViewModel / Presentation`
   - 읽기/쓰기: `ClientPresentation → OperationalState | ClientPresentation`
   - 부수효과: `NetworkCall | ThirdPartyApiCall | PersistentRead | PersistentWrite | UiStateMutation | MayIncurExternalCost | StateMutation`
@@ -445,11 +446,11 @@
 - **source.ui.workspace-view-model** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `ui.workspace-view-model`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs:10](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs#L10) · `StepKey = "ui.workspace-view-model"`
+  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs:11](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Core/RoleWorkspaceViewModel.cs#L11) · `StepKey = "ui.workspace-view-model"`
 - **source.ui.food-driver-adapter** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `ui.food-driver-adapter`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs:16](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs#L16) · `StepKey = "ui.food-driver-adapter"`
+  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs:18](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/Food/FoodDriverRoleWorkspaceAdapter.cs#L18) · `StepKey = "ui.food-driver-adapter"`
 - **source.ui.stage-presentation** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `ui.stage-presentation`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -473,7 +474,7 @@
 - **source.contract.workspace-port** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `contract.workspace-port`, `contract.recovery-port`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs:25](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L25) · `StepKey = "contract.workspace-port"`
+  - [Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs:30](../../../Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs#L30) · `StepKey = "contract.workspace-port"`
 - **source.application.current-bundle-policy** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.current-bundle-policy`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -505,7 +506,7 @@
 - **source.application.work-start** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.work-start`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs:29](../../../Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs#L29) · `StepKey = "application.work-start"`
+  - [Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs:30](../../../Ssalddel/Application/Driver/Work/Handlers/운행시작CommandHandler.cs#L30) · `StepKey = "application.work-start"`
 - **source.application.work-stop** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.work-stop`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -513,7 +514,7 @@
 - **source.application.work-location** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.work-location`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs:24](../../../Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs#L24) · `StepKey = "application.work-location"`
+  - [Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs:26](../../../Ssalddel/Application/Driver/Work/Handlers/위치갱신CommandHandler.cs#L26) · `StepKey = "application.work-location"`
 - **source.api.food-driver** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `api.food-driver`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -525,7 +526,11 @@
 - **source.infrastructure.driver-followup-outbox** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `infrastructure.driver-followup-outbox`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs:60](../../../Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs#L60) · `StepKey = "infrastructure.driver-followup-outbox"`
+  - [Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs:55](../../../Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs#L55) · `StepKey = "infrastructure.driver-followup-outbox"`
+  - [Ssalddel/Services/Community/음식주문원장동기화PayloadHandler.cs:9](../../../Ssalddel/Services/Community/음식주문원장동기화PayloadHandler.cs#L9) · `internal sealed class 음식주문원장동기화PayloadHandler`
+  - [Ssalddel/Services/Community/창고출고원장동기화PayloadHandler.cs:11](../../../Ssalddel/Services/Community/창고출고원장동기화PayloadHandler.cs#L11) · `internal sealed class 창고출고원장동기화PayloadHandler`
+  - [Ssalddel/Services/Community/음식합의취소투영PayloadHandler.cs:13](../../../Ssalddel/Services/Community/음식합의취소투영PayloadHandler.cs#L13) · `internal sealed class 음식합의취소투영PayloadHandler`
+  - [Ssalddel/Services/Community/음식기사후속PayloadHandler.cs:13](../../../Ssalddel/Services/Community/음식기사후속PayloadHandler.cs#L13) · `internal sealed class 음식기사후속PayloadHandler`
 - **source.contract.work-start-followup-port** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `contract.work-start-followup-port`, `infrastructure.work-start-followup`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -541,7 +546,7 @@
 - **source.application.driver-followups** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-followups`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
-  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs:41](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs#L41) · `StepKey = "application.driver-followups"`
+  - [Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs:43](../../../Ssalddel/Services/Dispatch/Recommendation/FoodDeliveryDriverWorkService.Followups.cs#L43) · `StepKey = "application.driver-followups"`
 - **source.application.driver-action-policy** · reflection 단계의 실제 선언 파일 및 partial 책임을 명시적으로 결속
   - 관련 단계(탐색): `application.driver-action-policy`
   - 경계: 탐색 소스 연결이며 런타임 호출·완료 증거가 아니다.
@@ -558,7 +563,8 @@
   - 관련 단계(탐색): `api.food-driver`, `application.current-work`
   - 경계: 현재 조회는 정산 조회와 분리한다. 네이티브 assembly를 reflection으로 불러오지 않는다.
   - [FDriverApp/Services/FoodDeliveryDriverApiService.cs:77](../../../FDriverApp/Services/FoodDeliveryDriverApiService.cs#L77) · `public Task<FoodDeliveryDriverCurrentWorkDto> GetCurrentWorkAsync`
-  - [FDriverApp/PageModels/MainPageModel.cs:719](../../../FDriverApp/PageModels/MainPageModel.cs#L719) · `private async Task LoadWorkspaceAsync`
+  - [FDriverApp/PageModels/MainPageModel.cs:716](../../../FDriverApp/PageModels/MainPageModel.cs#L716) · `private async Task LoadWorkspaceAsync`
+  - [FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs:6](../../../FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs#L6) · `internal sealed class FDriverWorkspaceRefreshSession`
 - **native.automatic-start** · 운행 시작 한 번과 동일 요청 ID를 통한 정본 확인·수신 의사 복구
   - 관련 단계(탐색): `application.work-start`, `ui.recovery-policy`
   - 경계: 불확실한 시작 POST를 자동 재전송하지 않고 사용자의 명시적 수신 OFF를 보존한다.
@@ -567,9 +573,16 @@
 - **native.pending-recovery** · 계정별 미확정 요청 ID의 네이티브 암호화 저장·복원
   - 관련 단계(탐색): `ui.recovery-policy`, `contract.recovery-port`
   - 경계: 공통 UI 객체의 일시 보존과 별도다. 저장·복원은 실제 기기 실행 검증을 대신하지 않는다.
-  - [FDriverApp/PageModels/MainPageModel.FoodPending.cs:33](../../../FDriverApp/PageModels/MainPageModel.FoodPending.cs#L33) · `private async Task RestorePendingOperationsAsync`
-  - [FDriverApp/PageModels/MainPageModel.FoodPending.cs:86](../../../FDriverApp/PageModels/MainPageModel.FoodPending.cs#L86) · `private async Task PersistPendingOperationsAsync`
+  - [FDriverApp/PageModels/MainPageModel.FoodPending.cs:28](../../../FDriverApp/PageModels/MainPageModel.FoodPending.cs#L28) · `private async Task RestorePendingOperationsAsync`
+  - [FDriverApp/PageModels/MainPageModel.FoodPending.cs:66](../../../FDriverApp/PageModels/MainPageModel.FoodPending.cs#L66) · `private async Task PersistPendingOperationsAsync`
   - [FDriverApp/Services/FDriverSecurePendingOperationStore.cs:5](../../../FDriverApp/Services/FDriverSecurePendingOperationStore.cs#L5) · `public sealed class FDriverSecurePendingOperationStore`
+  - [Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs:6](../../../Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs#L6) · `public sealed class ProtectedPendingSnapshotStore<TSnapshot>`
+  - [FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs:8](../../../FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs#L8) · `internal sealed class FDriverPendingOperationCoordinator`
+- **native.location-transmission** · 지도 GPS와 분리된 운행 위치 전송의 취소·세대·heartbeat 수명
+  - 관련 단계(탐색): `application.work-location`
+  - 경계: 전송 완료 시각과 지도 획득 수명을 구분하며 실제 GPS·기기 통신 검증을 대신하지 않는다.
+  - [FDriverApp/PageModels/MainPageModel.LocationTransmission.cs:19](../../../FDriverApp/PageModels/MainPageModel.LocationTransmission.cs#L19) · `private async Task<FDriverLocationSnapshot?> CaptureLocationAsync`
+  - [FDriverApp/PageModels/FDriverLocationTransmissionSession.cs:5](../../../FDriverApp/PageModels/FDriverLocationTransmissionSession.cs#L5) · `internal sealed class FDriverLocationTransmissionSession`
 - **native.work-screen** · 전문 기사 전체 지도·독립 카드 XAML과 코드부
   - 관련 단계(탐색): `ui.stage-presentation`, `ui.workspace-presentation`, `api.food-driver`
   - 경계: x:Class와 namespace/partial class를 함께 검사한다. 네이티브 화면은 reflection View 형식으로 위장하지 않는다.
@@ -583,7 +596,7 @@
 - **native.foreground-notification** · 화면 전경 복귀·배차 알림 뒤 최신 업무 재조회
   - 관련 단계(탐색): `ui.recovery-policy`, `application.current-work`
   - 경계: 백그라운드 위치·실제 푸시 수신·자동 수락 완료의 증거가 아니다.
-  - [FDriverApp/PageModels/MainPageModel.cs:193](../../../FDriverApp/PageModels/MainPageModel.cs#L193) · `private async Task ResumeForegroundWorkspaceAsync`
+  - [FDriverApp/PageModels/MainPageModel.cs:192](../../../FDriverApp/PageModels/MainPageModel.cs#L192) · `private async Task ResumeForegroundWorkspaceAsync`
   - [FDriverApp/PageModels/MainPageModel.FoodNotifications.cs:204](../../../FDriverApp/PageModels/MainPageModel.FoodNotifications.cs#L204) · `public async Task ResumeFoodNotificationWorkspaceAsync`
 - **source.application.shared-driver-admission** · 기사 업무 선택과 미완료 약속을 수락 직전에 검사하는 공통 관문
   - 관련 단계(탐색): `application.shared-driver-admission`
@@ -596,10 +609,10 @@
 - **source.application.driver-offer-evidence** · 저장된 기사 요금과 실제 피킹 책임을 제안 표시로 읽는다
   - 관련 단계(탐색): `application.driver-offer-evidence`
   - 경계: 운임 수락·실지급·경로 안전 판정을 대신하지 않는다
-  - [Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs:13](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L13) · `StepKey = "application.driver-offer-evidence"`
+  - [Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs:14](../../../Ssalddel/Services/Dispatch/Recommendation/기사제안표시근거Service.cs#L14) · `StepKey = "application.driver-offer-evidence"`
 
 ## 진단 요약
 
 - 오류: 0
-- 경고: 7
+- 경고: 8
 - 일반 공개 타입의 미표기는 경고이며, 필수 단계·권위 위반·오래된 생성 파일만 검증을 차단한다.

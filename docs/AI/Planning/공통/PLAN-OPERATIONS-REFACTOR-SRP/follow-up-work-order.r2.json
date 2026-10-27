@@ -1,0 +1,1622 @@
+{
+  "schema": "operations-srp-follow-up-survey.v1",
+  "date": "2026-10-20",
+  "status": "ProposedOnly",
+  "implementationAuthorizedByThisRequest": false,
+  "requestScope": "현행 구조 재조사와 다음 리팩토링 후보 제안. 제품 코드·기능 변경 없음.",
+  "baselineGit": {
+    "head": "fd55a1c4bca4dffb4752ac34de64c62d07caced3",
+    "branch": "dev/mirror-integration",
+    "status": "See baseline-git.json; existing dirty work preserved"
+  },
+  "previousCompletedItems": 22,
+  "sourceCensus": {
+    "sourceFiles": 8672,
+    "projectCount": 85,
+    "sourceAndProjectFiles": 8757,
+    "sourceLines": 1343497,
+    "testFiles": 1814
+  },
+  "coverageLimit": "전수 구조 집계와 선택된 운영 후보의 직접 의미 검토. 모든 파일·경로의 의미/런타임 전수 검증 아님.",
+  "workItems": [
+    {
+      "sequence": 1,
+      "wave": 1,
+      "id": "SERVER-R2-03",
+      "title": "창고 입고 검수의 순수 판정과 원자 저장 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P1",
+      "proposedBoundary": "검수 입력 정규화와 replay 비교·정상/가용 수량·상태/이력 메모를 반환하는 순수 내부 입고검수Plan/Policy를 추출한다. 권한조회·기존 최신이력 조회·tracked entity 적용·이력/이동·SaveChanges·commit은 현 facade의 같은 트랜잭션 안에 남긴다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 902,
+          "meaning": "검수 API 실행 본문"
+        },
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 904,
+          "meaning": "수량·불량수량·10만 상한·메모 400자 검증"
+        },
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 927,
+          "meaning": "권한 범위 조회와 Serializable 트랜잭션"
+        },
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 942,
+          "meaning": "기존 최신 이력 memo와 요청의 replay 동등성"
+        },
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 977,
+          "meaning": "정상수량/예약 보호 및 새 수량·상태 계산"
+        },
+        {
+          "path": "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs",
+          "line": 993,
+          "meaning": "재고 이력·재고 이동 생성과 저장"
+        }
+      ],
+      "preserve": [
+        "입고검수접근가능재고Query의 창고 권한 범위",
+        "보관중 상태만 신규 검수, 완료 결과의 다른 수량/메모 변경 거부",
+        "기존 최신 이력 정렬과 메모의 정확한 문자열 동등성",
+        "정상수량이 예약수량 미만이면 거부",
+        "Serializable·SaveChanges·commit 위치",
+        "재고/이력/불량 이동의 수량과 발생 시각",
+        "멱등재시도여부와 caller의 감사/Event 중복 방지",
+        "기존 예외 종류·문구"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs",
+          "line": 842,
+          "test": "입고검수는_상품소유만으로는조회하거나처리할수없다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs",
+          "line": 862,
+          "test": "입고검수는_보관중상품을한번만변경하고_같은결과재시도는멱등하다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs",
+          "line": 894,
+          "test": "입고검수재시도는_같은수량의다른메모를기존근거로오인하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs",
+          "line": 926,
+          "test": "입고검수는_정상수량이이미예약된수량보다작아지는변경을거부한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs",
+          "line": 953,
+          "test": "입고검수UseCase는_정확한멱등재시도에_감사와Event를중복발행하지않는다"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [
+        "현행 검증→인증 순서, 최신 이력의 처리일시/Id 정렬, replay의 원 처리자/시각과 caller 감사/Event 생략을 보존한다.",
+        "기존 BuildInboundInspectionHistoryMemo를 재사용하고 now 취득·tracked 적용·Save/commit은 facade에 둔다."
+      ],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs": "26e9528aad15bfa0d04a69cfbbf4035d215f6bcbf9ebcdc136f79517396f2190",
+        "Ssalddel.Tests/Services/LogisticsProcessing/Warehouse/WarehouseOperationDetailTests.cs": "e3e0ee9a49d6bb3c63ced0a6480b12595b73e28059f559a5191da1dbb785338f"
+      }
+    },
+    {
+      "sequence": 2,
+      "wave": 2,
+      "id": "SHARED-01",
+      "title": "7개 MAUI 인증 토큰 저장소의 동일 직렬화·손상 처리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "높음",
+      "proposedBoundary": "기존 Client.Infrastructure 안의 플랫폼 비의존 토큰 JSON 저장 core에 read/write/remove delegate와 키를 제공한다. 실제 SecureStorage 연결·기존 타입 facade·역할 키·호스트 DI는 각 앱이 소유한다. Native 코드를 새 assembly로 바꾸지 않는다.",
+      "evidence": [
+        {
+          "path": "SsalddelApp/Services/Security/MauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:32 / ClearAsync:40",
+          "reason": "JSON 읽기·빈값·JsonException 삭제·쓰기·제거 구현"
+        },
+        {
+          "path": "DriverApp/Services/Security/MauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:32 / ClearAsync:40",
+          "reason": "역할 키 외 같은 알고리즘"
+        },
+        {
+          "path": "OrdererApp/Services/Security/OrdererMauiSecureTokenStore.cs",
+          "line": 12,
+          "symbol": "LoadAsync / SaveAsync:33 / ClearAsync:44",
+          "reason": "같은 snapshot과 Web JSON; Save의 null 명시 검사 차이"
+        },
+        {
+          "path": "RestaurantDeskApp/Services/Security/RestaurantMauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:33 / ClearAsync:45",
+          "reason": "같은 snapshot과 Web JSON; Save의 null 명시 검사"
+        },
+        {
+          "path": "WarehouseManagerApp/Services/Security/WarehouseMauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:33 / ClearAsync:44",
+          "reason": "같은 snapshot과 Web JSON; Save의 null 명시 검사"
+        },
+        {
+          "path": "SellerApp/Services/MauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:31 / ClearAsync:41",
+          "reason": "auth_token 키 철자 차이 외 동일 처리"
+        },
+        {
+          "path": "HumanResourcesManagerApp/Services/Security/HumanResourcesMauiSecureTokenStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync:33 / ClearAsync:44",
+          "reason": "창고와 같은 snapshot·직렬화·null 검사·손상 삭제"
+        }
+      ],
+      "preserve": [
+        "7개 역할 키와 기존 JSON 바이트 의미",
+        "빈 문자열은 null, JsonException만 삭제 후 null",
+        "SecureStorage 접근 실패는 전파",
+        "기존 사전 취소 검사 위치",
+        "Orderer/Restaurant/Warehouse/HR의 null 검사와 나머지3개의 차이",
+        "기존 singleton 수명과 역할별 저장 격리"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Client/Infrastructure/ClientAuthSessionTests.cs",
+          "line": 49,
+          "name": "모든Token이만료되면_저장소와메모리세션을비운다",
+          "limit": "가짜 IClientSecureTokenStore로 세션 계약 검사"
+        },
+        {
+          "path": "Ssalddel.Tests/Client/Infrastructure/ClientAuthSessionTests.cs",
+          "line": 69,
+          "name": "새Token적용은_인증상태와보안저장소를함께갱신한다",
+          "limit": "MAUI SecureStorage 자체 시험 아님"
+        },
+        {
+          "path": "Ssalddel.Tests/Architecture/SellerAppCompositionTests.cs",
+          "line": 96,
+          "name": "Seller 토큰 저장 source 검사",
+          "limit": "파일본문에 결속; 추출 시 facade와 core를 명시적으로 함께 검사"
+        }
+      ],
+      "characterizationOrGap": "추출 전에 7개 프로필의 키·손상 JSON·빈값·저장/삭제 예외·취소/null 우선순위를 delegate 저장소로 대조한다. 현재 발견된 회귀시험만으로 실제 보호저장 adapter 동작을 검증했다고 표시하지 않는다.",
+      "additionalIndependentReviewConditions": [
+        "JsonException catch는 역직렬화만 감싼다. GetAsync/Remove의 저장소 실패까지 삼키지 않는다.",
+        "JSON 리터럴 null은 null 반환하되 삭제하지 않는다. await 후 취소 검사·자동 재시도·fallback을 추가하지 않는다."
+      ],
+      "evidenceSourceHashes": {
+        "SsalddelApp/Services/Security/MauiSecureTokenStore.cs": "9ff0af673cb987ec912ac49a948be05051426f3a0bc7dc0f2c4bede5a56451aa",
+        "DriverApp/Services/Security/MauiSecureTokenStore.cs": "aa2f47319368a92fb944a43a8499fd04606bcb32a570e5773874d0ea829cb730",
+        "OrdererApp/Services/Security/OrdererMauiSecureTokenStore.cs": "4aec60c8686cc770f9a1447866b841c6cc3e3e2325046e06cc35340509a5f7e4",
+        "RestaurantDeskApp/Services/Security/RestaurantMauiSecureTokenStore.cs": "eb9d7f4d2b6f4bbe9b0b59726316bd024073d55b68c33832b5be37c41becb017",
+        "WarehouseManagerApp/Services/Security/WarehouseMauiSecureTokenStore.cs": "f9a0856ecc6cbf9d555e0f302fa105115abd0018112fdb7bb437e2fff40f4c04",
+        "SellerApp/Services/MauiSecureTokenStore.cs": "658f30efa0267a98bafdf7d01d884da38127797ff8c09dd9eb246358c755c890",
+        "HumanResourcesManagerApp/Services/Security/HumanResourcesMauiSecureTokenStore.cs": "b6746f5f5f6e01843bd52c9bb4bab15cf35f4689f502185c9a142b4dd8afc1bb",
+        "Ssalddel.Tests/Client/Infrastructure/ClientAuthSessionTests.cs": "9aa0606a177de73fbcfe4d25b68e418864b13ed75cf09290084b062ca0882ec1",
+        "Ssalddel.Tests/Architecture/SellerAppCompositionTests.cs": "1b56ca9f2fea92d7949efe0b30d2a6d9c82153bcee42f60dddd42228e8d50238"
+      }
+    },
+    {
+      "sequence": 3,
+      "wave": 3,
+      "id": "SERVER-R2-02",
+      "title": "국내화물 조율 입력의 근거 수집과 조합점수 조립 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P1",
+      "proposedBoundary": "조회와 외부 호출은 우선 그대로 두고, 수집한 decision/evaluation·비용/이익·aging·복귀부담·제외 사유를 입력받아 점수·이유·배지·결과를 만드는 내부 순수 Composer부터 추출한다. 후속으로 필요할 때만 요청/기사 snapshot 로더를 분리한다. partial 파일 이동만으로 완료로 판단하지 않는다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.cs",
+          "line": 87,
+          "meaning": "SQL/기사 상태/실차/근무 자료 조회와 평가/묶음/최종 판정근거 조립"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+          "line": 36,
+          "meaning": "운임 SQL 및 원장/기사/실차/위치 지문 대조"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+          "line": 118,
+          "meaning": "실경로와 일정 구성·삽입 평가 호출"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+          "line": 193,
+          "meaning": "기존 평가 점수에 aging/복귀/비용/이익 보정을 직접 계산"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs",
+          "line": 221,
+          "meaning": "추천 문구·배지·최종 DTO를 같은 메서드에서 조립"
+        }
+      ],
+      "preserve": [
+        "현재 bounded 조회·기사별 캐시 clear 시점 및 재사용 의미",
+        "기준 now와 원자적조회여부=false, 조회완료시각·근거 지문",
+        "평가 전후 현재근거 대조와 제외 사유 순서",
+        "cost/5000 clamp, profit/3000 clamp, aging/복귀 가산·감산 및 제외시 점수 상한 0",
+        "명시 작업시간/저장 작업시간 충돌을 미확인으로 유지",
+        "기존 실차/자격/참여/경로 검증 및 추천가능 여부",
+        "추천 문구·배지 순서와 null 의미"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs",
+          "line": 223,
+          "test": "조율은_선택한복귀정책을점수에한번반영하고_기존부담비용을끄며_기사별상태를재사용한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs",
+          "line": 255,
+          "test": "차량명세누락이나_구간적재미확인은_적합성허용응답이있어도_복귀가점적격으로확정하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs",
+          "line": 376,
+          "test": "실제적합성에서_제원이나요구부피기준이미확인이면_조합후보와복귀가점을인증하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Shipper/Request/화물작업시간영속R77Tests.cs",
+          "line": 73,
+          "test": "정본시간을기본으로쓰고_상충하는조율입력은미확인이다"
+        }
+      ],
+      "characterizationOrGap": "현재 실제 Factory를 구성하는 CargoReturnAreaTests의 Fixture.Factory를 확인했다(:494). 비용/이익 clamp 경계·문구/배지 순서 전체 비교는 추출 전에 추가 특성화할 필요가 있다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.cs": "712d7e177daddfc18a433a7b79a6795cad11ff127810c39dcdc8e85bf2bbd706",
+        "Ssalddel/Services/Dispatch/Coordination/국내화물배차조율입력Factory.Evaluation.cs": "472fefc17aeaa724800ad0dd7585951eab22ef3e6dd78387795abb0a3a6596f7",
+        "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs": "cdebbf146c4c9f969c0322b2ca249b7511822d12609b2c09b9c0e3578ac0ce55",
+        "Ssalddel.Tests/Application/Shipper/Request/화물작업시간영속R77Tests.cs": "9c04e7ba883d3f745dc813553cf40b8c568c3e0d17c935bed10a1bc47113250d"
+      }
+    },
+    {
+      "sequence": 4,
+      "wave": 3,
+      "id": "SERVER-R2-01",
+      "title": "음식 배차 시점 평가의 자료 조립과 모델 조율 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P1",
+      "proposedBoundary": "첫 단계는 rows와 queue·now를 받아 regional/pending/호환/유입 통계만 반환하는 순수 SnapshotBuilder를 추출한다. 다음 단계로 원주문 조회와 OrderInformationSource 정규화 판정을 나누되, 관측·재조회 위치는 facade에 유지한다. demandService.평가Async는 판정 투영 복구 효과가 있을 수 있으므로 무효과 Reader로 가장하지 않고 기존 조율 순서에 남긴다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs",
+          "line": 108,
+          "meaning": "SQL 주문풀 조회·행수 상한"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs",
+          "line": 122,
+          "meaning": "권역·중복 원의뢰·pending 필터"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs",
+          "line": 142,
+          "meaning": "호환 주문/유입과 입력 통계 계산"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs",
+          "line": 160,
+          "meaning": "AI 호출 뒤 같은 원주문/현재시각/허용 행동 재검사"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.Information.cs",
+          "line": 51,
+          "meaning": "원주문 조회와 조리 정보 정규화·유효성 판정이 한 메서드에 있음"
+        }
+      ],
+      "preserve": [
+        "최초 CreatedAt 기준 최대 대기, 기존 추천·재시도 조기 복귀",
+        "SQL 행수 상한+1와 SnapshotTruncated·CurrentQueueNotObserved 의미",
+        "같은 원의뢰 최신행 선택과 기존 통계 수치/정렬",
+        "원주문 revision·조리 차수·UTC 정규화·관측시각 보존",
+        "AI 전후 원주문 재검사와 현재시각 최종 재판정",
+        "caller 취소 재throw, 허용된 조회 실패만 기존 즉시 흐름으로 복귀",
+        "worker/기능 기본값과 수요 판정 투영 복구 순서"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+          "line": 128,
+          "test": "조회실패잘림현재주문누락권역미확인은즉시기존흐름으로복귀한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+          "line": 213,
+          "test": "모델응답중수집기한이끝나면Collect응답도서버가기각한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+          "line": 353,
+          "test": "자료조회나모델대기중원주문판본상태연결조리가바뀌면수집을취소한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+          "line": 518,
+          "test": "모델대기중준비정보유효기간이끝나면다시관측한것처럼갱신하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs",
+          "line": 564,
+          "test": "호출자취소는복구판정으로숨기지않는다"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.cs": "e45c364225e04ffffcd58fb949bf839baed96b33243c04677cc921717e8f3004",
+        "Ssalddel/Services/Dispatch/AI/FoodDispatchTimingService.Information.cs": "257efe720b62eb7a4a26e759f07dce4a865bc4bce091b6293346e04c9e33e829",
+        "Ssalddel.Tests/Services/Dispatch/AI/FoodDispatchTimingServiceTests.cs": "e78b672b02ee6082b5f744768045fdaefccc2cedc10a3b533f33d7990387a79c"
+      }
+    },
+    {
+      "sequence": 5,
+      "wave": 3,
+      "id": "SERVER-R2-05",
+      "title": "운송 삽입 평가의 경로조회와 순수 누적·시도선택 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P2",
+      "proposedBoundary": "먼저 완성된 attempts와 baseline에서 selected/result를 만드는 순수 InsertionAttemptSelector를 추출한다. 이어 필요하면 각 순차 route 응답을 받아 누적 상태를 전이하는 순수 ScheduleAccumulator를 만든다. 응답을 한꺼번에 미리 읽거나 호출수를 줄이지 않는다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.cs",
+          "line": 54,
+          "meaning": "연속삽입 후보 열거와 각 경로 시뮬레이션"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.cs",
+          "line": 118,
+          "meaning": "유리한 경로변경/가능/최소위반 fallback 세 선택 분기"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.Simulation.cs",
+          "line": 25,
+          "meaning": "외부 경로 포트 호출"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.Simulation.cs",
+          "line": 43,
+          "meaning": "거리·시간·기준시각 대기·작업시간 누적"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.Simulation.cs",
+          "line": 64,
+          "meaning": "시간창 초과·미확인 경로·route option 일관성 판정"
+        }
+      ],
+      "preserve": [
+        "후보 열거 순서·연속/분리삽입 구분과 경로 호출 횟수/순서",
+        "caller 취소 검사 위치",
+        "작업시간 null과 명시 0, 구형 누락 계산 호환 및 신규 계획 검증의 별도 차단",
+        "대기/작업시간을 포함한 완료시각과 시간창 초과 판정",
+        "Math.Round 자릿수·비교 tie break·fallback 순서",
+        "전체 일정 끝점·실경로 여부·route option 혼합 미인증",
+        "public 결과 record/API와 사유 문자열"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/운송일정삽입평가ServiceTests.cs",
+          "line": 11,
+          "test": "평가_분리삽입이_단순이어가기보다_빠르면_경로변경이점으로_선택한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs",
+          "line": 23,
+          "test": "분리삽입은_후보하차지가아닌_전체일정끝점을보존한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs",
+          "line": 104,
+          "test": "경로옵션이섞인계획은_복귀비교실경로로인증하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Coordination/국내화물배차계획검증Tests.cs",
+          "line": 120,
+          "test": "준비대기와작업시간을전체소요시간에포함한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Recommendation/화물배차수락적격성ServiceTests.cs",
+          "line": 85,
+          "test": "추천에기록된상하차시간을_수락때빠뜨려약속을통과시키지않는다"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.cs": "05ec570b7adc223004c85191a0feae0f5e42b829c3287a3fa652108acb7a6837",
+        "Ssalddel/Services/Dispatch/Recommendation/운송일정삽입평가Service.Simulation.cs": "33bc87130d2b4a99137ee29fa2c3597f85a949c25ebe532306e83275a9a89e8f",
+        "Ssalddel.Tests/Services/Dispatch/Recommendation/운송일정삽입평가ServiceTests.cs": "1a9d9e20f6f22614c9a3248ab587cee8a8f941ec0e03d3abc9009bdd4123401b",
+        "Ssalddel.Tests/Services/Dispatch/Recommendation/CargoReturnAreaTests.cs": "cdebbf146c4c9f969c0322b2ca249b7511822d12609b2c09b9c0e3578ac0ce55",
+        "Ssalddel.Tests/Services/Dispatch/Coordination/국내화물배차계획검증Tests.cs": "a165bb684830dcfcf9797b7985f55437cd8b3fb2c669aca2843838786b640712",
+        "Ssalddel.Tests/Services/Dispatch/Recommendation/화물배차수락적격성ServiceTests.cs": "425792ae26f18a1ef5333bd26c17c8fb755d996025aebf62978b0897183cc031"
+      }
+    },
+    {
+      "sequence": 6,
+      "wave": 4,
+      "id": "UI-R2-01",
+      "title": "화주 작성 초안과 차량추천 조회·선택 수명 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P1",
+      "proposedBoundary": "가칭 차량추천조회Session에 순번·입력지문·응답·적용선택 출처와 기존 조회/초기화 전이를 추출한다. 기존 ViewModel 공개 속성·메서드는 위임 facade로 남기고 입력·초안 변환·검증 메시지를 계속 소유한다. 접수용 고정복사와 저장 초안 복원의 차이를 명시 API로 보존한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+          "line": 155,
+          "member": "차량추천현재유효·적용차량재확인필요·서버추천후보"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+          "line": 212,
+          "member": "차량추천조회Async"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+          "line": 251,
+          "member": "차량추천초기화"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs",
+          "line": 260,
+          "member": "접수입력고정복사"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Components/Transport/운송의뢰추천Panel.razor",
+          "line": 51,
+          "member": "RecommendAsync → 차량추천조회Async"
+        },
+        {
+          "path": "Ssalddel.WebApp/ViewModels/ShipperRequestAuthoringPageViewModel.cs",
+          "line": 299,
+          "member": "SubmitAsync의 접수입력고정복사 호출"
+        }
+      ],
+      "preserve": [
+        "최신 요청 순번과 입력지문 일치 후에만 응답 적용",
+        "CurrentRevision 및 추천 근거 입력지문 검사",
+        "실패·빈 후보 뒤 기존 차량 선택 문구는 유지하되 재확인 필요",
+        "연락처·시간창 수정은 적재추천을 시간약속 검증으로 확대하지 않음",
+        "명시 초기화·초안 교체·복원·같은 접수 호출의 고정복사 차이",
+        "기존 취소 예외 처리와 오류 문구·순서"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/UiCommon/ShipperVehicleRecommendationR74Tests.cs",
+          "line": 51,
+          "covers": "서버 후보 명시 선택·입력 변경·복원·고정복사·오래된 응답·역순 응답·실패·빈 목록"
+        },
+        {
+          "path": "Ssalddel.Tests/UiCommon/ShipperRequestAuthoringViewModelTests.cs",
+          "line": 82,
+          "covers": "초안 복원"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/ShipperRequestSubmissionRecoveryTests.cs",
+          "covers": "접수와 고정입력 소비 경계"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [
+        "현재 입력지문을 속성 조회와 await 후마다 다시 읽는 지연 검증을 유지한다.",
+        "차량추천초기화는 재확인 출처를 보존하지만 Reset은 지우는 차이를 유지한다.",
+        "고정복사는 새 VM의 독립 session으로 조건부 복사하며 같은 session을 공유하지 않는다.",
+        "Panel CTS는 기존 컴포넌트 소유다. 역순 요청 자동취소·계정 guard를 추가하지 않는다."
+      ],
+      "evidenceSourceHashes": {
+        "Ssalddel.Ui.Common/Areas/App/ViewModels/운송의뢰작성ViewModel.cs": "d7fd2b6429a187ac603882f998b4395736647f0783f24525e5bf986584169e9e",
+        "Ssalddel.Ui.Common/Areas/App/Components/Transport/운송의뢰추천Panel.razor": "44e7495507952c68c6070f64e81ffd0f820caf6efdd6306ab9796862e7d381ab",
+        "Ssalddel.WebApp/ViewModels/ShipperRequestAuthoringPageViewModel.cs": "665e97ec37bc8dd17285ad4afc3a380a2f191978786e2c6e448e4968154e4483",
+        "Ssalddel.Tests/UiCommon/ShipperVehicleRecommendationR74Tests.cs": "1fd77a6421295b1eff1bc0377849972886761d3b75dc5732b5f2ac39d545f688",
+        "Ssalddel.Tests/UiCommon/ShipperRequestAuthoringViewModelTests.cs": "9be4ef42aa3f0a7e3fcf65b6ca08d64f73d79fba646d56583004c79788527b84",
+        "Ssalddel.Tests/Clients/ShipperRequestSubmissionRecoveryTests.cs": "93245a4a66007aa583fa2bc3c10729e9ee3a851f5520d972a13043d0973533ac"
+      }
+    },
+    {
+      "sequence": 7,
+      "wave": 4,
+      "id": "UI-R2-03",
+      "title": "관리자 운송의뢰 상세의 관찰 수명과 취소 결정 입력 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P1",
+      "proposedBoundary": "기존 observer를 재사용하는 운송의뢰상세ReadSession이 snapshot·이전 성공 정보·feature/인증 조회·polling 구독/해제를 소유하고, 취소검토DecisionState가 확인 ID·사유·확인창과 승인/거절 명령 수명을 소유하게 한다. 페이지는 route·표현·기존 공용 잠금 순서를 조립한다.",
+      "evidence": [
+        {
+          "path": "SsalddelAdmin/Components/Pages/RequestDetail.razor",
+          "line": 374,
+          "member": "LoadAsync(bool)"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/RequestDetail.razor",
+          "line": 484,
+          "member": "CancelAsync"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/RequestDetail.razor",
+          "line": 536,
+          "member": "RejectCancellationReviewAsync"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/RequestDetail.razor",
+          "line": 600,
+          "member": "EnsureObserverStarted·RunPollingAsync"
+        },
+        {
+          "path": "SsalddelAdmin/Components/Pages/RequestDetail.razor",
+          "line": 674,
+          "member": "Dispose"
+        }
+      ],
+      "preserve": [
+        "운송 기능 OFF·관리자 인증·메모리 모드의 기존 분기",
+        "일시 조회 실패 시 이전 request 보존과 인증 실패 시 제거의 차이",
+        "isLoading/isSaving 공동 잠금과 polling 주기",
+        "RequestId 변경 시 민감정보 표시·확인 입력 초기화",
+        "reviewLedgerId와 운영원본Id를 함께 맞춘 취소 검토 선택",
+        "명시 확인 ID·취소 사유·정책 판정은 현재 helper를 재사용",
+        "일반 취소/환불과 공동 원장 승인·거절의 API 분기 및 성공 후 조회 순서",
+        "현행 예외·취소·성공 메시지 의미"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Architecture/AdminMapTransportCancellationReviewCompositionTests.cs",
+          "line": 6,
+          "covers": "통합 관리자 화면 소유·공식 API·Bearer 인증"
+        },
+        {
+          "path": "Ssalddel.Tests/Architecture/PlatformLedgerRefreshPolicyCompositionTests.cs",
+          "line": 6,
+          "covers": "공통 30초 정책 조립"
+        }
+      ],
+      "characterizationOrGap": "두 발견 시험은 소스 조립 검사다. 새 내부 session의 지연·예외·폐기·취소 후 재조회 결과와 기존 공용 잠금을 fake service로 먼저 고정할 필요가 있다. 늦은 응답 차단 추가는 별도 동작 개선이다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "SsalddelAdmin/Components/Pages/RequestDetail.razor": "1296680ae890f5b44570897450c65037c3fe4225a9ab01f7446336d3e74167f1",
+        "Ssalddel.Tests/Architecture/AdminMapTransportCancellationReviewCompositionTests.cs": "d149dc0b6255764e24639066e8a8d145357ae8789376c58498b14e684120a2b4",
+        "Ssalddel.Tests/Architecture/PlatformLedgerRefreshPolicyCompositionTests.cs": "29e91332143dae44824f36d48f115adecd4943ce4c4ed2eaaee7642e4329bbaa"
+      }
+    },
+    {
+      "sequence": 8,
+      "wave": 4,
+      "id": "UI-R2-02",
+      "title": "주문자 비구속 수요 Panel의 모집권 조회와 등록·철회 상태 추출",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P1",
+      "proposedBoundary": "주소 후보·사용자 확인을 소유하는 모집권선택State와 수요 등록/철회·출처키·후속 원장 재조회를 소유하는 수요신청Session을 내부 객체로 추출한다. Razor는 기존 양식·EventCallback·인증 표시 모드를 조립한다. 같은 목적의 화면과 route는 유지한다.",
+      "evidence": [
+        {
+          "path": "OrdererApp/Components/GroupPurchase/GroupPurchaseDemandPanel.razor",
+          "line": 324,
+          "member": "ResolveDeliveryScopesAsync"
+        },
+        {
+          "path": "OrdererApp/Components/GroupPurchase/GroupPurchaseDemandPanel.razor",
+          "line": 421,
+          "member": "SubmitDemandAsync"
+        },
+        {
+          "path": "OrdererApp/Components/GroupPurchase/GroupPurchaseDemandPanel.razor",
+          "line": 523,
+          "member": "WithdrawDemandAsync"
+        },
+        {
+          "path": "OrdererApp/Components/GroupPurchase/GroupPurchaseDemandPanel.razor",
+          "line": 597,
+          "member": "CreateDemandSourceKey"
+        },
+        {
+          "path": "OrdererApp/Components/Pages/GroupPurchaseDemandCreate.razor",
+          "line": 24,
+          "member": "GroupPurchaseDemandPanel 소비"
+        }
+      ],
+      "preserve": [
+        "권장 모집권 자동 선택과 사용자의 별도 최종 확인을 구분",
+        "비구속 동의·HS 코드 확인과 명시 제출",
+        "userId|상품카드Id SHA256의 앞 32자를 쓰는 수요출처키 형식",
+        "이미 등록한 출처키와 다른 상품의 등록 차단",
+        "등록 성공 뒤 ListGroupsAsync 조회가 실패한 상태를 등록 실패와 구분",
+        "철회 성공 뒤 재조회 실패를 경고로 구분",
+        "401의 재로그인 모드·입력과 등록 수요 상태 수명",
+        "가격·결제·집단 확정 의미를 새로 추가하지 않음"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Architecture/OrdererGroupPurchasePageCompositionTests.cs",
+          "line": 124,
+          "covers": "기존 route/컴포넌트 분리·철회 후 재조회·보조 결제 흐름 제외의 소스 조립 검사"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Orderer/공동구매자동수요멱등정책Tests.cs",
+          "covers": "서버 수요 출처 멱등 정책"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Orderer/공동구매자동집단화철회UseCaseTests.cs",
+          "covers": "서버 철회 계약"
+        }
+      ],
+      "characterizationOrGap": "발견한 Panel 전용 시험은 주로 소스 조립 검사다. 추출 전 fake client로 등록 성공/후속 조회 실패, 철회 성공/후속 조회 실패, 401·상품 변경의 현재 결과를 특성화해야 한다. 새 세대 guard나 자동 재조회 정책은 이 단계에 넣지 않는다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "OrdererApp/Components/GroupPurchase/GroupPurchaseDemandPanel.razor": "a5f984431336b6ea95ad539b31bf38462924ce98f71fcace24edf719042a84b5",
+        "OrdererApp/Components/Pages/GroupPurchaseDemandCreate.razor": "41047ce1d9faae48e0a812e3632d4a8c0ea1856c8860f94ff4d5efc89d37c1ee",
+        "Ssalddel.Tests/Architecture/OrdererGroupPurchasePageCompositionTests.cs": "470bd94425828667e1b382c58f31b80ae95d6d8be138615b7abedf834a4494ce",
+        "Ssalddel.Tests/Services/Orderer/공동구매자동수요멱등정책Tests.cs": "0c5f439ef621fd9f632fc5ac229a5ede58510ba1ec4d0c6b9f169326338bf735",
+        "Ssalddel.Tests/Services/Orderer/공동구매자동집단화철회UseCaseTests.cs": "3986d807e8789472b71e21561db6f9c5d528a0480ab23e7bb55e81832c53ba06"
+      }
+    },
+    {
+      "sequence": 9,
+      "wave": 4,
+      "id": "UI-R2-04",
+      "title": "판매자 수요 허브의 조회 조율·polling과 집단수요 표시 projection 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P2",
+      "proposedBoundary": "수요 허브 ReadSession 또는 PageViewModel이 네 원장의 응답·오류·현재 조회 순서·timer 수명을 소유하고, 집단수요 표시 projection이 검색/정렬·진행률·라벨·다음 대응 문구를 순수하게 만든다. Razor의 네 종류 진입과 같은 허브 목적을 유지한다.",
+      "evidence": [
+        {
+          "path": "SellerApp/Components/Pages/OrdererDemand.razor",
+          "line": 277,
+          "member": "LoadAsync"
+        },
+        {
+          "path": "SellerApp/Components/Pages/OrdererDemand.razor",
+          "line": 336,
+          "member": "MonitorAsync"
+        },
+        {
+          "path": "SellerApp/Components/Pages/OrdererDemand.razor",
+          "line": 361,
+          "member": "FilteredClusteredDemands"
+        },
+        {
+          "path": "SellerApp/Components/Pages/OrdererDemand.razor",
+          "line": 394,
+          "member": "DemandProgress·DemandProgressText·DemandStatus"
+        },
+        {
+          "path": "SellerApp/Components/Pages/OrdererDemand.razor",
+          "line": 464,
+          "member": "DisposeAsync"
+        }
+      ],
+      "preserve": [
+        "개별/공동 주문 요청을 먼저 시작하고 현행 순서로 적용",
+        "집단수요·수출의 403/404만 기능 미활성 안내로 변환",
+        "기타 실패와 이미 반영된 앞 응답의 현행 부분 상태",
+        "PageSize 100·search 전달·집단수요의 현재 로컬 필터/정렬",
+        "30초 polling과 폐기 취소",
+        "목표 없는 진행률의 현재 0/100 표시와 상태별 문구",
+        "참여자 이름·상세 주소·개별 주문량 비공개"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Architecture/SellerAppCompositionTests.cs",
+          "line": 19,
+          "covers": "판매 흐름 4분류·공통 서버 서비스·30초 정책·개인정보 문구"
+        }
+      ],
+      "characterizationOrGap": "발견한 시험은 소스 조립 검사다. 추출 전에 fake service 응답별 403/404와 일반 실패·부분 반영·검색·timer 폐기 결과를 특성화해야 한다. 조회 병렬화·중복 조회 방지·계정 guard·실패 격리 강화는 동작 변경이므로 이 후보에 섞지 않는다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "SellerApp/Components/Pages/OrdererDemand.razor": "d1083a664ee6003d25f1a159cb0f96cea18bf5637b814178a2804b3ebfb6e3ae",
+        "Ssalddel.Tests/Architecture/SellerAppCompositionTests.cs": "1b56ca9f2fea92d7949efe0b30d2a6d9c82153bcee42f60dddd42228e8d50238"
+      }
+    },
+    {
+      "sequence": 10,
+      "wave": 5,
+      "id": "SERVER-R2-04",
+      "title": "작업자 주간 명세의 전문 자료 조립과 완료주간 projection 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P2",
+      "proposedBoundary": "먼저 주간 경계와 활동 완료시각 선택, 최종 lines 중복/정렬/합계를 담당하는 순수 WorkerWeeklyStatementProjector를 추출한다. EF/source 조회와 Gate는 facade에 남긴다. 자료 수집을 나눌 경우 음식/화물/활동 별 내부 reader로만 분리하고 SQL 순서/동작은 보존한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 15,
+          "meaning": "gate·KST 수요일 주간 경계"
+        },
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 24,
+          "meaning": "음식 전문 정산 조회/DTO"
+        },
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 36,
+          "meaning": "화물·계좌·의뢰·운임·보류사건·지급요청·배치 조회/DTO"
+        },
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 70,
+          "meaning": "생활 정산 원천/과거 terms판본 조회와 활동 명세 조립"
+        },
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 89,
+          "meaning": "작업 종류·과거 workflow·수혜자에 따른 실제 완료시각 선택"
+        },
+        {
+          "path": "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs",
+          "line": 115,
+          "meaning": "stable ID 중복 제거·정렬·알려진/미확인 금액 집계"
+        }
+      ],
+      "preserve": [
+        "KST 수요일 시작·UTC 반열림 주간 경계",
+        "기사 귀속·본인 party 조회 및 Simulation gate",
+        "실제 완료시각만 사용하고 기록/발생/지급 날짜로 대체하지 않음",
+        "음식/화물 배송참고 및 원가배부 중복 제외",
+        "모의처리처 수행 제외, 운임 null·손상 합의 근거 null 의미",
+        "지급준비·신고·수령확인·실입금 별도 유지",
+        "StableId prefix·중복 제거·동일 시각 정렬 및 집계/null 표현"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs",
+          "line": 30,
+          "test": "R76_본인완료주간만조회하고_화물보수null과_모의지급을_실입금으로숨기지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs",
+          "line": 60,
+          "test": "R76_피킹은늦은보수기록일이아닌_완료주간에한번만포함한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs",
+          "line": 77,
+          "test": "R76_기존배송참고와입고원가배부는_작업자보수에중복합산하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs",
+          "line": 126,
+          "test": "R76_판매대행료완료일은_판매근거를쓰며_시각없으면기록일로추정하지않는다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs",
+          "line": 139,
+          "test": "R76_입고단위보관보수는_실제입고완료와공간제공자를연결하며_원가배부를더하지않는다"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [
+        "첫 추출은 Weekly.cs:20~22 주간 경계와 :115~125 최종 명세 projection으로 제한한다.",
+        "음식→화물→활동의 입력 순서와 DistinctBy 첫 항목 선택, 주간 필터 이전 제외/미확인 카운터를 유지한다.",
+        "기준일 기본값과 ObservedAtUtc의 서로 다른 Now 읽기를 하나로 합치지 않는다. 완료시각 selector는 다음 작은 추출이다."
+      ],
+      "evidenceSourceHashes": {
+        "Ssalddel/Application/Settlement/NeighborhoodSettlementUseCase.Weekly.cs": "219682636a9512a4443c163a3d94dfe7b6e02cba72cd4f0c4e2f6419de72d524",
+        "Ssalddel.Tests/Application/Settlement/WorkerWeeklyStatementR76Tests.cs": "d2f3b620cdde72f8a9e2118f1ec6292e5791b13e52adf5605ef28e7625b2362f"
+      }
+    },
+    {
+      "sequence": 11,
+      "wave": 5,
+      "id": "SHARED-02",
+      "title": "기사·음식점 pending 보호저장의 잠금/읽기/쓰기/소유자 삭제 중복",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "중간",
+      "proposedBoundary": "단일 보호 snapshot I/O와 인스턴스별 직렬 실행만 작은 내부 core로 공유한다. snapshot 타입·키·Validate·owner 추출·오류 문구·복구/명령 결정은 두 전문 adapter와 session에 남긴다. SHARED-01과 core를 합칠지는 손상 데이터 삭제 차이를 확인한 뒤 판단한다.",
+      "evidence": [
+        {
+          "path": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
+          "line": 11,
+          "symbol": "LoadAsync / SaveAsync / ClearAsync:31 / ReadAsync:46 / Validate:56",
+          "reason": "SemaphoreSlim, JSON, 취소, 소유자 삭제, 실패 전파"
+        },
+        {
+          "path": "RestaurantDeskApp/Services/Security/RestaurantSecureProgressPendingStore.cs",
+          "line": 12,
+          "symbol": "LoadAsync / SaveAsync:19 / ClearAsync:32 / ReadAsync:47 / Validate:57",
+          "reason": "동일 잠금·취소·단일 snapshot I/O; 업무 검증과 오류 문구는 다름"
+        },
+        {
+          "path": "FDriverApp/MauiProgram.cs",
+          "line": 73,
+          "symbol": "AddSingleton<IFDriverPendingOperationStore, FDriverSecurePendingOperationStore>",
+          "reason": "실제 호스트 호출 경계"
+        },
+        {
+          "path": "RestaurantDeskApp/MauiProgram.cs",
+          "line": 87,
+          "symbol": "AddSingleton<IRestaurantProgressPendingStore, RestaurantSecureProgressPendingStore>",
+          "reason": "실제 호스트 호출 경계"
+        }
+      ],
+      "preserve": [
+        "동일 원문·요청 ID·revision",
+        "이 store의 손상 JSON은 삭제해서 성공으로 바꾸지 않음",
+        "Save 전 업무 검증과 Save 후 취소 확인",
+        "다른 owner의 Clear는 no-op",
+        "Remove false의 IOException",
+        "store 인스턴스별 SemaphoreSlim과 singleton 수명",
+        "조회만으로 자동 POST 금지"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverPendingDurableRecoveryTests.cs",
+          "line": 124,
+          "name": "SaveFailure_PreventsEveryPendingWrite_AndDisablesFurtherActions",
+          "limit": "시험용 pending store 경계"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverPendingDurableRecoveryTests.cs",
+          "line": 149,
+          "name": "LoadFailure_DoesNotClearUncertainStorageOrQueryProtectedWorkspace",
+          "limit": "실제 SecureStorage 구현 시험은 아님"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/RestaurantOrderProgressRecoveryTests.Durable.cs",
+          "line": 70,
+          "name": "StorageFailure_BlocksProtectedReadOrWrite_WithoutSyntheticSuccess",
+          "limit": "상위 session 실패 계약"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/RestaurantOrderProgressRecoveryTests.Durable.cs",
+          "line": 83,
+          "name": "ExplicitLogout_WaitsForDurableClear_AndRemovalFailureIsNotHidden",
+          "limit": "상위 session·가짜 저장소 계약"
+        }
+      ],
+      "characterizationOrGap": "delegate 기반 실제 공통 core의 동시 Load/Save/Clear 순서·삭제 false·손상 JSON·취소 시점을 새 좁은 특성화로 고정해야 한다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "FDriverApp/Services/FDriverSecurePendingOperationStore.cs": "a846b9f5aa98bf0c5b26424db81406bb106ae2617251d8802df6845f87377dec",
+        "RestaurantDeskApp/Services/Security/RestaurantSecureProgressPendingStore.cs": "abb97b3ab4213901dbba54f739fd1f881c5885bf40c4fb4e3e792067eb87bd3f",
+        "FDriverApp/MauiProgram.cs": "b5f2557392aee163cd235d4c583a30aedfc49e7da6cc19e9c2abb07ea41840a3",
+        "RestaurantDeskApp/MauiProgram.cs": "8b86ec0c314ea25ef7f475d72ec220c22746ca1e2317340a00eb4cbe322e8b86",
+        "Ssalddel.Tests/Clients/FDriverPendingDurableRecoveryTests.cs": "d369f5867cd74ced7e39e8bc3d352cc8f7b74aadc86a58804f9ddb9efc6c2c46",
+        "Ssalddel.Tests/Clients/RestaurantOrderProgressRecoveryTests.Durable.cs": "aaba4bf725979da3046f46d2dcc451601324eb0be8881c03c751679daf60d9ce"
+      }
+    },
+    {
+      "sequence": 12,
+      "wave": 5,
+      "id": "SHARED-03",
+      "title": "Admin/FDriver HTTP 오류 메시지 파싱과 전문 오류 표현 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "중간",
+      "proposedBoundary": "두 역할 API의 메시지 탐색 primitive만 기존 Client.Infrastructure 내부에 공유하고, 인증 갱신/재시도·전문 exception·HTTP status·사용자 문구·응답 dispose는 기존 adapter가 소유한다. Ui.Common의 광범위 parser로 일괄 교체하지 않는다.",
+      "evidence": [
+        {
+          "path": "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs",
+          "line": 118,
+          "symbol": "ThrowApiExceptionAsync → ReadProblemMessage:145 / ReadProblemErrorCode:133",
+          "reason": "detail/message/title 순서의 비어있지 않은 문자열 탐색"
+        },
+        {
+          "path": "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
+          "line": 360,
+          "symbol": "ThrowApiExceptionAsync → ReadProblemMessage:375",
+          "reason": "거의 같은 탐색 본문과 raw body fallback"
+        },
+        {
+          "path": "SsalddelAdminApp/Services/AdminFoodOperationsService.cs",
+          "line": 11,
+          "symbol": "AdminAuthenticatedApiClient 생성자 의존",
+          "reason": "실제 소비 서비스"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelJsonApiClient.cs",
+          "line": 69,
+          "symbol": "SsalddelApiProblemParser",
+          "reason": "별도 광범위 parser 존재; 전체를 무조건 교체하면 공백 문자열·non-object·code fallback 의미가 달라짐"
+        }
+      ],
+      "preserve": [
+        "detail→message→title 순서와 공백값 건너뜀",
+        "비JSON raw body fallback",
+        "Admin은 JSON root 비object면 빈값, FDriver는 현재 InvalidOperationException 가능이라는 차이",
+        "Admin errorCode와 FDriver의 현재 노출 범위",
+        "401 한 번 갱신과 재전송 규칙",
+        "취소/timeout/연결 오류 구분"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Clients/AdminFoodOperationsClientTests.cs",
+          "line": 101,
+          "name": "비정상오류본문은_프로토콜예외나빈목록성공으로바꾸지않는다",
+          "limit": "Admin parser 회귀"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/AdminFoodOperationsClientTests.cs",
+          "line": 64,
+          "name": "검토401갱신후_동일한원요청을한번만재전송한다",
+          "limit": "재전송 정책 보존"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverAuthenticationRecoveryTests.cs",
+          "line": 83,
+          "name": "WorkspaceStillUnauthorized_AfterSuccessfulRefresh_RemainsAnAuthenticationFailure",
+          "limit": "FDriver 인증 오류 경계"
+        }
+      ],
+      "characterizationOrGap": "객체/배열/숫자/null JSON, 공백 detail과 후속 message, 비JSON, errorCode 유무를 현재 두 adapter별로 고정한다. non-object 처리 개선은 구조 이동에 섞지 않는다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "SsalddelAdminApp/Services/AdminAuthenticatedApiClient.cs": "6da208c8cffc421aa980ac2579c3ef301599457d7157555bacb2fe9e2e5026aa",
+        "FDriverApp/Services/FoodDeliveryDriverApiService.cs": "266b37217e500028f33f6762526b596d9476907aabfeb98bfd98f527a6b235dd",
+        "SsalddelAdminApp/Services/AdminFoodOperationsService.cs": "c7337d1a5b19e8ba062a0d18f6fa6cb9e8a1215835f22d63e27e4862f91bcc7d",
+        "Ssalddel.Ui.Common/Areas/App/Services/SsalddelJsonApiClient.cs": "9f3563b106c069ae85bc6dbca95bd851840e40f8827693abedeac142aa1102e0",
+        "Ssalddel.Tests/Clients/AdminFoodOperationsClientTests.cs": "613c35d854727950d620616ea6b42a547878da3ae5b7ac294b93fc5c9c76a404",
+        "Ssalddel.Tests/Clients/FDriverAuthenticationRecoveryTests.cs": "f51b9e06e8d86e4475f179da3d1cd9537589ba7f7066bd0741eccf58c6efd717"
+      }
+    },
+    {
+      "sequence": 13,
+      "wave": 5,
+      "id": "UI-R2-05",
+      "title": "공통 문서 출력의 용지 규격·식별코드 조립과 렌더러 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P2",
+      "proposedBoundary": "용지규격 resolver를 우선 순수 추출하고, 기존 HTML 빌더를 운송장/일반품목표/전표 renderer로 위임한다. 공개 서비스·DTO·파일명·MIME·평문 계약과 singleton lifetime은 유지한다. 식별코드 생성기는 기존 adapter를 그대로 소비한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelDocumentOutputService.cs",
+          "line": 46,
+          "member": "CreateExpectedItems"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelDocumentOutputService.cs",
+          "line": 140,
+          "member": "BuildExpectedItemsHtml"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelDocumentOutputService.cs",
+          "line": 214,
+          "member": "BuildExpectedItemsReceiptSlipHtml"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/SsalddelDocumentOutputService.cs",
+          "line": 481,
+          "member": "ResolvePrintLayout와 alias/CSS 규격"
+        }
+      ],
+      "preserve": [
+        "A4/A5/A6/58mm/80mm 및 alias·기본값",
+        "감열 용지의 portrait/receipt-slip 강제와 현재 CSS 치수",
+        "QR/행 바코드 표시 옵션과 식별자 fallback",
+        "HTML encoding·줄바꿈·숫자/날짜 형식·문서 필드와 파일명 정리",
+        "기존 Html·PlainText 출력; 가능하면 fixture별 byte 비교",
+        "프린터 실행·저장/내보내기 동작은 기존 panel/host에 유지"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Ui/Common/SsalddelDocumentOutputServiceTests.cs",
+          "line": 9,
+          "covers": "입/출고 식별코드·용지/밀도/QR 옵션·감열 전표"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/RestaurantReceiptRecoveryTests.cs",
+          "covers": "전표 생성과 주문 수락/출력 복구 소비"
+        }
+      ],
+      "characterizationOrGap": "기존 4개 출력 시험은 부분 문자열 비교다. 규격 alias와 운송장/일반품목표/전표 대표 입력의 전체 HTML·평문 비교를 추출 전 기준선으로 고정하면 이동 실수를 판별할 수 있다. 실제 인쇄·종이 가독성 검증을 수행한 것은 아니다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel.Ui.Common/Areas/App/Services/SsalddelDocumentOutputService.cs": "b9bdebc8f37977e2e4f281e7d79274925b3529176845069165d644cf0260cb4d",
+        "Ssalddel.Tests/Ui/Common/SsalddelDocumentOutputServiceTests.cs": "b10647d7119d4d66fe7f9c91bf88ea2361a6ef102103a2f5946d7992de67cc7a",
+        "Ssalddel.Tests/Clients/RestaurantReceiptRecoveryTests.cs": "df37da3f794ccde79dd69870633eb12a4d8e533195fc5d220454fe7ed769a7a8"
+      }
+    },
+    {
+      "sequence": 14,
+      "wave": 5,
+      "id": "UI-R2-07",
+      "title": "관리자 같이수입 준비의 초안 편집·저장 지문과 OS 명령 조립 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P2",
+      "proposedBoundary": "먼저 초안 Factory/Codec에 초기 초안·재료별 기본 구성·동일 JSON clone/fingerprint 계산을 추출한다. 다음으로 현재 저장 지문과 요청키의 수명만 작은 저장Session에 모으고, 기존 ViewModel은 선택·공동 잠금·OS/전문검토 호출 및 revision 동기화를 명시적으로 조립한다. 입력 항목이나 별도 전문 업무 진입은 바꾸지 않는다.",
+      "evidence": [
+        {
+          "path": "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs",
+          "line": 464,
+          "member": "저장Async의 fingerprint·대기 멱등키·revision"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs",
+          "line": 494,
+          "member": "Os작업실행Async"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs",
+          "line": 526,
+          "member": "전문검토인계Async"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs",
+          "line": 859,
+          "member": "CreateDraft·Material·NewClassification·NewCost"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs",
+          "line": 998,
+          "member": "Clone·Fingerprint"
+        }
+      ],
+      "preserve": [
+        "JSON Web 옵션·property 순서에 따른 현재 지문 바이트; 요청멱등키·기대Revision 제외",
+        "같은 입력 재시도의 대기저장멱등키 유지·입력 변경 시 새 키",
+        "저장한 원장 revision과 OS 상태 revision 동기화",
+        "초안 수정 뒤 OS 실행 차단 및 기존 후속기능 OFF",
+        "RunAsync 공동 처리중 잠금·예외 문구·선택 시 초기화 순서",
+        "인계 승인·준비 저장·전문검토 기록·실제 외부 실행을 구분"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Ui/BackOffice/같이수입준비관리ViewModelTests.cs",
+          "line": 10,
+          "covers": "초기 초안·다중 재료·포워더 회신·저장 revision/멱등키·OFF·저장 후 OS/전문검토 revision"
+        }
+      ],
+      "characterizationOrGap": "기존 VM 시험을 그대로 유지하며 새 Factory/Codec을 통과한 입력이 동일 지문·같은 request body인지 고정해야 한다. OS 점검/인계에 새로운 durable receipt나 자동 재전송을 추가하는 것은 별도 기능이다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel.Ui.Common/Areas/BackOffice/ViewModels/같이수입준비관리ViewModel.cs": "953608c5874c426c66228ad841ddada66e792241388e0f0ece842fae05d0530c",
+        "Ssalddel.Tests/Ui/BackOffice/같이수입준비관리ViewModelTests.cs": "9db8b76078e27d8f7ed6fc3cf1c9ab385f0d43f081d9efe5612805f6a51d6af9"
+      }
+    },
+    {
+      "sequence": 15,
+      "wave": 5,
+      "id": "SERVER-R2-06",
+      "title": "공개·전국 화물 콜의 조회와 공통 제안 표현 조립 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P3",
+      "proposedBoundary": "두 query는 유지하고, 업무종류/작업/주소·좌표/의뢰유형 분류/가림의 공통 부분만 순수 내부 Projector로 추출한다. 공개 전용 상태·배지/경고 기본값과 전국 전용 null 값·Pricing 공급 경로는 명시 입력으로 각각 보존한다. 두 query 정책을 합치지 않는다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/Dispatch/Queue/공개배차Service.cs",
+          "line": 31,
+          "meaning": "조회 시작 자격·공개/hybrid 조회·참여·요금 검증"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Queue/공개배차Service.cs",
+          "line": 84,
+          "meaning": "DTO의 업무종류·작업·금액·주소/좌표/공개 상태 조립"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Queue/공개배차Service.cs",
+          "line": 110,
+          "meaning": "의뢰유형 분류와 생활배송 주소/좌표 가림"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Request/NationalDispatchRequestService.cs",
+          "line": 65,
+          "meaning": "전국 콜의 유사 DTO 조립"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Request/NationalDispatchRequestService.cs",
+          "line": 84,
+          "meaning": "동일 분류·생활배송 가림 흐름"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Queue/공개배차Service.cs",
+          "line": 120,
+          "meaning": "반환 직전 자격 재검사"
+        }
+      ],
+      "preserve": [
+        "공개 hybrid/PublicCall 조건, 전국 최근 100건·생성 역순 및 거절 목록 차이",
+        "공개 공유기사 참여검사와 양쪽 소형요금 검증 순서",
+        "조회 전/반환 직전 자격 재검사",
+        "원천 화물정보 누락 제외",
+        "공개 Pricing=TryReadPricing와 전국 Pricing=요금근거의 현행 의미",
+        "의뢰유형 분류 필드·stable ID·현재 null/default",
+        "생활배송의 주소/정확좌표 가림과 기사 운임 보존"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/PublicCargoQualificationR71Tests.cs",
+          "line": 43,
+          "test": "레거시화물정보누락과_누락원장은_공개나전국콜에서도_제외한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/PublicCargoQualificationR71Tests.cs",
+          "line": 67,
+          "test": "조회중_정지되면_반환직전_추천을_제거한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Driver/SharedDriverAdapterCargoTests.cs",
+          "line": 53,
+          "test": "공개콜은선택한소형물품또는화물종류만노출한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Driver/SmallGoodsStraightLinePricingR72Tests.cs",
+          "line": 136,
+          "test": "제안부터공개조회수락까지같은기사금액을쓰고현재요율변경과재수락은보존한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Application/Driver/NeighborhoodDeliveryDriverDisclosureTests.cs",
+          "line": 199,
+          "test": "공개전국콜도_생활배송의_주소와좌표를_반환하지않는다"
+        }
+      ],
+      "characterizationOrGap": null,
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/Dispatch/Queue/공개배차Service.cs": "171c10fb39b298bd30369685e391711b018faf280c48fbf86570c8f6d72baaa4",
+        "Ssalddel/Services/Dispatch/Request/NationalDispatchRequestService.cs": "b4ca6b68f6dc20198d80ef9a15755761a2de9fdca034e6a81a7eacee5177a9af",
+        "Ssalddel.Tests/Services/Dispatch/PublicCargoQualificationR71Tests.cs": "a140beab5864f747d25837ad88b214ced0b38273baf36654f02c781be9320ec8",
+        "Ssalddel.Tests/Driver/SharedDriverAdapterCargoTests.cs": "9dd2ea1373a994bac4fbbc16abd9cf02dad273c5e34e3f4c4258da314a654dcc",
+        "Ssalddel.Tests/Driver/SmallGoodsStraightLinePricingR72Tests.cs": "05eff962a240537c490022036e881d51b3bb576f73d1def0d2c70f476adfe22a",
+        "Ssalddel.Tests/Application/Driver/NeighborhoodDeliveryDriverDisclosureTests.cs": "f32c25eeee11bf879b10568cce996ad23483a91d82ad9dcd25c8f6f22ca85daf"
+      }
+    },
+    {
+      "sequence": 16,
+      "wave": 6,
+      "id": "UI-R2-06",
+      "title": "화물기사 Android 지도 Handler의 제공자 자원과 표시 갱신 수명 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/ui-audit.json",
+      "sourceAuditSha256": "49035355536281f8ffa61ddb53c591e621f2009dc0d11ec88e1e3556a9819f79",
+      "localPriority": "P2",
+      "proposedBoundary": "기존 Handler와 property mapper를 유지하고 Naver/Google 내부 map surface가 각 SDK 생성·callback·overlay·dispose를 소유하게 한다. 위치 freshness timer와 두 surface 갱신 조율은 Handler별 presentation lifetime 객체로 옮길 수 있다. UI.Common 업무 계층이나 새 공용 assembly로 즉시 올리지 않는다.",
+      "evidence": [
+        {
+          "path": "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs",
+          "line": 67,
+          "member": "EnsureNaverMapView·EnsureGoogleMapView"
+        },
+        {
+          "path": "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs",
+          "line": 109,
+          "member": "DisconnectHandler"
+        },
+        {
+          "path": "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs",
+          "line": 201,
+          "member": "ApplyProviderVisibility"
+        },
+        {
+          "path": "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs",
+          "line": 438,
+          "member": "RefreshLocationPresentation"
+        },
+        {
+          "path": "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs",
+          "line": 451,
+          "member": "StartLocationFreshnessTimer"
+        }
+      ],
+      "preserve": [
+        "MapProviderCode 선택과 기존 비활성 surface 유지/숨김",
+        "callback lifecycle generation과 disconnect 순서",
+        "현재 위치 10분 정책·샘플/복귀지와 실제 위치 구분",
+        "1초 freshness tick과 위치 불변 시 방향 freshness 갱신",
+        "선택 핀 tint/ZIndex·marker 클릭 ID·route overlay 의미",
+        "SDK 설정·locale·카메라·로고/출처 및 기존 비Android placeholder 경로"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Clients/Cargo/DriverNativeLocationR16Tests.cs",
+          "line": 10,
+          "covers": "순수 위치 freshness·출처·카메라 fallback·경로/거리 표시"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/Cargo/DriverRecommendationMarkerPresentationR71Tests.cs",
+          "line": 6,
+          "covers": "핀 색·선택/미선택·좌표·겹침 순서"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/CargoNativeHomeWorkflowTests.cs",
+          "line": 25,
+          "covers": "native home의 업무 상태 조립"
+        }
+      ],
+      "characterizationOrGap": "발견 시험은 SDK 자원 수명 자체를 실행하지 않는다. 추출 뒤 Android 제공자 전환·늦은 ready callback·연결해제·timer 해제의 실제 host 검증이 필요하므로 순수 helper보다 후순위다. 이번에 APK/실기기/지도 접속을 하지 않았다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "DriverApp/Handlers/DriverNativeMapViewHandler.Android.cs": "b3a75f2b3b047c9639ebe9668a45c0d4cb4ec8ea34d48ab49c469210982f56d3",
+        "Ssalddel.Tests/Clients/Cargo/DriverNativeLocationR16Tests.cs": "702cbb6acff4c65143e2746cce5d4f9ca6cedc861a21e5548b87ca4b5cf32e3e",
+        "Ssalddel.Tests/Clients/Cargo/DriverRecommendationMarkerPresentationR71Tests.cs": "44a4e7a011e4db6b09d983c70bc5a9dcf733b9a047b000d3dd9def8d6a9d0652",
+        "Ssalddel.Tests/Clients/CargoNativeHomeWorkflowTests.cs": "5c01e7192c6e7c47d7f55b35a29d24857751cdd05377ea53d6c57027a9eaef51"
+      }
+    },
+    {
+      "sequence": 17,
+      "wave": 6,
+      "id": "SERVER-R2-07",
+      "title": "음식 AI 검토의 예시/공간 보강과 판단사례 기록 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/server-audit.json",
+      "sourceAuditSha256": "70d30a44921f5bce9067181212855e812e583d4a61f2f5a1fe2eebd952b2694f",
+      "localPriority": "P3",
+      "proposedBoundary": "가장 작은 첫 단계는 예시 주문/기사·권역 catalog와 검토용 OrderEnrichment를 내부 객체로 추출하는 것이다. 다음 단계로 순수 WorkspaceProjector와 JudgmentCaseRequestFactory를 분리한다. 공개 service facade와 조회/기록 메서드는 유지한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 53,
+          "meaning": "실제 주문 조회와 sample 선택·기사 fallback·검토 workspace"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 99,
+          "meaning": "입력 검증·운영자 문구/키워드·RAG 생성 저장"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 166,
+          "meaning": "별도 묶음 service 결과를 순위/배정/검토 DTO로 조립"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 407,
+          "meaning": "주문에서 검토용 장소/조리시간/권역을 보강"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 442,
+          "meaning": "누락 매장 정보·좌표와 고객 지역 근사/offset fallback"
+        },
+        {
+          "path": "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs",
+          "line": 520,
+          "meaning": "중랑/인접 권역 예시 주문 catalog"
+        }
+      ],
+      "preserve": [
+        "sample/actual/actual-with-sample-drivers Source 문자열 및 기존 fallback 조건",
+        "중랑 주요·인접 4권역, 현재 예시 좌표/순서와 검토용 근사 의미",
+        "12주문·24조합·최대2건과 기존 배정 선택",
+        "조리시간 보강/장소 누락 fallback의 현행 결과",
+        "음식 RAG Source·RelatedOS·키워드·원문 정규화·저장자",
+        "판단사례 저장은 배차 확정·모델학습·운영적용 완료가 아님",
+        "public DTO/route/오류 문구"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewServiceTests.cs",
+          "line": 13,
+          "test": "GetWorkspaceAsync는_중랑구_주요배달권과_인접배달권_판단_샘플을_제공한다"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewServiceTests.cs",
+          "line": 38,
+          "test": "RecordDecisionAsync는_음식배달_운영자_판정을_화물과_구분된_RAG_사례로_저장한다"
+        }
+      ],
+      "characterizationOrGap": "기존 시험은 예시 workspace와 기록이 다른 포트를 부르지 않는 분리를 확인한다. 실제/일부 누락 주문의 enrichment 및 sample-driver 혼합 field 비교는 추출 전에 특성화가 필요하다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewService.cs": "ec64185148175e98c4dd1f9a59f5b1433920e677284db0314ae98ed88b5e3175",
+        "Ssalddel.Tests/Services/Dispatch/Coordination/FoodDeliveryDispatchAIReviewServiceTests.cs": "a81a9f3f94ad55ed15995fc7a364966d2ae1421c51ccf214f27749a2f5bcab32"
+      }
+    },
+    {
+      "sequence": 18,
+      "wave": 6,
+      "id": "DATA-R2-01",
+      "title": "KAMIS·AMS 조회와 원자료 표시 projection 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/root-audit.json",
+      "sourceAuditSha256": "8782d17006e64fc88530d7c7f8b554c53b4466ee3dfb91ef1a51e9b198e61797",
+      "localPriority": "P3",
+      "proposedBoundary": "EF 조회·현행 순차 호출·페이지 선택은 facade에 남기고 명시적 내부 관측 snapshot과 매핑 결과를 받는 순수 가격정보 Projector부터 추출한다. 기존 Domain 매핑 catalog와 공개 응답은 유지한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs",
+          "line": 125,
+          "member": "GetAsync: 조회·매핑·표시 조립"
+        },
+        {
+          "path": "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs",
+          "line": 311,
+          "member": "BuildProductCodeConnection"
+        },
+        {
+          "path": "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs",
+          "line": 358,
+          "member": "BuildDistributionStagePriceBands"
+        },
+        {
+          "path": "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs",
+          "line": 754,
+          "member": "BuildKamisPoints"
+        },
+        {
+          "path": "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs",
+          "line": 1013,
+          "member": "BuildAmsStages"
+        },
+        {
+          "path": "Ssalddel/Controllers/Common/농수산정보Controller.cs",
+          "line": 135,
+          "member": "조회 facade 소비"
+        }
+      ],
+      "preserve": [
+        "KRW와 USD·원본 포장/단위·결측 상태·출처 구분",
+        "AllowsDirectPriceDifference=false와 HS 후보/전문검토 상태",
+        "정렬·동률·DistinctBy 키·Take 상한·CancellationToken 검사 위치",
+        "현행 SQL 선택과 조회/예외 순서·연도와 빈도 검증"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Services/AgriculturalFisheries/Kamis중심UsdaAms가격비교QueryServiceTests.cs",
+          "line": 46,
+          "covers": "국내/AMS 시장단계 나란히 표시"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/AgriculturalFisheries/Kamis중심UsdaAms가격비교QueryServiceTests.cs",
+          "line": 135,
+          "covers": "매핑 필터와 잘못된 빈도 조건"
+        }
+      ],
+      "characterizationOrGap": "추출 전 원자료 정렬 동률·결측·빈 매핑·시장단계별 상한의 전체 응답 fixture를 추가로 고정한다. 환율/단위 환산이나 직접 가격차 계산을 추가하지 않는다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Services/AgriculturalFisheries/Information/Kamis중심UsdaAms가격비교QueryService.cs": "d1f153be35a9f63a16691eb9657c178424eb1b82f7f33251ff54a3c8f01f05ad",
+        "Ssalddel/Controllers/Common/농수산정보Controller.cs": "c366def72ea7cdc82c43b803635d922a93a12c198e5c056b6a31079ec44b3bc7",
+        "Ssalddel.Tests/Services/AgriculturalFisheries/Kamis중심UsdaAms가격비교QueryServiceTests.cs": "e315fc226c1bf6bb6a45993de3cd7c22938a4d437a9f4e696ae016334bd2023d"
+      }
+    },
+    {
+      "sequence": 19,
+      "wave": 6,
+      "id": "SHARED-04",
+      "title": "Program에 남은 BLS·국제가격 수집 CLI와 호스트 조립 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "중간",
+      "proposedBoundary": "같은 Startup TryRunAsync 패턴으로 두 named command와 인자 파싱만 추출한다. Program의 선택 순서·early return·DI/middleware/일반 DB 초기화 위치는 보존한다. 범용 명령 프레임워크나 실행 정책을 만들지 않는다.",
+      "evidence": [
+        {
+          "path": "Ssalddel/Program.cs",
+          "line": 662,
+          "symbol": "--collect-bls-average-retail-prices",
+          "reason": "인자 선택/연도 파싱→scope→MigrateAsync→CollectAsync→로그→return"
+        },
+        {
+          "path": "Ssalddel/Program.cs",
+          "line": 712,
+          "symbol": "--collect-international-agricultural-prices",
+          "reason": "동일 파싱/실행 골격과 필수 source 검증"
+        },
+        {
+          "path": "Ssalddel/Program.cs",
+          "line": 668,
+          "symbol": "year-from/year-to 파싱:668-685 및727-744",
+          "reason": "NumberStyles.None·InvariantCulture·first-match 중복; BLS 기본 UTC현재연도와 국제가격 기본0은 다름"
+        },
+        {
+          "path": "Ssalddel/Program.cs",
+          "line": 773,
+          "symbol": "UsdaAms공개사업체CommandLine.TryRunAsync",
+          "reason": "뒤따르는 기존 분기와 실행 우선순위 경계"
+        }
+      ],
+      "preserve": [
+        "명령 대소문자 비교와 첫 인자 우선",
+        "연도 파싱 실패의 서로 다른 기본값",
+        "국제가격 source 누락은 scope/DB 전 거절",
+        "MigrateAsync 후 CollectAsync 순서",
+        "기존 로그 필드와 CancellationToken.None 의미",
+        "여러 command가 같이 들어올 때 기존 첫 분기 우선"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Startup/MaintenanceCommandLineTests.cs",
+          "line": 127,
+          "name": "Program은_원래명령우선순위와조기return및일반초기화위치를유지한다",
+          "limit": "현재 BLS 위치는 문자열 순서로 검사; 두 잔여 command의 인자/실행 직접 시험 없음"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/AgriculturalFisheries/국제농수산가격ArchiveServiceTests.cs",
+          "line": 95,
+          "name": "공급자실패는_실패Run만남기고_관측을부분저장하지않는다",
+          "limit": "아래 service 회귀이며 command host 시험 아님"
+        },
+        {
+          "path": "Ssalddel.Tests/Services/AgriculturalFisheries/Bls평균소매가격ArchiveServiceTests.cs",
+          "line": 13,
+          "name": "Bls평균소매가격ArchiveServiceTests",
+          "limit": "서비스 시험을 CLI 실행 증거로 확대하지 않음"
+        }
+      ],
+      "characterizationOrGap": "두 분기의 미선택 시 서비스 조회0, malformed/multiple year, source 누락, 명령 동시 입력 우선순위를 DB/외부 API 없이 고정한다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel/Program.cs": "316f60b125428dfc15d57639598846254d0a6e24ccbc9c5a1e1704a615a638d7",
+        "Ssalddel.Tests/Startup/MaintenanceCommandLineTests.cs": "9d0426a78819e7bc5297211111e85c7f3d00696666aab37b73027d8cfe450468",
+        "Ssalddel.Tests/Services/AgriculturalFisheries/국제농수산가격ArchiveServiceTests.cs": "7ef90861417f34fa9145339f700165405c6426e2f814de184f943a6dbb62ca1d",
+        "Ssalddel.Tests/Services/AgriculturalFisheries/Bls평균소매가격ArchiveServiceTests.cs": "fa2691393dc9552eaf27da77187cba4b4dbb51551beb14477cc64665e1ac111d"
+      }
+    },
+    {
+      "sequence": 20,
+      "wave": 6,
+      "id": "SHARED-05",
+      "title": "Architecture 시험의 소스 탐색과 DI 의미 검증 책임 분리",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "낮음",
+      "proposedBoundary": "두 시험의 저장소 root/명시적 소스 읽기는 작은 공통 fixture로 모으고 route·마크업·보호 문자열 검사와 registration descriptor 의미 검사를 구별한다. DI 검증은 기존 descriptor 방식으로 옮길 수 있는 부분만 옮기며, 감시할 파일은 명시적으로 소유한다.",
+      "evidence": [
+        {
+          "path": "Ssalddel.Tests/Architecture/CommunityPageViewModelCompositionTests.cs",
+          "line": 41,
+          "symbol": "CommunityPageViewModel은_공통DI_module에등록된다 / FindRepositoryRoot:58",
+          "reason": "지정한 단일 파일의 TryAddTransient 문자열과 root 탐색을 함께 소유"
+        },
+        {
+          "path": "Ssalddel.Tests/Architecture/AdminMobileOperationsCompositionTests.cs",
+          "line": 97,
+          "symbol": "모바일관리인증은_갱신토큰을보존하고_401에서_한번만재시도한다 / Read:119 / FindRepositoryRoot:122",
+          "reason": "인증 동작·구현 문자열·MauiProgram의 AddScoped 위치를 한 시험에 묶음"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/Services/CommunityPlatformUiModule.cs",
+          "line": 44,
+          "symbol": "실제 TryAddTransient registrations 및97-98 지역문화 registrations",
+          "reason": "공통 모듈 파일을 더 분리하면 동일 DI 의미여도 원본 문자열 시험이 실패"
+        },
+        {
+          "path": "Ssalddel.Tests/Infrastructure/ServiceRegistrationCompositionTests.cs",
+          "line": 234,
+          "symbol": "Shape / AssertDescriptors:238",
+          "reason": "이미 존재하는 descriptor 의미 검증 방식; 새 시험 프레임워크를 만들 이유 없음"
+        }
+      ],
+      "preserve": [
+        "현재 route·마크업·민감자료 비노출 assertion",
+        "등록 service type/lifetime/TryAdd 기존선점 의미",
+        "파일 전체 무작위 concat으로 assertion 약화 금지",
+        "이전194개 음식점 assertion 재정리 금지",
+        "실제 인증 HTTP 검증은 별도 회귀로 보존"
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Architecture/CommunityPageViewModelCompositionTests.cs",
+          "line": 41,
+          "name": "CommunityPageViewModel은_공통DI_module에등록된다",
+          "limit": "리팩토링 대상 시험 자체"
+        },
+        {
+          "path": "Ssalddel.Tests/Architecture/AdminMobileOperationsCompositionTests.cs",
+          "line": 97,
+          "name": "모바일관리인증은_갱신토큰을보존하고_401에서_한번만재시도한다",
+          "limit": "동작 이름이지만 현재 소스문자열 검사"
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/AdminFoodOperationsClientTests.cs",
+          "line": 64,
+          "name": "검토401갱신후_동일한원요청을한번만재전송한다",
+          "limit": "기존 실제 fake HTTP 회귀를 유지"
+        }
+      ],
+      "characterizationOrGap": "시험이 감시하는 의도를 보존한 채 helper 추출과 의미검증 이동을 분리한다. 단순 중복 제거의 이득이 작으면 후순위로 남긴다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "Ssalddel.Tests/Architecture/CommunityPageViewModelCompositionTests.cs": "85f017bee0cd35736b7856b6a3fb7137b7b37bb2dbabdcc90fa57f89ed7c4443",
+        "Ssalddel.Tests/Architecture/AdminMobileOperationsCompositionTests.cs": "48781bd55e8b2139e2e91cb54cc2061d19c3e5158535a0f267a94be906d7952d",
+        "Ssalddel.Ui.Common/Areas/App/Services/CommunityPlatformUiModule.cs": "821627532eb83aae31c160eea03539606ffe16be78241fbf3cc3c8ab268da501",
+        "Ssalddel.Tests/Infrastructure/ServiceRegistrationCompositionTests.cs": "075ae578e33251affda9f78cb6d47d34e77256644cdba58258a641fb4d0f8854",
+        "Ssalddel.Tests/Clients/AdminFoodOperationsClientTests.cs": "613c35d854727950d620616ea6b42a547878da3ae5b7ac294b93fc5c9c76a404"
+      }
+    },
+    {
+      "sequence": 21,
+      "wave": 6,
+      "id": "SHARED-06",
+      "title": "validate-changes의 검증계획 생성과 실행/증거 조립 경계",
+      "status": "ProposedOnly",
+      "sourceAudit": "artifacts/local/refactoring-survey/20261020-r2/shared-audit.json",
+      "sourceAuditSha256": "f4c73b83af6a3ef3493920b15c4c879b54cf471b2b54f43c8925a7bec5520775",
+      "localPriority": "낮음",
+      "proposedBoundary": "기존 script facade를 유지하고 입력 정규화/계획 생성 함수와 명령 실행·증거 writer를 별도 내부 script module로 나누는 후보이다. 파일명을 기준으로 한 기존 test 선택·상한·fallback은 이 추출에서 고치지 않는다.",
+      "evidence": [
+        {
+          "path": "eng/validate-changes.ps1",
+          "line": 153,
+          "symbol": "Get-DirectBuildTargets",
+          "reason": "입력 파일 목록·repoRoot 전역으로 build 선택"
+        },
+        {
+          "path": "eng/validate-changes.ps1",
+          "line": 336,
+          "symbol": "Get-RelatedTestFilter",
+          "reason": "TestFilter/repo/rg 환경과 파일명 추론 조합"
+        },
+        {
+          "path": "eng/validate-changes.ps1",
+          "line": 505,
+          "symbol": "Get-ChangedFiles→선택 함수 호출→switch Level",
+          "reason": "동일 top-level scope에서 계획 생성과 후속 실행 준비"
+        },
+        {
+          "path": "eng/validate-changes.ps1",
+          "line": 584,
+          "symbol": "validationPlan / PlanOnly:602",
+          "reason": "이미 출력하는 계획 경계가 있음"
+        },
+        {
+          "path": "eng/validate-changes.ps1",
+          "line": 640,
+          "symbol": "runDirectory 생성 / planning evidence:643 / Invoke-LoggedCommand:663",
+          "reason": "계획 뒤 실행·log·증거 수명으로 전환"
+        }
+      ],
+      "preserve": [
+        "Fast/Task/Release build/test 계획",
+        "명시 Paths/BaseRef/TestFilter 우선순위",
+        "파일명 term16·test24 상한과 null full fallback",
+        "PlanOnly의 JSON schema·부작용 경계",
+        "NoRestore 의미·명령 인자·exit code",
+        "planning evidence 해시·run ID·시작/완료 기록"
+      ],
+      "regressionTargets": [],
+      "characterizationOrGap": "후속 구현 승인 시 고정 경로 목록×Level×TestFilter의 PlanOnly JSON 동등성을 먼저 저장하고 process runner fake로 실행 순서·실패 exit/증거 닫힘을 대조해야 한다. 현재 조사에서는 PlanOnly도 실행하지 않았다.",
+      "additionalIndependentReviewConditions": [],
+      "evidenceSourceHashes": {
+        "eng/validate-changes.ps1": "7f6b9952dda765efb816deabc8b1d4adb828fdc032c4be20b925dbd1970b317e"
+      }
+    }
+  ],
+  "globalPreserve": [
+    "API/JSON/route/stable ID/request ID/body/revision",
+    "전문 원장 권위와 주문 원장 참조 경계",
+    "보안 저장 키·lifetime·예외/취소 순서",
+    "SQL/Mongo/Outbox/트랜잭션/Save 순서",
+    "배차/요금/승인 정책·기능 및 worker 기본값",
+    "UI 시각·사용자 행동·페이지 목적; source-linked Compile은 필요성과 의도를 보존"
+  ],
+  "behaviorChangeBacklogExcluded": [
+    "값 변경 후 특정 요금 예외의 원복 범위",
+    "재위탁 SQL 성공 뒤 Mongo 실패/null의 replay 동기화 기준",
+    "커뮤니티 질문/게시/내원장 늦은 응답의 선택·계정 세대 보호"
+  ],
+  "executionThisTurn": {
+    "productCodeEdits": false,
+    "build": false,
+    "tests": false,
+    "externalApi": false,
+    "database": false,
+    "model": false,
+    "apkOrPhone": false,
+    "stageCommitPush": false
+  }
+}

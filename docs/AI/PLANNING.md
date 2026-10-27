@@ -1,5 +1,137 @@
 # Mirror 기획 목차
 
+## 기사 새 추천의 단발 진동·홍달배달 음성 r18 (2026-10-27)
+
+- [Approved / ReadyToDispatch 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-recommendation-signal.r18.md) · [구현·검토 APK·감각 검증 구분](../Changes/2026-10-27-driver-recommendation-signal-r18.md): `Implemented / Fast174Passed / Task16353Passed16Skipped / Apk133Packaged / SensoryNotTested`. 같은 추천은 한 번만 예약하고 새 라운드는 허용한다. 알림 설정·무음·야간 제한을 유지하며 서버 배차/FCM 설정과 운영 활성화는 포함하지 않는다.
+
+## 기사 운행 흐름 정밀 보완 r17 (2026-10-27)
+
+- [승인 범위·허용 경로·검증](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-workloop-precision.r17.md) · [결과와 실제 화면](../Changes/2026-10-27-driver-workloop-precision-r17.md): `Approved / ScopedPrecisionVerified / ActualDevice131 / OperationalDisabled`. 시작→지도·완료 재조회→지도와 위험 조회를 보완하고 격리6완료/2만료무수락·DB/API재시작 일치·실제 휴대폰131을 확인했다. 실도로 연속 운행·FCM·고정거점 권역·운영 활성화는 별도다.
+
+## 관리자 상단 제목 간소화 r16 (2026-10-27)
+
+- [사용자 승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/admin-header-simplification.r16.md) · [소스 반영](../Changes/2026-10-27-admin-header-simplification-r16.md): `Approved / SourceTextChanged / DeviceNotRebuilt`. 보조 문구만 제거하고 업무·알림/권한은 유지한다. FCM 설정 활성화는 포함하지 않는다.
+
+## 화물 검증 결손 보완 r15 (2026-10-27)
+
+- [승인 범위·완료 조건](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.implementation.r15.md) · [실제 결과](../Changes/2026-10-27-cargo-runtime-followup-r15.md): `Approved / ScopedRemediationVerified / ActualDevice128 / IsolatedReadiness200`. 화주 다음 행동·운영자 제목·기사 안전 영역을 수정하고 실제 기기에서 확인했다. Fast49/49·Task16,305통과/환경16생략·CLI15/15, 새 격리 DB migration98/pending0·ready200·같은 화물 서버 재시작/SQL/Mongo를 검증했다. [짧은 DB 이름](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.schema-name-fix.r15.md)과 [HTTP 소비 결속](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.consumer-binding.r15.md)은 좁은 후속 명세다. 제품 운영 게이트·기존 DB·외부 효과는 보존했고 전체 앱 출시/운영 migration 준비·실금융·공개 운영은 별도다.
+
+## 영상 일괄 실행·정확 대상·결과 환류 r118 (2026-10-26)
+
+- [직접 승인 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-three-stage-integration.implementation.r118.md) · [실제 결과](../Changes/2026-10-26-video-diorama-integration-r118.md): `PrivateIntegrationImplemented / Python214Passed / Unity186Passed / ActualHandoffVerified / CanonicalApplied0`. r117 절차를 실행/재개·건물 결속·새 Unity 환류에 연결했다. 원본1/비공개대상3/단계6·35PNG/5복구를 확인하고 전체 의미 판독·정본 동일성·무인 렌더링과 구분했다.
+
+## 앱 공통 제작 절차 적용 r13 (2026-10-26)
+
+- [승인한 적용 범위](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.md) · [공통 진입 안내](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md) · [적용 결과](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.result.md): `WorkflowApplied / ManagementToolValidated / CargoInputsPrepared / CargoRuntimeNotRun`. 기존 제작 입력·관계 대장·통합 1.0 마감표와 화물 앱별 입력/계획을 연결했다. 도구 97/97과 실제 관리 화면을 확인했으며 화물 서버/휴대폰 완주는 별도다. 제품 책임은 `PLAN-OPERATIONS-DISPATCH-CORE`, 기존 입력/추적의 형식과 이력은 r8~r12가 소유한다.
+
+## 공통 수행·인계·보류 재개 절차 r117 (2026-10-26)
+
+- [공통 절차 보강](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-common-procedure.r117.md): `ProcedurePreparationRequested / CommonGuideStrengthened / ExecutionDeferred / NoCodeOrPolicyContractChange`. 배달 공통 안내 r3의 시작/통과/인계·보류/재개·일괄 마감 기준을 보강했다. r116의 세 단계 방향을 구체화하되 기존 JSON 단계/상태·원본·실행 코드는 보존하고 실제 처리는 뒤로 둔다.
+
+## 매일 영상의 분석·선분·디오라마 인계 r116 (2026-10-26)
+
+- [후속 절차 제안](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-three-stage-handoff.proposal.r116.md): `ProposalOnly / ExistingDailyProcedureReused / FeedbackGapConfirmed / NoNewImplementation`. 원본 접수·분석 → 도로/건물 공간 연결 → 정확 대상의 비공개 보완과 원본별 결과 환류를 제안했다. 기존 r110/r111을 유지하며 새 Unity 결과의 일일 인계와 정본 건물 대응은 구현 전이다. 새 실행 자동화·승인·공개 반영을 확정하지 않았다.
+
+## 정확 높이와 쇼윈도 보완 r115 (2026-10-26)
+
+- [직접 승인 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/building-envelope-and-glass.r115.md): 코드·시험175/175까지 진행했으며 새 PNG/유리 시각 검증은 사용자 절차 제안으로 전환해 미실행이다. 본체의 공식자료 높이와 비실측 점포 높이를 구분하고 정본 적용0·새 영상 생성0을 유지한다.
+
+## 건물별 상세 외형 교체와 사진 참조 모델 r114 (2026-10-26)
+
+- [직접 승인한 구현 단위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/detailed-building-representation.r114.md) · [실제 결과](../Changes/2026-10-26-detailed-building-representation-r114.md): `PrivateDetailedFrontsRendered / Focused143Passed / CanonicalApplied0 / GameViewNotVerified`. 기존 원장을 유지하는 외형 교체·거리3단계·실패복구와 세 전면 시범을 구현했다. 실측/전체 건물 복원·실내·비동기 메모리 스트리밍은 남았다.
+
+## 디오라마 재질·조명 현실감 비교 r113 (2026-10-26)
+
+- [직접 승인한 좁은 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/diorama-realism-preview.r113.md) · [실제 결과](../Changes/2026-10-26-diorama-realism-r113.md): `PrivateRealismPreviewRendered / Focused111Passed / CanonicalApplied0 / GameViewNotVerified`. 기존 동일 입력의 전후/복구20PNG와 16초 비교 MP4·HTML을 만들었다. 재질·조명 스타일과 실측 사실, 가까운2시점 그림자와 원거리2시점 한계를 구분한다.
+
+## 영상→선분→디오라마 통합 시안 r112 (2026-10-26)
+
+- [시각 검증 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-segment-diorama-visual-demo.r112.md) · [실제 결과](../Changes/2026-10-26-video-segment-diorama-demo-r112.md): `PrivateIntegratedDemoRendered / Focused106Passed / CanonicalApplied0 / GameViewNotVerified`. 같은 0111 관측·후보3·공개외관3을 동네 시안 4시점/12PNG와 약32초 MP4·비교 HTML로 묶었다. 겹치는 legacy3개는 미리보기 사본에서만 가리고 원본/정본은 보존했다. 실측·전체 경로·Game View·운영/공개는 미검증이다.
+
+## 영상 위치 판독과 일일 연결 구현 r111 (2026-10-26)
+
+- [구현·검증 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-diorama-daily-connection.implementation.r111.md) · [실제 결과](../Changes/2026-10-26-video-diorama-daily-connection-r111.md): `ScopedConnectionImplemented / Focused160Passed / CanonicalBindingPending`. 정수 PTS·일일 결과 결속/재개·건물 도형 대응 후보를 구현했다. 실제 0112 사진 12장으로 영화사로 진입 후보를 보완했고 기존 접수 13개·구형 표본 761개의 재검사에서 신규 실적 0을 확인했다. 전체 위치 자동 추론·GPS·정본 적용·Unity 실행은 완료로 표시하지 않는다.
+
+## 매일 영상에서 디오라마 자료 누적 r110 (2026-10-26)
+
+- [일일 운영 기준](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-diorama-accumulation.r110.md): `ProcedureStandardized / IntegrationGapsRecorded / AutomaticRunnerNotImplemented`. 접수·실제 시점/OCR·시간순 판독 뒤 도로 선분과 공개 건물 외관을 분기해 누적한다. 배달 작업공간에 정본 절차·JSON 기록 양식·공통 진입을 연결했다. 구형 OCR 시계·실행 영수증 연결·신규 카탈로그 편입·정본 건물 대응은 후속이며 새 미디어 처리·Unity 반영은 수행하지 않았다.
+
+## 주행 영상과 건물별 외관 보완 r109 (2026-10-26)
+
+- [좁은 구현 기준](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-facade-refinement.implementation.r109.md): `FirstSliceImplemented / PrivateStudyVerified / CanonicalBindingPending`. 기존 공간 배치·ID 보존과 건물별 외관 입력·복구를 구현했다. Unity 98/98·Python 25/25와 비공개 연구 3건의 전후·제거 뒤 복구를 검증했다. 현재 지도 직접 ID 대응이 없어 정본 적용은 0건이다. Game View·실측·운영·배포는 미검증이며 아래 좁은 범위 밖 보류 이력은 유지한다. [변경 기록](../Changes/2026-10-26-sagajeong-video-facade-r109.md).
+
+## 화물 Android 업무 복구·설정 연결 r124 (2026-10-26)
+
+- [기준·페이지 책임](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-android-recovery.implementation.r124.md) · [허용 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-android-recovery.r124.work-order.json) · [실제 결과](../Changes/2026-10-26-cargo-android-recovery-r124.md): `ImplementedAndAndroidValidated / FullConsumerBuildBlocked / PhysicalUiNotVerified / OperationalDisabled`. 화주 본인 요약·통합 기사 설정/거절·만료 복귀·계정 전환·Push 미설정 시작·본인 운송주선 정보업무와 사유 안전분류를 보완했다. 후속 기사 APK125는 확정 시작/종료 뒤 요약을 갱신한다. 최종 .NET16,289통과/환경16생략과 실제 에뮬레이터 결과를 전체 소비 빌드·휴대폰·운영 허가와 구분한다.
+
+## 월정액 화물 정보추천 운영 방향·준비 조회 r4 (2026-10-26)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE 월정액 정보추천 r4](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.direction.r4.md): `DirectionConfirmed / ReadOnlyPreparationImplemented / LocalServerAndUiValidated / FullConsumerBuildBlocked / LegalApplicabilityOpen / OperationalDisabled`. 사용자 선택은 월정액 정보추천·건별 수수료 없음·기사 수락/거절·당사자 최종 결정이다. 5,000원·10,000원은 후보이며 현재 무료0원 설정과 분리한다. 이번 [명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.r4.work-order.json)는 기존 관리자 준비 조회의 읽기 전용 표시와 법적 분류·기관 회신 확인에 한정한다. [서면질의 초안](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.authority-question.r4.md)은 미발송이며 실제 청구·가격 확정·배차 운영·허가 면제 판정을 포함하지 않는다. r1 법령 검토·r2 공고·r3 기사 업무 설계와 기존 검증 이력은 보존한다.
+
+## 지도 중심 단건 화물 업무·집/거점 고정 활동권역 r3 (2026-10-25)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE 지도 업무 r3](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-map-first-workloop.design.r3.md): `DirectionRecorded / FixedAnchorConfirmed / ImplementationNotStarted / OperationalDisabled`. 사용자 답변으로 집·지정 거점의 고정 활동반경을 확정했다. 기사 지도 홈에서 전용 단건 제안과 다음 업무를 이어 주고 현재 위치의 상차 접근 한도를 따로 둔다. 기존 조회 반경·복귀 가점은 하드 제한이 아니므로 설정·전체 경로와 추천/수락 관문부터 보완한다. 이번은 감사·설계이며 r2 정보 공고와 운송 업무, 실제 구현·운영 활성화를 구분한다.
+
+## 화물 정보 공고 공개 수명 보완·법적 읽기 자료 r2 (2026-10-25)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE 공고 r2](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-publication.implementation.r2.md): 같은 스레드에서 승인한 좁은 구현 범위다. 독립 공고의 초안·현재 내용 공개 동의·수정 후 재동의·철회·만료와 인증·원 요청 복구를 보완한다. 실제 결과와 남은 상한은 [변경 기록](../Changes/2026-10-25-cargo-information-publication-r2.md)을 따른다. [정보 우선 r1](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-first-legal-review.r1.md)은 감사·방향의 근거로 보존한다. 법적 적용·기관 확인·운영 활성화는 미완료이며 Unity는 재개하지 않는다.
+
+## 디오라마 운영 지도 방향 r9 (2026-10-25)
+
+- [운영 지도 r9](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/diorama-operating-map.direction.r9.md): `DioramaOperatingMapDirectionConfirmed / MobileDesktopPriorityRetained / PlanningOnly`. 지도 중심의 상태 조회·장소/사람 선택·업무 요약·기존 상세 진입으로 Unity 역할을 좁힌다. 원장 권위·모의/운영·자료 시각·위치 근거를 구분하며 추가 구현·실행은 아직 재개하지 않았다. 직전 보류와 r8 근거는 보존한다.
+
+## 최신 방향 — 모바일·데스크톱 앱 우선, Unity 후속 보류 (2026-10-25)
+
+- 사용자의 최신 요청으로 Unity 추가 작업을 보류하고 기존 통합 앱 1.0의 모바일·데스크톱 업무 완성도를 우선한다. 기존 Unity 자료와 공유 Simulation 코어는 보존한다.
+- [다중 센터 출고 Unity r8](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment.unity.r8.md): `LocalUnityPlayValidated / FurtherUnityWorkDeferredByUser / MobileDesktopAppsPriority / OperationalDisabled`. 실제 부분 피킹·저장 복구와 관련 EditMode 46개 통과를 기록했다. 아래 r7의 Scene 미연결은 당시 이력이며 전체 경영 게임·운영 출시를 뜻하지 않는다.
+
+## 공간·계약·고용·물류 통합 경영 게임 첫 구현 r7 (2026-10-25)
+
+- [다중 센터·위치 출고 구현 r7](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment.implementation.r7.md): `CoreImplemented / LocalAndTestHttpValidated / SaveReplayValidated / PresenterValidated / SceneIntegrationPending`. 가상 센터·위치·담당 선택, 예약·부분 피킹·포장 준비와 세션 저장/재생을 연결했다. Fast 320+54·Task Simulation/Unity 전체 3,044 통과. 실제 Unity 장면·Play Mode·운영은 미검증이며 기존 활성 Goal·운영 원장은 유지한다. 아래 r1~r6 상태는 제안 당시의 이력이고 현재 구현 범위·남은 항목은 r7을 따른다.
+- [센터→적재 위치→직원 작업의 다단계 출고 제안 r6](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment-decisions.proposal.r6.md): `MultiCenterFulfillmentHierarchyConfirmed / ProposedDesign / ImplementationDeferredByUser`. r5 위에 센터 선택을 구체화하고 단일/분할 출고, 내부 불가 시 상위 재판단과 예약 부분 실패를 구분한다. 기존 출고 배치/피킹 기반을 재사용하며 후속은 정책·작업 가능성·예약 경계와 첫 회차 명세 검토다.
+- [위치 바코드·적치→출고 재고 선택→직원 피킹 안내 제안 r5](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/location-barcode-outbound-picking.proposal.r5.md): `LocationBarcodePutAwayDirectionConfirmed / LocationGuidedPickingConfirmed / ProposedDesign / ImplementationDeferredByUser`. 선반 위치별 재고와 출고/피킹 배치를 잇는 최신 상세 제안이다. r4의 범위와 기존 권위를 유지하며 실제 스캔·운영 재고·게임 연결은 구현하지 않았다. 후속은 첫 가상 선반·직접 체험 범위와 실행 명세 검토다.
+- [공간·공급 계약→고용·근무→입출고·배송→결산 제안 r4](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/space-supply-workforce-logistics.proposal.r4.md): `SpaceLeaseSupplyHiringWarehouseScopeConfirmed / ProposedDesign / ImplementationDeferredByUser`. 사용자가 건물주 계약·공급업체 계약·현장 직원 고용과 거점별 입고·창고 업무를 핵심 경영 범위에 포함하도록 요청했다. 담당 부재·시간 중복·용량·납기·비용의 병목과 대안, 음식/화물/거점 흐름의 구분을 기록했다. 실제 계약·고용·게임 코드·학습·운영은 실행하지 않았다.
+- [다섯 지역의 플랫폼 운영자 경영 방향 r3](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/regional-platform-management-direction.r3.md): `PlatformOperatorManagementPrimaryConfirmed / FiveRegionScopeConfirmed / ProposedDesign / ImplementationDeferredByUser`. 중랑구·동대문구·광진구·구리시·노원구의 음식점·기사·화물 업무를 플랫폼 입장에서 경영하고 주행 영상·디오라마를 현장 판단·표현으로 사용한다. 지역 목표와 현재 자료 범위, 음식/화물의 전문 조건, 경영 경험과 실제 운영을 구분한다.
+- [같은 동네·도로·매장을 잇는 제안 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-diorama-play-experience.proposal.r2.md): `ProposalOnly / ImplementationDeferredByUser / WeightTrainingNotStarted`. 사용자가 첫 제작 요청을 정정해 주행 영상·디오라마·직접 플레이 경험을 함께 연결하는 방안부터 요청했다. 지도 선분/판본·원본 SHA/실제 PTS·3D 공간·게임 회차를 기존 자료의 관계로 잇는다. 아직 빠진 선분–3D 연결과 직접 배차 선택 기능을 구현 완료로 표시하지 않는다.
+- [학습 환류 제안 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gameplay-experience-learning.proposal.r1.md)의 수익·배송 품질·참여자 보수 균형은 유지한다. 구체 보상·공개 수집 동의·첫 구현 범위·학습/운영 적용은 별도이며 기존 승인 기획과 원장은 유지한다.
+
+## 휴대폰 업무 요약·독립 상세·등록 연락처 r117 (2026-10-24)
+
+- [승인 구현 r117](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-work-detail-contacts.implementation.r117.md): 노드는 요약, 상세는 별도 페이지로 두고 같은 회차로 복귀한다. 기존 업무의 등록 연락처만 사용하며 명시적 조회와 직전 재검증 후 전화 앱의 번호 입력창을 연다. 관련386시험·격리HTTP21검사·실제 별도 APK 기능을 확인했다. 초기 실행 안정성은 별도 미해결이고 운영·발신·릴리스 배포는 하지 않았다.
+
+## 생산부터 출고까지 업무 연결도 r116 (2026-10-24)
+
+- [승인된 읽기 전용 연결도 r116](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/work-procedure-graph.implementation.r116.md): r115의 당사자 조회를 생산·입고·보관·주문·출고·배송·정산 절차 안내에 연결했다. 기존 인계 카탈로그·원천 관계를 재사용하고 실행 순서/인계/완료 권위는 전문 원장에 유지한다. 관련235시험·실제 브라우저·휴대폰 기능을 확인했으며 초기 실행 종료 원인·안정성은 미해결이다.
+
+## 통합 협업 원장·참여 약속 r115 (2026-10-24)
+
+- [승인된 첫 구현 r115](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/integrated-cooperation-ledger.implementation.r115.md): 기존 상위 공동운영 원장 아래 여러 주문·전문 업무 관계를 묶고 당사자 시간 약속과 취소 영향을 연결했다. 관련219시험·격리HTTP32검사와 실제 휴대폰 기능 검증을 확인했으며 첫 실행 1회 종료의 원인·안정성은 미해결이다. 아래 제안 상태는 당시 이력이다. 전역 일정 잠금·HR·실제 물류/지급·푸시 발송은 포함하지 않는다.
+
+## 사전 참여·약속 영향·성과 환류 r114 (2026-10-24)
+
+- [r114 제안](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/advance-participation-and-promise-impact.design.r114.md): `AdvanceParticipationAndImpactDirectionAccepted / ProposedDesign / ImplementationNotStarted`. 생산자/주문자의 사전 의향·예약, 연결된 약속의 취소 영향/대안·변경 알림, 기대 편익과 실제 성과의 분리를 r113에 보강했다. 범용 영향 조회·새 알림/금전 정책은 구현 전이며 자동 벌점·공제·손해 책임을 확정하지 않는다.
+
+## 통합 앱 모바일 예약·상호 수락 r113 / 변화 조회 r112 (2026-10-24)
+
+- [예약·상호 수락 제안 r113](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-work-appointments.design.r113.md): `MobileValidationPriorityAccepted / ProposedDesign / NewFeatureImplementationNotStarted`. 특정일 업무 제안·양측 수락·예약 확정과 시작 준비를 분리하고 실제 통합 앱 모바일 검증을 우선한다. 기사는 기존 실시간 배차를 유지한다.
+- [변화 조회 구현 r112](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/shared-outcomes.implementation.r112.md): `Implemented / FocusedTestsPassed / MobileRuntimePending`. r111의 첫 조회 보완이며 현재 고유 참여·회차별 전문 상태와 미확인 값을 구분한다. 새 예약/HR/급여 구현과 별개다.
+
+## 협업 비전과 객관적 성과 r111 (2026-10-24)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r111](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/cooperation-vision-and-shared-outcomes.design.r111.md): `VisionAndCooperationDirectionAccepted / ProposedDesign / DensityIncomeEffectUnverified / ImplementationNotAuthorized`. 참여의 의미→역할/인계→확인 성과/보수→다음 개선을 한 작업공간의 회차에 연결하는 제안이다. 소득 증가의 인과·배분율·공개 범위·책임 판단은 미정이며 자동 금전/신뢰 불이익이나 실제 운영은 변경하지 않는다.
+
+## HR 등록·업무 숙지·일정 신청 r110 (2026-10-24)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r110](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/hr-onboarding-work-schedule.design.r110.md): `HrDirectionAccepted / OnboardingBeforeApplicationAccepted / ProposedDesign / CompensationDetailsPending / ImplementationNotAuthorized`. 현장 인력은 기존 HR을 출발점으로 업무 숙지 뒤 입고 일정에 신청하고, 작업량 보수와 판매 성과 조건을 구분해 안내하는 제안이다. 배송기사의 기존 배차·이전 기획을 유지하며 실제 고용/급여/운영 변경은 없다.
+
+## 사람 중심 협업 매칭 r109 (2026-10-24)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r109](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/people-matching.design.r109.md): `PeopleMatchingPriorityAccepted / ProposedDesign / ImplementationNotAuthorized`. 공간 잔여량보다 사람 연결을 우선한다. 운영 참여자와 회차별 담당자의 모집·추천·가능 시간·개별 수락·인계를 제안하고 r108은 이전 제안으로 보존한다. 제품 코드·DB·실제 모집/배정은 변경하지 않는다.
+
+## 공간·공급·작업·배송 매칭 제안 r108 (2026-10-24)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r108](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/resource-work-matching.design.r108.md): `Proposed / SourceReviewed / ImplementationNotAuthorized / OperationalDeferred`. r104 위에서 부족 업무·가능 자원·시간/수량 예약을 연결하고 입고검수·적치·피킹포장부터 기존 전문 실행으로 이어가는 제안이다. 이전 구현과 독립 기획을 보존하며 코드·DB·실제 배정은 변경하지 않는다.
+
 ## 화물 3역할 업무 마감 재검토 r15 (2026-10-22)
 
 - [조사·재현·우선순위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-three-role-readiness.review.r15.md): `ReviewedWithFindings / ProductUnchanged`. 현재436개 집중 시험과 별도9개 가상 분기를 대조했다. 기본 접수/선결제, 미확정 결과·PC 대상 전환, 고객 운임/기사 보수, 수납/지급 표시, 분쟁/보류/관리자 인계를 먼저 닫은 뒤 APK·배포로 간다. 새 기능 활성화·실행 승인·제품 수정 완료를 뜻하지 않는다.
@@ -66,8 +198,103 @@
 
 - [승인·범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/role-error-recovery.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/role-error-recovery.r1.work-order.json) · [결과·화면](../Changes/2026-10-21-role-error-recovery-r1.md): `CompletedLocalDeviceValidation / RemainingRoleFindings`. 역할10종 대표 오류·서버 설정 조사와 공통 안내 창·화주/기사 조회 복구 첫 적용을 마쳤다. PC8건 기대 응답·APK202두앱 설치/바이트·실제 조회 오류/복귀/연결 복구9PNG를 확인했다. 명령 미확정·필수 경고·입력 수명·운영 비활성 경계를 보존하며 다른 앱 개별 화면/endpoint·외부 통신은 후속이다.
 
+## 화물 업무 핵심 문구 정리 r1 (2026-10-21)
 
+- [계획·완료](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-concise-ui.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-concise-ui.r1.work-order.json) · [실제 전후 화면](../Changes/2026-10-21-cargo-concise-ui-r1.md): `Completed / PhysicalDeviceReadbackVerified`. 반복 설명·구현 문구를 줄이고 핵심 값/상태/행동과 필수 안내를 유지했다. APK201두앱 업데이트·동일 완료운송 재조회·전후8PNG를 연결하며 새 업무 완료·외부효과와 구분한다.
 
+## 화물 AI·휴대폰 수행 검증 r1 (2026-10-21)
+
+- [계획·완료 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-phone-verification.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-phone-verification.r1.work-order.json) · [실제 단계별 화면](../Changes/2026-10-21-cargo-ai-phone-verification-r1.md): `CompletedSyntheticDeviceValidation / LocalOnly`. 현재 제품 AI 선택부터 휴대폰 수락·상하차 촬영/완료·화주 재조회까지 같은 가상 운송으로 확인했다. 외부 푸시·실물·정산·운영 준비는 별도이며 제품 기능/기본값은 유지한다.
+
+## 화물 추천 약속 검사·AI 선택·안전 복귀 구현 r1 (2026-10-21)
+
+- [구현·검증 결과](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.implementation.r1.md) · [승인·범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.r1.work-order.json). 대기 기사 전체 일정, 정확한 모델/완료 응답, 초기·최신 후보 재검증과 현재 규칙 복귀를 보완한다. 격리 로컬 AI 선택 프로필과 그림자 비교를 구분하며 운영 기본 OFF·기사 수락·기존 지도/목록은 보존한다. 다건 적용의 재시도 안전 조건은 다건 활성화와 별개다.
+
+## 화물 우선 추천 기본·목록 조회 검토 r1 (2026-10-21)
+
+- [방향·정적 결손·우선순위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.review.r1.md): `DirectionAccepted / SourceAudited / ProductUnchanged`. 같은 추천의 지도/목록 보기를 재사용하고 공개 콜 권한과 LLM/규칙 선택을 분리한다. 약속/응답 검증 → 화물 모델 선택·복귀 → 화면 사용 → 다건 조합 순서이며 음식·피킹은 후속이다.
+
+## 로컬 가상 운영 누적 캠페인 r1 (2026-10-21)
+
+- [구현·실행·검증](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operating-campaign.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operating-campaign.r1.work-order.json): `CompletedLocalValidation / SyntheticLocalOnly`. 기존 가상 주문→수락→사진 픽업/전달과 경험 corpus를 연결하고 최대 5개 대표 사례·고정 검토 목록을 제공한다. 합성 두 회차의 각 1건 완료와 회귀를 확인했고 새 유한 누적 회차를 실행했다. 현재 실행은 증거 pointer로 조회하며 실제 운영·자동 승인·가중치 학습과 구분한다.
+
+## 로컬 AI 시험실 실행 r1 (2026-10-21)
+
+- [사용 안내·실행 상태](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-ai-lab.guide.r1.md): `Running / BrowserModelRoundTripVerified / HumanReviewPending`. 사용자가 시작한 기존 모델·검토 호스트를 확인하고 전용 자료 33개 중 1개를 브라우저에서 비교·저장·재조회했다. 입력 근거 없는 응답은 거부하고 규칙 결과를 보존했다. 사용자 승인·새 엔진/UI·운영 배차·가중치 학습은 실행하지 않았다.
+
+## 서버 AI 배차·학습 연결 검토 r1 (2026-10-21)
+
+- [검토·실행 증거·후속 순서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/server-ai-learning-readiness.review.r1.md): `Reviewed / GapsIdentified / ImplementationNotAuthorized / WeightTrainingNotStarted`. 기존 경험 보관과 학습 답안·모델 배포를 구분하고, 완전한 판단 근거 → 기존 검토 연결 → 실시간 지연 관문 → 별도 학습/평가·배포를 제안한다. 제품 코드/설정·실제 배차·클라우드·가중치 학습은 변경하지 않았다.
+
+## 배차 운영 경험 누적 r1 (2026-10-21)
+
+- [구조·검증](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.md) · [현재 스레드 작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.work-order.json): `CompletedLocalValidation / SyntheticLocalOnly`. 운영 배차 코어 아래 기존 가상 3회차·11건의 경험을 별도 파일 원장으로 누적했다. 재접수/재시작·명시적 사람 검토·원본 보존을 확인하고 미확인 2건은 유지했다. 기존 학습 사례/approved export와 운영 DB는 변경하지 않았으며 실제 배차·가중치 학습·무인 수집은 별도다.
+
+## 운영 앱·서버 후속 리팩토링 r3 — 첫 2개 구현 (2026-10-21)
+
+- [구현·결과](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation.r3.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation-work-order.r3.json): `CompletedLocalValidation`. 1 첨부파일·2 푸시 설치 HTTP의 첫 경계를 완료하고 소비 빌드·집중/Task 회귀를 확인했다. 나머지 12개는 기존 제안이며 제품 정책·화면·운영 활성화·실기기·commit/push는 별도다.
+
+## 운영 앱·서버 단일 책임 후속 조사 r3 (2026-10-21)
+
+- [조사와 우선순위](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-survey.r3.md) · [14개 후보 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-work-order.r3.json): `ProposedOnly / ImplementationNotAuthorized`. 이전 r1/r2 첫 경계 43개를 보존하고 공통 게시·푸시 → 기사 보류 → 정산/입고 → 후속 실행·표현 → 기기/도구 순서로 제안한다. 제품/시험/설정·실행·commit/push 변경은 없다.
+
+## 운영 코드 후속 리팩토링 r2 구현 (2026-10-20)
+
+- [진행·결과](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation.r2.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation-work-order.r2.json): `CompletedLocalValidation`. 선정 21개 항목의 첫 책임 경계를 구현하고 최종 Task와 소비 빌드를 확인했다. 조사 판본은 보존하며 기능·정책·DB schema·실제 외부 운영 활성화·commit/push는 포함하지 않는다.
+
+## 운영 코드 리팩토링 후속 조사 r2 (2026-10-20, 제안)
+
+- [조사와 우선순위](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-survey.r2.md) · [21개 후보 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-work-order.r2.json): `ProposedOnly`. 완료된 22개와 중복을 제외하고 계산·자료 조회·화면 수명·공통 저장 책임을 조사했다. 이번에는 제품 코드·기능을 바꾸지 않았고 build/test·운영 실행·commit/push도 하지 않았다.
+
+## 운영 앱과 서버 단일 책임 리팩토링 (2026-10-20)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/README.md) · [22개 항목 작업 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/work-order.json): `CompletedLocalValidation / OperationalDisabled`. 화주 접수→AI 판단→추천/알림→역할 앱→원장/창고→정산/운영자→공통 지도→조립 순서로 현행 동작을 고정하고 책임을 추출한다. 업무 정책·DB 스키마·실제 운영/학습·commit/push는 별도다.
+
+## 화물 입력 완결·이동 중 추천 갱신 r77 (2026-10-19)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-input-refresh.implementation.r77.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-input-refresh.r77.work-order.json) · [결과·화면](../Changes/2026-10-19-cargo-input-refresh-r77.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. 실제 입력·실차 기록과 조회·수락 시 본인 추천의 최신 계획을 연결했다. 최종 전체 시험 13,165개 통과·환경 의존 16개 생략, 실제 Razor 18상태와 대표 PNG 10장을 보존했다. Ollama 성능·미정 수치 정책·운영/기기 전환은 별도다.
+
+## 화물 배차 우선순위 2~6 연결 r76 (2026-10-19)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-dispatch-evidence.implementation.r76.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-dispatch-evidence.r76.work-order.json): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. r75에 이어 실차·상태·전체 계획·검토·최신 재확인을 연결했다. Task 13,103개·집중 81개·도구 33개·화면 6개 통과. 실제 모델 비교는 2회 시간 초과로 유효 판단 검증 보류이며 실제 수치 확인·가중치 학습·운영 활성화는 별도다.
+
+## 화물 입력·원장·판정 일치 r75 (2026-10-19)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-loading-consistency.implementation.r75.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-loading-consistency.r75.work-order.json) · [결과·화면](../Changes/2026-10-19-cargo-loading-consistency-r75.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. r74 우선순위 1번의 공유 계산·근거 보존·접수/수정/일괄·원장 왕복·App/Web 현재 입력 추천을 보완했다. 집중 1,182개·전체 13,017개 통과/환경 의존 16개 생략, 소비 빌드·화면 11개를 확인했다. 새 DB 열은 미적용이며 2~6번 전체 구현·실제 모델 학습·운영 활성화는 별도다.
+
+## 화물 접수→추천→조합 개발 우선순위 r74 (2026-10-19, 제안)
+
+- [우선순위 정본](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#2026-10-19-개발-우선순위-r74--접수부터-조합-결정까지): `PriorityOrderProposed / ImplementationNotRequested / WeightTrainingNotStarted / OperationalDisabled`. 1 입력/원장/판정 조건 일치 → 2 실차·장비 연결 및 3 주문/기사 현재 상태 → 4 가능한 조합·순서 계산 → 5 AI 비교/사용자 검토 → 6 최신 재확인/추천·수락 순서다. 구체 조합 수치와 가중치는 미정이며 r73 완료를 개별 실차 확인·학습 완료로 확대하지 않는다.
+
+## 소형차 적재 제원 보완 r73 (2026-10-19)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/small-vehicle-loading-specs.implementation.r73.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/small-vehicle-loading-specs.r73.work-order.json) · [변경·검증](../Changes/2026-10-19-small-vehicle-loading-specs-r73.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. 미확인 소형차 템플릿·기존 관리자 API의 물리 제원 등록·요구 축 검증불가 제외·물리 상한을 보완했다. 소비 빌드·집중 115개·전체 12,929개 통과/환경 의존 16개 생략. 실제 모델 수치 확인·개별 장비 식별·화면 편집기·입력 원장 보존·AI 학습/운영 적용은 별도다.
+
+## 전국 가상 화물 AI 문답 검토 (2026-10-19)
+
+- [차량 적재 판정과 AI 연결 조사](../Changes/2026-10-19-cargo-vehicle-selection-ai-input-audit.md): `StaticAuditCompleted / FollowupProposed / WeightTrainingNotStarted / OperationalDisabled`. 새 조합 기준 이전에 기존 화물→차량 알고리즘을 조사했다. 자료·조건 보존·적격 상태의 일관성을 먼저 갖추고 실제 기사/차량·구간별 적재·일정의 허용 계획을 AI 입력으로 만드는 후속 방향이다. 확장 구현 승인은 아니다.
+- [PLAN-OPERATIONS-DISPATCH-CORE 문답 검토 절차](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#2026-10-19-전국-가상-화물--사용자-문답-검토-우선): `DialogueReviewProcessConfirmed / FirstCaseHumanReviewPending / WeightTrainingNotStarted / OperationalDisabled`. 사용자 확인·정정 답안 중심으로 학습 후보를 모으고, 미응답/보류·공개한 평가 문제·실제 가중치 학습을 구분한다. 전국 자료 규모·확장 구현 전체 승인은 별도다.
+- 현재 문답 초점은 [주문 조합·수행 순서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#주문-조합수행-순서로-문답-초점-이동)다. 차량/업무별 조건을 보존하고 당사자별 이득을 비교한다. 추가 우회 상한·교차 업무 혼합·가중치·구현·학습/운영 적용은 미정이며 단건의 미확인 답을 조합 승인으로 사용하지 않는다.
+
+## 화주 모바일 맥락별 입력 r72 (2026-10-19)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE 모바일 입력 r72](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/mobile-context-authoring.implementation.r72.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/mobile-context-authoring.r72.work-order.json) · [검증·화면](../Changes/2026-10-19-mobile-context-authoring-r72.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. 모바일 8단계와 PC 통합 입력을 보존하고, APK200 설치·휴대폰 입력/접수·실제 AI 추천/수락·상하차 촬영/저장·운송 및 하위 원장 완료를 합성 자료로 확인했다. 실제 결제·입금·외부 푸시·지도/GPS·서버 공개 준비는 별도다.
+
+## 무료 퀵·화물 등록 준비 보완 r71 (2026-10-19)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE 등록 준비 r71](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/registration-readiness.implementation.r71.md) · [구현·검증](../Changes/2026-10-19-freight-registration-readiness-r71.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. 수단별 기사·실차 검토와 플랫폼 등록 준비를 분리하고 신규 운행·추천·수락·알림에 공통 확인을 연결했다. 집중 333개·전체 12,823개 통과·환경 의존 16개 생략, 공통 화면 14장면을 확인했다. 기존 운송 완료와 무료 이용료 설정을 보존하며 실제 기관 등록·공식 조회·서류 확인·운영 활성화는 별도다.
+
+## 주문 원장 중심 퀵 한 건 마감 r70 (2026-10-19)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r70](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/order-closeout.design.r70.md) · [작업지시서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/order-closeout.r70.work-order.json) · [결과](../Changes/2026-10-19-cargo-order-closeout-r70.md): `ApprovedInCurrentThread / CompletedLocalValidation / OperationalDisabled`. 추천 UTC·기사 보수·변경 재확인·조회 오류를 보완하고 같은 퀵 의뢰의 화면 수락→사진 첨부→인수완료→화주·운영자 조회를 검증했다. 통합앱0.1.194는 Drive 비공개 USB 시험판이며 GitHub 다운로드 안내는 로컬 준비다. 상위 통합 주문 자동 연결·기존 POD/인수증 연계·실제 기기·실수납/입금·외부 운영은 별도 미완료다.
+
+## 퀵·화물 주문 한 건 마감 우선 r69 (2026-10-19)
+
+- [PLAN-OPERATIONS-DISPATCH-CORE r69](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/dispatch-decision-manual.design.r69.md): `OperationsCloseoutPrioritized / FeatureExpansionDeferred / PolicyQuestionsDeferred / ImplementationNotRequested`. 기능과 세부 정책을 더 늘리기보다 기존 퀵·화물 주문 한 건의 접수→추천→화면 수락→픽업→전달→완료 조회를 마무리하고 운영 경험으로 보완하는 방향이다. 수락 시간대 해석·기사 보수 정본 표시를 먼저 닫을 대상으로 정리했다. 기존 약속 준수·장기 대기 우선 방향은 유지하고 미답변 질문은 승인 없이 보류한다. 이번은 문서 정리이며 제품·운영 설정·모델·실제 알림/운영은 변경하지 않았다.
+
+## 직접 거래와 산을 통한 신뢰 표현 r107 (2026-10-17, 2026-10-19 보충)
+
+- [PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB r107](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/trust-elevation.design.r107.md): `PairWeeklyThreeDirectionAccepted / OffPlatformTradeRecognitionAccepted / MirrorRecognitionIdentityAccepted / TopicDeferredForDispatch / ImplementationNotStarted`. 신뢰 인정은 상품/수량 차이와 무관하게 동일 두 사람 사이 일주일 총3회 정도로 정리했다. 이는 거래 자체의 제한이 아니며 이전 상품/수량별 계속 가산 예외를 대체한다. 하루1~2회 언급의 정확한 상한·주간 경계·증빙 파일 필수 여부·상승량은 미정으로 두고 AI 배차 기획을 먼저 진행한다. 제품·금융·원장·점수/공개 동의는 변경하지 않았다.
 
 ## 운영자 관점 업무 흐름 검증 r66 (2026-10-16)
 

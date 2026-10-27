@@ -36,12 +36,21 @@
     "Ssalddel/Services/Dispatch/Queue/기사운행시작후속Worker.cs",
     "Ssalddel/Services/Community/FoodDriverFollowupOutbox.cs",
     "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
+    "Ssalddel/Services/Community/음식주문원장동기화PayloadHandler.cs",
+    "Ssalddel/Services/Community/창고출고원장동기화PayloadHandler.cs",
+    "Ssalddel/Services/Community/음식합의취소투영PayloadHandler.cs",
+    "Ssalddel/Services/Community/음식기사후속PayloadHandler.cs",
     "Ssalddel.Ui.Common/Areas/App/RoleWorkspace/RoleWorkspaceContracts.cs",
     "FDriverApp/Services/FoodDeliveryDriverApiService.cs",
     "FDriverApp/Services/FDriverSecurePendingOperationStore.cs",
+    "Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs",
     "FDriverApp/PageModels/MainPageModel.cs",
     "FDriverApp/PageModels/MainPageModel.AutomaticWork.cs",
     "FDriverApp/PageModels/MainPageModel.FoodPending.cs",
+    "FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs",
+    "FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs",
+    "FDriverApp/PageModels/MainPageModel.LocationTransmission.cs",
+    "FDriverApp/PageModels/FDriverLocationTransmissionSession.cs",
     "FDriverApp/PageModels/MainPageModel.FoodDailySettlement.cs",
     "FDriverApp/PageModels/MainPageModel.FoodNotifications.cs",
     "FDriverApp/Pages/MainPage.xaml",
@@ -512,6 +521,22 @@
             {
               "path": "Ssalddel/Services/Community/FoodMartLedgerSyncOutboxService.cs",
               "symbol": "StepKey = \"infrastructure.driver-followup-outbox\""
+            },
+            {
+              "path": "Ssalddel/Services/Community/음식주문원장동기화PayloadHandler.cs",
+              "symbol": "internal sealed class 음식주문원장동기화PayloadHandler"
+            },
+            {
+              "path": "Ssalddel/Services/Community/창고출고원장동기화PayloadHandler.cs",
+              "symbol": "internal sealed class 창고출고원장동기화PayloadHandler"
+            },
+            {
+              "path": "Ssalddel/Services/Community/음식합의취소투영PayloadHandler.cs",
+              "symbol": "internal sealed class 음식합의취소투영PayloadHandler"
+            },
+            {
+              "path": "Ssalddel/Services/Community/음식기사후속PayloadHandler.cs",
+              "symbol": "internal sealed class 음식기사후속PayloadHandler"
             }
           ]
         },
@@ -630,6 +655,10 @@
             {
               "symbol": "private async Task LoadWorkspaceAsync",
               "path": "FDriverApp/PageModels/MainPageModel.cs"
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverWorkspaceRefreshSession.cs",
+              "symbol": "internal sealed class FDriverWorkspaceRefreshSession"
             }
           ]
         },
@@ -672,6 +701,32 @@
             {
               "symbol": "public sealed class FDriverSecurePendingOperationStore",
               "path": "FDriverApp/Services/FDriverSecurePendingOperationStore.cs"
+            },
+            {
+              "symbol": "public sealed class ProtectedPendingSnapshotStore<TSnapshot>",
+              "path": "Ssalddel.Client.Infrastructure/Security/ProtectedPendingSnapshotStore.cs"
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverPendingOperationCoordinator.cs",
+              "symbol": "internal sealed class FDriverPendingOperationCoordinator"
+            }
+          ]
+        },
+        {
+          "key": "native.location-transmission",
+          "relatedStepKeys": [
+            "application.work-location"
+          ],
+          "responsibility": "지도 GPS와 분리된 운행 위치 전송의 취소·세대·heartbeat 수명",
+          "boundary": "전송 완료 시각과 지도 획득 수명을 구분하며 실제 GPS·기기 통신 검증을 대신하지 않는다.",
+          "sources": [
+            {
+              "path": "FDriverApp/PageModels/MainPageModel.LocationTransmission.cs",
+              "symbol": "private async Task<FDriverLocationSnapshot?> CaptureLocationAsync"
+            },
+            {
+              "path": "FDriverApp/PageModels/FDriverLocationTransmissionSession.cs",
+              "symbol": "internal sealed class FDriverLocationTransmissionSession"
             }
           ]
         },

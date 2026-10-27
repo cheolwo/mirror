@@ -1,5 +1,249 @@
 # Mirror(거울) Current Work
 
+## 맥락별 로컬 커밋 정리 (2026-10-27)
+
+- 사용자가 커밋만 하도록 요청했다. [분리 기준과 결과](../Changes/2026-10-27-context-commits.md)에 화물·기사 알림·공동운영·입출고·음식·정산·시뮬레이션·검증·문서를 나눠 기록한다. 기존 검증 소스의 기능은 변경하지 않고 푸시·배포·운영 활성화는 하지 않는다. 비공개 다운로드 링크와 원본/실행 자료는 로컬에 보존한다.
+
+## 기사 새 추천의 단발 진동·홍달배달 음성 r18 (2026-10-27)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-recommendation-signal.r18.md) · [구현과 검증](../Changes/2026-10-27-driver-recommendation-signal-r18.md). 지도 정본 조회와 기존 Push 복구를 같은 설정/중복 방지 경로로 연결하고 ‘홍달배달’ 음원·180ms 단발 진동·기존 채널 무음/차단 유지·계정 왕복 이력·늦은 취소 경쟁을 보완했다. 최종 Fast174통과·Task16,353통과/환경16생략, 검토 APK133의 서명/음원/권한·두 ABI의 실제 앱 DLL/접속 설정을 확인했다. 실기기 설치·발음/볼륨·진동·실제 FCM은 수행하지 않았고 서버/운영 플래그·commit/push를 바꾸지 않았다.
+
+## 기사 운행 흐름 정밀 보완 r17 (2026-10-27)
+
+- [사용자 승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-workloop-precision.r17.md) · [실제 결과와 화면](../Changes/2026-10-27-driver-workloop-precision-r17.md). 기존 시작→지도·완료 확인→지도, 늦은 이동 취소와 활성 운송/신선한 위치에 한정한 위험 조회를 보완했다. 휴대폰에서 발견한 하차 상태 지연·숨김 버튼도 최종 APK131에서 재조회/지도 복귀로 확인했다. Fast249·Task16,326통과/환경16생략·최종 관련75·Python30·compiled관문28 통과. 새 격리 서버6완료/2만료무수락·SQL24전이/Mongo6문서·재시작 전후 동일, 실기기131 설치 해시/화면을 확인했다. 간헐 ready503과 auth429의 근거/범위는 보고에 보존했다. 시험기사Off/대기·소유호스트/USB연결/검토앱 정리, 실제 전 과정 운행·FCM·운영 활성화·commit/push와 구분한다.
+
+## 관리자 상단 제목 간소화 r16 (2026-10-27)
+
+- [소스 변경 범위](../Changes/2026-10-27-admin-header-simplification-r16.md). 사용자 요청대로 공통 상단의 `플랫폼 모바일 관제` 한 줄을 제거하고 제목·메뉴·계정·앱 상태·알림 연결을 보존했다. 단일 삭제/정적 검증이며 새 APK·실제 화면은 아직 미확인이다. FCM 필요성은 현재 구현과 공식 문서로 검토했으며 설정·실제 전송은 변경하지 않았다.
+
+## 화물 화면·서버 준비 결손 보완 r15 (2026-10-27)
+
+- [실제 결과·휴대폰 화면](../Changes/2026-10-27-cargo-runtime-followup-r15.md). 화주 홈을 상세 다음 행동 정책과 맞추고 운영자 전체 목록 제목·전문 기사 Android 안전 영역을 보완했다. 표준 Fast49/49·Task16,305통과/환경16생략·실패0, CLI15/15, 최신 검토 APK128 세 개의 서명/내부 endpoint/설치 해시 및 실제 SM-A346N의 화면·세션/재실행을 확인했다. 기존 EnsureCreated DB는 보존하고 새 짧은 GUID 시험 DB에 네 context migration98개를 실제 적용해 pending0·live/ready200을 확인했다. 같은 합성 의뢰의 배차/완료 서버 재시작, 제품 API·SQL 전이 각1회·Mongo 완료문서1개를 대조했다. 수신Off·합성기사종료·소유5378서버/USB reverse/검토앱프로세스 정리, DB/앱데이터/다른작업 보존. 전체 native 완주·지도 인증·실제 GPS/카메라/금융/FCM·운영 공개와 별도이며 commit/push 없음.
+
+## 화물 서버·실제 휴대폰 검증 r14 (2026-10-27)
+
+- [실제 결과·휴대폰 화면·남은 결손](../Changes/2026-10-27-cargo-lifecycle-runtime-r14.md). 신규 격리 Simulation DB의 같은 화물 1건을 후불 승인·배차·상하차·인수완료까지 처리하고 세 역할 제품 API 및 SQL/Mongo 원장 1개를 대조했다. 실제 SM-A346N에서 화주124·전문 기사125·운영자126의 로그인/조회·앱 재실행, 기사 도착 버튼/완료 알림, 운영자 연결 실패 보존·재조회와 완료 표시를 확인했다. 진행/완료 상태의 서버 재시작 보존도 확인했다. 전체 native 버튼 완주·실제 GPS/카메라/금융·운영 공개는 미검증이며 ready503·지도 인증 미설정과 홈 다음 행동/운영자 건수 제목/기사 하단 겹침 3개를 보완 대상으로 남겼다. 내부 6,000원 입금 요청 준비 1개·안내 예약3개와 실제 계좌 발급/입금/지급을 구분했다. 합성 기사 종료·이번 reverse/소유 서버 정리, DB/앱 데이터·다른 작업 보존. 추적 제품 코드·commit/push 변경 없음.
+
+## 영상 일괄 실행·정확 결속·Unity 환류 r118 (2026-10-26)
+
+- [세 부분 구현·실제 결과](../Changes/2026-10-26-video-diorama-integration-r118.md). 고정 CLI 실행/예산/잠금/원본별 재개, 정확 source/target·현재 지도/원형 결속, 새 Unity 결과의 현재 보호·실제 전후/복구와 일일 환류를 구현했다. Python214/214·Unity186/186·graphics 종료0/35PNG/5시점 exact 복구·실제11명령 종료0·최종 validate 문제0이다. 원본1/비공개대상3/단계6·새 의미 판독0·원본 재해시0·정본 동일성3보류/적용0을 유지한다. 나머지 의미 판독 미완료로 runner Held다. 최신 포인터 `배달/edit-kit/private/video-diorama-integration/current-review.json`. 아래 r115의 새 시각 검증은 이번 입력에서 보완했고 Game View/FPS·무인 위치 추론/렌더러·운영/공개/commit/push는 미실행이다.
+
+## 앱 공통 제작 절차와 화물 마감 입력 r13 (2026-10-26)
+
+- [적용 결과](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-common-workflow.r13.result.md). 공통 안내·AGENTS·통합 1.0 마감을 연결하고 제작 도구의 화주/창고 역할과 현재 검증/포장 시험을 보완했다. 화물 화주·전문 기사·운영자 입력 3건과 같은 건의 검증 계획을 등록했다. 도구 97/97·실패/생략0, 생성 정합성·링크·범위 Fast와 실제 관리 브라우저를 확인했다. 입력 정보 Ready와 사람 검토 Pending·환경 Unknown을 구분하며 실제 화물 API/DB·APK/기기·운영 실행은 NotRun이다. 새 결과 근거를 과거 통과와 분리했고 기존 변경·서비스·기기와 commit/push 상태를 유지했다.
+
+## 공통 영상 처리 절차 우선 보강 r117 (2026-10-26)
+
+- [절차 준비 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-common-procedure.r117.md). 사용자가 실제 처리는 나중에 몰아서 하고 공통 절차를 먼저 보강하도록 요청했다. 배달 공통 안내 r3에 자료 도착/처리 시작 구분·세 단계 시작/통과/인계 기준·공통 인계 검사·보류별 재개 조건·일괄 처리/중단/마감 규칙을 정리했다. 기존8단계/8상태·정책 JSON r2·도구 코드는 유지했다. 문서 변경이며 새 원본 처리·선분 등록·Unity·렌더·자동화는 실행하지 않았다. 실제 일괄 실행·새 Unity 환류·정본 건물 대응은 후속이다.
+
+## 매일 영상 분석·선분·디오라마의 세 단계 인계 제안 r116 (2026-10-26)
+
+- [절차 제안과 확인한 결손](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-three-stage-handoff.proposal.r116.md). 사용자는 구현을 후속으로 두고 내일부터의 원본 입력 절차 정리를 요청했다. 기존 접수/분석에서 도로 선분과 건물 관측을 나누고 정확 대상의 비공개 변경·전후/복구 결과를 그날 원본/관측에 되돌리는 방안을 제안했다. 새 상세/영상선분 Unity 결과의 일일 연결 adapter와 정확 정본 건물 대응은 남았다. 이번에는 제안 문서만 변경했으며 새 분석·Unity·자동화는 실행하지 않았다.
+
+## 건물 높이·쇼윈도 보완 r115 — 시각 검증 전 보류 (2026-10-26)
+
+- [직접 요청 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/building-envelope-and-glass.r115.md). 정확 GIS 원자료의 높이31.5m/8층 한 곳과 높이0/2층 두 곳을 확인하고 본체/점포 높이 분리·미확정4m 유지·opt-in 유리와 중립 셸을 구현했다. 기존 실행 시험의 최종 XML은175/175(실패/생략0)이다. 사용자가 절차 제안으로 전환해 새 graphics PNG·실제 유리 외관·Game View는 확인 전이며 새 영상 생성0·정본 반영0이다. 이전 r114 검증을 새 표현의 시각 검증으로 승계하지 않는다.
+
+## 건물별 상세 외형 교체와 세 점포 시범 r114 (2026-10-26)
+
+- [실제 구현·시각 검증](../Changes/2026-10-26-detailed-building-representation-r114.md). 기존 건물 ID/외관 Profile를 재사용하고 상세·중간·원형 표시와 실패/제거 복구를 소형 부품 Overlay 밖에 분리했다. 세 전면 모델은 Synty 없이 창틀·입구 가설·차양·간판 깊이를 만들고 일반 CC0 실사 표면을 일부에 연결했다. Unity143/143·최종graphics r4 종료0·32PNG/4시점exact복구·원본14+재질9파일보존·16초480프레임 MP4 디코딩을 확인했다. 최신 포인터 `배달/edit-kit/private/detailed-building-study/current-review.json`. 높이4m/정면/문/창구획 비실측, 불투명 유리·전면 한정·비동기 스트리밍/Game View/FPS 미구현·미검증이며 정본0이다. 기존 Scene/권위/승인/운영/공개/commit/push는 보존했다.
+
+## 디오라마 재질·조명 현실감 비교 r113 (2026-10-26)
+
+- [최종 구현·실제 시각 결과](../Changes/2026-10-26-diorama-realism-r113.md). 기존 0111·후보3·외관3의 동일 입력을 opt-in PBR/미세질감·반사·조명 사본으로 표현했다. Unity111/111·graphics r2 종료0·20PNG/두 종류 exact 복구·원본14파일 불변·16초 무음 MP4 전체 디코딩을 확인했다. 가까운 와플/맥주2시점만 실제 그림자가 보이고 전체/뚜레는 clipping 방지로 원거리 유지다. 가는 줄그림자·노면 겹침·유리 깊이·실측 높이/정면은 남았다. 최신 포인터 `배달/edit-kit/private/diorama-realism/current-review.json`. 정본0·Game View/FPS/운영/공개 미검증이며 기존 Scene·승인·원본은 보존했다. 초기 meta/직렬화 실패는 최종 성공과 분리한다.
+
+## 영상→선분→동네 디오라마 시각 시안 r112 (2026-10-26)
+
+- [실제 결과·대표 자료 위치](../Changes/2026-10-26-video-segment-diorama-demo-r112.md). 0111 실제 PTS 관측5·선분 후보3·공개외관3을 같은 입력으로 묶어 동네 배경에서 외관 전후·실제 제거 복구 12장과 무음 약32초 검토 MP4·HTML을 만들었다. Unity106/106·PNG/복구 동일 SHA·파생 전체 디코딩·방향/자막·cleanup을 확인했다. 원 baseline602 중 겹친3개는 깊은 preview 사본에서만 제외하고 Overture2247/원본 Scene/Prefs/승인은 보존했다. 일부 노면 줄무늬·상호 작은 표시·높이/정면 가설·정본 동일성 대응은 남았다. 연구 반영3·정본0이며 그래픽 CLI 카메라 렌더와 실제 Game View를 구분한다. 최신 비공개 포인터 `배달/edit-kit/private/video-diorama-demo/current-review.json`. 운영/공개/commit/push 없음.
+
+## 영상 위치 판독·일일 근거 연결 보완 r111 (2026-10-26)
+
+- [구현·시험·실제 원본 범위](../Changes/2026-10-26-video-diorama-daily-connection-r111.md). 정수 시계·읽기 결속/재개·건물 대응 후보와 관련 160/160을 검증했다. 0112 실제 PTS 사진 12장을 판독해 영화사로 진입/선분 후보를 기록하고 원본 시간표와 대조했다. 기존 접수 13개·구형 표본 761개를 r3/r4에 결속해 새 실적 중복 0·현재 입력 검증 통과를 확인했다. 현재 공간 2,247건물과 공개 원형 3개의 겹침 후보는 0으로 정본 적용을 보류한다. 기존 번호순/원본 포인터·사용자 승인·Scene·운영 DB는 보존했고 무인 위치 추론·Unity/배포·commit/push는 실행하지 않았다. 다음은 0112 미확인 창과 현재 공간 자료의 정확 건물 대응이다.
+
+## 일일 영상 자료 누적 절차 정형화 r110 (2026-10-26)
+
+- [현재 기준과 미해결 연결](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-video-diorama-accumulation.r110.md). 배달 작업공간의 공통 절차·단계/기록 JSON·AGENTS/기존 안내를 연결했다. 원본 SHA별 접수·실제 PTS/OCR·시간순 판독에서 선분 후보와 공개 건물 외관을 분기하고 기존 저장소·비공개 적용/복구를 재사용한다. 정의 저장과 자동 실행기 구현은 구분한다. 새 원본 분석·렌더·Unity·운영 DB·자동 감시·배포는 실행하지 않았다. r109의 실제 시험/연구 결과를 새 실적으로 중복 집계하지 않는다.
+
+## 첫 구현 검증 — 영상 근거와 사가정 건물별 외관 보완 r109 (2026-10-26)
+
+- [사용자가 승인한 좁은 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-facade-refinement.implementation.r109.md)의 상세 공간 보존·건물별 외관 입력·복구를 구현했다. Unity 98/98·Python 25/25, 공개 원형 3개의 비공개 연구·전후/복구 이미지 9장을 확인했다. 현재 Overture 2,247건물과 직접 ID 대응이 없어 정본 적용은 0건이며 높이·정면은 연구 가설이다. 실제 Game View·입력·성능 검증과 구분하고 기존 Scene·Prefs·원본·사용자 승인·운영 DB를 보존했다. [변경 기록](../Changes/2026-10-26-sagajeong-video-facade-r109.md), 로컬 포인터 `배달/edit-kit/private/diorama-facade-refinement/current-review.json`. 운영·학습·배포·commit/push 없음.
+
+## 최신 보완 — 화물 Android 업무 복구 r124·기사 요약 후속125 (2026-10-26)
+
+- [실제 결과·원캡처·남은 제한](../Changes/2026-10-26-cargo-android-recovery-r124.md): 화주 본인 요약·통합 기사 설정/거절·만료복귀·권한 없음 계정전환·Push 미설정 시작과 본인 운송주선 정보업무를 보완했다. 통합 APK124에서 화주 요약·본인 원장3개/상세·GUI 설정/운행/수신·거절과 만료 복귀를 확인했다. 독립 기사 후속125에서 같은 화면의 대기→운행중→종료 뒤 대기 갱신을 확인했다. 실제 휴대폰은 설치 확인과 업무 검증을 구분하며 에뮬레이터 결과를 승계하지 않는다.
+- 거절 사유가 미입력으로 남던 기존 서버 누락도 안전한 분류 저장으로 보완하고 관련58개 시험을 통과했다. 과거 실제 NotProvided 사건은 보존하며 수정 서버의 새 HTTP/GUI 검증은 별도다. 최종 .NET 전체16,289통과·실패0·환경16생략, 3개 APK 빌드/입력동결/양 ABI endpoint를 확인했다. 표준 Task의 전체 Android 소비 빌드는 기존 리소스 누락으로 차단됐다. 운영·금융·지도 인증·실제GPS·외부Push·commit/push는 미수행이다. 기준·정확 범위는 [r124 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-android-recovery.implementation.r124.md)·[작업지시서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-android-recovery.r124.work-order.json)에 기록했다.
+
+## 이전 Android 점검 — 화주·기사·운송주선업체 실제 업무 화면 (2026-10-26)
+
+- [실행 결과·화면과 보완 항목](../Changes/2026-10-26-cargo-android-role-review.md): 최신 통합 검토 Release APK123을 별도 패키지로 빌드·기기/에뮬레이터에 데이터 보존 설치했다. 실기기는 잠금 해제가 어려워 업무 조작을 하지 않았고 실제 APK 화면 점검은 Android 에뮬레이터에서 수행했다. 소스 2,327개 변경0·완성APK endpoint/ABI/서명/해시를 확인했다. 일반 소비 솔루션 전체 빌드 복구로 표시하지 않는다.
+- 화주 공개 진입→로그인·합성 의뢰2건 조회, 기사 로그인→GUI 운행 시작·위치 수신·신규배차 ON, 별도 API 시험설정→전용 추천1건·조건체크·만료 참여 차단을 확인했다. 화주 홈의 창고API403, 통합 기사 업무/차량설정·거절 연결 부재, 만료선택 유지로 복귀/재시도 실패를 찾았다. 수락·거절·상하차·완료 정상 완주·실제 GPS·지도·외부Push는 미검증이다.
+- 운송주선업체의 독립 배차·수수료·업체 정산 작업공간은 현재 코드에서 찾지 못했다. 서버관리자 관제와 커뮤니티 전문참여 자격을 해당 업체 화면으로 대신하지 않는다. 독립 DriverApp 검토 APK도 빌드/에뮬레이터 설치했으나 새 검토패키지의 Firebase 초기화 오류로 업무 화면은 미검증이다. 원래 기사 앱의 동일 오류로 단정하지 않는다.
+- 별도 Simulation DB·합성계정/의뢰를 사용했다. 운영 설정·원래 앱/소스·운영 DB·법적 분류·실금전·Unity·배포·commit/push는 변경하지 않았다. 서버 readiness503(시험 DB migration 이력 없음)과 새 검토패키지 설정 제한은 제품 실행 결과와 구분한다. 상세 로컬 증거는 `artifacts/local/cargo-android-role-review/20261026-r1/`에 보존한다.
+- 문서 Fast(diff)·보고 링크20개·대표PNG8개 해시를 확인했다. 시험 운행은 별도 API로 수신OFF/종료 후 대기·활성운송0 재조회했으며 GUI 종료 성공으로 표시하지 않는다. 소유 시험 서버/에뮬레이터와 이번 reverse만 정리하고 공유 Docker 서비스는 보존했다. 결제·지급·수락후속0, 실제FCM미전송과 만료 후 시험DB의 공개fallback 상태를 분리 기록했다.
+
+## 최신 화물 운영 방향 — 월정액 정보추천·관리자 준비 조회 r4 (2026-10-26)
+
+- [단일 기준 r4](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.direction.r4.md): 월5,000원·10,000원 후보, 확정금액 없음, 건별 중개수수료 없음, 서버 추천·기사 수락/거절·당사자 최종 결정이라는 사용자 방향을 기록한다. 유료 정보 서비스 계획이며 월정액만으로 무상·허가 면제라고 판단하지 않는다.
+- 이번 [정확한 수정 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.r4.work-order.json)의 관리자 준비 조회 보완을 마쳤다. 현재 무료0원과 향후 후보를 구분하고 기관 회신·유효 검토가 없으면 법적 분류 확인을 보류한다. 최종 관련29개·서버 전체16,220개 통과/환경16개 생략, 계약·공통UI·서버와 별도 소비 호스트 빌드 및 390/1280px 실제 공통 화면을 확인했다. 최초 전체 소비 솔루션은 Android 리소스/Java 생성 오류로 실패해 전체 Task·APK 호환성 성공으로 표시하지 않는다. [이번 결과와 상한](../Changes/2026-10-26-cargo-information-subscription-r4.md)은 이전 검증과 구분한다.
+- [기관 서면질의 초안](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-subscription.authority-question.r4.md)은 미발송이다. 납부 주체·세금·갱신/환불·확정금액·계약 성립/대금 경로는 미정이다. 실제 청구·입금 처리·무료/운영 설정·정산 계산·배차/금융/기관 전송·운영 DB·APK·Unity·배포·commit/push는 이번 범위에서 실행하거나 변경하지 않는다. r2 공고 구현과 r3 고정 활동권역·전용 단건 후속 설계는 보존한다.
+
+## 최신 기사 운영 방향 — 지도와 고정 활동권역의 단건 배차 r3 (2026-10-25)
+
+- [지도 중심 업무 설계 r3](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-map-first-workloop.design.r3.md): 사용자 답변은 집·지정 거점 기준의 고정 활동반경이다. 기사 홈은 목록 클릭 경쟁 대신 지도→업무 시작→전용 한 건 추천→현재 업무와 다음 한 건을 구분한다. 20/50km 활동 원과 현재/예상 종료 위치에서 픽업하러 갈 최대 거리는 별도 설정이다.
+- 기존 모바일 지도·단건 배너·AI 적격 후보 선택은 기반이며, 조회의 20/50km는 화면 필터이고 복귀는 우대 가점이다. 고정 반경 강제·종료 임박 다음 한 건의 화면 연결은 완료로 표시하지 않는다. 상하차 끝점만 원 안인 경로의 권역 밖 우회·최신 위치/설정·추천 독점·수락 재검사를 구현 마감 기준에 넣었다.
+- 이번은 코드 읽기와 canonical 설계·색인 갱신만 수행했다. 제품 코드·새 시험·APK·위치 수집·실제 배차·운영 설정·Unity·commit/push를 실행/변경하지 않았다. 아래 r2의 기존 구현·검증은 보존하고, 정보 게시·조회부터 법적 준비를 확인하는 우선 운영 범위도 유지한다.
+
+## 최신 우선순위 — 화물 정보 공고 보완과 법적 읽기 자료 r2 (2026-10-25)
+
+- [승인된 공고 r2](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-publication.implementation.r2.md)에서 독립 Mongo 초안·명시 공개·수정 후 재동의·철회·만료, 소유권·개정 충돌·원 요청 결과와 공통 MAUI/Web 화면을 보완했다. 과거 운송 원장을 동의 없이 공개하지 않으며 공고가 운송·배차·금융을 만들지 않는다. 초기 공개 지역은 기존 30동 목록이며 기본 옵션은 OFF다. [r1 감사](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-information-first-legal-review.r1.md)는 근거로 보존한다.
+- 전체 Task16,210통과·환경16생략, 실제 격리 HTTP/Mongo31·합성 Client를 사용하는 실제 제품 컴포넌트 390/1280px 20검사를 통과했다. 그 뒤 공고 route가 없는 DriverApp에서 링크를 숨기는 마지막 표시 조정을 하고 최종 Fast292·소비 솔루션 빌드를 확인했다. 전체 Task와 마지막 표시 조정 뒤의 집중 검증 판본은 [변경 기록](../Changes/2026-10-25-cargo-information-publication-r2.md) 및 `artifacts/local/cargo-info-publication-r2/verification-summary.json`에서 구분한다. 미확정 요청의 관리자 해제·실제 회원 인증/휴대폰·운영 보존/파기·기관 확인·Figma는 별도다. 기존 작업·운영 설정·DB·Unity·commit/push를 변경하지 않았다.
+- [법적 읽기 자료](../Legal/freight-information-platform-20261025-r1/README.md)의 한국어 PDF6쪽·동일 내용 HTML을 준비하고 전 쪽 렌더·원문8개·모바일/데스크톱 가독성을 검사했다. 현행과 2027-09-23 시행 예정·기관 질문을 구분하며 적법 판정·허가/등록 수리·운영 공개로 표시하지 않는다.
+
+## 최신 방향 — 디오라마를 운영 지도로 사용 (2026-10-25)
+
+- [운영 지도 방향 r9](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/diorama-operating-map.direction.r9.md): 사용자는 디오라마가 맵이고 이를 보며 운영하는 Unity 역할을 제시했다. 모바일·데스크톱 업무 완성을 우선하면서 Unity는 공간별 상황 파악→객체 요약→기존 업무 상세 연결로 좁힌다. 기존 원장/Simulation Session을 재사용하고 모의·운영, 실제·추정 위치, 업무 완료와 애니메이션을 구분한다.
+- 이번은 방향 문서만 정리했으며 Unity 추가 코드·Scene·실행·운영 연결은 재개하지 않았다. 아래의 직전 보류 기록과 r8 실행 근거는 보존한다.
+
+## 최신 우선순위 — 모바일·데스크톱 앱 집중, Unity 후속 작업 보류 (2026-10-25)
+
+- 사용자가 Unity 작업의 비용을 줄이고 휴대폰 앱·데스크톱 앱의 완성도에 집중하도록 방향을 정정했다. Unity의 추가 구현·실행·시각 보완은 보류한다. 기존 코드·저장·검증 자료는 보존하며 통합 앱 1.0의 실제 업무 흐름, 입력·진행·복구·역할별 화면을 우선한다. 구체적인 다음 앱 변경 범위는 기존 업무별 마감표와 현재 코드에서 정한다.
+- [출고 Unity 첫 플레이 r8](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment.unity.r8.md)은 중단 전에 가상 센터 비교→예약→부분 피킹→포장 준비·저장 복구를 실제로 확인했다. 관련 EditMode 46개 통과, 마지막 시험도 종료됐다. 아래 r7의 Scene 미연결 표기는 당시 상태이며 현재 구현/검증과 후속 보류는 r8을 따른다. 전체 경영 게임·운영 출고 완료는 아니다. 새 앱 기능·배포·commit/push는 이번 우선순위 정리에서 실행하지 않았다.
+
+## 공간·계약·인력·물류의 통합 경영 게임 제안 (2026-10-25)
+
+- [다중 센터·위치 출고 첫 구현 r7](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment.implementation.r7.md): 같은 Simulation 세션의 가상 센터·선반·담당 후보→예약→위치/상품 확인·부분 피킹→포장 준비와 파일 저장/재시작 복원을 구현했다. Local 공통 Runtime·테스트 HTTP/인증·Remote adapter·한국어 Presenter를 연결했다. 집중 65, Fast 320+54, Task Simulation/Unity 전체 3,044 통과(중복 합산하지 않음). 실제 View/Scene·Play Mode는 아직 미연결·미검증이며 확정 예약의 센터 전환·피킹 후 복구는 후속이다. 운영 원장·활성 Goal·학습·배포·commit/push는 변경/실행하지 않았다. 실제 결과와 첫 소비 예는 r7을 따른다.
+- [다단계 출고 제안 r6](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment-decisions.proposal.r6.md)에 주문→센터 선택→위치별 재고→직원 피킹→포장/운송을 구체화했다. 내부 수행 가능성을 센터 평가에 반영하고 하위 병목 시 재선정·분할·일정 조정, 복수 센터 예약의 부분 성공과 실제 완료를 구분한다. 현재 출고 배치/피킹 계층은 기반이며 게임 연결·전체 조건 검증·일괄 예약/복구를 구현 완료로 표시하지 않는다. 문서 보완만 수행했다.
+- [상세 제안 r5](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/location-barcode-outbound-picking.proposal.r5.md)에 선반 위치 바코드·물품/로트·수량 적치 기록→주문별 재고 선택/예약→직원·위치 피킹 안내→확인·포장·인계와 불일치/부족/변경 대응을 추가했다. 일반 창고의 위치 문자열·확인 항목과 분산 물류의 위치/예약 검증을 구분해 현재 실물 스캔·통합 경로가 완성됐다고 표시하지 않는다. 이번도 문서만 보완하며 코드·DB·장치·Unity·학습·운영 실행은 없다.
+- [제안 r4](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/space-supply-workforce-logistics.proposal.r4.md)에 공간 임대·공급 계약·현장 직원 고용·근무 배치·입고/검수/적치/피킹/포장/출고 인계·배송·결산을 핵심 경영 범위로 추가했다. 음식점 직접 픽업·거점 출고·개별 화물은 서로 다른 흐름을 유지한다. 기존 공급경영/NPC 작업 배치/운영 계약과 HR 코드는 기반이지만 게임의 채용·근무·처리 능력·임대/급여/손익 연결은 미구현이다. 이번은 기획 문서만 갱신했고 코드·Scene·실제 계약/고용/금융·학습·운영은 변경하지 않았다.
+- [방향 r3](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/regional-platform-management-direction.r3.md)에 중랑구·동대문구·광진구·구리시·노원구를 무대로 한 플랫폼 운영자 경영을 중심으로 고정했다. 주행 영상·디오라마는 경영 상황의 현장 근거·표현이며 수익·품질·보수 균형의 경험을 쌓는다. 현재 지도는 중랑·동대문 기반과 광진/노원 일부이며 구리 독립 자료는 현 포인터에서 미확인이다. 지역 목표를 전 지역 준비 완료로 바꾸지 않는다.
+- 사용자 최신 정정으로 직접 플레이 구현을 보류하고 [같은 동네의 영상·3D·플레이 연결 제안 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/video-diorama-play-experience.proposal.r2.md)를 작성했다. 지도 선분과 Unity 도로의 서로 다른 ID를 판본화된 관계로 잇고, 원본 SHA/실제 PTS·공간/규칙 판본·판단/결과 출처를 보존한다. 기존 영상·Synty 샘플은 있으나 선분–3D 직접 연결과 음식의 플레이어 후보 선택 기능은 미구현이다.
+- [r1 학습 방향](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gameplay-experience-learning.proposal.r1.md)의 수익·배송 품질·참여자 보수 균형은 유지한다. 이번은 카탈로그·소스 읽기와 제안 문서만 변경했고 원본 분석·Unity 코드/Scene·앱·검토 DB·모델·학습·운영·배포·기존 승인 기획은 실행하거나 바꾸지 않았다.
+
+## 통합 앱 1.0 목표·모바일 마감 r121 (2026-10-25)
+
+- 사용자 정정에 따라 기존 0.0~3.5 전체 범위를 [통합 앱 1.0](../Versions/unified-1.0/README.md) 하나로 묶었다. 기존 업무 분류·저장/API 호환과 기본 기능 설정은 보존하고 [업무별 마감표](../Versions/unified-1.0/checklist.md)로 완성 여부를 관리한다. 목표 선언은 완료나 운영 활성화가 아니다.
+- [이번 작업](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-app-closeout.implementation.r121.md)은 Native 화주 금융 상태 보존·미확정 테스트 결제 보호와 실제 로그인 한 열 배치다. 관련567·로그인8·전체16,159시험이 통과했고 환경 의존16개는 생략했다. 표준 Release 검토 APK0.1.122를 실제 기기에 데이터 보존 업데이트했으며 로그인·초안 복구·취소 복귀·재실행3회를 확인했다. 과거 첫 실행 native 종료의 원인 해결이나 전체1.0 공개 완료로 표시하지 않는다.
+- 전용 GUID MySQL/Mongo DB에서 음식5·화물7·창고 인계/배송8검사를 통과하고 최신 서버 재시작 뒤 완료 원장의4가지 보존을 재조회했다. 제품 경로/적재 관문은 유지하고 신규 합성 사례의 선언 입력만 보완했다. 초기 실패 원장·앱 데이터는 보존한다. 표준 마감 검사와 상세 결과는 [r121 변경 기록](../Changes/2026-10-25-mobile-app-closeout-r121.md) 및 `artifacts/local/mobile-app-closeout/20261025-r121/verification-summary.json`을 따른다. 운영·실금융·외부 알림·배포·commit/push는 실행하지 않는다.
+
+## 업무 흐름 표시 내부 정리 r120 (2026-10-24)
+
+- 사용자의 새 구현 중단·리팩토링 요청에 따라 기존 요약/상세 화면의 동작 블록을 partial code-behind로 옮기고, 흐름 표시 계산을 회차 점검·단계·정산 helper로 분리했다. 공개 모델·문구·DOM·CSS·서버·계약·업무 동작을 유지하며 분리 전후 템플릿/동작 본문 해시가 일치한다. 공용 UI·소비 호스트 빌드, 기존440시험·격리HTTP27검사·390px 브라우저의 보류 펼치기/상세 왕복을 확인했다. 새 기능·새 시험·APK 설치는 없고 기존 별도 공백으로 중단된 공통 검사와 이전 기기 안정성 문제는 유지한다. [r120 범위와 증거](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-readiness-and-settlement.implementation.r119.md#r120--동작을-유지한-내부-정리).
+
+## 통합 원장·시작 보류·정산 흐름 r119 (2026-10-24)
+
+- [r119 구현](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/workflow-readiness-and-settlement.implementation.r119.md): 원장 안의 회차·업무를 묶고, 같은 회차의 실제 서버 점검만 보류로 표시한다. 부족한 역할은 회차에, 명시된 원천 연결 부족은 해당 노드에 표시한다. 정산의 지급 준비·실제 지급·이익을 구분한다. 관련440시험·격리HTTP27검사·브라우저·실제 APK 0.1.119의 보류/상세 왕복·정산 안내와 최종 여백 보정을 확인했다. 기존 별도 공백으로 중단된 공통 검사, 초기 실행 안정성과 Figma Pending은 별도 미해결로 남긴다. [화면과 검증 범위](../Changes/2026-10-24-workflow-readiness-settlement-r119.md).
+
+## 모바일 업무 노드 연결선 r118 (2026-10-24)
+
+- r117의 한 열 요약 노드에도 연결선을 표시했다. 생산·입고·보관 흐름과 주문은 출고에서 합쳐지고 배송·정산으로 이어진다. 기존 경로·업무·연락처 권한은 유지한다. [구현 기준](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-work-detail-contacts.implementation.r117.md)의 r118과 [실제 화면·검증](../Changes/2026-10-24-mobile-work-connectors-r118.md)을 따른다.
+
+## 휴대폰 업무 요약·독립 상세·등록 연락처 r117 (2026-10-24)
+
+- [r117 구현](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-work-detail-contacts.implementation.r117.md): 한 열의 요약 노드에서 같은 원장·회차의 독립 상세로 이동한다. 기존 업무에 등록된 담당·현장 연락처만 현재 전문 권한으로 조회하고, 전화 앱에는 번호만 입력한다. 관련386시험·격리HTTP21검사·브라우저·실제 별도 Android APK의 상세 이동과 더미 번호 입력창을 확인했다. 실제 통화·전문 명령·원장 변경은 없다. 초기 실행 native 종료의 원인·안정성과 기존 별도 파일 공백으로 막힌 공통 검사는 미해결이다. [실제 화면·범위](../Changes/2026-10-24-mobile-work-detail-contacts-r117.md).
+
+## 생산부터 출고까지 업무 연결도 r116 (2026-10-24)
+
+- [r116 구현](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/work-procedure-graph.implementation.r116.md): 기존 r115 통합 원장과 운영 체제 인계 정의를 읽기 전용 절차 노드로 연결했다. 단계 안내와 이번 회차의 확인된 참고 자료 관계를 구분하며 생산·개별 피킹 완료나 새 업무 명령을 만들지 않는다. 관련235시험·브라우저·390px 보조 렌더·실제 Android APK 노드 선택/상세를 확인했다. 격리 원장 판본은 변경되지 않았다. 시험 앱 초기화 뒤 최초 실행 1회 종료(status255) 원인·안정성은 미해결이고 공통 검사는 기존 별도 파일 공백 오류로 중단됐다.
+
+## 통합 협업 원장·참여 약속 구현 r115 (2026-10-24)
+
+- [r115 구현](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/integrated-cooperation-ledger.implementation.r115.md): 기존 공동운영 원장을 상위 정본으로 재사용해 회차·당사자 주문·검증한 전문 업무 계보와 공유 관계를 조회한다. 독립 시간 약속의 제안·각 당사자 수락·거절·취소 전 영향·명시 대체를 추가했다. 관련219시험·실제 격리HTTP32검사를 통과했고 별도 시험 APK의 실제 휴대폰 로그인 복귀·수락·저장·읽기 전용 취소 영향을 확인했다. 초기화 뒤 첫 실행 1회 종료의 원인·안정성은 미해결이다. 아래 r113/r114의 구현 전 설명은 당시 제안 이력이다.
+- 일반 제안과 운영 담당의 회차 필수 약속을 구분한다. 같은 상위 원장 안의 일정 경합만 확인하며 HR·외부 일정·실제 작업·배차·금전과 앱 내 변경 이력을 분리한다. 실제 시험·HTTP·APK·기기 결과는 r115 문서의 새 증거를 따른다.
+
+## 생산자·주문자 사전 참여와 약속 영향 제안 (2026-10-24)
+
+- [r114 제안](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/advance-participation-and-promise-impact.design.r114.md): 사용자가 생산자/주문자도 사전 참여·예약하고, 취소가 상대 일정/비용/기대 이익에 주는 영향과 약속 이행 성과를 알림·화면으로 확인하는 구조를 요청했다. 기존 수요 의향·공급 초안·입고 합의/반환·취소 합의·정산/성과금과 대조해 의존관계·취소 영향 조회·명시 변경·관련자 알림·기대/실현 성과의 흐름을 제안했다.
+- 사전 의향/예약과 실제 발주·생산/재고·근무·배차·지급을 분리한다. 확인 비용·약정 조건·추정 기대 손실·책임/정정은 별개이며 자동 위약금·공제·귀책/신뢰 감점은 정하지 않았다. 이번에는 문서만 보강하고 제품 코드·예약 DB·실제 알림·금전 효과·APK·운영·commit/push는 실행하지 않았다. 기존 r112 구현/93시험과 모바일 미검증 상태는 보존한다.
+
+## 통합 앱 모바일 예약·상호 수락 제안 / 변화 조회 보완 (2026-10-24)
+
+- [r113 제안](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/mobile-work-appointments.design.r113.md): 실제 통합 앱 모바일 검증을 우선한다. 현장 업무는 특정일 시간 약속·상호 수락·예약 확정과 실제 시작 준비를 분리하고 기사는 기존 실시간 배차를 유지하는 방안을 현재 코드와 대조했다. 주문자 참여/수령 약속, 단계별 필수 역할·선행 근거, 거절·변경·취소·충돌·복구를 제안했으며 새 예약/매칭 기능은 아직 구현하지 않았다.
+- [r112 첫 보완](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/shared-outcomes.implementation.r112.md): 기존 비공개 상세에 현재 고유 관심/수락 인원·조건 동의와 회차별 전문 원천 상태를 연결했다. 관련93시험 통과(신규 서버6+UI21), 테스트 프로젝트 build 오류0·경고218. 새 판본 실제 서버/통합 앱 APK·휴대폰 화면은 아직 확인하지 않았으며 앞선 화면 증거를 승계하지 않는다. HR 예약·급여·배차·운영 DB·외부 효과·commit/push는 변경/실행하지 않았다.
+
+## 협업 비전과 객관적 성과 제안 (2026-10-24)
+
+- [r111 기획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/cooperation-vision-and-shared-outcomes.design.r111.md): 사용자가 사람·업무의 집적과 협업이 생활/소득 개선으로 이어지는 과정을 지속적으로 비전·수치·시각화로 보여 달라고 요청했다. 한 공간의 역할/인계·대기/비용·실제 완료·보수/수령·다음 개선을 연결하는 제안으로 정리했다. 밀집도에 따른 소득 증가는 검증할 가설이고 확정 수입으로 약속하지 않는다.
+- 현재 홈 실적은 일부 완료 용달운송이며 확정 이익/실분배액 정본은 미연결이다. 성과금은 모의 재무 입력·예정/발생·실지급을 구분한다. 거래분쟁·정산 이의와 HR 고충의 연결은 별도 설계하며 신고/의견차이만으로 자동 귀책·감점·보수 삭감을 만들지 않는다. 이번에는 문서만 보완하고 코드·DB·앱·HR·보수/신뢰·배차·Unity·운영·외부 공개/알림·commit/push는 실행하지 않는다.
+
+## HR 등록·업무 숙지·일정 신청 제안 (2026-10-24)
+
+- [r110 기획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/hr-onboarding-work-schedule.design.r110.md): 사용자는 고정/현장 인력은 HR로 등록·관리하고 업무 절차를 익힌 뒤 날짜/시간이 정해진 작업에 신청하는 방향을 제시했다. 배송기사는 기존 배차를 유지하고 입고 처리량 및 판매에 따른 보수 조건을 신청 전에 안내하는 방안을 정리했다. 구현 전 제안이며 단가·산식·계약/지급 정책은 미정이다.
+- 현재 HR 지원의 동의는 물류 업무 이해 확인이 아니고, 입고 시간창과 개별 근무 신청은 추가 연결이 필요하다. HR PerTask DTO만으로 건당 급여 완성을 주장하지 않으며 기존 시급 외 계약 검토 관문과 Simulation 정산 관문을 유지한다. 작업별 PerUnit·주문 성과금의 제한된 근거를 재사용하되 교육/행사 혜택 기록과 근무 보수를 합치지 않는다. 이번에는 문서만 보완하고 코드·DB·앱·계약·근무 배정·급여·알림·commit/push는 실행하지 않는다.
+
+## 사람 중심 협업 매칭 제안 (2026-10-24)
+
+- [r109 기획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/people-matching.design.r109.md): 사용자가 공간/선반 잔여량의 전산화보다 사람 연결을 우선하도록 정정했다. 함께 운영할 사람과 회차별 작업 담당자의 희망 업무·가능 시간·모집·추천·개별 수락·후속 인계·공석 재모집을 중심으로 제안했다. r108은 이전 제안으로 보존하며 제품 구현은 아직 승인되지 않았다.
+- 기존 역할 참여를 특정 시간의 근무 확정이나 전문 작업 권한으로 간주하지 않는다. 먼저 한 모임의 기존 참여자로 입고검수·피킹포장·배송 담당을 연결하고 이후 신규 공개 모집과 반복 참여로 확대하는 제안이다. 이번에는 문서만 보완하며 코드·DB·앱·서버·기능 시험·실제 모집/배정·외부 발송·commit/push는 실행하지 않는다.
+
+## 동네 공간 공동운영 순환 (2026-10-24)
+
+- [변경·검증](../Changes/2026-10-24-community-space-cooperation-r104.md) · [구현 범위](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/community-space-cooperation.implementation.r104.md): 공개 모집/선택 소개, 역할별 수락·현재 조건 동의, 공간 제공자의 명시 운영 수락·양측 인계, 기존 전문 원장 연결과 한 회차 결과·다음 회차를 공용 화면에 연결했다. 원장은 기존 Mongo 보호 블록과 전문 SQL의 권위를 유지한다.
+- 관련537개 통과(새 공동운영66개 포함), Web/통합 Android 오류0, 실제 격리 Mongo28검사와 실제 HTTP/공용 화면의 제안·참여·동의·운영 수락·회차 준비·재시작 재조회를 확인했다. 전체 업무 순환은 별도 격리 SQLite 시험이며 UI 호스트 전문 실행은 OFF다. Fast는 기존 미관련 EOF에서 중단, 새 범위 diff는 통과했다. Figma 쓰기는 읽기 전용으로 차단됐다. 휴대폰 설치·운영 DB·실물·실지급·외부 발송·Unity·배포·commit/push는 미수행이다.
+
+## 화물 기사 위치 전송·지도 확인 (2026-10-24)
+
+- [동작·검증·제한](../Changes/2026-10-24-cargo-driver-tracking-r1.md) · [페이지 책임](../ProjectOverview/page-docs/cargo-driver-tracking-r1.md): 기존 GPS 전송을 명시적 운행의 계정·세션·서버·근무에 결속하고 현재 배정의 유효 위치를 화주/관리자 역할 지도에 연결했다. 지연·미수신·종료 상태, 시각·요약/상세·핀의 로컬 만료와 조회 권한을 보존한다.
+- 현재32소스 변경0, 집중192통과/실패0/생략0, 기사 Android 오류0·기존 경고29를 확인했다. 최초 EF membership 식 문제는 수정 후 같은 범위를 재시험했고 최초 실패도 보존했다. Fast/Task는 기존 미관련 EOF에서 중단, 선택 범위 diff는 통과했다. 통합앱230의 합성 자료로 실제 휴대폰 화주·관리자 위치 상태/갱신 시각과 화주 종료 비공개를 확인했다. 네이버 SDK401로 지도 타일·핀·핀 이동은 미검증이며 콘솔 로그인 후 등록 확인이 남는다. 전문 기사 앱229는 유지했고 새 송신 코드 설치·실제 GPS·장시간 백그라운드·운영 DB/배차·commit/push/배포는 실행하지 않았다. 최신 근거는 `artifacts/local/cargo-driver-tracking/20261024-r1/`에 기록한다.
+- 화주·관리자의 최신/지연/종료6화면을 실제 기기에서 확인했다. 기존 계정·USB5363·서버PID32404와 기사229를 보존하고 검증용 관리자 역할·시험 서버만 정리했다. 통합앱230은 데이터 보존 갱신 상태다. 최종 `validation-final.json`과 별도 `device/validation-device-final.json`은 상태 UI 확인·지도401·실제 GPS 미실행을 구분한다.
+
+## 기사 단건 배차 추천 (2026-10-24)
+
+- [표시·기본 정책·운영 경계](../Changes/2026-10-24-cargo-single-recommendation.md): 전문 Native 추천의 이전/다음·번호·가로 넘김을 제거하고 서버의 현재 제안 한 건만 지도/카드로 표시한다. 검토 중 같은 ID·차수는 새 조회 순서가 달라도 유지하고, 새 정본에서 종료 확인 후 다음 서버 제안을 받는다. 수락/거절·상하차 완료는 구분하며 기존 수락/표시 보호6구간은 보존했다.
+- 집중221통과/실패0/생략0, 기사 Android 오류0/기존 경고29, 독립16소스 변경0이다. 기본 조율 입력·잠금을1건으로 맞추고 실제 SQLite의 기본1/잠금해제뒤다음/명시2호환·기존추천보존을 시험했다. 이 조율 batch는 운영 연결 전이며 실제 Queue 전역의 동시1건 강제는 미구현이다. 표준 Fast/Task는 기존 EOF 공백으로 중단됐다. APK229를 SM-A346N/Android16에 데이터 보존 갱신 설치·설치본 SHA 대조하고, 합성 GET 자료에서 한 건 표시·순서 변경 시 유지·현재 건 제거 뒤 전환·빈 화면을 실제 폰에서 확인했다. 실제 수락/거절·상하차0건이며 제품 DB·운영 발급 검증은 별도다.
+- USB 원래 연결·기존 서버를 복원/보존하고 새 시험 서버만 종료했다. 최종16소스 변경0이며 통합 근거는 `artifacts/local/cargo-single-recommendation/20261024-r1/validation-final.json`, 단말 근거는 별도 `device/validation-device-final.json`이다. 단말 미확인 방식·만료·확인창은229에서 반복하지 않았고 원시 홈 건수/좌표 미확인/legacy 한계는 변경 기록에 보존한다.
+
+## 기사 화물 추천 카드 간략 배치 (2026-10-24)
+
+- [변경·실제 APK 화면·제한](../Changes/2026-10-24-cargo-compact-recommendation-cards.md): 전문 기사 추천에서 총중량/수량, 상차/하차를 좌우 비교하고 월일 일정과 전체 상세를 나눈다. 왼쪽 거절·오른쪽 독차/혼적(미확인 수락)은 기존 확인 절차이며 운송 방식 변경이나 상차 완료가 아니다. URL 거절 의도는 사유 입력만 연다.
+- 집중103통과/실패0/생략0, 최종 기사 Android 오류0/기존 경고29, 최종9파일 및 전체 APK 빌드 입력 변경0이다. 표준 Fast/Task는 기존 다른 파일 EOF에서 중단됐다. 227 실제 화면에서 발견한 글자·운임/상세 잘림과 대상 전환 스크롤 잔존을 보완하고, 228을 SM-A346N/Android16에 데이터 보존 갱신 설치·설치본 SHA 대조했다. 실제 간략/상세·혼적/독차/미확인·전환/조회 후 스크롤을 확인했다.
+- Native 본문 위 가로 swipe는 미인식이며 카드 이동은 상단 화살표를 사용한다. 읽기용 합성 HTTP이며 예시 좌표 없음·기존 WebView 하단 탐색 겹침·legacy 결정 화면의 사전 조건 재조회 한계는 남는다. 실제 수락/거절·상하차0건, 제품 DB 완주·운영·commit/push는 미실행이다. USB 원매핑·원래 서버를 복원/보존하고 새 시험 서버만 종료했다. 최종 근거는 `artifacts/local/cargo-compact-cards/20261024-r1/validation-final.json` 및 별도 `device/validation-device-final.json`이다.
+
+## 화물 조건 비교 카드 r1 (2026-10-24)
+
+- [구현·검증·APK 화면](../Changes/2026-10-24-cargo-condition-cards-r1.md) · [페이지 책임](../ProjectOverview/page-docs/cargo-condition-comparison-r1.md): 원장 조건8개를 인증된 조회에 투영하고 세 역할의 목록·현재 카드와 기사 수락 전 화면에서 같은 기준으로 표시한다. 단독은 표시만 독차, 누락은 미확인으로 유지하며 조건 변경·추천/상세 불일치 시 확인 해제·POST 차단을 추가했다. 익명 계약·기존 권한·운영 설정은 유지한다.
+- 집중111통과/실패0/생략0(신규65·기존46), Contracts·공통 UI·서버·기사 Android 오류0과 최종 의존 DLL 정합을 확인했다. 표준 Fast·Task는 기존 `CargoDriverWorkSession.cs:245` EOF에서 중단됐고 선택 범위 diff는 통과했다. 실제 Razor의 로컬 합성 브라우저 세 역할·카드 링크/명시 수락과 390/320px 프레임(실제 내용380/310px)의 가로 넘침·조건 값 잘림0을 확인했다. 제품 HTTP·DB 완주·실금융·운영·commit/push/배포는 미실행이며 로컬 최종 근거는 `artifacts/local/cargo-conditions-r1/20261024-r1/validation-final.json`이다.
+- 후속226 APK 두 종을 SM-A346N/Android16에 데이터 보존 갱신 설치하고 설치본 SHA를 대조했다. 읽기용 합성 HTTP로 실제 화주·운영자 조건 및 기사 목록/Native 혼적·미확인을 확인했다. 기존 하단 메뉴/시스템 막대 겹침과 Native 카드 넘김 정렬·헤더 불일치가 남아 있어 정상 완료로 합치지 않는다. 사용자 대표 검토는 APK 단말 캡처로 제공하며, 후속 기록은 `artifacts/local/cargo-conditions-device/20261024-r1/validation-device-final.json`이다.
+
+## 화물 앱 재실행 복구·공개 탐색 r1 (2026-10-24)
+
+- [구현·시험·휴대폰 확인](../Changes/2026-10-24-cargo-restart-guest-r1.md): `CompletedSyntheticDeviceValidation / OperationalDisabled`. 화주 작성 입력·접수/인수증 미확정 보호와 전문 기사 신고를 계정·서버별로 복원하며, 공개 화물 목록은 로그인 없이 조회하고 의뢰·배차 추천 시 기존 인증으로 인계한다. 로그인 성공은 업무 명령을 자동 실행하지 않는다.
+- 집중253·전체15,510통과/실패0/환경16생략, 선택39소스 해시 변경0, 실제 브라우저의 페이지 다시 로드 후11항목을 확인했다. APK225 두 앱 데이터 보존 갱신 설치·설치 SHA일치, SM-A346N/Android16에서 공개목록·로그인 복귀·화주 초안과 기사 미확정 신고의 강제 종료 후 복원을 확인했다(신고 POST1회 유지). 합성 HTTP fixture이며 제품 DB 완주·인수증/카메라 실기기·운영/실금융·외부 푸시·commit/push는 미실행이다. 기존 기사 하단 메뉴와 시스템 막대 겹침은 남아 있다. 최종 근거는 `artifacts/local/cargo-restart-guest/20261024-r1/validation-final.json`이다.
+
+## 화물 앱 마무리 보완 r1 (2026-10-24)
+
+- [범위·실제 화면·남은 작업](../Changes/2026-10-24-cargo-app-closeout-r1.md): `CompletedLocalCloseoutWave1 / RemainingCloseoutWorkPending`. Web 화주 증빙에 기존 인수증 등록·동일 의뢰 결과 확인을 연결하고, 공통 상하차의 정형 미적용 거절 뒤 복구 및 전문 기사 신고의 계정/운송/화면 수명·중복 전송 보호를 보완했다. 기존 권한·사진·운송 보류·운영 비활성은 유지한다.
+- 집중420·전체15,438통과/실패0/환경16생략, 신규85사례, 화주 Web·기사/통합 Android 오류0을 확인했다. 실제 재사용 컴포넌트의 루프백 브라우저에서 인수증 확인과 미확정 잠금·신고1회/운영자 안내 및 1280px 가로 넘침0을 확인했다. 표준 Fast/Task는 미관련 기존 EOF로 중단됐고 범위 diff·직접 시험/소비 빌드와 분리했다. 최종 선택 소스19개 해시 변경0이며 근거는 `artifacts/local/cargo-app-closeout/20261024-r1/validation-final.json`이다.
+- 이 판본 검증 당시 Web 보호는 같은 브라우저 앱 scope, 전문 신고 보호는 현재 VM 수명이었다. 재실행 영속 보호는 위의 후속 판본에서 보완했고 요청별 신고 영수증, Native 일반 FakePG의 상태 덮기/응답 유실, 관리자 개별 상세/지급 준비·CLI guard 정합은 후속이다. 이 판본의 제품 HTTP/실DB 완주·단말 설치/카메라·실금융/외부알림·운영/배포·commit/push는 실행하지 않았다.
+
+## 업무 단계 완료 안내 r1 (2026-10-23)
+
+- [구현 범위·검증·실제 공통 화면](../Changes/2026-10-23-workflow-completion-feedback-r1.md): `CompletedLocalImplementationAndBuilds / PhysicalWorkflowPending`. 음식·마트 픽업/전달, 화물 상하차, 창고 입고 수령/적재/피킹/포장/인계 준비, 연습 환경의 기사 직접 피킹·전달에서 확인된 서버 결과와 재조회 뒤 완료 안내를 연결했다. 확인은 안내만 닫으며 수령 확인·정산·실제 지급이나 다음 단계 명령을 실행하지 않는다.
+- 현재 화면에만 적용하는 단계별 창/짧은 안내/최종 전달만 표시와 최근 결과 최대 10개·중복 표시 방지를 제공한다. 추천·휴대폰 알림 설정과 분리하며, 새 미확정 보호 일부는 모델 수명 내 상태로 재실행 영속 보호와 구분한다. 계정·대상 전환과 이전 결과의 잘못된 완료 표시는 차단한다.
+- 최종 전체15,353통과/실패0/환경16생략, 범위 한정 diff·최종 소비 빌드·실제 공통 컴포넌트 브라우저9항목/대표PNG2장을 확인했다. 최초 선택기·분산 시험 호스트의15개 실패는 보완 후 재시험했다. 표준 Fast/Task는 미관련 기존 EOF 형식 오류로 중단돼 직접 검증과 구분한다. 0.1.213 APK3종의 서명·ABI별 내장 assembly·handoff SHA256 및 빌드 전후 선택 소스 변경0을 확인했다. 새 완료창의 실제 단말 검증은 Chrome 초기 설정/삼성 인터넷 실행 자동 승인 거절로 미완료이며 자체 USB 경로는 복구했다. APK는 아직 설치하지 않았고 운영·실금융·외부 FCM·commit/push 없음. 최종 근거는 `artifacts/local/workflow-completion-feedback/20261023-r1/validation-final.json`이다.
+
+## 음식·화물 추천 알림 구분 r1 (2026-10-23)
+
+- [변경·화면·검증 범위](../Changes/2026-10-23-driver-recommendation-alerts-r1.md): 종류별 허용은 기본 끔이며 음식은 식기, 화물/퀵은 트럭과 각각의 업무명으로 표시한다. 설정 저장 후 본인 정본 재조회·계정 판본/수신/만료·기존 OS 차단과 무음을 유지했다.
+- 두 서버 발송 경로는 종류별 허용을 대조한 data-only 힌트이며 화물 Android 로컬 게시를 연결했다. 기존 배차 수신·자격·수락·현재 수행과 알림 설정을 분리했다. 운영 플래그·공개 배포·외부 FCM·commit/push는 별도이며 시험/빌드 수치는 변경 기록의 검증 파일을 따른다.
+- 최종 집중519·전체15,296통과/실패0/환경16생략, 세 앱 Android 오류0·공통 화면1280px/390px를 확인했다. 표준 Fast/Task는 미관련 기존 EOF 형식 오류로 중단됐고 직접 시험/소비 빌드로 구별했다. 음식 앱 저장 결과 미확인 동안의 허용 캐시·늦은 일반 조회 복원과 native 잠금 뒤 취소/계정 변경도 차단했다.
+- 후속 Galaxy A34/Android16 실제 기기에서 음식212·화물211 설치본 SHA를 대조하고, 실제 게시기의 합성 알림 오른쪽 파란 식기/빨간 트럭과 종류·전체 끔 차단을 확인했다. OneUI 본문용 큰 아이콘과 음식 설정의 명시적 Geometry 변환을 보완했다. 음식만/화물만 설정은 앱에서 저장→격리 합성 서버의 실제 Controller/UseCase GET200으로 재확인했다. 시험 설정 모두 끔·시험 계정 로그아웃·원래 USB 연결 복구를 기록했으며 외부 FCM·알림 클릭·잠금 화면·소리/진동 검증과 구별한다. 상세는 `artifacts/local/driver-recommendation-alerts/20261023-device-r1/validation-device-final.json`이다.
+
+## 기사 현재 업무·피킹 보수·약정 담당 확인 r1 (2026-10-23)
+
+- [구현·대표 화면·검증 제한](../Changes/2026-10-23-integrated-driver-work-r1.md): 같은 계정의 음식·퀵/화물·직접 피킹 현재 업무를 GET으로 모아 기존 전문 수행으로 연결했다. 수락 전 작업·제안 운임/피킹 보수 확인과 포장 동의를 구별하고, 정산의 본인 조회 범위 담당/동의·지급 관계를 표시한다. 종류별 그림·기존 색·홈 진입·Web/통합 MAUI 배선을 보완했다.
+- 최종 집중216·전체15,165통과/실패0/환경16생략. 통합 Web 소비 컴파일·Android 재빌드(오류0/기존경고14)와 실제 공통 컴포넌트1280px/390px·10PNG를 확인했다. 독립 검토에서 발견한 예약 상세 숨김 시 주문별 반납 책임과 허용 행동 안내를 보완하고 다시 전체 시험했다.
+- 표준 Fast/Task는 기존 다른 파일 EOF 형식 오류로 diff 관문에서 중단돼 직접 시험/소비 빌드로 구분했다. 새 서버/API·원장/수락 정책·요금·후원결제·운영 설정·개인 고객정보 복제·APK 설치/실기기·실계약/수금/지급·공개 배포·commit/push는 변경/실행하지 않았다. 화면 예시와 실제 제품 HTTP·업무 완주를 구분한다.
+
+## 생산 참여 홈 제목 r1 (2026-10-23)
+
+- [변경·대표 화면·검증 제한](../Changes/2026-10-23-home-production-title-r1.md): 공통 홈 제목을 `생산에 참여해 보세요.`로 바꾸고 상단 브랜드 표시를 제거했다. 성과 요약·9개 역할 진입·하단 거래 안내를 유지했다. 실제 공통 UI 소비 빌드와 1280px/390px 브라우저를 확인했다.
+- 변경 파일 diff 검사는 통과했다. 전체 Fast는 기존 다른 파일 `CargoDriverWorkSession.cs`의 EOF 빈 줄로 중단했고, 삭제된 assets를 복원한 좁은 소비 호스트 빌드는 통과했다. 새 시험/전체 시험·APK/단말·실금융·배포·commit/push는 이번 범위가 아니다.
+
+## 정상 자료·예외·단독 운영 대응 리팩토링 r21 (2026-10-22)
+
+- [구현·실행·대표 화면](../Changes/2026-10-22-cargo-operating-verification-refactor-r21.md): `CompletedLocalValidationWithFindings / OperationalDisabled`. 시험자료/실행/정본/증거, 운영 알림 조회/대응, 수납/지급 표시·조회 책임을 분리했다. 확인한 알림도 미해결 목록에 남고 확인 응답 유실은 공통 복구창→GET으로 복구한다.
+- Python33·Fast115·Task15,069통과/환경16생략, 최종 소비 빌드·781px 브라우저11항목/PNG8장을 확인했다. 새5369·전용DB의 HTTP4사례는 완료3·경로미지원1이며 원실패를 보존하고 별도 팔레트판본으로 정상 검증했다. 모델 NetworkFailure는 규칙 대체로 기록했고 ready503 운영migration·실PG/계좌/송금·휴대폰/실카메라·외부발송/자동worker·CLI guards 호환은 후속이다. 기존 서버/DB·dirty1,016파일의 미관련 내용과 index를 보존, 새 commit/push 없음.
+
 ## 맥락별 커밋 정리 (2026-10-22)
 
 - [커밋 목록과 보존 범위](../Changes/2026-10-22-context-commits.md): 앱·서버·화면·검증 기록을 맥락별로 저장했다. 이번 요청은 커밋만이며 푸시·배포는 하지 않았다. 이전의 별도 변경과 검증 실행 증거는 보존한다.
@@ -99,8 +343,236 @@
 - 기존 로컬 API8건 기대 응답, 집중69·Fast366·전체14,172개 통과/환경16개 미실행과 소비 빌드, APK202두앱 기존서명/데이터보존 설치·설치SHA·제작입력3,335개를 확인했다. 실제 폰의 없는 대상/닫기/32초중복방지/다시열기/복귀·통신차단/GET재시도/자동복구9PNG를 보존했다. 같은 완료운송9·차수1·6,200원·AI Applied는 유지됐다.
 - 남은 순서: 입고 POST성공/조회실패 구분 → Seller/HR모바일 endpoint → native음식 및 음식점/주문자/관리자 등의 개별 오류 → 기존 화주 홈 요약 경고. 조사·공통소비·개별적용을 구분한다. 외부 서버/FCM·실금융·운영활성화·신규 업무명령·commit/push는 하지 않았으며 USB시험연결/기존서버를 유지했다.
 
+## 화물 업무 흐름·예외 안내 검증 r1 (2026-10-21)
 
+- [검증·화면·보완 순서](../Changes/2026-10-21-cargo-ui-exception-audit-r1.md): `VerifiedWithFindings / ProductUnchanged`. APK201 실제 폰에서 통신 실패 안내·자동 복구 후 오류 잔존·수동 복구·없는 화주/기사 의뢰를 확인했다. 대표 PNG5장과 관측 원문을 분리했다.
+- 정상 빌드·기존 13클래스184개 통과/실패·생략0. 제작 입력3,330개 SHA 일치, 같은 운송9의 인수완료·차수1·6,200원·AI Applied 유지. 신규 업무/신고/결제 요청은 없고 USB 시험 연결은 복구했다.
+- 후속: 오류 정리/짧은 오류 안내 → 기사 운송보류·상차 미확정 안내 → 신고 결과 미확정/늦은 응답·기존 수락 연타 보호 → Web 의뢰/계정 전환·테스트 결제창 오류. 소스 결손과 실제 기기 재현을 구분하며 제품 수정·APK 제작/설치·외부 푸시/소리·운영·금융·commit/push는 실행하지 않았다.
 
+## 화물 기사·화주 핵심 문구 정리 r1 (2026-10-21)
+
+- [변경·전후 화면·검증](../Changes/2026-10-21-cargo-concise-ui-r1.md) · [계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-concise-ui.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-concise-ui.r1.work-order.json): `Completed / PhysicalDeviceReadbackVerified`. 현재 운송·상하차·화주 의뢰 상세/진행/증빙/결제에서 반복 설명·개발 용어·내부 번호·정상 조회 배너를 줄였다. 핵심 상태/값/행동·오류·미확정·사진·동의·테스트 결제 경계는 유지했다.
+- 소비 솔루션 오류0, Fast355개 통과. Task의 기존 알림 시간 제한1건 실패를 보존하고 단독 재시험1개·같은 빌드의 전체 재시험14,139개 통과/환경16개 미실행을 확인했다. 시간 제한·제품 조건은 바꾸지 않았다.
+- 두 APK0.1.201/201을 기존 서명·데이터 유지로 업데이트하고 설치 바이트 SHA와 제작 원본을 대조했다. 실제 폰에서 기존 운송9를 조회해 전후8PNG와 의뢰번호 기본접힘/펼침을 확인했다. 같은 인수완료·차수1·동결6,200원·AI Applied 유지, 신규 업무/결제/완료 요청은 없다.
+- 이번 기기 증거는 완료 건의 읽기 화면이며 상하차 미완료 문구는 소스·빌드·회귀 범위다. 운영/현장·새촬영·FCM·금융·가중치학습·commit/push는 실행하지 않았다. 같은5364 수동서버를 재기동했고 기존 migration health 경고·5595검토서버/Ollama·선행 원문은 보존했다.
+
+## 화물 AI 추천·휴대폰 수락·상하차 촬영 검증 r1 (2026-10-21)
+
+- [결과·업무 트리·단계별 PNG](../Changes/2026-10-21-cargo-ai-phone-verification-r1.md) · [계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-phone-verification.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-phone-verification.r1.work-order.json): `CompletedSyntheticDeviceValidation / LocalOnly`. 기존 설치판200/190과 USB 단말에서 실제 제품 AI Applied → 추천 배너·6,200원 카드 → 본인 수락 → 상차/하차 사진·완료 → 화주 인수완료 재조회를 검증했다.
+- 같은 phone-02 운송9의 SQL 인수완료·Mongo 완료/인수완료, 추천차수1·동결보수6,200원, 서로 다른 카메라 사진2개의 업무 결속·실제 저장 바이트/SHA를 대조했다. 서버 proof의 단말 미인증 값은 보존하고 실제 PNG를 별도 연결했다. 단말은 실제, 업무/위치/경로는 합성이다.
+- 시험 호스트에 제품 AI 명시 프로필·현재 감사 재조회·추천 저장 판정을 연결했다. 기존 DB nullable10열만 추가하고 합성 차량 제원1행을 보완했다. 첫 후보없음 사례와 기존 원장은 보존했다. 최신 primary23·legacy31개 검사와 경고/오류0 빌드를 확인했다. 제품 전체 시험은 이번에 다시 실행하지 않았다.
+- 기사 지도→현재운송 동선의 첫 전환 미확인, 화주 개발 문구·증빙 원장별 안내, 기존 DB migration health는 후속이다. 실제 이동/GPS·외부FCM/소리·실수금/지급·가중치학습·클라우드·새APK설치·commit/push는 하지 않았다. 기존5595검토서버/Ollama는 유지하며 이번5364수동호스트에 자동수락·완료배우는 없다.
+
+## 화물 추천 약속 검사·AI 선택·안전 복귀 구현 r1 (2026-10-21)
+
+- [구현과 검증](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.implementation.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.r1.work-order.json). 사용자 승인에 따라 대기 기사도 실제 전체 일정과 픽업·전달 약속을 검사하고, 서버가 허용한 화물 후보 안에서 Ollama가 선택하도록 연결했다. 모델 응답 뒤 현재 후보·의뢰를 다시 확인하며 지연·무효·혼잡은 현재 규칙으로 복귀한다.
+- 운영 기본 OFF와 기사 본인의 수락을 유지한다. 기존 추천의 지도/목록을 재사용하며 공개 콜·음식/피킹 혼합·다건 진입을 새로 켜지 않는다. 다건 저장 재시도는 연결 전 안전 조건으로 별도 검증한다. 실제 실행·시험 수치와 남은 제한은 연결 문서의 최신 완료 기록을 따른다.
+- 최종 전체 Task 14,139개·도구 자체 검사 72개 통과, 환경 의존 16개 미실행이다. 새 단건 프로필 2건에서 실제 정본 감사의 `Timeout` 복귀와 `Applied` 추천 저장을 각각 확인하고 모두 사진 픽업·전달 완료까지 마쳤다. 다건 commit 응답 유실과 기존 추적 행의 결합 회귀 11개도 통과했다. 실제 운영·기기·외부 푸시·가중치 학습·commit/push는 이번 범위가 아니다.
+
+## 화물 우선 추천 기본·목록 조회 구조 검토 r1 (2026-10-21)
+
+- [코드 검토·다음 순서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-recommendation-default.review.r1.md): `DirectionAccepted / SourceAudited / PrioritiesSet / ProductUnchanged`. 사용자 방향은 AI 추천 기본·목록 보조·화물 우선이다. 같은 추천의 지도/목록 보기는 이미 있고 자율 공개 콜은 별도 동의/수락 경계다.
+- 화물 실제 선택은 규칙이며 Ollama는 비교다. 대기 기사/수행 기사 픽업 시간 검사 차이, 훈련 응답 model/done 검증 누락, 다건 transaction의 잠재 재시도 충돌을 정적으로 확인했다. 공개 콜에는 보수/차량 판정·상세 접근·추천 판본의 추가 연결 결손이 있다. 현재 가동 경로의 재현 장애나 실제 부정 배차로 과장하지 않는다.
+- 순서: 추천 전 약속·비교 자료 검증 → 화물 한 건 모델 선택/현재 규칙 복귀 → 기본 추천/보조 목록 사용 검증 → 여러 화물 조합. 음식·피킹 통합은 후속이다. 제품·설정·코드·실행 중 합성 캠페인/기존 검토는 변경하지 않았으며 이번 새 build/test·기기·렌더·모델 호출·commit/push는 없다.
+
+## 배달 중 로컬 가상 운영 누적·대표 검토 r1 (2026-10-21)
+
+- [캠페인 구현·검증](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operating-campaign.r1.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-operating-campaign.r1.work-order.json): `CompletedLocalValidation / SyntheticLocalOnly`. 기존 30분·15슬롯 시험기에 유한 관측·60초 corpus 접수·불명 명령 재전송 방지·본 회차의 신규 발생 종료를 연결했다. 별도 주문/배송 엔진은 만들지 않았다.
+- 최대 5개 대표 검토표가 미확인·업무 문제·모델 비교·정상 결과와 후보 거리/대기 가점/총점·원문을 연결한다. 목록 번호와 당시 근거를 불변 packet에 고정하며 반복 관측 수를 독립 학습량으로 표시하지 않는다. 캠페인 31·corpus/선별 53·호스트 자체 검사 28개 및 경고/오류 0 도구 빌드가 통과했다.
+- 전용 합성 DB의 11개 nullable 컬럼 누락, MySQL 재시도/transaction 충돌과 시험 입력/경로·차량 경고 확인을 보완했다. 제품 점수·수락 보호 조건은 유지했다. Fast 74·Task 13,993개 통과·16개 미실행, 소비 솔루션 빌드가 확인됐다. 기존 원문·실패/미확정 회차·5595 검토 자료는 보존했다.
+- 새로 검증한 합성 회차 두 개에서 각각 동일 주문의 수락·공개 동의·픽업 사진/완료·전달 사진/완료와 서버 정본 완료 1·미완료 0을 확인했다. 그중 두 번째는 첫 추천 수락부터 완료까지 거부 없이 진행했다. 이후 새 2,200초 캠페인을 실행 중이며 현재 상태는 `artifacts/local/dispatch-operating-campaign/20261021-r1/current-campaign.json`, 확인 시점·수량은 `runtime-verification.json`을 따른다. 전체 15건 회차 완료를 미리 주장하지 않는다.
+- 검토 시작점은 `artifacts/local/dispatch-experiences/current-representatives.md`다. 실제 화물 선택은 규칙이며 Ollama는 비교 전용이고 현재 비교 시간 초과가 기록된다. 사람 승인·가중치 학습·실제 운영·외부 푸시·휴대폰·정산/입금·클라우드·commit/push는 실행하지 않았다.
+
+## 로컬 AI 시험실 실행·브라우저 검증 r1 (2026-10-21)
+
+- [직접 시작·반복 시험 안내](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/local-ai-lab.guide.r1.md): `Running / BrowserModelRoundTripVerified / HumanReviewPending`. 사용자가 직접 시작한 5595 검토 서버와 12681 Ollama를 확인했다. 별도 자료 33개 중 학습 전 검토 사례 한 건을 브라우저 버튼으로 실제 비교했다.
+- C1/C2 ETA 5분·대기 35/5분 사례에서 모델은 13,960ms 후 C1과 입력에 없는 PLAN_VERIFIED를 제시해 거부됐다. 기존 규칙 C1은 보존됐으며, 원응답/오류/시간 표시와 새로고침 후 지속을 확인했다. 모델 사건 1개·사람 검토 0개, dataset SHA 일치다. 현재 실행·화면 증거는 `artifacts/local/local-cargo-ai-lab/current-runtime.json`과 `runtime/20261021-r1/`이다.
+- 초기 자동 시작 거절은 과거 사실로 보존하고 정책을 우회하지 않았다. 현재는 사용자가 시작한 두 서버와 검토 탭을 그대로 유지한다. 제품 코드/설정·운영 DB·이전 경험/검토·모델 가중치·실제 배차·commit/push는 변경하지 않았다. 다음은 사례별 사용자 답안 검토다.
+
+## 서버 AI 배차·학습 연결 검증 r1 (2026-10-21)
+
+- [소스·실행 검토와 다음 순서](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/server-ai-learning-readiness.review.r1.md): `Reviewed / GapsIdentified / WeightTrainingNotStarted`. 음식 후보의 AI 선택·규칙 복귀는 연결돼 있지만 화물·퀵 실제 선택은 규칙이고 훈련 Ollama는 비교다. 서버 배포·새 경험→학습 답안 연결은 미완결이다.
+- 기존 corpus 366관측 중 예산 생략 349·단일 후보 5·시간 초과 12, 유효 AI 성공 0·사람 검토 0을 확인했다. 11경험을 학습 가능한 11답안으로 표시하지 않는다. 새 완전 입력·대표 사례·기존 검토 adapter가 우선이다.
+- 기존 모델을 잠시 실행해 합성 3건을 비교했다. 11~15초, 세 건 모두 사실에 없는 PLAN_VERIFIED 주장으로 거부; 모델 중지 시에도 규칙 결과와 timeout을 분리했다. 음식 관련 시험 174·화물 검토 자체 검사 34개 통과. 모델 컨테이너는 원래 중지 상태로 복구했으며 기존 corpus·제품 코드/설정·운영 DB·학습/배포·commit/push는 변경하지 않았다.
+
+## 배차 운영 경험 누적 r1 (2026-10-21)
+
+- [누적 구조·결과](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.md) · [승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/operating-experience-accumulation.r1.work-order.json): `CompletedLocalValidation / SyntheticLocalOnly`. 기존 가상 운영 3회차를 11건의 접수 시도 경험(접수 확인·완료 관측 9건, 미확정 2건)으로 접수했다. 예약 13·생략 21슬롯은 별도로 집계한다. 기존 API·운영 DB·훈련 session·사람 검토/approved 자료는 변경하지 않았다.
+- 예약·생략 슬롯과 실제 접수 시도 경험을 구분하고, 같은 원문 재접수·재시작은 중복 추가하지 않는다. 명시적 검토는 판본/revision에 결속하며 새 관측으로 과거 승인을 자동 전파하지 않는다. 원문에 없는 조건·단계 시각·사진/정산·모델 해시는 미확인이다.
+- 명시적 도구 빌드, 새 자체 검사 27개·CLI 12개·기존 훈련 14개와 원본/기존 검토 파일 해시 보존을 확인했다. scoped Fast/Task는 eng guidance 분류로 시험을 생략하여 위 별도 실행 검증과 구분했다. 실제 배차·가중치 학습·자동 수집·자동 승인·새 UI·기기·commit/push는 하지 않았다. 다음은 미확인·예외 사례의 사용자 문답 검토다.
+
+## 운영 앱·서버 후속 리팩토링 r3 — 1·2번 완료 (2026-10-21)
+
+- [구현·검증](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation.r3.md) · [범위 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation-work-order.r3.json): `CompletedLocalValidation`. 사용자 “계속진행”에 따라 첨부파일 선택/순차 업로드와 푸시 설치 HTTP 전송을 분리했다. 나머지 12개 조사 후보는 후속 제안이다.
+- 최종 Fast 111개·Task 13,989개 통과/실패 0개, Task 16개 미실행과 소비 솔루션 빌드를 확인했다. 기존 화면·문구·계정/토큰·취소/저장·요청/응답 해제 순서를 유지했다.
+- 실제 화면/기기·외부 푸시·운영 연결·금전·APK 설치·stage/commit/push는 실행하지 않았다. 기존 경고와 별도 운영 준비를 로컬 시험 성공으로 덮지 않는다. 다음 제안은 마트 기사 보류 명령·결과 확인 수명 분리다.
+
+## 운영 앱·서버 후속 구조 조사 r3 (2026-10-21, 제안만)
+
+- 이번 요청은 기능 변경 없는 단일 책임 재조사와 다음 순서 제안이다. [조사 보고서](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-survey.r3.md) · [14개 후보 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-work-order.r3.json): `ProposedOnly / ImplementationNotAuthorized`.
+- 소스 8,723개·85개 프로젝트를 구조 색인하고 후보 본문/회귀를 대조했다. 이전 43개 첫 경계와 중복을 제외했으며 r2 완료 소스 대비 추가/삭제/변경은 0개다. 모든 메서드나 런타임 전수 검증은 아니다.
+- 권고 순서: 공통 첨부 업로드 → 푸시 설치 HTTP → 마트 기사 보류/조회 → 주간 명세 계산 → 입고 완료 구성. 기존 계정·저장·시계/취소·후속 순서를 보존하고 이후 9개는 검증 공백/기기 위험에 따라 진행한다.
+- 이번에는 문서와 로컬 조사 산출물만 작성했다. 제품·설정·시험 코드, build/test·DB/API/모델·APK/기기·stage/commit/push는 실행하지 않았다. 이전 시험 결과는 재실행 결과와 구분한다.
+
+## 운영 코드 후속 리팩토링 r2 (2026-10-20, 21개 첫 책임 경계·로컬 검증 완료)
+
+- 사용자가 후속 순서대로 리팩토링을 계속하도록 요청했다. [구현 현황](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation.r2.md) · [항목별 작업 명세](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation-work-order.r2.json)가 현재 상태를 소유한다. 직전 조사 판본과 완료된 22개 기록은 보존한다.
+- 선정 21개 항목의 첫 책임 경계를 정리했고 최종 Task 13967개 통과·실패 0개·건너뜀 16개와 소비 빌드/명시 Android 컴파일을 확인했다. 화면·업무 정책·저장/예외 순서·공개 계약·기능 기본값은 유지했다. 실기기/운영·commit/push는 이번에 실행하지 않았다.
+
+## 운영 코드 리팩토링 재조사 r2 (2026-10-20, 조사·제안만)
+
+- 기존 22개 완료 뒤 현재 소스 8,672개·프로젝트 85개를 다시 구조 집계하고 운영 서버·역할 UI·공통/검증 도구의 직접 후보를 검토했다. [조사 정본](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-survey.r2.md) · [21개 후속 후보와 순서](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/follow-up-work-order.r2.json): `ProposedOnly`. 전수 구조 집계와 모든 소스의 의미/런타임 전수 검증은 구분한다.
+- 권고 순서는 입고 검수 계산 → 7개 역할 토큰 저장 → 배차 자료/점수/삽입 계산 → 화면 조회·명령 수명 → 공통 복구/명세/출력 → SDK·검토·정보·도구다. 기존 정책·저장/예외 순서·화면을 보존하며, 기존 원복/Mongo replay/늦은 응답 보호의 동작 개선은 분리한다.
+- 제품 코드는 수정하지 않았다. 조사 원자료는 `artifacts/local/refactoring-survey/20261020-r2/`에 있으며 소스 해시·근거 경로/줄·JSON·문서 링크/diff를 정적으로 확인한다. build/test·DB/API·모델·APK/기기·stage/commit/push는 실행하지 않는다. 이전 통합 시험 성공을 이번 조사에서 재실행한 결과로 보고하지 않는다.
+
+## 운영 앱과 서버 단일 책임 리팩토링 (2026-10-20, 리팩토링·로컬 통합 검증 완료)
+
+- 사용자가 조사 후보 22개를 순서대로 모두 구현하도록 승인했다. [계획과 단계별 결과](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/README.md) · [범위·보존 조건](Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/work-order.json). 기존 dirty 변경을 보존하고 단계별 검증 후 다음 영역으로 진행한다.
+- 1단계 화주 접수/복구는 전체 소비 솔루션 빌드·167/167 시험, 2단계 AI 후보 준비/평가/순위와 모델 응답 처리는 서버/소비 빌드·308/308 시험을 통과했다(`artifacts/local/validation/20261020-164011/`, `20261020-165431/`). 3단계 추천 요금 준비·발송/비용·원천 메타데이터/실행 인덱스도 서버/소비 빌드·202/202 시험을 통과했다(`artifacts/local/validation/20261020-170700/`). 4단계 역할 앱은 코드 지도·전체 소비 솔루션 빌드와 1,332/1,332 시험을 통과했다(`artifacts/local/validation/20261020-171921/`). 5단계 주문 조회/관계·Outbox·창고 재위탁/분산명령도 서버/소비 빌드·코드 지도·578/578 시험을 통과했다(`artifacts/local/validation/20261020-173203/`). 6단계 공통 지급 준비·운영자 조회/모의 지급/요금 편집은 서버·관리자 소비 빌드와 302/302 시험을 통과했다(`artifacts/local/validation/20261020-174430/`). 7단계 커뮤니티 지도/작성·전문 상태 표현은 공통 UI/웹 소비 빌드와 380/380 시험을 통과했다(`artifacts/local/validation/20261020-175716/`). 8단계 DI 조립·유지관리 CLI·두 호스트 주소 조회 공유도 서버/FoodApi 소비 빌드와 128/128 시험을 통과했다(`artifacts/local/validation/20261020-180734/`). 22개 항목과 최종 Task 통합 검증을 마쳤다. 전체 소비 솔루션 오류0·경고145, 전체 시험 13,585개 통과·실패0·Mongo/MySQL 실환경 16개 건너뜀, 별도 FoodApi 경고/오류0, 코드 지도와 검증 전후 해시 확인을 통과했다(`artifacts/local/validation/20261020-181018/`). 최종 상세 결과와 기존 동작 개선 후보는 계획 문서가 소유한다. 기준선·상세 진행은 `artifacts/local/refactoring-implementation/20261020-r1/`에 기록한다. 구현·시험·UI/기기·운영 증거를 분리하고 아직 검증하지 않은 후속 단계는 완료로 표시하지 않는다.
+- 공개 계약·요청 ID/원문/revision·DB 스키마·배차/요금 정책·기능/worker OFF와 실제 운영·모델 학습·영상/Unity 경계를 유지한다. commit/push는 요청받지 않았다.
+
+## 화물 배차 사례 검토 책임 분리 (2026-10-20, 로컬 검증 완료·사람 승인 대기)
+
+- 사용자 요청에 따라 [CargoTrainingStore](../../eng/CargoRegionalTrainingReview/CargoTrainingStore.cs)를 345줄에서 174줄로 줄였다. 사례 기준선·출처 판본은 [DatasetEvidence](../../eng/CargoRegionalTrainingReview/CargoTrainingDatasetEvidence.cs), 파일 잠금·이력 입출력은 [EventLog](../../eng/CargoRegionalTrainingReview/CargoTrainingEventLog.cs), 모델 비교 실행·결과 근거 검증은 [ModelComparison](../../eng/CargoRegionalTrainingReview/CargoTrainingModelComparison.cs)이 담당한다. Store는 기존 조회·사람 검토·승인 내보내기 절차를 조율한다. public API·JSON·오류 코드·잠금 범위·배차 조건·화면은 유지했다.
+- 검토 도구 직접 빌드와 격리 self-check **34/34 통과**, 기존 **33사례 전체 snapshot 동일**을 확인했다. 새 소스 3개의 변조를 기본/계획 모드에서 각각 차단하는 검사를 추가했다. 명시 경로 Fast·Task는 해당 eng 도구를 안내 경로로 분류하여 diff 검사만 수행하므로, 직접 빌드·self-check·전후 대조를 별도 실행했다. 최종 증거는 `artifacts/local/cargo-training-srp/20261020-r1/`의 `build-final.log`, `self-check.json`, `case-compatibility.json`이다.
+- 소스·실행 DLL 해시가 바뀌어 새 정책/자료 판본을 생성했으며 사례 입력·계획 해시와 판정은 보존했다. 기존 `dispatch-human-review/20261020-r1/batch-01-pending.json`은 변경하지 않았고 이전 승인을 새 판본으로 승계하지 않는다. 자동 시험의 모의 승인과 실제 사람 승인은 구분하며 **실제 사람 승인 0·모델 네트워크 호출 0·추가 학습 false·운영 적용 false**다. UI/휴대폰·APK·실제 Ollama 추론·운영 DB·commit/push는 이번 검증 범위가 아니다.
+
+## 화물 입력 완결·이동 중 추천 갱신 r77 (2026-10-19, 로컬 검증 완료·운영 미활성)
+
+- 직전 제안 1·2번의 사용자 승인을 받아 생활배송 포장 입력·화주 상하차시간·관리자 실차 확인과 추천 조회·수락 전후의 본인 추천 재검증을 연결했다. [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-input-refresh.implementation.r77.md) · [소유 경로](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-input-refresh.r77.work-order.json) · [변경·검증·화면](../Changes/2026-10-19-cargo-input-refresh-r77.md).
+- 최종 소비 솔루션 빌드·전체 시험 13,165개 통과/실패 0개·환경 의존 16개 생략, 실제 Razor 18상태·대표 PNG 10장 및 해시를 보존했다. nullable 선택 표시·음수 경고와 전체 시험에서 발견한 EF 조회식 오류를 고쳤다. 구형 추천을 새 검증으로 승격하지 않으며 상시 GPS 재추천은 별도다.
+- 운영 DB·feature/worker·기기·클라우드·모델 학습·commit/push는 별도다. r76 모델 시간 초과를 이번 변경으로 해결한 것은 아니다.
+
+## 화물 배차 우선순위 2~6 연결 r76 (2026-10-19, 로컬 검증 완료·실제 모델 판단 보류)
+
+- 사용자가 r75 다음 우선순위들을 계속 진행하도록 승인했다. [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-dispatch-evidence.implementation.r76.md) · [작업 명세](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-dispatch-evidence.r76.work-order.json) · [구현/검증 기록](../Changes/2026-10-19-cargo-dispatch-evidence-r76.md).
+- 기존 기사별 실차 근거, 같은 시각의 상태 지문, 전체 수행 계획 검증과 가능한 계획의 AI/사람 검토, 추천 저장/수락 최신 재확인을 연결한다. 실제 DB 적용·운영 활성화·가중치 학습·기기 설치·commit/push는 별도이며 미정 수치 정책을 임의로 확정하지 않는다.
+- 전체 소비 솔루션 빌드 및 Task 13,103개 통과·실패 0개·환경 의존 16개 생략, 집중 81개·검토 도구 33개·실제 Razor 화면 6개 검사를 통과했다. 실제 Ollama 비교 2회는 20초 제한에서 보류됐고 사람 승인 0개다. 유효 모델 판단 검증은 남아 있다.
+
+## 화물 입력·추천·접수·배차 조건 일치 r75 (2026-10-19, 로컬 검증 완료·운영 미활성)
+
+- 사용자가 개발 우선순위 r74의 1번 진행을 승인했다. [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-loading-consistency.implementation.r75.md) · [허용 경로와 분담](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-loading-consistency.r75.work-order.json). 같은 포장의 치수×수량, 총중량, 입력/유효 CBM과 근거, 회전·적층을 추천→단건/일괄 접수→수정·재조회→Mongo/SQL→기사 판정에 연결한다.
+- [변경·화면·검증 결과](../Changes/2026-10-19-cargo-loading-consistency-r75.md). App/Web의 현재 입력 서버 추천과 오래된 응답 보호, 일괄 담당자·약속 보존을 보완했다. 집중 1,182개·전체 13,017개 통과/실패 0개·환경 의존 16개 생략, 전체 소비 솔루션 빌드와 실제 Razor 화면 11개 검사·11장 캡처를 확인했다. 신규 nullable 5열 migration은 준비만 했으며 실제 DB 적용·운영/worker 활성화·모델 학습·기기/APK 설치·commit/push는 범위 밖이다. r74의 2~6번은 후속이다.
+
+## 화물 접수부터 조합 결정까지의 개발 순서 (2026-10-19, 기획 제안)
+
+- [개발 우선순위 r74](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#2026-10-19-개발-우선순위-r74--접수부터-조합-결정까지). 입력·원장·판정 일치를 먼저 닫고, 실제 차량/장비와 주문/기사 상태를 연결한 뒤 가능한 조합을 계산하고 AI 비교·최신 재확인/수락으로 이어가는 6단계다. 기존 구성 재사용과 약속 준수 원칙을 유지한다.
+- 이번은 우선순위 제안과 문서 정리다. 새 제품 구현·제원 입력·DB·모델·시험/기기·운영 상태를 변경하지 않으며, 조합 대기·우회 상한·최대 묶음 수·가중치는 문답 대기다.
+
+## 소형차 적재 제원 보완 r73 (2026-10-19, 로컬 검증 완료·운영 미활성)
+
+- [승인 계획](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/small-vehicle-loading-specs.implementation.r73.md) · [변경·검증 기록](../Changes/2026-10-19-small-vehicle-loading-specs-r73.md). 오토바이·다마스 미확인 템플릿을 추천 OFF로 추가하고 기존 실측 설정을 보존한다. 기존 관리자 API에 물리 제원 수정과 저장 전 상한 검사를 연결한다.
+- 요구 축의 기준이 없거나 기사 제원이 없으면 적합으로 통과하지 않는다. 중량·CBM 물리 상한을 보존한다. 실제 모델 수치 확인·운영 DB 적용·기사별 장비 식별·UI/APK·학습·운영 활성화는 별도다.
+- 소비 솔루션 빌드·집중 89개, 시험 환경 보완 후 집중 115개와 최종 Task 12,929개 통과·실패 0개·환경 의존 16개 생략을 확인했다. 미확인 템플릿의 요구값 없는 배차 우회와 실제 물리 부피/면적의 반올림 상향도 차단했다. 전체 시험에서 드러난 EF 준비 객체 누적은 시험별 고유 DB 이름을 유지하면서 root를 재사용해 해결했고 경고를 억제하지 않았다. 운영·실차·기기·모델 학습·commit/push 증거는 아니다.
+
+## 화물 조건→차량 선정→AI 조합 입력 조사 (2026-10-19, 정적 조사·후속 제안)
+
+- [코드 조사 결과](../Changes/2026-10-19-cargo-vehicle-selection-ai-input-audit.md). 기존 적재 엔진이 중량·CBM·치수·팔레트·온도/장비를 판정하며 서버 화주 추천과 기사 적합성에서 재사용됨을 확인했다. 일반 차량제원 초기 자료는 1~5톤급 22코드이며 오토바이/다마스 운임표와 적재 제원은 다르다. 현재 DB·실차 제원을 조회한 것은 아니다.
+- 모바일 간이 추천과 상세 추천의 차이, 추정 CBM/회전·적층 조건의 접수·배차 보존 공백, 제원 누락 시 검증불가와 적합 혼용, AI 입력에 구간별 적재/순서 계획이 없는 점을 확인했다. 먼저 화물 조건·차량 제원·판정 근거를 일치시킨 뒤 가능한 조합을 AI가 비교하는 방향을 제안했다. 제품·설정·DB·모델·APK·운영·commit/push는 변경하지 않았고 새 시험 실행은 없다.
+
+## 전국 가상 화물 AI 문답 검토 (2026-10-19, 사용자 검토 우선·주문 조합 기획으로 이동)
+
+- [문답 기준](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#2026-10-19-전국-가상-화물--사용자-문답-검토-우선). 사용자가 한 사례씩 적절성을 판단한 답안과 확인한 정정 답안을 중심으로 학습 후보를 모은다. 무응답·보류·코덱스 초안을 승인 자료로 만들지 않으며, 문답 기록·실제 추가 학습·평가·운영 적용을 구분한다.
+- 가상 대전→청주 첫 사례의 조건과 B 우선 제안만 `artifacts/local/cargo-national-dialogue-review/20261019-r1/case-001.json`에 기록했다. 사람 승인·학습 후보 편입·엔진/모델 실행은 0건이다. 기존 r67 검토 원장·모델·제품 코드·운영 DB·APK·commit/push는 변경하지 않는다.
+- 단건 조건 반복 대신 차량/업무에 맞는 여러 주문의 조합·수행 순서와 당사자별 이득을 문답 주제로 옮겼다. [조합 문답 기준](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/배차-사례-문답검토절차.md#주문-조합수행-순서로-문답-초점-이동)에 확인 방향과 제안 절차를 구분했다. 기존 약속·보수·선택 업무와 기사 수락을 보존하며, 5분 추가 우회의 허용 여부는 첫 미결정 질문이다. 교차 업무 혼합·새 단가·허용시간·가중치·학습/운영 적용을 확정하지 않았다.
+
+## 화주 모바일 맥락별 입력 r72 (2026-10-19, APK200·실기기 입력/추천/수락/상하차 촬영 완료, 로컬 합성 검증)
+
+- [승인 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/mobile-context-authoring.implementation.r72.md) · [단계와 결과](../Changes/2026-10-19-mobile-context-authoring-r72.md). 같은 운송 초안을 물품→포장→출발지→도착지→일정→차량→비용→최종 확인으로 나누고 이전/다음·현재 단계 필수값 확인·보완 링크를 연결했다. PC 통합 입력·기존 4단계·접수/동의/중복 보호는 보존한다. 실제 브라우저에서 발견한 날짜 변환 오류도 작은 공통 입력으로 보완했다.
+- USB 승인 기기와 전용 합성 서버를 사용한다. 기존 시험 DB에 필요한 r71 nullable 2열·전문표 1개만 추가하고, 기사 본인 프로필 GET의 기능 분류를 보완해 실제 200을 확인했다. live200과 ready503은 구분한다. 최종 시험·APK·기기 결과는 연결된 변경 기록을 정본으로 사용한다. 실제 운영·금융·외부 FCM·공개 배포·Unity·영상·commit/push는 이번 범위가 아니다.
+- 최종 Fast-r8 330개·Task-r3 전체 12,884개 통과, 실패 0개·환경 의존 16개 생략과 소비 솔루션 빌드를 확인했다. APK0.1.200/code200 교체 설치·설치 바이트 일치, 실제 휴대폰 8단계·초안 유지·17캡처를 확인했다. 첫 의뢰의 부피 누락 차단은 보존하고, 명시한 부피의 새 UI 의뢰에서 별도 API 후불 시험 준비→실제 qwen3:1.7b 추천→앱 수락→상하차 실제 촬영·저장→운송 인수완료·사진 2개 무결성·하위 Mongo 완료 수렴을 확인했다. 결제/정산은 입금대기이며 외부 FCM·소리·지도·GPS와 ready 503은 남아 있다. 198/199 및 시험 실패 기록은 보존한다.
+
+## 무료 퀵·화물 등록 준비 보완 r71 (2026-10-19, 로컬 검증 완료·운영 미활성)
+
+- [승인 구현 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/registration-readiness.implementation.r71.md) · [변경·검증 기록](../Changes/2026-10-19-freight-registration-readiness-r71.md). 기사/실차의 수단별 내부 검토와 플랫폼 등록·요금/약관·사업계획·시설 등의 준비를 분리했다. 신규 운행·후보/AI·공개/전국 콜·추천 저장·수락·알림에서 검토를 확인하고 기존 운송 조회·사진·완료·멱등 복구는 유지한다. 무료 설정 0원, 화주 종류·포장 포함 중량·치수·출도착 입력/보존을 연결했다.
+- 집중 333개·전체 12,823개 통과, 실패 0개·환경 의존 16개 생략. 실제 격리 HTTP·SQLite와 전체 소비 솔루션/로컬 운송 도구 4개 빌드, 공통 UI·화주 입력 14장면·대표 PNG 6장을 확인했다. 최초 실패와 수정 후 성공은 별도 보존했다. 실제 증빙 존재·소유/진위, 기관 조회·등록/신고·개인정보 보존/삭제와 운영 적격 판정은 미완료다. 실제 사용자/운영 DB·기관 전송·실금융·APK 설치·공개 배포·Unity·영상·commit/push는 변경하지 않았다.
+
+## 무료 퀵·화물 등록 준비·기사 자격 확인 감사 (2026-10-19, 조사·기존 시험 확인)
+
+- [법령·코드 대조와 보완 순서](../Changes/2026-10-19-freight-platform-registration-readiness-audit.md). 2027-09-23 개정법 시행을 목표로 현재 프로필·역할·추천·수락과 법정 자격 확인을 구분했다. 기사 기본 정보 등록 후 활동중 저장, 한국 허가 정책 AuditOnly, 면허·허가·보험 검토/효력 관리 공백을 확인했다. 화물 입력과 문제 신고는 기존 기반을 재사용하되 법령 필수 항목·위반 확인/제한 연결은 보완 대상이다.
+- 무료 직접 제안 경로와 달리 기본/개발 설정에 건당500원·월상한5,000원 이용료 계산이 남아 있음을 기록했다. 실제 청구·유효 배포 설정 확인은 아니다. 현 소스 빌드 후 관련 기존 시험60개와 요금/운영 정책10개가 통과했으며 실제 법정 자격 검증 완료로 해석하지 않는다.
+- 이번에는 문서만 추가/연결했다. 제품·설정·DB·운영 활성화·APK·외부 조회·등록 신청·commit/push는 변경하지 않았다. 사업자 서류·사무실·결격사유와 신설 등록 세부 기준의 적격은 미확인이다. 다음은 수단별 자격 검토 결과와 기존 기사/차량을 연결하고 운행 시작·추천·수락에서 효력을 재확인하는 서버 공통 관문이다.
+
+## 퀵·화물 주문 한 건 마감 r70 (2026-10-19, 로컬 검증 완료·운영 미활성)
+
+- [결과·단계별 화면](../Changes/2026-10-19-cargo-order-closeout-r70.md) · [승인 설계](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/order-closeout.design.r70.md) · [관리자 조회 계약 보완](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/order-closeout.admin-contract.r70.md). UTC 추천 시각·기사 약정/동결 보수·변경 재확인·EF 배열 조회를 보완했다. 같은 의뢰의 공통 앱 VM 수락 POST1회→픽업/전달 사진 첨부→인수완료→화주 완료 조회·기사 대기 복귀를 실제 격리 HTTP/SQL/Mongo로 확인했다. 운영자 숫자 열거 응답과 조회5개 기능 분류 누락도 보완했고 최종9GET·3개 기존 역할 SSR이 통과했다. 사진 없는 완료와 타기사 조회 차단을 확인했으며 초기 실패는 보존했다.
+- 추천 조회 수정 포함 전수12,690통과·16생략·실패0 뒤 추가 관리자 수정은 최종 집중114/114와 솔루션·도구 빌드로 검증했다. SSR·브라우저 PNG와 실제 기기·Windows 앱 조작은 별개다. 일반 퀵의 상위 통합 주문 자동 연결, 운송 첨부 사진과 기존 POD/인수증 연계, 실수납·입금은 완료하지 않았다. 운송은 인수완료, 결제/정산은 대기 상태다.
+- 통합앱0.1.194 USB 시험 APK를 Drive 소유자 전용으로 보관하고 [다운로드 안내](../../eng/release/downloads/README.md)를 준비했다. 내장5363과 이번 API호스트5364를 구분하며 설치·외부 통신·실제 FCM·익명 다운로드·GitHub 게시·commit/push는 하지 않았다. 운영 기본값·권한·Unity/영상은 유지했다. 시험 API호스트와 처음 꺼져 있던 컨테이너3개를 정리하고 DB/자료를 보존했다. 읽기 전용 화면 기록5366만 남겼다.
+
+## 거래 신뢰 r107 (2026-10-19, 동일 두 사람 주간 총3회 방향·상세 논의 보류)
+
+- [직접 거래·신뢰의 높이 정본](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/trust-elevation.design.r107.md). 미러 밖의 거래도 확인 이력으로 알아봐 주는 방향을 유지하며, 신뢰 인정은 상품/수량 차이와 관계없이 같은 두 사람 사이 일주일 총3회 정도로 제한한다. 이전 상품/수량별 계속 인정 예외는 현행으로 재사용하지 않는다. 이는 실제 거래 제한이 아니고 하루1~2회의 정확한 상한·주간 경계·증빙/상승량은 미정이다.
+- 사용자 요청에 따라 이 주제의 추가 질문은 보류한다. 기존 상호 완료·유상 수령 확인·금액 중립·공개 동의는 유지하고 제품·점수·금융·외부 서비스는 변경하지 않았다.
+
+## 화물 AI 선택→앱 API 업무 마감 r114 (2026-10-19, 로컬 API 검증·추천 UI 공백)
+
+- [업무 트리·결과·실제 공통 화면 6단계](../Changes/2026-10-19-cargo-ai-device-verification-r114.md) · [책임 정본 r68](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ai-device-verification.implementation.r68.md). 최신 사용자 답변에 따라 휴대폰은 조작하지 않고 새 전용 Simulation DB/5364에서 합성 법정동 표식의 주문 3개·기사 2명을 사용했다. 실제 모델 3회 중 이유 불일치 2회는 추천하지 않았고, 이유 규약 r2의 별도 1건은 기존 추천 전환→실제 API 수락→상차/하차 사진 업로드→인수완료와 SQL/Mongo·화주 조회·기사 대기 복귀까지 확인했다. 모델 가중치나 운영 배차를 활성화한 것은 아니다.
+- 새 도구 빌드 경고/오류 0·자체 31개·추천 보호 5개·사진 필수 2개와 비소유 상세 거절을 확인했다. Fast/Task 라우터는 새 도구 경로를 guidance로 분류해 제품 시험을 생략한다. 실제 공통 client/ViewModel/Razor의 수락 후 5단계는 통과했지만 **일반 화물 추천 보수 미확인과 만료 시각의 시간대 해석 문제가 남았다**. 보수 부재가 수락 차단의 원인인 것은 아니다. 오프셋 없는 UTC 의미의 응답을 한국 시간대에서 Unspecified→ToUniversalTime으로 해석하면 9시간 일찍 만료된다. 수락은 직접 API로 진행했으므로 전체 UI 통과가 아니다. 대표 캡처는 실제 공통 SSR의 브라우저 화면이며 Android 캡처가 아니다.
+- ready 503은 EnsureCreated 격리 DB의 미적용 migration(main 66·시장 2·농수산 17·공공수집 7)로 남겼다. Outbox Pending/시도 0·실제 FCM/배너/소리·GPS/도로 ETA·물리 카메라·실금융·APK·외부 배포·Unity/영상·commit/push는 미수행이다. 다음은 제안 보수/적격성/화면 수락 계약 연결 후 같은 업무의 실기기 검증이다. 읽기 전용 기록 검토는 `http://127.0.0.1:5365/view/completed`이다.
+
+## 법정동별 퀵 배차 학습 준비·PC 검토 r113 (2026-10-19, 로컬 구현·검증 완료)
+
+- [흐름·실행·대표 화면](../Changes/2026-10-19-cargo-regional-training-r113.md) · [기획 정본 r67](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-regional-training.implementation.r67.md). 공식 보관 자료의 법정동 15개 코드·명칭을 가상 퀵 주문/기사 사례에 연결했다. 검토 20개와 다른 상황군의 평가 8개를 나누고, 기존 순수 화물 조율 엔진·선택적 로컬 모델·사용자 의견을 PC에서 비교/저장하도록 공용 관리자 컴포넌트와 loopback 호스트를 준비했다. 실제 경계·인접·경로·ETA나 운영 권역 변경을 뜻하지 않는다.
+- 최종 자체 26개·Fast 계약/관리자 빌드·Task 솔루션 빌드와 제품 전체 12,644개 통과·실패 0개·환경 의존 16개 생략이다. 실제 연결 화면의 법정동 필터·끝점 ETA·평가 제외·모델 차이와 별도 사본의 복수 후보 저장/복원·보류 전환을 관찰했다. 초기 경로 정규화·ZIP 한글 파일명·Razor 연결 실패도 보존했다.
+- 기존 Ollama `qwen3:1.7b`로 실제 비교 3회 중 2회는 입력과 맞지 않는 근거로 제외됐고, 나머지도 같은 ETA에서 장기 대기 후보 대신 짧게 기다린 후보를 골랐다. 구조 검사 통과와 판단 품질을 구분하며 사용자와 검토할 자료로 남겼다. 실제 사람 검토/학습 가능/승인 내보내기는 모두 0이다.
+- 로컬 검토 주소는 `http://127.0.0.1:5595/admin/freight-delivery/dispatch-ai-review/training`이다. 운영 DB·기존 관리자 route/DI/메뉴·모델 가중치·worker/추천 적용·APK/휴대폰·Unity·영상·외부 배포·commit/push는 변경하지 않았다. 다음은 대표 사례를 사용자와 검토해 허용 후보/보류와 미정 정책을 정리하는 일이다.
+
+## 화주 PC MAUI 재확인·접수 후 안내 r112 (2026-10-18, 구현·로컬 검증 완료)
+
+- [조사·변경 범위](../Changes/2026-10-18-shipper-pc-closeout-r112.md). 기존 `SsalddelApp`이 Windows MAUI 화주 호스트임을 현재 소스로 재확인했다. 별도 웹과 구분하고 기사 모바일 우선·화주 PC/모바일 지원을 유지한다. 기존 PC 셸의 폭 고정을 반응형으로 보완하고 공통 상세의 다음 담당/대기 이유·완료 단계 오분류와 웹 접수 응답 유실 보호를 다룬다.
+- 최종 Fast154개·Task12,644개 통과·실패0·환경 의존16개 생략, Windows MAUI/제품 솔루션/미리보기 빌드 성공, 격리 JS8개 통과다. CUA5장면·캡처7장·대표5장, 콘솔 오류0·1280px의1180px 셸/2열·메뉴 복귀 입력 유지·표 목록을 관찰했다. 검사 소스31개 해시 변화0·기존 dirty312파일의 허용 범위 밖 변경0, 전용5594/탭16만 종료했다. 최초 복원 호출·시험 타입 연결·동의 구성 기대문자열 실패와 수정은 기록에 보존한다.
+- 실제 선결제·승인·배차를 임의 활성화하지 않았으며 Windows 빌드/브라우저 공통 UI와 실제 Windows 창·서버/DB·USB·실금융을 구분한다. 초기 선결제 UI→서버 결제준비·확인→배차 연결과 일반 거절의 미접수 확정 계약, 새 Web 복구의 실제 브라우저/다중 탭·320/390px/단말 확인은 남아 있다. commit/push·외부 배포는 미수행이다.
+
+## 퀵 기기별 마감 범위 r111 (2026-10-18, 기획 정리·제품 변경 없음)
+
+- [현행 기기별 책임과 순서](../ProjectOverview/page-docs/quick-driver-usability-r110.md#기기별-마감-범위-r111--2026-10-18-사용자-확정). 기사 모바일은 추천/수락·픽업/전달·사진·내역에 집중하고 기사 데스크톱의 신규 제품 화면/별도 최적화는 이번 마감에서 제외한다. 화주는 모바일 단건 접수·현장 확인과 데스크톱 접수·다건 관리·증빙 조회를 모두 유지한다.
+- 다음은 화주 데스크톱 단건 접수/결과 재조회 마감→기사 모바일 동일 건 수행→화주 모바일/PC 같은 의뢰 왕복 확인→데스크톱 일괄 접수다. 현재 웹 단건은 서버 등록에 연결돼 있지만 웹 CSV는 형식 미리보기이며 모바일 일괄등록과 다르다. 후불 승인 권한/준비 계약의 공백은 r110 후속으로 유지한다.
+- 이번은 현재 소스의 진입/기능 범위를 읽고 문서로 책임을 나눈 작업이다. 제품 코드·새 UI 구현·실행 시험·APK/USB·서버/DB·운영 설정·commit/push를 변경하지 않았다. 기존 r110의 데스크톱 모의 화면을 기사 휴대폰 검증으로 확대하지 않는다.
+
+## 퀵 우선: 통합 기사 시작·수신과 상하차 안내 r110 (2026-10-18, 구현·로컬 검증 완료)
+
+- [업무 트리·결과·대표 화면](../Changes/2026-10-18-quick-driver-usability-r110.md) · [페이지 책임](../ProjectOverview/page-docs/quick-driver-usability-r110.md). 사용자의 퀵 우선 요청에 따라 통합 화물기사의 운행 시작·본인 신규 수신 토글·내 정보 운행 종료를 기존 서버 계약에 연결하고, 상하차 저장의 첫 부족 조건·이미 완료된 정본과 다음 업무를 표시했다. 진행 운송·음식/미확인 유형 근무·위치 실패와 응답 유실 보호를 유지한다.
+- 최종 집중193개·Task 전체12,568개 통과, 실패0·환경 의존16개 생략이다. 소스21파일 변화0·기존 dirty280파일의 허용 범위 밖 변경0, 현재 DLL을 소비한 브라우저 조작/캡처9장·대표8장을 확인했다. 미리보기의 메모리 예시이며 지도·GPS·FCM·실제 API/DB/금융·Android 검증과 구분한다. 전용5593 서버/검증 탭만 종료했다.
+- 다음은 퀵을 보내는 사람의 원천별 접수/결제·승인 다음 행동 연결이다. 간편 퀵 직접 현장지급, 일반 화주 선결제·플랫폼 수납, 별도 후불승인을 같은 흐름으로 합치지 않는다. 후불승인의 현재 권한·준비 상태를 앱에서 판독하는 계약이 부족해 임의 승인 버튼은 추가하지 않았다. 객체 수명 밖의 영속 복구·백그라운드 위치·APK 제작/설치·외부 공개·commit/push는 미수행이다.
+
+## 첫 이용 관점의 화면·업무 경로 점검 r109 (2026-10-18, 조사·로컬 화면 검증)
+
+- [점검 결과·보완 순서·대표 화면](../Changes/2026-10-18-first-use-task-audit-r109.md). 실제 공통 컴포넌트를 모의 자료로 조작하고 역할별 소스와 대조했다. 먼저 통합 화물기사의 운행/신규 수신 시작, 창고 초안의 조건 보완·견적·승인 인계, 비활성 저장의 부족 이유, 부분 성공/결과 미확정 복구를 보완한다. 시작/초안 문제는 소스 확인이며 실제 첫 빈 계정 렌더와 구분한다.
+- 생활 배송4단계·음식 필수값 안내·전달/수령/지급의 구분은 직접 확인했다. 창고 입고에서 확인3개만 선택하고 보관 위치를 비우면 저장 불가 이유가 없음을 재현했고, 모의 쓰기 차단 후 재확인에서는 입력 보존을 확인했다. 의도적인 미리보기 차단을 운영 서버 오류로 판정하지 않았다.
+- 320/390px의 기존 목적 사용성 검사26개·캡처14장, 브라우저 오류0을 별도로 확인했다. 일부 회귀 결과이며 모든 역할의 설명 없는 완주·실제 참가자/Android/지도/알림/결제 검증은 아니다. 제품 코드·APK·DB·운영 설정·commit/push는 변경하지 않았다. 상세 조사3개와 수동 관찰은 `artifacts/local/usability-review-r109/`에 보존한다.
+
+## 최신 앱·로컬 서버 업무 완주와 수락 후속 복구 r108 (2026-10-18, 로컬 검증 완료·기기 대기)
+
+- [작업 범위·결과·대표 화면](../Changes/2026-10-18-local-workflow-recovery-r108.md). 사용자 승인 1·2번인 정상 업무와 중단·응답 유실 복구를 로컬에서 검증했다. USB 조작·설치·외부 공개·실수납·실송금은 수행하지 않았다. 최종 역할 앱 빌드·집중291개·제품 전체12,515개 시험 통과, 실패0·환경 의존16개 생략이며 검사한 소스/시험30파일 해시 변화0이다.
+- 화물 수락과 영속 후속 의도를 함께 저장하고 시간약속·알림 Outbox·완료를 원자 마감한다. 최신 수락/담당/차수·CAS/lease, 기존 관리자 Failed 재예약·Blocked 조회 전용·worker 기본OFF를 유지했다. 창고 출고의 저장 좌표 인계·승인 전 준비 검사, 앱 오류 `code` 판독, 신규작성 견적의 공급된 좌표·추가비 보존을 보완했다.
+- 격리 실제 MySQL/Mongo에서 음식·퀵·창고 출고 연계 API 완주·재시작 후 보존과 수락 후속 INSERT 장애 복구를 확인했다. 공통 앱 VM/실제 HTTP43검사·성공응답 유실5회/업무POST5회·별도 수령 확인, 모의 제품 화면32상태/2흐름/40캡처를 서로 구분했다. 실제 경로·FCM·Android·금융은 미검증이다. 전용 서버는 종료하고 시험 자료는 보존했다.
+- 통합 시험APK193을 같은 소스로 제작·서명/정렬·양 ABI·기존192 동일서명·수정 코드 실제 탑재까지 확인했고 설치/업로드는 하지 않았다. 기존 로컬 시험 주소5363은 이번 하네스5378과 별개다. 기존 창고 초안의 상세→수정·견적·승인 화면 인계·주소 좌표 해소와 일시적 Mongo 연결 오류 최초 원인 확인은 후속이다. 서버 API 완주나 신규작성 조건 회귀를 창고 앱 화면 전 과정 검증으로 확대하지 않는다.
+
+## 직접 거래와 신뢰의 높이 r107 (2026-10-17, 기획·공식 자료 수집)
+
+- [현재 기획](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/trust-elevation.design.r107.md). 직접 계좌이체 선택·산 높이 신뢰 표현, 상호 완료/유상 대금 수령 확인·금액 중립 평가를 수용했다. 같은 상대라도 상품/실제 수량이 다른 별도 거래는 계속 인정하고 같은 조건 반복은 일주일3회 인정하는 방향이다. 동일 거래의 재전송은1회만 센다. 다음은 달력 주/최근7일의 집계 경계이며 상품 식별 단위·상승량·정정·공개 범위도 미정이다. 실제 점수/결제 기본값은 변경하지 않았다.
+- 공식100대명산 CSV100행·11열 원본과 해시/출처, 후보 ID100개를 보관했고 용마산·북한산·설악산·지리산·한라산·후지산·에베레스트의 대표 근거를 조사했다. 전국100개 항목 전수 검수·제품DB 저장·사진 사용 허락·신뢰 엔진·APK 반영은 미수행이다.
+- 기존 상호 완료·직접 송금/수령 확인 원장을 재사용하되 일반 생활협업의 상품대금 원천 어댑터와 모바일 개인 화면의 실제 인증 조회가 공백이다. 공개 주간 집계나 신고/사건 종결 수를 개인 신뢰·귀책 확정으로 오용하지 않는다. 후속 구현은 개인 화면/원천 연결→계산 정책 합의→근거 투영/산 표시 순서를 제안했다.
+
+## 로컬 서버·통합앱 푸시 연결 r106 (2026-10-17, 로컬·실기기 통신 검증 완료)
+
+- [현재 기록](../Changes/2026-10-17-external-server-push-connection-r106.md). Firebase 포함 통합APK190과 화면/통신 보안 보완192를 제작·업데이트 설치했고, 최종 base.apk 해시·로그인·기기 등록·알림 권한을 확인했다. 전용 r106 DB/계정9개/API를 사용하며 기존 데이터·다른 앱을 보존했다.
+- 기존 Firebase 프로젝트에 통합앱을 등록하고 전용 SDK 설정을 저장소 밖에 확보했다. 새 발송 키/권한은 만들지 않았다. 외부파일 결속13개·기존 USB21개·배포 포장46개·빌드 준비 모의12개 통과다. 실제 MySQL에서 드러난 재시도/명시 transaction 충돌을 전체 생활배송 SQL 변경 경계에 보완했다. 최초 전체 시험33개 실패의 fixture 모델 캐시 혼용을 해결하고 엄격한 암호화를 유지했다. 최종Fast150개·전체Task15,415개 통과, 실패0/환경 의존16개 생략이다.
+- 초기 case03(서버r6/APK190)과 최종 case04(수정 서버/APK192)를 나눠 기록한다. 192에서 앱을 뒤로 보낸 상태의 Google FCM 승인·Android 게시·알림 선택 후5,000원/2.5km 조회·하단 버튼/사람 아이콘/중량 표시, 실제 기한 후 재조회 시 수락 명령 차단을 확인했다. 실제 사람 청취는 대기다. 사용자 후속 `서버는 로컬에서 검증`에 따라 Azure 로그인 대기를 종료하고 배포/최종 외부 묶음 제작은 보류했다. 외부 HTTPS·배송 업무 완주·실금융은 미확인이다.
+
+## 전체 역할 통합 공개 준비 r105 (2026-10-16~17, 로컬 구현·검증 완료·외부 공개 대기)
+
+- [승인 기준](Planning/공통/PLAN-OPERATIONS-NEIGHBORHOOD-MICRO-HUB/integrated-public-release.r105.md) · [구현/검증](../Changes/2026-10-16-integrated-platform-preparation-r105.md). 퀵만 먼저 공개하는 방향을 음식·퀵·화물·공간·현장 작업의 함께 공개 준비로 대체했다. 통합앱/웹·24시간 서버·정상 자동/당사자 처리·예외 비상 담당·서비스비 수납/주간지급·상품대금 직접 거래 기준이다.
+- 음식 합의 취소·화물 상차 후 취소 보호·불량/소실 재고 마감·판매 실패 보존·기존 운송 채무 자동 명세를 구현했다. schema는 취소합의1테이블·판매 진단1열·자동명세 진행2열이며 전문 원장 권위와 기본OFF 유지다.
+- 초기 컴파일·fixture·판매 계정 변경 즉시비노출 실패와 전체Task56개 실패를 보존하고 원인별로 수정했다. 최종Fast506개·Task12,402개 통과, 실패0/환경 의존16개 생략. 소개9개·판매 연속14개 실제 루프백 검사 통과. EF 모델차이0·DB연결없는신규SQL생성을 확인했다. 통합APK188 제작·설치와 최종189 제작(미설치)을 구분하며 사용자가 기기 화면 시험을 다음으로 미뤘다.
+- 공개 준비 점검은 `NotReady`. 실수납/지급 계약·재원·Operational adapter·전체 외부HTTPS/단말/독립복구 미완료. Azure현재조회/USB연결은변경기록에서구분하며 공개/운영/commit/push는실행하지않았다.
+
+## 역할 앱 첫 이용 사용성 보완 r1 (2026-10-16, 소스·로컬 검증 완료)
+
+- [역할별 사용성 점검](../ProjectOverview/page-docs/first-use-usability-review-r1.md)과 [변경·대표 화면](../Changes/2026-10-16-first-use-usability-r1.md): 공식 KRDS·GOV.UK·W3C·Android 원칙을 기존 시각 기준 r8에 통합했다.9개 앱325개 route 파일·356개 정의·XAML21개를 목록화하고 대표36개를 소스에서 검토했다. 이 집계는 실제 도달 가능한 모든 화면·상태나 전수 렌더 완료가 아니다.
+- 판매 주문 목록의 검색/페이지 보존·안전한 복귀, 상품 등록 빈 상태, 음식 주문 필수/선택·진행 안내, 계좌 미확인과 미연결 기능 안내, 화주 CSV 입력/보관 범위·창고/인력 용어·지도 준비 안내를 기존 책임 안에서 보완했다. 승인된 네이티브 지도/추천 카드·서버/원장/권한/운영 상태와 관련 없는 기존 변경4개는 보존했다.
+- 전체 Task 빌드와12,286개 시험 통과·실패0/환경 의존16개 생략. 모바일320/390px의 실제 공통 컴포넌트26개 검사·브라우저 오류/업무·외부 HTTP 시도0개, 캡처14장 중 검토 PNG6개·해시 대장 보존. 초기 전체 시험3개 실패와 참조 출력이 이전 판본이던 브라우저 검사4개 실패도 별도로 유지한다. APK 설치·실기기·실주문/금융·접근성 인증·commit/push는 추가하지 않았다.
+- 다음은 긴 주문 확인 화면의 묶음/표시 순서, CSV 불명확 접수 결과, 음식점 알림 결과, 설정 왕복의 편집값·키보드/포커스·긴 주소 관측이다. 검색값 보존과 실제 입력 포커스 보존을 혼동하지 않으며 교육 없는 사용 가능은 처음 쓰는 사람의 과업 관찰로 확인해야 한다.
 
 ## 대표 스크린샷과 화면 진행 문서 연결 (2026-10-16, 기존 기기 캡처 문서화)
 

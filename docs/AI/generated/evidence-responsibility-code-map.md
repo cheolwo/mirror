@@ -2,8 +2,8 @@
 
 > 이 문서는 C# E 책임 Attribute와 현재 E 책임 모듈 대장에서 자동 생성된다. 직접 수정하지 않는다.
 
-- 후보 타입: `883`
-- 책임 지정: `879`
+- 후보 타입: `893`
+- 책임 지정: `889`
 - 사유 있는 제외: `4`
 - 미분류: `0`
 - 메서드 책임: `17`
@@ -13,8 +13,8 @@
 | E | G | 모듈 | 대표 | 보조 |
 | --- | --- | --- | ---: | ---: |
 | `E1` | `G1` | `E1핵심계약Module` 핵심 계약 | 133 | 0 |
-| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 288 | 0 |
-| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 317 | 1 |
+| `E2` | `G1` | `E2실행경계Module` 실행 경계 | 293 | 0 |
+| `E3` | `G1` | `E3회귀증거Module` 회귀 증거 | 322 | 1 |
 | `E4` | `G1` | `E4실행문맥결속Module` 실행 문맥 결속 | 54 | 0 |
 | `E5` | `G1` | `E5세계발현Module` 세계 발현 | 7 | 0 |
 | `E6` | `G1` | `E6세계정제Module` 세계 정제 | 21 | 0 |
@@ -34,8 +34,8 @@
 | `E1` | `E1세션권위계약Module` 세션 권위 계약 | `E1.SessionAuthorityContract` | Session 식별자·Revision·시간과 상태 권위의 불변 경계를 정의한다. | 6 | 0 |
 | `E1` | `E1공간계약Module` 공간 계약 | `E1.SpatialContract` | H·AreaSet·Graph·Handover의 안정 식별자와 구조 계약을 정의한다. | 18 | 0 |
 | `E1` | `E1세계상호작용계약Module` 세계 상호작용 계약 | `E1.WorldInteractionContract` | WI 목적·StableId·허용 발생원과 Preview·Confirm 계약을 정의한다. | 29 | 0 |
-| `E2` | `E2로컬권위AdapterModule` 로컬 권위 Adapter | `E2.LocalAuthorityAdapter` | Solo LocalProcess에서 공통 Simulation Core를 실행한다. | 3 | 0 |
-| `E2` | `E2원격HostAdapterModule` 원격 Host Adapter | `E2.RemoteHostAdapter` | Hosted Server에서 같은 Core를 HTTP 경계로 노출한다. | 17 | 0 |
+| `E2` | `E2로컬권위AdapterModule` 로컬 권위 Adapter | `E2.LocalAuthorityAdapter` | Solo LocalProcess에서 공통 Simulation Core를 실행한다. | 4 | 0 |
+| `E2` | `E2원격HostAdapterModule` 원격 Host Adapter | `E2.RemoteHostAdapter` | Hosted Server에서 같은 Core를 HTTP 경계로 노출한다. | 18 | 0 |
 | `E2` | `E2세션실행Module` 세션 실행 | `E2.SessionExecution` | Session 생성·조회·Tick·Save/Load의 공통 실행 포트를 제공한다. | 6 | 0 |
 | `E2` | `E2공간실행Module` 공간 실행 | `E2.SpatialExecution` | H·LH·배치 계획의 준비·활성·캐시·해제 실행 경계를 제공한다. | 11 | 0 |
 | `E2` | `E2Unity권위ClientModule` Unity 권위 Client | `E2.UnityAuthorityClient` | Unity 입력을 Local 또는 Remote 권위 포트에 전달한다. | 5 | 0 |
@@ -43,14 +43,14 @@
 | `E3` | `E3계약회귀Module` 계약 회귀 | `E3.ContractRegression` | StableId·요청·응답·WI metadata 계약의 회귀를 검증한다. | 39 | 0 |
 | `E3` | `E3결정성검증Module` 결정성 검증 | `E3.DeterminismRegression` | 같은 Seed·명령·시간이 같은 canonical 상태를 만드는지 검증한다. | 23 | 0 |
 | `E3` | `E3로컬원격동등성Module` 로컬·원격 동등성 | `E3.LocalRemoteParityRegression` | LocalProcess와 RemoteHost가 같은 권위 결과를 만드는지 검증한다. | 2 | 0 |
-| `E3` | `E3저장재생검증Module` 저장·재생 검증 | `E3.SaveReplayRegression` | Save schema 호환·복원·Replay hash 회귀를 검증한다. | 6 | 1 |
+| `E3` | `E3저장재생검증Module` 저장·재생 검증 | `E3.SaveReplayRegression` | Save schema 호환·복원·Replay hash 회귀를 검증한다. | 7 | 1 |
 | `E3` | `E3Unity소비자회귀Module` Unity 소비자 회귀 | `E3.UnityConsumerRegression` | Unity Adapter·Projection이 권위 계약을 임의 변경하지 않는지 검증한다. | 12 | 0 |
 
 ### 아직 하위 모듈을 지정하지 않은 기존 책임
 
 - `E1`: `76`개
-- `E2`: `195`개
-- `E3`: `235`개
+- `E2`: `198`개
+- `E3`: `239`개
 
 ## 미분류 후보
 
@@ -152,6 +152,7 @@
 | `Ssalddel.Simulation.Application.I세계상호작용E단계Module` | `-` | `` | `` | `` | `Excluded` |
 | `Ssalddel.Simulation.Application.I세계상호작용E단계ModuleSet` | `-` | `` | `` | `` | `Excluded` |
 | `Ssalddel.Simulation.Application.LocalBusinessWorkflowRuntimeFactory` | `E2` | `E2.LocalAuthorityAdapter` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Application.LocalSimulationFulfillmentRuntime` | `E2` | `E2.LocalAuthorityAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.LocalSimulationRuntime` | `E2` | `E2.LocalAuthorityAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.NullSimulationPlayableLoopEngineTraceSink` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.PyeongchangSimulationWorldUI기획Factory` | `E2` | `` | `` | `` | `Annotated` |
@@ -278,6 +279,7 @@
 | `Ssalddel.Simulation.Application.음식배달여정상태Projector` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Application.프랜차이즈공급망SimulationService` | `E2` | `E2.SessionExecution` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationFoodOrderRuntime` | `E2` | `E2.WorldInteractionExecution` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Contracts.ISimulationFulfillmentRuntime` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationLogisticsRuntime` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulationNpcPolicyRuntime` | `E2` | `E2.WorldInteractionExecution` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Contracts.ISimulation세계자산배치Engine` | `E1` | `` | `` | `` | `Annotated` |
@@ -455,6 +457,7 @@
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationFarmConstructionPlacementController` | `E4` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationFarmRealityEvidenceController` | `E6` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationFarmSurvivalController` | `E2` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Hosting.Controllers.SimulationFulfillmentController` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationHexagramCampaignController` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationIntegratedWorldController` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Hosting.Controllers.SimulationLhWorldController` | `E2` | `` | `` | `` | `Annotated` |
@@ -494,6 +497,7 @@
 | `Ssalddel.Simulation.Infrastructure.InMemory경영SimulationSessionStore` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Infrastructure.RemoteBusinessWorkflowRuntimeFactory` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Infrastructure.RemoteSimulationFoodOrderRuntime` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Infrastructure.RemoteSimulationFulfillmentRuntime` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Infrastructure.RemoteSimulationLogisticsRuntime` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Persistence.SimulationFarmRealityEvidenceStore` | `E6` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Persistence.SimulationOnlineWorldCheckpointStore` | `E2` | `E2.RemoteHostAdapter` | `` | `` | `Annotated` |
@@ -545,6 +549,10 @@
 | `Ssalddel.Simulation.Tests.SimulationFocusMeditationTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationFoodOrderRuntimeAdapterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationFreightTransportTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.SimulationFulfillmentEngineTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.SimulationFulfillmentRuntimeIntegrationTests` | `E3` | `` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.SimulationFulfillmentSaveCompatibilityTests` | `E3` | `E3.SaveReplayRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Simulation.Tests.SimulationFulfillmentSessionTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationGwangbokResonanceEntryCapCandidateTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationGwangbokResonanceMaintenanceCandidateTests` | `E3` | `E3.ContractRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Simulation.Tests.SimulationGwangbokSelfRecoveryActionCandidateTests` | `E3` | `E3.ContractRegression` | `` | `WI-NATURE-06,WI-NATURE-14,WI-REFLECT-01` | `Annotated` |
@@ -800,6 +808,7 @@
 | `Ssalddel.Unity.Tests.음식점정책카드Tests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.저녁학당업무Preview보강Tests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.창고정책카드Tests` | `E3` | `E3.UnityConsumerRegression` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Tests.출고센터선택PresenterTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.턴마감CoordinatorTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.통합전시관MapperTests` | `E3` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Tests.표현연결PreflightTests` | `E3` | `` | `` | `` | `Annotated` |
@@ -1041,6 +1050,7 @@
 | `Ssalddel.Unity.Warehouse.음식점정책카드Presenter` | `E2` | `E2.UnityAuthorityClient` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Warehouse.음식점주문표시Model` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.Warehouse.창고정책카드Presenter` | `E2` | `E2.UnityAuthorityClient` | `` | `` | `Annotated` |
+| `Ssalddel.Unity.Warehouse.출고센터선택Presenter` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.WorldEvents.ISimulationWorldEventApiClient` | `E2` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.WorldEvents.I세계사건ProjectionRepository` | `E7` | `` | `` | `` | `Annotated` |
 | `Ssalddel.Unity.WorldEvents.SimulationWorldEventApiRepository` | `E2` | `` | `` | `` | `Annotated` |

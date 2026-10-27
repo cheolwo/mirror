@@ -3177,7 +3177,7 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Application",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 118\uAC1C: DisabledSimulationWorldAreaSetGraphStore, DisabledSimulationWorldLandscapeCompositionStore, DisabledSimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, ISimulationActorEquipmentRuntime, ISimulationBattleInstanceStore, ISimulationBattleRuntime, ISimulationBattlefieldDerivationService, ISimulationFarmChoiceRuntime, ..."
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 119\uAC1C: DisabledSimulationWorldAreaSetGraphStore, DisabledSimulationWorldLandscapeCompositionStore, DisabledSimulationWorld\uC0C1\uD638\uC791\uC6A9GraphReadinessStore, ISimulationActorEquipmentRuntime, ISimulationBattleInstanceStore, ISimulationBattleRuntime, ISimulationBattlefieldDerivationService, ISimulationFarmChoiceRuntime, ..."
     },
     {
       "severity": "Warning",
@@ -3191,21 +3191,21 @@
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Contracts",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 4\uAC1C: ISimulationFoodOrderRuntime, ISimulationLogisticsRuntime, ISimulationNpcPolicyRuntime, I\uC5ED\uBC29\uC5B4\uC900\uBE44Runtime"
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 5\uAC1C: ISimulationFoodOrderRuntime, ISimulationFulfillmentRuntime, ISimulationLogisticsRuntime, ISimulationNpcPolicyRuntime, I\uC5ED\uBC29\uC5B4\uC900\uBE44Runtime"
     },
     {
       "severity": "Warning",
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Hosting",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 31\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationHexagramCampaignController, SimulationIntegratedWorldController, ..."
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 32\uAC1C: DisabledSimulationFarmRealityEvidenceStore, SimulationActorEquipmentController, SimulationActualE5SessionsController, SimulationAreaSetImmersionController, SimulationCollectibleCardRewardsController, SimulationFarmConstructionPlacementController, SimulationFulfillmentController, SimulationHexagramCampaignController, ..."
     },
     {
       "severity": "Warning",
       "code": "CODEMAP100",
       "featureKey": "simulation-unity",
       "stepKey": "Ssalddel.Simulation.Infrastructure",
-      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 5\uAC1C: FileSimulationLocalSaveSlotStore, InMemorySimulationOnlineWorldCheckpointStore, InMemorySimulationSessionSaveStore, RemoteSimulationFoodOrderRuntime, RemoteSimulationLogisticsRuntime"
+      "message": "\uAE30\uC900 \uAE30\uB2A5 \uBC16\uC758 \uD0D0\uC0C9 \uD6C4\uBCF4 6\uAC1C: FileSimulationLocalSaveSlotStore, InMemorySimulationOnlineWorldCheckpointStore, InMemorySimulationSessionSaveStore, RemoteSimulationFoodOrderRuntime, RemoteSimulationFulfillmentRuntime, RemoteSimulationLogisticsRuntime"
     },
     {
       "severity": "Warning",

@@ -1,0 +1,433 @@
+{
+  "schema": "operations-srp-implementation-work-order-r3",
+  "date": "2026-10-21",
+  "status": "CompletedLocalValidation",
+  "implementationAuthorizedByThisRequest": true,
+  "approvalSource": {
+    "request": "계속진행",
+    "context": "직전 권고의 1·2번부터 진행. 시작 안내에서 이번 범위를 1·2번으로 명시했다.",
+    "authorizedSequences": [
+      1,
+      2
+    ]
+  },
+  "sourceSurvey": "follow-up-survey.r3.md",
+  "sourceWorkOrder": "follow-up-work-order.r3.json",
+  "workItems": [
+    {
+      "sequence": 1,
+      "id": "UI-R3-02",
+      "priority": "P1",
+      "status": "CompletedLocalValidation",
+      "implementationAuthorized": true,
+      "title": "공통 글쓰기: 첨부파일 선택·업로드",
+      "auditTitle": "공통 글쓰기의 미디어 선택/부분 업로드와 게시·초안 조립 분리",
+      "whyThisOrder": "게시·초안 수명과 미디어 실패 규칙을 분리한다. 공통 소비 범위가 넓고 기존 시험으로 작은 경계를 먼저 고정할 수 있다.",
+      "firstBoundary": "내부 첨부 선택 policy와 순차 uploader를 분리한다. SelectedFiles snapshot은 게시 저장 await와 null 응답 확인 뒤에 만들고, 업로드마다 현행 Draft.Password를 읽는 delegate 또는 업로드 delegate를 전달한다. 앞서 잡은 submissionPassword는 반환 결과용이며 업로드 비밀번호 snapshot으로 대체하지 않는다. 파일별 시도·성공·실패 결과만 반환하고 게시/초안/닫기 수명은 facade에 남긴다.",
+      "facadeToKeep": "기존 Composer public facade·SelectedFiles 목록·PropertyChanged·IsSaving·상태 문구·Create/Update/Schedule 선택과 ClearLocalDraftAsync/Reset/닫기 순서는 유지한다. 초안 gate/generation과 비밀번호 보관 정책을 함께 뜯지 않는다.",
+      "preserve": [
+        "JPG/PNG/WebP/GIF/MP4/WebM 대소문자 비교, 이미지 5MB·동영상 15MB, 원순서 선착순 5개",
+        "형식/크기 탈락과 개수 상한을 합친 기존 rejectedCount·문구",
+        "게시글 저장 성공 후 파일 실패는 Succeeded=true 경고이며 글을 다시 POST하지 않음",
+        "업로드 취소 때 현재 파일부터 나머지 이름 모두 실패 집계 후 loop 중지",
+        "개별 일반 예외는 해당 파일만 실패 집계하고 다음 파일은 이어서 시도",
+        "업로드 후 CancellationToken.None으로 로컬 초안을 삭제하고 Reset·닫기 수행",
+        "업로드 호출에는 현행 Draft.Password 사용; 반환 SubmissionPassword와 혼동 금지",
+        "실패 파일 원순서·중복 수와 표시용 Distinct(StringComparer.OrdinalIgnoreCase)의 차이 유지",
+        "글 저장 전 인증/403/validation/예약 실패의 기존 결과·초안 보존 유지",
+        "SelectedFiles.ToArray는 게시 저장 await 및 saved null 확인 뒤(472줄), 각 업로드의 Draft.Password 읽기는 482줄의 현행 시점을 보존한다."
+      ],
+      "evidence": [
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityPostComposerViewModel.cs",
+          "line": 34,
+          "endLine": 45,
+          "symbol": "upload constants / AllowedUploadContentTypes",
+          "meaning": "browser 미디어의 형식·수량·크기 규칙이 글쓰기/예약/초안 조립 VM이 소유한다.",
+          "sourceSha256": "6b5f14f689a901c882e1f13f5cad415f556bc3783853f9e2855dc89a68e27665"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityPostComposerViewModel.cs",
+          "line": 226,
+          "endLine": 268,
+          "symbol": "SetFiles / RemoveFile / ClearFiles",
+          "meaning": "선택 파일의 필터·원순서·5개 상한과 UI 경고/알림을 동시에 관리한다.",
+          "sourceSha256": "6b5f14f689a901c882e1f13f5cad415f556bc3783853f9e2855dc89a68e27665"
+        },
+        {
+          "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityPostComposerViewModel.cs",
+          "line": 414,
+          "endLine": 525,
+          "symbol": "SaveAsync",
+          "meaning": "글 생성/수정/예약 이후 파일별 업로드·취소 시 나머지 실패 집계·초안삭제·성공경고까지 한 본문이다.",
+          "sourceSha256": "6b5f14f689a901c882e1f13f5cad415f556bc3783853f9e2855dc89a68e27665"
+        }
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerViewModelTests.cs",
+          "line": 183,
+          "method": "사진선택은_형식크기개수를검증하고_개별제거한다",
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerViewModelTests.cs",
+          "line": 205,
+          "method": "미디어선택은_MP4와_WebM을_허용하고_동영상_용량한도를_따로_검증한다",
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerViewModelTests.cs",
+          "line": 226,
+          "method": "게시글저장뒤_사진업로드만실패하면_중복게시를막도록성공경고를반환한다",
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerViewModelTests.cs",
+          "line": 254,
+          "method": "게시글저장뒤_사진업로드가취소되어도_browser초안을삭제한다",
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerViewModelTests.cs",
+          "line": 162,
+          "method": "초안비우기는_늦게끝난자동저장보다항상나중에반영된다",
+          "executedThisSurvey": false
+        }
+      ],
+      "characterizationOrGap": "복수 파일의 중간 일반 실패·중간 취소·중복 파일명 결과와 upload→draft clear→Reset event 순서는 추출 직전에 동작 표로 고정할 가치가 있다. 현재 시험 본문은 확인했으며 이번 조사에서 실행하지 않았다.",
+      "effort": "작음~중간: 정책+순차 uploader 두 좁은 객체, 기존 facade 위임. shared 소비 호스트 확인 필요.",
+      "risk": "중간: 부분 실패를 전체 실패로 바꾸면 중복 게시를 유도한다. 병렬 업로드·재시도·새 허용 형식 등 기능 변경은 제외한다.",
+      "differenceFromCompleted": "글 작성·인증/비밀번호·예약 발행·브라우저 초안 수명과, IBrowserFile 형식/크기 제한·파일별 부분 업로드 결과의 변경 이유가 다르다. 이미 분리한 DraftViewModel을 다시 제안하지 않는다.",
+      "auditArtifact": "artifacts/local/refactoring-survey/20261021-r3/ui-audit.json",
+      "auditArtifactSha256": "e0970fa6ae83c89101e84fd7cb13c7cab780f4421f6fe7f69681820cb73206c8"
+    },
+    {
+      "sequence": 2,
+      "id": "SHARED-R3-01",
+      "priority": "P1",
+      "status": "CompletedLocalValidation",
+      "implementationAuthorized": true,
+      "title": "공통 푸시: 설치 HTTP 전송",
+      "auditTitle": "푸시 설치의 동일 HTTP 계약과 앱별 계정·철회 수명을 분리",
+      "whyThisOrder": "같은 HTTP 계약만 공유하고 역할별 계정·철회 정책은 유지한다. 전체 알림 상태머신 공통화보다 범위가 작다.",
+      "firstBoundary": "기존 Ssalddel.Client.Infrastructure/Notifications 안에 작은 concrete installation HTTP helper를 두고 명시적 DTO·installation ID·현재 access token·CancellationToken을 받아 PUT/DELETE 요청 한 번만 수행하게 한다. 먼저 원본 요청/응답 소유·예외 전파 의미를 고정하고 두 facade의 요청 생성/단일 전송만 위임한다. 새 assembly·범용 authenticated client·공통 등록 상태머신은 만들지 않는다.",
+      "facadeToKeep": "SsalddelMobilePushInstallationClient의 두 public 생성자, EnsureRegisteredAsync, DeactivateCurrentOwnerAsync / FDriverPushRegistrationService의 공개 메서드와 InstallationForOwner / 세션 restore/refresh·역할 확인·gate·owner/revision 재확인·로컬 저장 순서는 각 기존 facade",
+      "preserve": [
+        "api/v1/mobile/push/installations와 DTO, AppKey, platform 대소문자, AppVersion/DeviceModel의 현재 선택적 포함을 그대로 유지",
+        "FDriver InstallationForOwner(deviceId,owner)와 회원 DeviceInstallationId를 합치지 않음",
+        "DELETE 404는 기존 성공 의미, PUT 상태/timeout/취소/예외 및 오류 문구는 facade별 현재 의미 유지",
+        "RevocationPending 저장 → DELETE 확인 → 등록 상태 삭제/PUT 재등록 순서 및 gate를 유지",
+        "회원은 OS 권한 철회 시 같은 계정의 소리/진동 선택을 보존하고 명시적 로그아웃은 정리; 음식기사는 권한 OFF가 서버 등록 실패가 되지 않는 현재 차이 유지",
+        "계정 변경·revision·토큰 회전의 늦은 응답 차단, credentials 확보/refresh 위치 유지",
+        "새 자동 재전송·새 실패 복구·새 계정/보안 정책을 추가하지 않음",
+        "PUT·공통 DELETE는 현재 caller의 로컬 저장까지 응답 수명을 유지한다. FDriver DELETE는 기존 DeleteAsync 내부 해제→bool 반환→계정 재확인→로컬 저장 순서를 유지한다. 새 wire helper는 각 호출자가 현행 위치에서 응답을 해제할 수 있게 반환한다.",
+        "회원 DTO의 AppVersion/DeviceModel 선택값과 음식 기사 DTO의 현행 기본값 차이를 보존한다."
+      ],
+      "evidence": [
+        {
+          "path": "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationClient.cs",
+          "line": 64,
+          "endLine": 101,
+          "symbol": "EnsureRegisteredCoreAsync",
+          "meaning": "토큰 공급자 조회, owner/revision 검사, 토큰 없음에 따른 철회, RevocationPending 복구를 조율한다.",
+          "sourceSha256": "883f632726b28b00fcca14784a41d6eb0ed96841607c09384864ece3fba14eb1"
+        },
+        {
+          "path": "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationClient.cs",
+          "line": 103,
+          "endLine": 137,
+          "symbol": "EnsureRegisteredCoreAsync PUT 요청 및 저장",
+          "meaning": "동일 endpoint와 upsert DTO/Authorization를 직접 조립한 직후 토큰 회전 CAS 및 등록 완료 로컬 상태를 갱신한다.",
+          "sourceSha256": "883f632726b28b00fcca14784a41d6eb0ed96841607c09384864ece3fba14eb1"
+        },
+        {
+          "path": "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationClient.cs",
+          "line": 163,
+          "endLine": 194,
+          "symbol": "DeactivateCoreAsync",
+          "meaning": "철회대기/계정 알림 설정을 먼저 저장하고 DELETE·404 수용·현재 계정 재검사 후 등록 상태를 지운다.",
+          "sourceSha256": "883f632726b28b00fcca14784a41d6eb0ed96841607c09384864ece3fba14eb1"
+        },
+        {
+          "path": "FDriverApp/Services/FDriverPushRegistrationService.cs",
+          "line": 81,
+          "endLine": 116,
+          "symbol": "RegisterCoreAsync",
+          "meaning": "음식기사 역할·인증/현재 계정·미완료 해제·24시간 캐시 정책 사이에 동일 endpoint PUT/DTO/Authorization 조립이 들어 있다.",
+          "sourceSha256": "e7dc68e7d717bddac59b9819fb6e982a54fb4b3f26e59f75a66fa6bb091ddec7"
+        },
+        {
+          "path": "FDriverApp/Services/FDriverPushRegistrationService.cs",
+          "line": 138,
+          "endLine": 161,
+          "symbol": "DeleteAsync / Authorized",
+          "meaning": "동일 DELETE 경로 escape·Bearer·2xx/404 계약을 재구현하지만 installation ID는 owner hash로 구분한다.",
+          "sourceSha256": "e7dc68e7d717bddac59b9819fb6e982a54fb4b3f26e59f75a66fa6bb091ddec7"
+        }
+      ],
+      "regressionTargets": [
+        {
+          "path": "Ssalddel.Tests/ClientInfrastructure/SsalddelMobilePushInstallationClientTests.cs",
+          "line": 25,
+          "name": "토큰과인증이있으면_공통설치Endpoint에보호요청을보낸다",
+          "coverage": "공통 PUT endpoint/보호 요청",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/ClientInfrastructure/MemberDeliveryPushTests.cs",
+          "line": 148,
+          "name": "로그아웃해제실패는철회대기를남기고같은계정에서삭제후재등록한다",
+          "coverage": "DELETE/DELETE/PUT 순서와 철회대기",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/ClientInfrastructure/MemberDeliveryPushTests.cs",
+          "line": 165,
+          "name": "OS알림철회는설치를해제하되같은계정의소리진동선택은보존한다",
+          "coverage": "회원 OS 권한 철회 의미",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/ClientInfrastructure/MemberDeliveryPushTests.cs",
+          "line": 179,
+          "name": "등록응답중계정변경은성공상태로저장하지않는다",
+          "coverage": "늦은 응답 owner/revision",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/ClientInfrastructure/MemberDeliveryPushTests.cs",
+          "line": 189,
+          "name": "등록중토큰회전은이전토큰을현재성공으로저장하지않는다",
+          "coverage": "현재 토큰 CAS",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverFoodPushTests.cs",
+          "line": 15,
+          "name": "Registration_IsFoodOnlyAndUsesCurrentOwnerCredentials_AndTokenRotationRegistersAgain",
+          "coverage": "FDriver AppKey·owner credentials·토큰 회전",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverFoodPushTests.cs",
+          "line": 72,
+          "name": "LogoutFailurePersistsOriginalOwnerAndRestartRetriesDeleteBeforeRegistration",
+          "coverage": "FDriver 해제 복구 순서",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverFoodPushTests.cs",
+          "line": 85,
+          "name": "OtherOwner_NeverUsesOwnCredentialsToDeletePreviousOwnerInstallation",
+          "coverage": "계정별 설치 해제 경계",
+          "executed": false,
+          "executedThisSurvey": false
+        },
+        {
+          "path": "Ssalddel.Tests/Clients/FDriverFoodPushTests.cs",
+          "line": 190,
+          "name": "NotificationPermissionOffDoesNotFailServerRegistrationAndRemainsVisibleAfterMonitorStarts",
+          "coverage": "회원과 다른 FDriver 권한 OFF 의미",
+          "executed": false,
+          "executedThisSurvey": false
+        }
+      ],
+      "characterizationOrGap": "기존 fake HTTP/state 시험 경로를 확인했을 뿐 실행하지 않았다. 실제 SecureStorage·FCM·네트워크/기기 등록은 별도다. 추출 시 요청 bytes/headers/status/disposal 순서를 두 facade별로 대조해야 한다.",
+      "effort": "Medium",
+      "risk": "Medium",
+      "differenceFromCompleted": "토큰 직렬화나 일반 인증 HTTP 파이프라인의 재추출이 아니다. 두 앱의 동일 mobile/push/installations PUT·DELETE wire 계약을 다루며 계정/권한/철회 정책은 각 facade에 남긴다.",
+      "auditArtifact": "artifacts/local/refactoring-survey/20261021-r3/shared-audit.json",
+      "auditArtifactSha256": "e5a9d7fa6ba2dfca2e621e4a2dfeb3a554776958bd9b99ab2ea71799e77091af"
+    }
+  ],
+  "globalPreserve": [
+    "화면 구조·문구·보이는 정보·다음 행동·route·JSON·public facade·StableId·오류 코드를 유지한다.",
+    "음식/화물/창고의 전문 상태 권위와 주문·수령·정산·지급·사건 종결의 구분을 유지한다.",
+    "DB schema·기능/worker 기본값·요금/배차/주간 정책·권한·승인을 바꾸지 않는다.",
+    "시계 읽기·SQL 조회·Add/Save/commit·후속 실행·취소·실패·멱등/재시도 위치와 순서를 고정한다.",
+    "계정/owner/revision/generation·내구 pending·동일 requestId·자동 POST 금지와 늦은 응답 처리의 현행 의미를 유지한다.",
+    "새 assembly·범용 workflow/recovery/framework·불필요한 interface를 만들지 않는다. 기존 프로젝트 내부의 최소 책임부터 추출한다.",
+    "관련 없는 dirty 작업·기존 원장/자료·완료 증거·검토 상태는 보존하고 새 구현 승인으로 확장하지 않는다."
+  ],
+  "deferredProposals": {
+    "sequences": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "status": "ProposedOnly",
+    "implementationAuthorizedByThisBatch": false
+  },
+  "ownership": {
+    "root": [
+      "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityPostComposerViewModel.cs",
+      "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityComposerAttachmentPolicy.cs",
+      "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityComposerAttachmentUploader.cs",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation.r3.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/implementation-work-order.r3.json",
+      "docs/AI/CURRENT_WORK.md",
+      "docs/AI/PLANNING.md",
+      "docs/AI/Planning/공통/PLAN-OPERATIONS-REFACTOR-SRP/README.md"
+    ],
+    "composerTestAgent": [
+      "Ssalddel.Tests/Ui/Common/CommunityPostComposerAttachmentFlowTests.cs"
+    ],
+    "pushAgent": [
+      "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationClient.cs",
+      "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationTransport.cs",
+      "FDriverApp/Services/FDriverPushRegistrationService.cs",
+      "Ssalddel.Tests/ClientInfrastructure/MobilePushInstallationHttpLifetimeTests.cs"
+    ]
+  },
+  "validationPlan": [
+    "공유 쓰기 종료 후 새 composer 특성화 시험을 현행 본문에 실행",
+    "추출 후 집중 시험과 소비 빌드",
+    "validate-changes Fast/Task를 이번 Paths로 중앙 실행",
+    "문서 링크/diff 및 소유 변경의 해시·호출 순서 대조"
+  ],
+  "evidenceRoot": "artifacts/local/refactoring-implementation/20261021-r3/batch-01/",
+  "excluded": [
+    "기능·화면·상태/요금/배차/정산 정책 변경",
+    "실제 외부 푸시·DB/모델·기기 실행",
+    "stage/commit/push"
+  ],
+  "verification": {
+    "status": "CompletedLocalValidation",
+    "date": "2026-10-21",
+    "completedItems": [
+      "UI-R3-02",
+      "SHARED-R3-01"
+    ],
+    "deferredCount": 12,
+    "baseline": {
+      "trx": "artifacts/local/refactoring-implementation/20261021-r3/batch-01/before-extraction-recheck.trx",
+      "passed": 18,
+      "meaning": "6 composer cases and initial 12 push rows on original facades"
+    },
+    "fast": {
+      "runDirectory": "artifacts/local/validation/20261021-080900",
+      "results": [
+        {
+          "trx": "artifacts/local/validation/20261021-080900/Ssalddel.Tests.trx",
+          "sha256": "064bffc093315088aebc1e00b845bcb442ba537ea1ec6fee5714d03a2e028260",
+          "counts": {
+            "total": 111,
+            "executed": 111,
+            "passed": 111,
+            "failed": 0,
+            "error": 0,
+            "timeout": 0,
+            "aborted": 0,
+            "inconclusive": 0,
+            "passedButRunAborted": 0,
+            "notRunnable": 0,
+            "notExecuted": 0,
+            "disconnected": 0,
+            "warning": 0,
+            "completed": 0,
+            "inProgress": 0,
+            "pending": 0
+          },
+          "resultOutcomes": {
+            "Passed": 111
+          }
+        }
+      ],
+      "passed": 111,
+      "notExecuted": 0
+    },
+    "task": {
+      "runDirectory": "artifacts/local/validation/20261021-081127",
+      "results": [
+        {
+          "trx": "artifacts/local/validation/20261021-081127/Ssalddel.Tests.trx",
+          "sha256": "fea84da9adb5c1880989f83478c08a6402a7450f9eb42ee726ce2191ff2aa5c9",
+          "counts": {
+            "total": 14005,
+            "executed": 13989,
+            "passed": 13989,
+            "failed": 0,
+            "error": 0,
+            "timeout": 0,
+            "aborted": 0,
+            "inconclusive": 0,
+            "passedButRunAborted": 0,
+            "notRunnable": 0,
+            "notExecuted": 0,
+            "disconnected": 0,
+            "warning": 0,
+            "completed": 0,
+            "inProgress": 0,
+            "pending": 0
+          },
+          "resultOutcomes": {
+            "Passed": 13989,
+            "NotExecuted": 16
+          }
+        }
+      ],
+      "passed": 13989,
+      "notExecuted": 16
+    },
+    "sourceHashes": [
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityPostComposerViewModel.cs",
+        "sha256": "3178811e44e4aa9711fd8b6823c484e10e0a72e0fa66b5c80285369b04037ceb"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityComposerAttachmentPolicy.cs",
+        "sha256": "10d2af5c371298c9d7cf32bdcb76ec96f1971062c15e56698da62b15689357c6"
+      },
+      {
+        "path": "Ssalddel.Ui.Common/Areas/App/ViewModels/CommunityComposerAttachmentUploader.cs",
+        "sha256": "9a925c006e4da178913e6e5712cdc54df219518d728d184de4e402e5bd493966"
+      },
+      {
+        "path": "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationClient.cs",
+        "sha256": "499f9bbc002557cde6e9d8abff0a2b33e6b2a262ed5e102485e42c1ee5e59ab2"
+      },
+      {
+        "path": "Ssalddel.Client.Infrastructure/Notifications/SsalddelMobilePushInstallationTransport.cs",
+        "sha256": "6b217857bd869337bec446999d6f5886d729e790a0c836a288f88c80d5e33459"
+      },
+      {
+        "path": "FDriverApp/Services/FDriverPushRegistrationService.cs",
+        "sha256": "1a493ee346f618232764c097ebaf799a146d70547404cc117cdc97e316557276"
+      },
+      {
+        "path": "Ssalddel.Tests/Ui/Common/CommunityPostComposerAttachmentFlowTests.cs",
+        "sha256": "cb2286f1d3a1c63ba362c2f80f1b6e2c2bfd516f446f251361d2c32f6233022a"
+      },
+      {
+        "path": "Ssalddel.Tests/ClientInfrastructure/MobilePushInstallationHttpLifetimeTests.cs",
+        "sha256": "bc7d64b0c97380db81b1a0777f02615a4a03f8328dce1326e8fae7c92b4e743c"
+      }
+    ],
+    "originalRegressionFilesUnchanged": true,
+    "independentReview": [
+      "Composer behavior and getter/exception/cleanup order preserved",
+      "Common header construction disposal boundary corrected then independently rechecked"
+    ],
+    "actualDeviceOrExternalPush": false,
+    "featureOrPolicyChange": false,
+    "commit": false,
+    "push": false
+  }
+}
