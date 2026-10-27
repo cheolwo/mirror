@@ -1,0 +1,44 @@
+{
+  "schema": "locally-generated-product-voice-assets.v1",
+  "userRequest": "Context-separated local commits only; no push",
+  "recordedAudioOrDeliveryFootage": false,
+  "mediaGuardModified": false,
+  "mediaGuardMustRemainEnforcedForFuturePush": true,
+  "assets": [
+    {
+      "path": "FDriverApp/Platforms/Android/Resources/raw/ssalddel_delivery.wav",
+      "sha256": "d0ed818d6e9d6449d7224f849d5dc71ea88f3d2a4b788be1d5aa3828765d577b",
+      "bytes": 86692,
+      "provenanceLocalReference": "artifacts/local/dispatch-verification-r75-implementation/audio/manifest.json",
+      "generation": "offline Windows System.Speech, Microsoft Heami Desktop, rate=-1",
+      "phrase": "살뜰 배달!",
+      "localCommitOnly": true,
+      "mediaGuardExceptionGranted": false,
+      "publicDistributionApproved": false
+    },
+    {
+      "path": "DriverApp/Platforms/Android/Resources/raw/hongdal_dispatch.wav",
+      "sha256": "6e0da9aaa1b36521b71a7ce0dff5412edd315cc6531d96c308e385a4c4cbbab2",
+      "bytes": 84000,
+      "provenanceLocalReference": "artifacts/local/driver-recommendation-signal-r18/audio/manifest.json",
+      "generation": {
+        "tool": "Windows PowerShell / System.Speech.Synthesis.SpeechSynthesizer",
+        "powershellVersion": "5.1.26100.9711",
+        "assembly": "System.Speech, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+        "voice": "Microsoft Heami Desktop",
+        "culture": "ko-KR",
+        "rate": -1,
+        "volume": 100,
+        "synthesizeCallCount": 1,
+        "repeated": false,
+        "outputMode": "SetOutputToWaveFile; SetOutputToNull before and after",
+        "scriptSha256": "92207b56e79eee150912c4264f4f4f50e90b62549d7114cb749a89ecad4846f7",
+        "approvedPlanSha256": "f35319677032de41aaa7ed6e5bded0058764adeb474a7bca59fa3e44471815a2"
+      },
+      "phrase": "홍달배달",
+      "localCommitOnly": true,
+      "mediaGuardExceptionGranted": false,
+      "publicDistributionApproved": false
+    }
+  ]
+}
