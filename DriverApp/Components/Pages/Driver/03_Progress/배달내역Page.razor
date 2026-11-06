@@ -47,6 +47,7 @@
                     <MudText Typo="Typo.h6">아직 배달 내역이 없습니다.</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">운송을 시작하면 진행 상태와 완료 기록이 여기에 시간순으로 쌓입니다.</MudText>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@DriverRoutes.Recommendations">추천 운송 보기</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="재조회Async">내역 새로고침</MudButton>
                 </MudStack>
             </MudPaper>
         }
