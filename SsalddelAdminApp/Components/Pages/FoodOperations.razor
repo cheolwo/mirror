@@ -19,12 +19,20 @@
     }
     else
     {
-        <MudTextField T="string" @bind-Value="search" Label="주문번호·음식점 검색" Variant="Variant.Outlined" MaxLength="100" Disabled="@state.IsBusy" />
+        var canClearEmptySearch = CanClearEmptySearch;
+        <MudTextField T="string" @bind-Value="search" Label="주문번호·음식점 검색" Variant="Variant.Outlined" MaxLength="100" Immediate="true" Disabled="@state.IsBusy" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@state.IsBusy" OnClick="SearchAsync">조회</MudButton>
-        @if (!string.IsNullOrWhiteSpace(state.Message))
+        @if (canClearEmptySearch)
+        {
+            <MudStack Spacing="1" AlignItems="AlignItems.Start">
+                <MudAlert Severity="Severity.Info" Style="overflow-wrap: anywhere;">@($"‘{state.Query}’ 검색 결과가 없습니다.")</MudAlert>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ClearEmptySearchAsync">검색 지우고 전체 보기</MudButton>
+            </MudStack>
+        }
+        else if (!string.IsNullOrWhiteSpace(state.Message))
         { <MudAlert Severity="@(state.RequiresRefresh ? Severity.Warning : Severity.Info)">@state.Message</MudAlert> }
         @if (state.IsBusy) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
-        @if (state.List is { } list)
+        @if (!canClearEmptySearch && state.List is { } list)
         {
             <MudText Typo="Typo.body2" Color="Color.Secondary">전체 @list.TotalCount 건 · @list.Page 페이지</MudText>
             @foreach (var item in list.Items)
@@ -63,7 +71,22 @@
         restoring = false;
         await state.RefreshListAsync(search);
     }
+    private bool CanClearEmptySearch =>
+        !disposed && !restoring && Session.IsServerAdmin &&
+        state is { AuthenticationCurrent: true, RequiresLogin: false, IsBusy: false, RequiresRefresh: false,
+            List: { TotalCount: 0, Items.Count: 0 } } current &&
+        !string.IsNullOrWhiteSpace(current.Query) &&
+        string.Equals(search?.Trim(), current.Query, StringComparison.Ordinal);
+
     private Task SearchAsync() => state!.RefreshListAsync(search, 1);
+
+    private Task ClearEmptySearchAsync()
+    {
+        if (!CanClearEmptySearch) return Task.CompletedTask;
+        search = string.Empty;
+        return SearchAsync();
+    }
+
     private Task LoadPageAsync(int page) => state!.RefreshListAsync(state.Query, page);
     private static string DetailUrl(string orderNo) => "/food-operations/orders/" + Uri.EscapeDataString(orderNo);
     private void SessionChanged() => _ = InvokeAsync(() =>
