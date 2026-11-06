@@ -1,3 +1,4 @@
+using System.Net;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Driver.Transport;
 using Ssalddel.WebApp.Pages.DriverCurrentTransport;
@@ -12,7 +13,7 @@ public sealed class DriverCurrentTransportPageViewModelTests
     {
         var loadCount = 0;
         using var viewModel = CreateViewModel(
-            loadCurrentTransport: _ => Task.FromResult(++loadCount == 1
+            loadCurrentTransport: _ => Task.FromResult<기사운송요약응답?>(++loadCount == 1
                 ? Transport("REQ-OLD", "운송중")
                 : Transport("REQ-ACCEPTED", "배차확정")));
 
@@ -31,7 +32,7 @@ public sealed class DriverCurrentTransportPageViewModelTests
     {
         var loadCount = 0;
         using var viewModel = CreateViewModel(
-            loadCurrentTransport: _ => Task.FromResult(++loadCount == 1
+            loadCurrentTransport: _ => Task.FromResult<기사운송요약응답?>(++loadCount == 1
                 ? Transport("REQ-10", "배차확정", id: 10)
                 : Transport("REQ-10", "상차지 도착", id: 10)));
         await viewModel.InitializeAsync(null);
@@ -50,7 +51,7 @@ public sealed class DriverCurrentTransportPageViewModelTests
         var loadCount = 0;
         using var viewModel = CreateViewModel(
             loadCurrentTransport: _ => ++loadCount == 1
-                ? Task.FromResult(Transport("REQ-20", "운송중", id: 20))
+                ? Task.FromResult<기사운송요약응답?>(Transport("REQ-20", "운송중", id: 20))
                 : throw new InvalidOperationException("현재 운송 조회 실패"));
         await viewModel.InitializeAsync(null);
 
@@ -59,6 +60,29 @@ public sealed class DriverCurrentTransportPageViewModelTests
         Assert.False(viewModel.Refresh.IsBusy);
         Assert.Equal(DriverCurrentTransportMessageTone.Error, viewModel.StatusTone);
         Assert.Equal("현재 운송 조회 실패", viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task 권한_오류_후_재조회_중에는_권한_안내를_유지한다()
+    {
+        var transport = Transport("REQ-20", "운송중", id: 20);
+        var pending = new TaskCompletionSource<기사운송요약응답?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var loadCount = 0;
+        using var viewModel = CreateViewModel(_ => ++loadCount switch
+        {
+            1 => Task.FromResult<기사운송요약응답?>(transport),
+            2 => throw new HttpRequestException("접근 확인 필요", null, HttpStatusCode.Forbidden),
+            _ => pending.Task
+        });
+        await viewModel.InitializeAsync(null);
+        await viewModel.Refresh.RefreshAsync();
+        Assert.Equal(DriverCurrentTransportReadState.AccessDenied, viewModel.ReadState);
+
+        var refresh = viewModel.Refresh.RefreshAsync();
+        Assert.Equal(DriverCurrentTransportReadState.AccessDenied, viewModel.ReadState);
+        pending.SetResult(transport);
+        await refresh;
+        Assert.Equal(DriverCurrentTransportReadState.Loaded, viewModel.ReadState);
     }
 
     [Fact]
@@ -127,9 +151,9 @@ public sealed class DriverCurrentTransportPageViewModelTests
     }
 
     private static DriverCurrentTransportPageViewModel CreateViewModel(
-        Func<CancellationToken, Task<기사운송요약응답>>? loadCurrentTransport = null)
+        Func<CancellationToken, Task<기사운송요약응답?>>? loadCurrentTransport = null)
         => new(
-            loadCurrentTransport ?? (_ => Task.FromResult(Transport("REQ-1", "배차확정"))),
+            loadCurrentTransport ?? (_ => Task.FromResult<기사운송요약응답?>(Transport("REQ-1", "배차확정"))),
             new TestTransportRequestLedgerObserver());
 
     private static 기사운송요약응답 Transport(string requestId, string status, long id = 1)

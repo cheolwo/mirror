@@ -1,7 +1,6 @@
 @page "/driver/transports/current"
 @inherits MvvmComponentBase<DriverCurrentTransportPageViewModel>
 @using Ssalddel.WebApp.Pages.DriverCurrentTransport
-@using Ssalddel.WebApp.ViewModels
 
 <WebPageHeader Eyebrow="Driver Web"
                Title="진행 중 운송"
@@ -9,40 +8,64 @@
                Badge="현재 운송 API" />
 
 <MudStack Spacing="3">
-    @if (ViewModel.HasAcceptedRequestContext)
+    @if (ViewModel.HasAcceptedRequestContext && !RequiresAccountAction
+        && (ViewModel.IsWaitingForAcceptedTransport || ViewModel.CurrentTransport is not null))
     {
         <MudAlert Severity="@ResolveAcceptedRequestSeverity()" Dense="true" Variant="Variant.Outlined">
             @ViewModel.AcceptedTransportGuideText
         </MudAlert>
     }
 
-    @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+    @if (ViewModel.ReadState == DriverCurrentTransportReadState.LoginRequired)
     {
-        <MudAlert Severity="@ResolveStatusSeverity(ViewModel.StatusTone)" Variant="Variant.Outlined">
-            @ViewModel.StatusMessage
-        </MudAlert>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">기사 계정으로 로그인해 주세요.</MudAlert>
+        <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
     }
+    else if (ViewModel.ReadState == DriverCurrentTransportReadState.AccessDenied)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">현재 계정의 기사 권한을 확인해 주세요.</MudAlert>
+        <MudButton Href="@DriverRoutes.Home" Variant="Variant.Outlined" Color="Color.Primary">기사 홈으로</MudButton>
+    }
+    else if (ViewModel.CurrentTransport is { } transport)
+    {
+        @if (!string.IsNullOrWhiteSpace(ViewModel.StatusMessage))
+        {
+            <MudAlert Severity="@ResolveStatusSeverity(ViewModel.StatusTone)" Variant="Variant.Outlined">
+                @ViewModel.StatusMessage
+            </MudAlert>
+        }
 
-    @if (ViewModel.CurrentTransport is null)
+        <MudGrid>
+            <MudItem xs="12" lg="8">
+                <DriverCurrentTransportOverview Transport="@transport" />
+            </MudItem>
+
+            <MudItem xs="12" lg="4">
+                <MudStack Spacing="3">
+                    <DriverCurrentTransportNextActionPanel Transport="@transport" />
+                    <DriverCurrentTransportNavigation IsBusy="@ViewModel.Refresh.IsBusy"
+                                                      OnRefresh="ViewModel.Refresh.RefreshAsync" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+    }
+    else if (ViewModel.ReadState == DriverCurrentTransportReadState.Loading
+             || ViewModel.Refresh.IsBusy || ViewModel.IsWaitingForAcceptedTransport)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        <MudText Typo="Typo.body2" role="status">현재 운송을 확인하고 있습니다.</MudText>
+    }
+    else if (ViewModel.ReadState == DriverCurrentTransportReadState.Empty && !ViewModel.HasAcceptedRequestContext)
     {
         <DriverCurrentTransportEmptyState IsBusy="@ViewModel.Refresh.IsBusy"
                                           OnRefresh="ViewModel.Refresh.RefreshAsync" />
     }
     else
     {
-        <MudGrid>
-            <MudItem xs="12" lg="8">
-                <DriverCurrentTransportOverview Transport="@ViewModel.CurrentTransport" />
-            </MudItem>
-
-            <MudItem xs="12" lg="4">
-                <MudStack Spacing="3">
-                    <DriverCurrentTransportNextActionPanel Transport="@ViewModel.CurrentTransport" />
-                    <DriverCurrentTransportNavigation IsBusy="@ViewModel.Refresh.IsBusy"
-                                                      OnRefresh="ViewModel.Refresh.RefreshAsync" />
-                </MudStack>
-            </MudItem>
-        </MudGrid>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+            @(ViewModel.HasAcceptedRequestContext ? "수락한 운송을 아직 확인하지 못했습니다." : "현재 운송을 확인하지 못했습니다.")
+        </MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewModel.Refresh.RefreshAsync">다시 조회</MudButton>
     }
 </MudStack>
 
@@ -52,6 +75,12 @@
 
     protected override Task OnParametersSetAsync()
         => ViewModel.InitializeAsync(AcceptedRequestId);
+
+    private bool RequiresAccountAction => ViewModel.ReadState is DriverCurrentTransportReadState.LoginRequired
+        or DriverCurrentTransportReadState.AccessDenied;
+
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(
+        ViewModel.AcceptedRequestId is { } requestId ? DriverRoutes.CurrentTransportFor(requestId) : DriverRoutes.CurrentTransport);
 
     private Severity ResolveAcceptedRequestSeverity()
         => ViewModel.IsWaitingForAcceptedTransport

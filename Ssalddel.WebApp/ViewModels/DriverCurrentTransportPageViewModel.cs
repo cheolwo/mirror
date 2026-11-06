@@ -1,3 +1,4 @@
+using System.Net;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Driver.Transport;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
@@ -13,16 +14,27 @@ public enum DriverCurrentTransportMessageTone
     Error
 }
 
+public enum DriverCurrentTransportReadState
+{
+    Loading,
+    Loaded,
+    Empty,
+    LoginRequired,
+    AccessDenied,
+    Failed
+}
+
 public sealed class DriverCurrentTransportPageViewModel : 조립ViewModelBase
 {
     private const int AcceptedTransportRetryCount = 5;
     private static readonly TimeSpan AcceptedTransportRetryDelay = TimeSpan.FromMilliseconds(700);
 
-    private readonly Func<CancellationToken, Task<기사운송요약응답>> _loadCurrentTransport;
+    private readonly Func<CancellationToken, Task<기사운송요약응답?>> _loadCurrentTransport;
     private readonly CancellationTokenSource _lifetimeCancellation = new();
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private readonly DriverCurrentTransportRefreshSession _refreshSession;
     private 기사운송요약응답? _currentTransport;
+    private DriverCurrentTransportReadState _readState;
     private string? _acceptedRequestId;
     private string? _statusMessage;
     private DriverCurrentTransportMessageTone _statusTone = DriverCurrentTransportMessageTone.Info;
@@ -40,7 +52,7 @@ public sealed class DriverCurrentTransportPageViewModel : 조립ViewModelBase
     }
 
     public DriverCurrentTransportPageViewModel(
-        Func<CancellationToken, Task<기사운송요약응답>> loadCurrentTransport,
+        Func<CancellationToken, Task<기사운송요약응답?>> loadCurrentTransport,
         ITransportRequestLedgerObserver ledgerObserver)
     {
         _loadCurrentTransport = loadCurrentTransport;
@@ -58,6 +70,12 @@ public sealed class DriverCurrentTransportPageViewModel : 조립ViewModelBase
     }
 
     public DriverCurrentTransportRefreshViewModel Refresh { get; }
+    public DriverCurrentTransportReadState ReadState
+    {
+        get => _readState;
+        private set => SetProperty(ref _readState, value);
+    }
+
 
     public 기사운송요약응답? CurrentTransport
     {
@@ -217,7 +235,24 @@ public sealed class DriverCurrentTransportPageViewModel : 조립ViewModelBase
         await _refreshGate.WaitAsync(cancellationToken);
         try
         {
-            CurrentTransport = await _loadCurrentTransport(cancellationToken);
+            if (CurrentTransport is null)
+            {
+                ReadState = DriverCurrentTransportReadState.Loading;
+            }
+
+            var transport = await _loadCurrentTransport(cancellationToken);
+            CurrentTransport = transport;
+            ReadState = transport is null ? DriverCurrentTransportReadState.Empty : DriverCurrentTransportReadState.Loaded;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+        {
+            ReadState = Api작업오류.변환(ex).Http상태코드 switch
+            {
+                (int)HttpStatusCode.Unauthorized => DriverCurrentTransportReadState.LoginRequired,
+                (int)HttpStatusCode.Forbidden => DriverCurrentTransportReadState.AccessDenied,
+                _ => DriverCurrentTransportReadState.Failed
+            };
+            throw;
         }
         finally
         {

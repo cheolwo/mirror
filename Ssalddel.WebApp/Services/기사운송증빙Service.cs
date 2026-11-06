@@ -1,7 +1,9 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Driver.Transport;
+using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.WebApp.Services;
 
@@ -35,11 +37,20 @@ public sealed class 기사운송증빙Service
         return items;
     }
 
-    public async Task<기사운송요약응답> 현재운송조회Async(CancellationToken cancellationToken = default)
+    public async Task<기사운송요약응답?> 현재운송조회Async(CancellationToken cancellationToken = default)
     {
         using var request = await CreateAuthorizedRequestAsync(HttpMethod.Get, "api/v1/driver/transports/current", cancellationToken);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
-        await EnsureSuccessAsync(response, "현재 운송 조회", cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            var problem = SsalddelApiProblemParser.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (problem.ErrorCode == "CargoTransportNotFound")
+            {
+                return null;
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
         var item = await response.Content.ReadFromJsonAsync<기사운송요약응답>(cancellationToken)
                    ?? throw new InvalidOperationException("현재 운송 조회 응답을 읽을 수 없습니다.");
         Observe(item, "Ssalddel.WebApp.DriverCurrentTransport");
@@ -196,7 +207,9 @@ public sealed class 기사운송증빙Service
         await _authSession.RestoreAsync(cancellationToken);
         if (!_authSession.IsLoggedIn || string.IsNullOrWhiteSpace(_authSession.AccessToken))
         {
-            throw new InvalidOperationException("이 작업은 서버 인증이 필요합니다. 먼저 웹 로그인에서 기사 계정으로 로그인해 주세요.");
+            throw new SsalddelApiException(
+                "이 작업은 서버 인증이 필요합니다. 먼저 웹 로그인에서 기사 계정으로 로그인해 주세요.",
+                (int)HttpStatusCode.Unauthorized, "기사 운송", string.Empty, null);
         }
 
         var request = new HttpRequestMessage(method, path);
