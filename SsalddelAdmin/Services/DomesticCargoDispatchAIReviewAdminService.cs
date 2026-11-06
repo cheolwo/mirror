@@ -31,7 +31,7 @@ public sealed class DomesticCargoDispatchAIReviewAdminService
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<DomesticCargoDispatchAIReviewWorkspaceDto>(cancellationToken: cancellationToken)
-               ?? new DomesticCargoDispatchAIReviewWorkspaceDto();
+               ?? throw new InvalidOperationException("배차 검토 응답에 작업공간이 없습니다.");
     }
 
     public async Task<DomesticCargoDispatchAIReviewDecisionResponse> RecordDecisionAsync(

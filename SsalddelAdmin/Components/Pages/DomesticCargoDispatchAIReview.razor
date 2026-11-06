@@ -1,6 +1,7 @@
 @page "/dispatch/ai-review"
 @page "/admin/freight-delivery/dispatch-ai-review"
 @rendermode InteractiveServer
+@using System.Net
 @inject DomesticCargoDispatchAIReviewAdminService ReviewService
 @inject 관리자인증세션Service AdminSession
 @inject NavigationManager NavigationManager
@@ -71,9 +72,9 @@
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Refresh"
-                       Disabled="@isLoading"
-                       OnClick="LoadAsync">
-                새로고침
+                       Disabled="@(!CanReload)"
+                       OnClick="ReloadAsync">
+                @(readState == WorkspaceReadState.Failed ? "다시 조회" : "새로고침")
             </MudButton>
         </MudStack>
 
@@ -87,9 +88,26 @@
             <MudAlert Severity="Severity.Success">@successMessage</MudAlert>
         }
 
-        @if (isLoading)
+        @if (readState == WorkspaceReadState.Loading)
         {
             <MudProgressLinear Indeterminate="true" />
+        }
+        else if (readState == WorkspaceReadState.LoginRequired)
+        {
+            <MudAlert Severity="Severity.Warning">관리자 계정으로 로그인해 주세요.</MudAlert>
+            <MudButton Href="@LoginHref" Variant="Variant.Filled" Color="Color.Primary">로그인</MudButton>
+        }
+        else if (readState == WorkspaceReadState.AccessDenied)
+        {
+            <MudAlert Severity="Severity.Warning">현재 계정에는 배차 검토 권한이 없습니다.</MudAlert>
+        }
+        else if (readState == WorkspaceReadState.Failed)
+        {
+            <MudAlert Severity="Severity.Error">국내화물 AI 배차 검토 데이터를 불러오지 못했습니다. 다시 조회해 주세요.</MudAlert>
+        }
+        else if (workspace.Requests.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">검토할 운송 의뢰가 없습니다.</MudAlert>
         }
         else
         {
@@ -259,25 +277,32 @@
     private string adminNote = string.Empty;
     private bool manualBundle;
     private bool accepted = true;
-    private bool isLoading = true;
+    private WorkspaceReadState readState = WorkspaceReadState.Loading;
     private bool isSaving;
     private string? errorMessage;
     private string? successMessage;
+
+    private enum WorkspaceReadState { Loading, Ready, Failed, LoginRequired, AccessDenied }
+
+    private static readonly string LoginHref = $"/login?returnUrl={Uri.EscapeDataString("/dispatch/ai-review")}";
+    private bool CanReload => !isSaving && readState is WorkspaceReadState.Ready or WorkspaceReadState.Failed;
 
     protected override async Task OnInitializedAsync()
     {
         if (!AdminSession.서버관리자인가)
         {
-            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString("/dispatch/ai-review")}");
+            NavigationManager.NavigateTo(LoginHref);
             return;
         }
 
         await LoadAsync();
     }
 
+    private Task ReloadAsync() => CanReload ? LoadAsync() : Task.CompletedTask;
+
     private async Task LoadAsync()
     {
-        isLoading = true;
+        readState = WorkspaceReadState.Loading;
         errorMessage = null;
         successMessage = null;
 
@@ -285,14 +310,16 @@
         {
             workspace = await ReviewService.GetWorkspaceAsync();
             SelectInitialBundle();
+            readState = WorkspaceReadState.Ready;
         }
         catch (Exception ex)
         {
-            errorMessage = $"국내화물 AI 배차 검토 데이터를 불러오지 못했습니다: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
+            readState = (ex as HttpRequestException)?.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => WorkspaceReadState.LoginRequired,
+                HttpStatusCode.Forbidden => WorkspaceReadState.AccessDenied,
+                _ => WorkspaceReadState.Failed
+            };
         }
     }
 
@@ -351,6 +378,11 @@
 
     private async Task SaveDecisionAsync()
     {
+        if (readState != WorkspaceReadState.Ready || workspace.Requests.Count == 0 || isSaving)
+        {
+            return;
+        }
+
         errorMessage = null;
         successMessage = null;
 
