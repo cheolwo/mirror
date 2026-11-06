@@ -6,7 +6,7 @@
         <MudPaper Elevation="0" Outlined="true" Class="pa-3">
             <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2">
                 <MudTextField T="string"
-                              @bind-Value="_search"
+                              @bind-Value="_draftSearch"
                               Label="주문 검색"
                               Placeholder="주문명 또는 원장 ID"
                               Variant="Variant.Outlined"
@@ -133,7 +133,8 @@
 
 @code {
     private const int PageSize = 20;
-    private string? _search;
+    private string? _draftSearch;
+    private string? _appliedSearch;
     private string? _errorMessage;
     private int _page;
     private bool _loading;
@@ -163,7 +164,7 @@
                 {
                     페이지 = _page,
                     페이지크기 = PageSize,
-                    검색어 = string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(),
+                    검색어 = _appliedSearch,
                     정렬조건 =
                     [
                         new 목록정렬조건(
@@ -188,6 +189,7 @@
 
     private Task SearchAsync()
     {
+        _appliedSearch = string.IsNullOrWhiteSpace(_draftSearch) ? null : _draftSearch.Trim();
         _page = 0;
         return LoadAsync();
     }
