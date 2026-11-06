@@ -75,6 +75,13 @@
                 <MudIcon Icon="@Icons.Material.Filled.ToggleOff" Color="Color.Warning" Size="Size.Large" />
                 <MudText Typo="Typo.h6">현재 이용할 수 없습니다</MudText>
             }
+            else if (HasRetryTarget)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Color="Color.Default" Size="Size.Large" />
+                <MudText Typo="Typo.h6">조회 미완료</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Style="overflow-wrap:anywhere">의뢰 번호: @State.LookupRequestId</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">새로고침으로 같은 의뢰를 다시 조회할 수 있습니다.</MudText>
+            }
             else if (EmptyContent is not null)
             {
                 @EmptyContent
@@ -123,6 +130,11 @@
     [Parameter] public EventCallback RefreshRequested { get; set; }
     [Parameter] public RenderFragment? EmptyContent { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    private bool HasRetryTarget => EmptyContent is not null
+        && RefreshRequested.HasDelegate
+        && !string.IsNullOrWhiteSpace(State.LookupRequestId)
+        && 업무오류안내Presentation.기술실패인가(State.QueryError);
 
     private string? QueryErrorMessage => State.QueryError is not null || 업무오류안내Presentation.조회오류인가(State.StatusMessage)
         ? State.StatusMessage : null;
