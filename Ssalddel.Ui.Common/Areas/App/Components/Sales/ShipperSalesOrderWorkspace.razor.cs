@@ -176,7 +176,7 @@ public partial class ShipperSalesOrderWorkspace
                 return;
             }
 
-            if (!List.처리중) await List.페이지조회Async(List.현재페이지, linked.Token);
+            if (!List.처리중) await List.페이지조회Async(List.재조회페이지, linked.Token);
         }
         finally
         {
@@ -206,7 +206,7 @@ public partial class ShipperSalesOrderWorkspace
 
     private Task SearchAsync() => ReadActionsBlocked ? Task.CompletedTask : List.조회Async();
 
-    private Task ReloadListAsync() => ReadActionsBlocked ? Task.CompletedTask : List.페이지조회Async(List.현재페이지);
+    private Task ReloadListAsync() => ReadActionsBlocked ? Task.CompletedTask : List.페이지조회Async(List.재조회페이지);
 
     private Task ChangePageAsync(int page) => ReadActionsBlocked ? Task.CompletedTask : List.페이지조회Async(page);
 

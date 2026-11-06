@@ -9,6 +9,7 @@ public sealed partial class 판매채널주문목록PageViewModel(
     I판매채널주문읽기Service service) : 업무작업ViewModelBase
 {
     private const int DefaultPageSize = 25;
+    private int _requestedPage = 1;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(검색조건있음))]
@@ -48,6 +49,7 @@ public sealed partial class 판매채널주문목록PageViewModel(
     [NotifyPropertyChangedFor(nameof(검색결과없음))]
     public partial bool 초기화됨 { get; private set; }
 
+    internal int 재조회페이지 => 오류발생 ? _requestedPage : 현재페이지;
     public int 총페이지수 => Math.Max(1, (int)Math.Ceiling(전체건수 / (double)DefaultPageSize));
     public bool 검색조건있음 => !string.IsNullOrWhiteSpace(검색어)
                             || !string.IsNullOrWhiteSpace(국내외구분)
@@ -62,9 +64,10 @@ public sealed partial class 판매채널주문목록PageViewModel(
         => 작업실행Async(
             async token =>
             {
+                _requestedPage = Math.Max(1, page);
                 var response = await service.목록조회Async(new 판매채널주문목록조회요청
                 {
-                    Page = Math.Max(0, page - 1),
+                    Page = _requestedPage - 1,
                     PageSize = DefaultPageSize,
                     Search = 검색어,
                     SyncScope = 국내외구분,

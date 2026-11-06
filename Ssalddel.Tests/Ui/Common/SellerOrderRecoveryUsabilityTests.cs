@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using MudBlazor;
 using MudBlazor.Services;
 using Ssalddel.Contracts.Common.Sales;
 using Ssalddel.Ui.Common.Areas.App.Components;
@@ -239,6 +240,44 @@ public sealed class SellerOrderRecoveryUsabilityTests
         Assert.Equal(3, notifications);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 실패한페이지를_다시시도하거나주기갱신하면_같은페이지와검색조건을_다시읽는다(bool periodic)
+    {
+        await using var context = new Context();
+        await context.StartAsync(new()
+        {
+            [nameof(ShipperSalesOrderWorkspace.InitialSearch)] = "찾을 주문",
+            [nameof(ShipperSalesOrderWorkspace.InitialSyncScope)] = CommerceChannelOrderSyncScopes.Overseas,
+            [nameof(ShipperSalesOrderWorkspace.InitialStatus)] = "출고예정",
+            [nameof(ShipperSalesOrderWorkspace.InitialPage)] = 2
+        });
+
+        var response = context.Orders.BlockNext();
+        var pageChange = context.Renderer.Dispatcher.InvokeAsync(
+            () => Assert.IsType<MudPagination>(context.Controls.Pagination).SelectedChanged.InvokeAsync(3));
+        await context.Orders.ReadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        response.SetException(new HttpRequestException("Temporary order read failure", null, HttpStatusCode.ServiceUnavailable));
+        await pageChange;
+
+        Assert.Equal(2, context.Model.목록.현재페이지);
+        Assert.Contains("다시 시도", await context.HtmlAsync());
+        await context.Renderer.Dispatcher.InvokeAsync(() => periodic
+            ? context.Workspace.RefreshAsync()
+            : context.Controls.RetryButton().OnClick.InvokeAsync(new MouseEventArgs()));
+
+        Assert.Equal([1, 2, 2], context.Orders.Requests.Select(request => request.Page).ToArray());
+        Assert.All(context.Orders.Requests, request =>
+        {
+            Assert.Equal("찾을 주문", request.Search);
+            Assert.Equal(CommerceChannelOrderSyncScopes.Overseas, request.SyncScope);
+            Assert.Equal("출고예정", request.Status);
+        });
+        Assert.Equal(3, context.Model.목록.현재페이지);
+        Assert.DoesNotContain("다시 시도", await context.HtmlAsync());
+    }
+
     [Fact]
     public async Task 사용자조회중_주기갱신은_진행중인조회를_중복하거나취소하지않는다()
     {
@@ -318,6 +357,7 @@ public sealed class SellerOrderRecoveryUsabilityTests
         internal readonly CurrentUser User;
         internal readonly 판매채널주문PageViewModel Model;
         internal readonly HtmlRenderer Renderer;
+        internal readonly CapturedControls Controls;
         internal ShipperSalesOrderWorkspace Workspace { get; private set; } = null!;
         private Func<string> renderHtml = () => string.Empty;
 
@@ -332,7 +372,10 @@ public sealed class SellerOrderRecoveryUsabilityTests
             services.AddSingleton(Model);
             services.AddSingleton<IJSRuntime, NoopJs>();
             services.AddSingleton<NavigationManager>(new TestNavigation());
+            services.AddSingleton<CapturedControls>();
+            services.AddSingleton<IComponentActivator>(sp => sp.GetRequiredService<CapturedControls>());
             provider = services.BuildServiceProvider();
+            Controls = provider.GetRequiredService<CapturedControls>();
             Renderer = new(provider, provider.GetRequiredService<ILoggerFactory>());
         }
 
@@ -372,6 +415,25 @@ public sealed class SellerOrderRecoveryUsabilityTests
             builder.AddComponentReferenceCapture(2, value => Capture?.Invoke((ShipperSalesOrderWorkspace)value));
             builder.CloseComponent();
         }
+    }
+
+    private sealed class CapturedControls(IServiceProvider services) : IComponentActivator
+    {
+        private readonly List<MudButton> buttons = [];
+        internal MudPagination? Pagination { get; private set; }
+
+        public IComponent CreateInstance(Type componentType)
+        {
+            var component = (IComponent)ActivatorUtilities.CreateInstance(services, componentType);
+            if (component is MudPagination pagination) Pagination = pagination;
+            if (component is MudButton button) buttons.Add(button);
+            return component;
+        }
+
+        internal MudButton RetryButton()
+            => Assert.Single(buttons.Where(button => button.Variant == Variant.Outlined
+                && button.Color == Color.Primary && string.IsNullOrEmpty(button.StartIcon)
+                && button.OnClick.HasDelegate));
     }
 
     private sealed class AccessService(bool enabled) : I판매채널페이지접근Service
