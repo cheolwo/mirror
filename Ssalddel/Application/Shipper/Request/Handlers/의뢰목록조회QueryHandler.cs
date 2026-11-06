@@ -67,6 +67,7 @@ public sealed class 의뢰목록조회QueryHandler : IRequestHandler<의뢰목�
 
         var items = await query
             .OrderByDescending(r => r.CreatedAt)
+            .ThenByDescending(r => r.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

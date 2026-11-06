@@ -36,6 +36,12 @@ public sealed class SmokeAwareShipperOperationsService : IShipperOperationsServi
             token => _sample.GetRequestsAsync(token),
             cancellationToken);
 
+    public Task<IReadOnlyList<ShipperRequestItem>> GetRequestsPageAsync(int page, CancellationToken cancellationToken = default)
+        => WithSampleFallbackAsync(
+            token => _server.GetRequestsPageAsync(page, token),
+            token => _sample.GetRequestsPageAsync(page, token),
+            cancellationToken);
+
     public Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default)
         => WithSampleFallbackAsync(
             token => _server.GetRequestAsync(requestId, token),

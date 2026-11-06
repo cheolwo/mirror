@@ -37,11 +37,20 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         => PostAuthorizedJsonAsync<신청개인정보동의기록Request, 신청개인정보동의증적Response>(
             "api/v1/common/application-privacy-consents", request, cancellationToken);
 
-    public async Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default)
+        => GetRequestsPageAsync(1, cancellationToken);
+
+    public async Task<IReadOnlyList<ShipperRequestItem>> GetRequestsPageAsync(int page, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(page, IShipperOperationsService.MaximumRequestPage);
         await EnsureAuthorizedConnectionAsync(cancellationToken);
         var userId = ResolveUserId();
         var path = $"api/v1/shipper/requests?shipperId={Uri.EscapeDataString(userId)}";
+        if (page > 1)
+        {
+            path += FormattableString.Invariant($"&page={page}");
+        }
         var response = await GetAuthorizedJsonAsync<IReadOnlyList<화주운송의뢰응답>>(path, cancellationToken);
         var items = response?.Select(ToRequestItem).ToArray() ?? [];
         foreach (var item in items)

@@ -9,10 +9,18 @@ namespace SsalddelApp.Services;
 
 public interface IShipperOperationsService
 {
+    const int RequestPageSize = 50;
+    const int MaximumRequestPage = int.MaxValue / RequestPageSize;
+
     Task<신청개인정보동의증적Response?> RecordPrivacyConsentAsync(신청개인정보동의기록Request request, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("운송 개인정보 동의 기록이 구성되지 않았습니다.");
 
     Task<IReadOnlyList<ShipperRequestItem>> GetRequestsAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShipperRequestItem>> GetRequestsPageAsync(int page, CancellationToken cancellationToken = default)
+        => page == 1
+            ? GetRequestsAsync(cancellationToken)
+            : throw new NotSupportedException("현재 운송 조회에서 이전 의뢰를 지원하지 않습니다.");
 
     Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default);
 

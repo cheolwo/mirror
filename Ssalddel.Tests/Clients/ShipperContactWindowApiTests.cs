@@ -239,6 +239,27 @@ public sealed class ShipperContactWindowApiTests
         Assert.Null(observer.GetSnapshot("missing-input"));
     }
 
+    [Theory]
+    [InlineData(1, "?shipperId=shipper-a")]
+    [InlineData(2, "?shipperId=shipper-a&page=2")]
+    public async Task 의뢰목록은_기존화주GET으로_요청한페이지를조회한다(int page, string expectedQuery)
+    {
+        var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
+        await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        using var handler = new RequestPageHandler(expectedQuery);
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        var observer = new TransportRequestLedgerObserver();
+        await using var realtime = new TransportRequestLedgerRealtimeClient(client.BaseAddress, _ => Task.FromResult<string?>(null), observer);
+        var service = new ServerBackedShipperOperationsService(client, auth, CreateAuthApi(client, auth), observer, realtime);
+
+        var requests = page == 1
+            ? await service.GetRequestsAsync()
+            : await service.GetRequestsPageAsync(page);
+
+        Assert.Empty(requests);
+        Assert.Equal(1, handler.RequestCount);
+    }
+
     private static AuthApiService CreateAuthApi(HttpClient client, IAuthSession auth)
         => new(client, auth,
             new 꾸미기보유권동기화Service(client, auth, new UnusedDecorationStore(), new PlatformCommunityDecorationStateService()),
@@ -248,6 +269,24 @@ public sealed class ShipperContactWindowApiTests
     {
         public Task<노드스티커보유권동기화Response?> LoadAsync(string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveAsync(노드스티커보유권동기화Response snapshot, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class RequestPageHandler(string expectedQuery) : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestCount++;
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal("/api/v1/shipper/requests", request.RequestUri!.AbsolutePath);
+            Assert.Equal(expectedQuery, request.RequestUri.Query);
+            Assert.Equal("access-a", request.Headers.Authorization?.Parameter);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(Array.Empty<화주운송의뢰응답>())
+            });
+        }
     }
 
     private sealed class RecoveryHandler(HttpStatusCode status) : HttpMessageHandler

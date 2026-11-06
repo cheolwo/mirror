@@ -25,6 +25,15 @@ public sealed class SampleShipperOperationsService : IShipperOperationsService
         return Task.FromResult(_store.GetRequests());
     }
 
+    public async Task<IReadOnlyList<ShipperRequestItem>> GetRequestsPageAsync(int page, CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(page, IShipperOperationsService.MaximumRequestPage);
+        const int size = IShipperOperationsService.RequestPageSize;
+        return (await GetRequestsAsync(cancellationToken)).OrderByDescending(item => item.생성일시)
+            .Skip((page - 1) * size).Take(size).ToArray();
+    }
+
     public Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

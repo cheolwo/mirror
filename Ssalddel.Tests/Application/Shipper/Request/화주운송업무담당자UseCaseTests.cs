@@ -180,6 +180,29 @@ public sealed class 화주운송업무담당자UseCaseTests
     }
 
     [Fact]
+    public async Task 생성시각이같은의뢰가_페이지경계에서고유번호순으로나뉜다()
+    {
+        await using var db = CreateContext();
+        var requests = Enumerable.Range(1, 51).Select(id =>
+        {
+            var request = CreateRequest();
+            request.Id = id;
+            request.의뢰Id = $"request-{id}";
+            return request;
+        });
+        db.화주운송의뢰.AddRange(requests);
+        await db.SaveChangesAsync();
+        var accessor = new TestCurrentUserAccessor("shipper-1", "화주");
+        var handler = new 의뢰목록조회QueryHandler(db, accessor, CreateUseCase(db, "shipper-1"));
+
+        var first = await handler.Handle(new 의뢰목록조회Query(null, null, null, null, 1, 50), CancellationToken.None);
+        var second = await handler.Handle(new 의뢰목록조회Query(null, null, null, null, 2, 50), CancellationToken.None);
+
+        Assert.Equal(Enumerable.Range(2, 50).Reverse().Select(id => $"request-{id}"), first.Select(request => request.의뢰Id));
+        Assert.Equal("request-1", Assert.Single(second).의뢰Id);
+    }
+
+    [Fact]
     public async Task 보조담당자의주소수정은_화주가추가권한을부여한판본부터허용된다()
     {
         await using var db = CreateContext();

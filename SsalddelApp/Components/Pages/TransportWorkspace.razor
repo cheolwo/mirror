@@ -2,6 +2,7 @@
 @using SsalddelApp.Models.Shipper
 @using SsalddelApp.Services
 @using Ssalddel.Client.Infrastructure.Transport
+@using Ssalddel.Contracts.Shipper.Request
 @using SsalddelApp.ViewModels.Shipper
 @inject IAuthSession AuthSession
 @inject IShipperOperationsService ShipperOperations
@@ -20,7 +21,7 @@
                 <MudText Typo="Typo.body2" Color="Color.Secondary">운송 의뢰별 결제, 배차, 운송 진행 상태와 정책 정보를 처리합니다.</MudText>
             </MudStack>
             <MudStack Row="true" Spacing="2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">새로고침</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@loading" OnClick="LoadAsync">새로고침</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="GoToRequestWizard">운송 의뢰 등록</MudButton>
             </MudStack>
         </MudStack>
@@ -39,33 +40,42 @@
                 <MudAlert Severity="@messageSeverity" Dense="true">@message</MudAlert>
             }
 
-            <MudGrid>
-                @foreach (var metric in Metrics)
-                {
-                    <MudItem xs="12" sm="4">
-                        <MudPaper Elevation="0" Class="pa-3 shipper-panel h-100">
-                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                                <MudStack Spacing="0">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@metric.Label</MudText>
-                                    <MudText Typo="Typo.h5" Color="@metric.Color">@metric.Value</MudText>
+            @if (loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                <MudText Typo="Typo.body2" role="status">운송 의뢰를 불러오는 중입니다.</MudText>
+            }
+
+            @if (hasLoaded)
+            {
+                <MudGrid>
+                    @foreach (var metric in Metrics)
+                    {
+                        <MudItem xs="12" sm="4">
+                            <MudPaper Elevation="0" Class="pa-3 shipper-panel h-100">
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@metric.Label</MudText>
+                                        <MudText Typo="Typo.h5" Color="@metric.Color">@metric.Value</MudText>
+                                    </MudStack>
+                                    <MudIcon Icon="@metric.Icon" Color="@metric.Color" Size="Size.Large" />
                                 </MudStack>
-                                <MudIcon Icon="@metric.Icon" Color="@metric.Color" Size="Size.Large" />
-                            </MudStack>
-                        </MudPaper>
-                    </MudItem>
-                }
-            </MudGrid>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
 
             <MudStack Spacing="1">
                 <MudText Typo="Typo.h6">@L.T("Home.RequestList")</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">의뢰 상세와 민감 정보는 필요한 건만 펼쳐서 확인합니다.</MudText>
             </MudStack>
 
-            @if (requests.Count == 0)
+            @if (hasLoaded && !loading && requests.Count == 0 && string.IsNullOrWhiteSpace(message))
             {
-                <MudAlert Severity="Severity.Info">@L.T("Home.NoRequests")</MudAlert>
+                <MudAlert Severity="Severity.Info">@(page == 1 ? L.T("Home.NoRequests") : "이 페이지에 표시할 운송 의뢰가 없습니다.")</MudAlert>
             }
-            else
+            else if (requests.Count > 0)
             {
                 <MudGrid>
                     @foreach (var request in OrderedRequests)
@@ -145,25 +155,53 @@
                     }
                 </MudGrid>
             }
+            @if (hasLoaded && (page > 1 || hasOlderRequests))
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.caption">@(page)페이지</MudText>
+                    @if (page > 1)
+                    {
+                        <MudButton Variant="Variant.Text" Disabled="@loading"
+                                   OnClick="@(() => LoadPageAsync(page - 1, synchronizeAddress: true))">최신 쪽 보기</MudButton>
+                    }
+                    @if (hasOlderRequests)
+                    {
+                        <MudButton Variant="Variant.Text" Disabled="@loading"
+                                   OnClick="@(() => LoadPageAsync(page + 1, synchronizeAddress: true))">이전 의뢰 보기</MudButton>
+                    }
+                </MudStack>
+            }
         }
     </MudStack>
 </MudContainer>
 
 @code {
+    [SupplyParameterFromQuery(Name = "page")]
+    public string? PageQuery { get; set; }
+
     private List<ShipperRequestItem> requests = [];
     private string? message;
     private Severity messageSeverity = Severity.Info;
     private CancellationTokenSource? refreshCancellation;
     private ShipperQueryLifetime? queryLifetime;
     private bool disposed;
+    private bool loading;
+    private bool hasLoaded;
+    private bool initialized;
+    private bool hasOlderRequests;
+    private int page = 1;
+    private int observedRoutePage = 1;
+
+    private int RoutePage => int.TryParse(PageQuery, out var parsed) && parsed is >= 1 and <= IShipperOperationsService.MaximumRequestPage
+        ? parsed : 1;
 
     private IEnumerable<ShipperRequestItem> OrderedRequests => requests.OrderByDescending(x => x.생성일시);
 
     private IReadOnlyList<WorkspaceMetric> Metrics =>
     [
-        new("전체 의뢰", $"{requests.Count:N0}건", Icons.Material.Filled.ReceiptLong, Color.Primary),
-        new("결제 대기", $"{requests.Count(x => IsMatch(x.결제상태, "결제대기", "미결제", "대기")):N0}건", Icons.Material.Filled.Payments, Color.Warning),
-        new("배차 진행", $"{requests.Count(x => IsMatch(x.배차상태, "매칭중", "배차대기", "기사배정", "운송중")):N0}건", Icons.Material.Filled.LocalShipping, Color.Info)
+        new("이 페이지 의뢰", $"{requests.Count:N0}건", Icons.Material.Filled.ReceiptLong, Color.Primary),
+        new("이 페이지 결제 대기", $"{requests.Count(x => IsMatch(x.결제상태, "결제대기", "미결제", "대기")):N0}건", Icons.Material.Filled.Payments, Color.Warning),
+        new("이 페이지 배차 진행", $"{requests.Count(x => IsMatch(x.배차상태, "매칭중", "배차대기", "기사배정", "운송중")):N0}건", Icons.Material.Filled.LocalShipping, Color.Info)
     ];
 
     protected override async Task OnInitializedAsync()
@@ -173,10 +211,26 @@
         LedgerObserver.RefreshRequested += OnLedgerRefreshRequested;
         await AuthSession.RestoreAsync();
         if (disposed) return;
+        page = observedRoutePage = RoutePage;
+        initialized = true;
         await LoadAsync();
         if (disposed) return;
         refreshCancellation = new CancellationTokenSource();
         _ = RunFallbackPollingAsync(refreshCancellation.Token);
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        var requestedPage = RoutePage;
+        if (!initialized || requestedPage == observedRoutePage)
+        {
+            return Task.CompletedTask;
+        }
+
+        observedRoutePage = requestedPage;
+        return requestedPage == page && !loading
+            ? Task.CompletedTask
+            : LoadPageAsync(requestedPage, synchronizeAddress: true);
     }
 
     public void Dispose()
@@ -198,13 +252,21 @@
             if (disposed) return;
             requests = [];
             message = null;
+            loading = false;
+            hasLoaded = false;
+            hasOlderRequests = false;
+            page = 1;
+            if (initialized && RoutePage != 1)
+            {
+                Navigation.NavigateTo(ShipperRoutes.TransportWorkspace, replace: true);
+            }
             StateHasChanged();
         });
 
     private void OnLedgerRefreshRequested(TransportRequestLedgerRefreshRequest request)
         => _ = InvokeAsync(async () =>
         {
-            if (disposed) return;
+            if (disposed || !initialized || loading) return;
             await LoadAsync();
         });
 
@@ -218,7 +280,7 @@
             {
                 await InvokeAsync(async () =>
                 {
-                    if (disposed) return;
+                    if (disposed || loading) return;
                     await LoadAsync();
                 });
             }
@@ -228,26 +290,59 @@
         }
     }
 
-    private async Task LoadAsync()
+    private Task LoadAsync() => LoadPageAsync(page);
+
+    private async Task LoadPageAsync(int requestedPage, bool synchronizeAddress = false)
     {
         if (disposed || queryLifetime is null) return;
         if (!AuthSession.IsLoggedIn)
         {
             requests = [];
+            message = null;
+            loading = false;
+            hasLoaded = false;
+            hasOlderRequests = false;
             return;
         }
 
+        var sessionRevision = AuthSession.SessionRevision;
+        var finished = false;
+        loading = true;
+        StateHasChanged();
         await queryLifetime.RunAsync(
-            cancellationToken => ShipperOperations.GetRequestsAsync(cancellationToken),
-            result => { requests = result.ToList(); message = null; },
+            cancellationToken => ShipperOperations.GetRequestsPageAsync(requestedPage, cancellationToken),
+            result =>
+            {
+                if (hasLoaded && requestedPage != page && result.Count == 0)
+                {
+                    messageSeverity = Severity.Info;
+                    message = requestedPage > page ? "더 오래된 의뢰가 없습니다." : "이 페이지에 표시할 운송 의뢰가 없습니다.";
+                    if (requestedPage > page)
+                    {
+                        hasOlderRequests = false;
+                    }
+                    return;
+                }
+
+                requests = result.ToList();
+                page = requestedPage;
+                hasLoaded = true;
+                hasOlderRequests = page < IShipperOperationsService.MaximumRequestPage
+                    && requests.Count == IShipperOperationsService.RequestPageSize;
+                message = null;
+            },
             ex =>
             {
-                messageSeverity = requests.Count == 0 ? Severity.Error : Severity.Warning;
-                message = requests.Count == 0
+                messageSeverity = hasLoaded ? Severity.Warning : Severity.Error;
+                message = !hasLoaded
                     ? $"서버 API 조회 실패: {ex.Message}"
                     : $"최신 상태를 확인하지 못해 마지막 조회 결과를 표시합니다: {ex.Message}";
             },
-            StateHasChanged);
+            () => { finished = true; loading = false; StateHasChanged(); });
+        if (synchronizeAddress && finished && !disposed && AuthSession.SessionRevision == sessionRevision && RoutePage != page)
+        {
+            Navigation.NavigateTo(PagePath(page), replace: true);
+        }
     }
 
     private static bool IsMatch(string? value, params string[] keywords)
@@ -350,9 +445,14 @@
     {
         if (!string.IsNullOrWhiteSpace(request.의뢰Id))
         {
-            Navigation.NavigateTo(ShipperRoutes.RequestDetailFor(request.의뢰Id));
+            var context = new ShipperRequestDetailNavigationContext { ReturnPath = PagePath(page) };
+            Navigation.NavigateTo(context.PathFor(ShipperRequestDetailScreenKind.Summary, request.의뢰Id));
         }
     }
+
+    private static string PagePath(int targetPage) => targetPage == 1
+        ? ShipperRoutes.TransportWorkspace
+        : FormattableString.Invariant($"{ShipperRoutes.TransportWorkspace}?page={targetPage}");
 
     private void GoToRequestWizard() => Navigation.NavigateTo(ShipperRoutes.Request);
 
