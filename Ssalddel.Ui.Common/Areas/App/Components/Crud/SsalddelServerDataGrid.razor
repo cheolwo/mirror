@@ -47,12 +47,16 @@
                                 DelayMilliseconds="@SkeletonDelayMilliseconds" />
     </LoadingContent>
     <NoRecordsContent>
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="pa-4">@EmptyText</MudText>
+        @if (HasSuccessfulQuery)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="pa-4">@EmptyText</MudText>
+        }
     </NoRecordsContent>
     <PagerContent>
         <MudDataGridPager T="TItem"
                           PageSizeOptions="@PageSizeOptions"
                           RowsPerPageString="페이지당 항목"
+                          ShowPageNumber="@HasSuccessfulQuery"
                           InfoFormat="{first_item}-{last_item} / {all_items}" />
     </PagerContent>
         </MudDataGrid>
@@ -117,6 +121,8 @@
 
     [Parameter]
     public int? MinimumWidth { get; set; }
+
+    private bool HasSuccessfulQuery => ViewModel.상태 == Api작업상태.성공;
 
     private string? GridContainerStyle => MinimumWidth is > 0
         ? $"min-width: {MinimumWidth.Value}px;"
