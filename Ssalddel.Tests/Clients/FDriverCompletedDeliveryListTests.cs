@@ -178,6 +178,35 @@ public sealed class FDriverCompletedDeliveryListTests
         Assert.DoesNotContain("private-error-payload", model.StatusText);
     }
 
+    [Fact]
+    public async Task FailedRefreshOfEmptyDate_HidesNormalEmptyStateUntilSameDateRetrySucceeds()
+    {
+        var (model, api, _, _) = Create();
+        var requestedDates = new List<DateOnly>();
+        api.DailySettlement = (date, _) =>
+        {
+            requestedDates.Add(date);
+            return requestedDates.Count == 2
+                ? Task.FromException<FoodDeliveryDailySettlementDto>(
+                    new FDriverApiException("Temporary failure", HttpStatusCode.ServiceUnavailable))
+                : Task.FromResult(Daily(date, 0));
+        };
+
+        await model.ActivateAsync();
+        Assert.True(model.HasNoItems);
+
+        await model.RefreshCommand.ExecuteAsync(null);
+        Assert.True(model.IsLoaded);
+        Assert.False(model.HasNoItems);
+        Assert.Contains("이전 조회 결과", model.StatusText);
+        Assert.True(model.RefreshCommand.CanExecute(null));
+
+        await model.RefreshCommand.ExecuteAsync(null);
+        Assert.True(model.HasNoItems);
+        Assert.Equal("한국 시간 전달 완료일 기준", model.StatusText);
+        Assert.Equal([Day, Day, Day], requestedDates);
+    }
+
     [Theory]
     [InlineData("Deactivate")]
     [InlineData("Pause")]

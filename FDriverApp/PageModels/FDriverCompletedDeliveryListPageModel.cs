@@ -26,6 +26,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
     private bool _foreground = true;
     private bool _navigationInProgress;
     private bool _sessionSubscribed;
+    private bool _lastRefreshFailed;
     private FDriverDailySettlementItem? _firstVisibleItem;
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.UtcNow.AddHours(9).Date;
@@ -41,7 +42,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
     public string PageText => $"{PageNumber} / {PageCount}페이지";
     public bool HasPreviousPage => IsLoaded && !IsLoading && PageNumber > 1;
     public bool HasNextPage => IsLoaded && !IsLoading && PageNumber < PageCount;
-    public bool HasNoItems => IsLoaded && !IsLoading && Items.Count == 0;
+    public bool HasNoItems => IsLoaded && !IsLoading && !_lastRefreshFailed && Items.Count == 0;
     public int? ScrollRestoreIndex
     {
         get
@@ -143,6 +144,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
                 .ThenBy(row => row.SettlementId, StringComparer.Ordinal)
                 .Select(row => FDriverDailySettlementItem.From(row, OpenDetailAsync)).ToArray();
             _loadedOwner = owner;
+            _lastRefreshFailed = false;
             IsLoaded = true;
             PageNumber = Math.Clamp(PageNumber, 1, PageCount);
             RenderPage();
@@ -170,9 +172,11 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
                 }
             }
             else
-                // 임의 서버 오류 본문이나 오래된 성공 상태를 정상 빈 목록으로 표시하지 않습니다.
+            {
+                _lastRefreshFailed = true;
                 StatusText = "완료 내역을 조회하지 못했습니다. 다시 조회해 주세요."
                     + (IsLoaded ? " 이전 조회 결과입니다." : string.Empty);
+            }
         }
         finally
         {
@@ -293,6 +297,7 @@ public sealed partial class FDriverCompletedDeliveryListPageModel : ObservableOb
         CancelRequests();
         _allItems = [];
         _loadedOwner = null;
+        _lastRefreshFailed = false;
         IsLoaded = false;
         IsLoading = false;
         PageNumber = 1;
