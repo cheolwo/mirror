@@ -1,0 +1,414 @@
+{
+  "schemaVersion": 1,
+  "purpose": "기존 출처 계약을 재사용하는 정기 수집 실행 정책. 공급자 정본 catalog나 운영 원장을 대체하지 않음.",
+  "outputRoot": "../../artifacts/local/data-collection-runs",
+  "limits": {
+    "maxRequests": 6,
+    "maxTotalBytes": 12582912,
+    "timeoutSeconds": 30
+  },
+  "security": {
+    "allowedUrls": [
+      "https://www.code.go.kr/etc/codeFullDown.do",
+      "https://api.worldbank.org/v2/country/KOR/indicator/AG.LND.ARBL.HA?format=json&mrv=1&per_page=100",
+      "https://api.bls.gov/publicAPI/v1/timeseries/data/",
+      "https://data.seoul.go.kr/dataVisual/seoul/seoulLivingPopulation.do",
+      "https://data.seoul.go.kr/dataVisual/seoul/capitalRegionLivingMigration.do",
+      "https://data.seoul.go.kr/dataList/OA-13291/A/1/datasetView.do",
+      "https://www.data.go.kr/catalog/15062056/fileData.json",
+      "https://www.data.go.kr/catalog/15151805/openapi.json",
+      "https://www.data.go.kr/catalog/15151809/openapi.json",
+      "https://www.data.go.kr/catalog/15095071/openapi.json",
+      "https://www.data.go.kr/catalog/15100475/openapi.json",
+      "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do"
+    ]
+  },
+  "jobs": [
+    {
+      "id": "geography",
+      "title": "데이터 수집 · 행정·공간·시설",
+      "cadenceKst": "월요일 13:10",
+      "inventoryRefs": [
+        "artifacts/local/data-collection-audit-20261111/spatial-audit.json",
+        "artifacts/local/data-collection-audit-20261111/agriculture-audit.json"
+      ],
+      "sources": [
+        {
+          "id": "mois-legal-dong",
+          "sourceId": "mois-standard-codes",
+          "datasetId": "korea-legal-dong-codes",
+          "status": "ready",
+          "kind": "dataset",
+          "method": "POST",
+          "url": "https://www.code.go.kr/etc/codeFullDown.do",
+          "form": {
+            "codeseId": "법정동코드"
+          },
+          "validator": "legal_dong_zip",
+          "maxBytes": 5242880,
+          "maxExpandedBytes": 20971520,
+          "maxRecords": 100000,
+          "intervalHours": 120,
+          "unit": "법정동 코드·명칭·폐지 여부",
+          "contractRef": "Ssalddel/Services/External/PublicData/Korea/대한민국법정동CodeSource.cs",
+          "redistributionApproved": false
+        },
+        {
+          "id": "osm-built-environment",
+          "sourceId": "osm-existing-snapshots",
+          "datasetId": "neighborhood-map",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "기존 OSM acquire는 동결 판본 전용. 새 범위·요청량·라이선스와 원문 지문을 검토하기 전 원본을 재취득하지 않는다."
+        },
+        {
+          "id": "administrative-jurisdictions",
+          "sourceId": "mois-resident-registration-codes",
+          "datasetId": "korea-administrative-legal-jurisdictions",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "기존 ArchiveUrl은 특정 시행일 ZIP. 최신판 발견·검증 없이 반복하지 않는다."
+        },
+        {
+          "id": "facilities-business-certification",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "사업체·공동주택·물류시설·관광·HACCP 등은 기존 catalog/승인/키/지역·페이지 상한과 DB분리 검토 전 자동호출하지 않는다. 수집 완료·반입·게시를 구분한다."
+        }
+      ]
+    },
+    {
+      "id": "city-activity",
+      "title": "데이터 수집 · 인구·이동·교통",
+      "cadenceKst": "매일 09:20",
+      "limits": {
+        "maxRequests": 7,
+        "maxTotalBytes": 20971520,
+        "timeoutSeconds": 30
+      },
+      "inventoryRefs": [
+        "artifacts/local/data-collection-audit-20261111/spatial-audit.json"
+      ],
+      "sources": [
+        {
+          "id": "seoul-population-metadata",
+          "sourceId": "seoul-open-data",
+          "datasetId": "population-reference",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://data.seoul.go.kr/dataVisual/seoul/seoulLivingPopulation.do",
+          "validator": "html",
+          "maxBytes": 2097152,
+          "intervalHours": 20,
+          "contractRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/population-traffic-map.proposal.r138.md",
+          "unit": "공급처 안내; 인구 관측값 아님"
+        },
+        {
+          "id": "seoul-mobility-metadata",
+          "sourceId": "seoul-open-data",
+          "datasetId": "mobility-reference",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://data.seoul.go.kr/dataVisual/seoul/capitalRegionLivingMigration.do",
+          "validator": "html",
+          "maxBytes": 2097152,
+          "intervalHours": 20,
+          "unit": "공급처 안내; 이동 관측값 아님"
+        },
+        {
+          "id": "seoul-traffic-metadata",
+          "sourceId": "seoul-open-data",
+          "datasetId": "traffic-reference",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://data.seoul.go.kr/dataList/OA-13291/A/1/datasetView.do",
+          "validator": "html",
+          "maxBytes": 2097152,
+          "intervalHours": 20,
+          "unit": "공급처 안내; 속도 관측값 아님"
+        },
+        {
+          "id": "seoul-trading-population",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-15568",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "POST",
+          "url": "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do",
+          "form": {
+            "srvType": "S", "infId": "OA-15568", "serviceKind": "0", "pageNo": "1",
+            "gridTotalCnt": "", "ssUserId": "SAMPLE_VIEW", "strWhere": "",
+            "strOrderby": "STDR_YYQU_CD DESC", "filterCol": "", "txtFilter": ""
+          },
+          "validator": "seoul_activity_csv",
+          "validationPolicyVersion": "seoul-csv-v1",
+          "requiredColumns": ["기준_년분기_코드", "상권_코드", "상권_코드_명", "총_유동인구_수"],
+          "periodColumn": "기준_년분기_코드",
+          "idColumns": ["기준_년분기_코드", "상권_코드"],
+          "numericColumns": ["총_유동인구_수"],
+          "spatialUnit": "상권 영역 집계; 도로링크·법정동 관측값 아님",
+          "unit": "공급자 추정 유동인구 수(명); 분기 집계 정의 유지",
+          "maxBytes": 12582912,
+          "maxRecords": 100000,
+          "intervalHours": 648,
+          "metadataUrl": "https://data.seoul.go.kr/dataList/OA-15568/S/1/datasetView.do",
+          "license": "공공누리 제1유형(출처표시); 공개 재배포는 별도 검토",
+          "redistributionApproved": false
+        },
+        {
+          "id": "seoul-administrative-population",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-22178",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "POST",
+          "url": "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do",
+          "form": {
+            "srvType": "S", "infId": "OA-22178", "serviceKind": "0", "pageNo": "1",
+            "gridTotalCnt": "", "ssUserId": "SAMPLE_VIEW", "strWhere": "",
+            "strOrderby": "STDR_YYQU_CD DESC", "filterCol": "", "txtFilter": ""
+          },
+          "validator": "seoul_activity_csv",
+          "validationPolicyVersion": "seoul-csv-v1",
+          "requiredColumns": ["기준_년분기_코드", "행정동_코드", "행정동_코드_명", "총_유동인구_수"],
+          "periodColumn": "기준_년분기_코드",
+          "idColumns": ["기준_년분기_코드", "행정동_코드"],
+          "numericColumns": ["총_유동인구_수"],
+          "spatialUnit": "행정동; 법정동으로 무배분",
+          "unit": "공급자 추정 유동인구 수(명); 분기 집계 정의 유지",
+          "maxBytes": 4194304,
+          "maxRecords": 30000,
+          "intervalHours": 648,
+          "metadataUrl": "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do",
+          "license": "공공누리 제1유형(출처표시); 공개 재배포는 별도 검토",
+          "redistributionApproved": false
+        },
+        {
+          "id": "seoul-trading-areas",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-15560",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "POST",
+          "url": "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do",
+          "form": {
+            "srvType": "S", "infId": "OA-15560", "serviceKind": "0", "pageNo": "1",
+            "gridTotalCnt": "", "ssUserId": "SAMPLE_VIEW", "strWhere": "",
+            "strOrderby": "", "filterCol": "", "txtFilter": ""
+          },
+          "validator": "seoul_activity_csv",
+          "validationPolicyVersion": "seoul-csv-v1",
+          "requiredColumns": ["상권_코드", "상권_코드_명", "행정동_코드", "엑스좌표_값", "와이좌표_값", "영역_면적"],
+          "idColumns": ["상권_코드"],
+          "numericColumns": ["엑스좌표_값", "와이좌표_값", "영역_면적"],
+          "spatialUnit": "상권 대표좌표·면적·행정동 코드; 폴리곤 경계 아님",
+          "unit": "공급자 투영 좌표값·영역 면적; CSV만으로 좌표계 확정하지 않음",
+          "maxBytes": 1048576,
+          "maxRecords": 5000,
+          "intervalHours": 648,
+          "metadataUrl": "https://data.seoul.go.kr/dataList/OA-15560/S/1/datasetView.do",
+          "redistributionApproved": false
+        },
+        {
+          "id": "seoul-administrative-areas",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-22160",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "POST",
+          "url": "https://datafile.seoul.go.kr/bigfile/iot/sheet/csv/download.do",
+          "form": {
+            "srvType": "S", "infId": "OA-22160", "serviceKind": "0", "pageNo": "1",
+            "gridTotalCnt": "", "ssUserId": "SAMPLE_VIEW", "strWhere": "",
+            "strOrderby": "", "filterCol": "", "txtFilter": ""
+          },
+          "validator": "seoul_activity_csv",
+          "validationPolicyVersion": "seoul-csv-v1",
+          "requiredColumns": ["행정동_코드", "행정동_명", "엑스좌표_값", "와이좌표_값", "영역_면적"],
+          "idColumns": ["행정동_코드"],
+          "numericColumns": ["엑스좌표_값", "와이좌표_값", "영역_면적"],
+          "spatialUnit": "행정동 대표좌표·면적; 법정동·폴리곤 경계 아님",
+          "unit": "공급자 투영 좌표값·영역 면적; CSV만으로 좌표계 확정하지 않음",
+          "maxBytes": 262144,
+          "maxRecords": 1000,
+          "intervalHours": 648,
+          "metadataUrl": "https://data.seoul.go.kr/dataList/OA-22160/S/1/datasetView.do",
+          "redistributionApproved": false
+        },
+        {
+          "id": "seoul-road-link-population",
+          "sourceId": "seoul-bigdata-campus",
+          "datasetId": "B030",
+          "kind": "dataset",
+          "status": "blocked",
+          "reasonCode": "campus_access_review_required",
+          "reason": "10m 도로구간별 추정 유동인구 원천은 캠퍼스 방문·반출 심사가 필요하다. 공개 상권/행정동 집계를 도로 인구로 대체하지 않는다.",
+          "metadataUrl": "https://bigdata.seoul.go.kr/cnts.do?r_id=P212"
+        },
+        {
+          "id": "seoul-new-observations",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "과거 면목동 2026-07 생활인구 4464관측의 수집·DB검증 기록은 있지만 현재 원본 ZIP 경로는 없다. 신규250m·이동·실시간속도 본문은 현schema/지원지역/자격/단위를 확인한 어댑터 연결 전 대기한다."
+        }
+      ]
+    },
+    {
+      "id": "production-prices",
+      "title": "데이터 수집 · 생산·농수산·물가",
+      "cadenceKst": "매일 17:20; 출처별 주기에 도달한 자료만 호출",
+      "inventoryRefs": [
+        "artifacts/local/data-collection-audit-20261111/agriculture-audit.json"
+      ],
+      "sources": [
+        {
+          "id": "worldbank-kor-arable",
+          "sourceId": "world-bank-indicators",
+          "datasetId": "wdi-ag-lnd-arbl-ha",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://api.worldbank.org/v2/country/KOR/indicator/AG.LND.ARBL.HA?format=json&mrv=1&per_page=100",
+          "validator": "worldbank",
+          "maxBytes": 65536,
+          "intervalHours": 720,
+          "unit": "ha",
+          "contractRef": "Ssalddel/Services/External/PublicData/WorldBank/WorldBank경지면적Source.cs",
+          "redistributionApproved": false,
+          "validationPolicyVersion": "worldbank-annual-v2"
+        },
+        {
+          "id": "bls-rice",
+          "sourceId": "bls-average-retail-food-prices",
+          "datasetId": "APU0000701312",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "POST",
+          "url": "https://api.bls.gov/publicAPI/v1/timeseries/data/",
+          "json": {
+            "seriesid": [
+              "APU0000701312"
+            ],
+            "startyear": "{{previousYear}}",
+            "endyear": "{{currentYear}}"
+          },
+          "seriesIds": [
+            "APU0000701312"
+          ],
+          "validator": "bls",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "미국 USD/파운드; 품목 규격은 기존 BLS catalog에 따른다",
+          "redistributionApproved": false,
+          "validationPolicyVersion": "bls-missing-price-v2"
+        },
+        {
+          "id": "kamis-domestic-prices",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "설정 키 존재는 확인했지만 유효성/최종설정 병합은 미검증. 기존 CLI의 자동 migration·게시와 분리한 raw-only 실행 경로 확인 전 수집 금지."
+        },
+        {
+          "id": "other-agriculture-price-providers",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "USDA NASS·AMS·농사로·ASOS·StatCan·Eurostat 등 개별 catalog/작업 경계와 raw-only 실행 가능성을 각각 검토한다. 실패한 HTTP/인증을 우회하지 않는다."
+        }
+      ]
+    },
+    {
+      "id": "logistics-trade",
+      "title": "데이터 수집 · 물류·무역·항공·해운",
+      "cadenceKst": "매월 20일 09:40",
+      "inventoryRefs": [
+        "artifacts/local/data-collection-audit-20261111/spatial-audit.json"
+      ],
+      "sources": [
+        {
+          "id": "iiac-air-movement-metadata",
+          "sourceId": "data-go-kr-catalog",
+          "datasetId": "15062056",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://www.data.go.kr/catalog/15062056/fileData.json",
+          "validator": "catalog_json",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "공식 자료 메타데이터; 운송 관측값 아님",
+          "contractRef": "eng/Ssalddel.PublicDataPortalImport/항공물동량자료Pipeline.cs",
+          "title": "인천공항 항공통계 파일"
+        },
+        {
+          "id": "kcs-country-trade-metadata",
+          "sourceId": "data-go-kr-catalog",
+          "datasetId": "15100475",
+          "title": "관세청 국가별 수출입실적",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://www.data.go.kr/catalog/15100475/openapi.json",
+          "validator": "catalog_json",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "공식 자료 메타데이터; 무역 실적 관측값 아님",
+          "contractRef": "eng/Ssalddel.PublicDataPortalImport/국가무역관찰Pipeline.cs"
+        },
+        {
+          "id": "kcs-port-in-metadata",
+          "sourceId": "data-go-kr-catalog",
+          "datasetId": "15151805",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://www.data.go.kr/catalog/15151805/openapi.json",
+          "validator": "catalog_json",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "공식 자료 메타데이터; 운송 관측값 아님",
+          "contractRef": "eng/Ssalddel.PublicDataPortalImport/항공물동량자료Pipeline.cs",
+          "title": "관세청 국가별 입항물동량"
+        },
+        {
+          "id": "kcs-port-out-metadata",
+          "sourceId": "data-go-kr-catalog",
+          "datasetId": "15151809",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://www.data.go.kr/catalog/15151809/openapi.json",
+          "validator": "catalog_json",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "공식 자료 메타데이터; 운송 관측값 아님",
+          "contractRef": "eng/Ssalddel.PublicDataPortalImport/항공물동량자료Pipeline.cs",
+          "title": "관세청 국가별 출항물동량"
+        },
+        {
+          "id": "iiac-country-api-metadata",
+          "sourceId": "data-go-kr-catalog",
+          "datasetId": "15095071",
+          "kind": "metadata",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://www.data.go.kr/catalog/15095071/openapi.json",
+          "validator": "catalog_json",
+          "maxBytes": 2097152,
+          "intervalHours": 168,
+          "unit": "공식 자료 메타데이터; 운송 관측값 아님",
+          "contractRef": "eng/Ssalddel.PublicDataPortalImport/항공물동량자료Pipeline.cs",
+          "title": "인천국제공항공사 국가별 항공 통계 서비스"
+        },
+        {
+          "id": "annual-trade-movement-values",
+          "status": "blocked",
+          "kind": "dataset",
+          "reason": "기존 2025년 5국가 수출입·인천공항·항구 자료는 동결 원문과 검토보류 단위를 보존. 최신 집계 기간·다운로드 판본·현재 키를 검증하지 않고 고정 CLI를 재호출하지 않는다."
+        }
+      ]
+    }
+  ]
+}
