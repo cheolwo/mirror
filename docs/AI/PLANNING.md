@@ -1,5 +1,54 @@
 # Mirror 기획 목차
 
+## 다음 작업 버튼 확정 r151 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r151](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/next-task-button-confirmed.design.r151.md). `NextTaskButtonConfirmed / DesignDocumented / ProductUnchanged`. r150의 미정이던 시작 방식을 사용자의 `다음 작업 버튼` 선택으로 해소했다. 같은 직무·현장을 유지하고 버튼을 눌러 다음 준비 작업 한 건을 시작한다. 제안 순서·버튼 세부 배치·제품 적용은 후속이다.
+
+## 원하는 직무를 연속 수행하는 작업 대기열 r150 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r150](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/preferred-role-continuous-tasks.design.r150.md). `PreferredRoleDirectionConfirmed / ContinuousTaskFlowDocumented / NextTaskStartProposed / ProductUnchanged`. r149 대기열에서 배달만·커피만·포장만 선택해 같은 현장의 다음 작업을 이어가는 방향이다. 매 건의 경영 복귀를 선택 경로로 정밀화하며 r146/r147의 안전 인계·개별 성과/정산을 유지한다. 새 이미지 없이 문서화했고 다음 작업의 자동/버튼 시작·정렬·제품 적용은 후속이다.
+
+## 동그란 작업 대기열과 현장 미니게임 시안 r149 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r149](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/task-queue-role-minigame.concept.r149.md). `TaskQueueDirectionConfirmed / ImageConceptGenerated / VisualReviewPending / ProductUnchanged`. r144의 장소·r146의 참여 방식·r147의 역할·r148의 포장 바코드 조작을 작업 선택→현장 이동→완료 보상·경영 복귀의 한 장 시안으로 연결했다. 개별 작업 원과 역할 예시를 구분하고 선택/미완료 귀환을 완료·지급으로 세지 않는다. 시각 채택·정렬/표시 수·제품 적용은 후속이다.
+
+## 상하 레이저 바코드 타이밍 미니게임 r148 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r148](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/barcode-scan-timing-minigame.design.r148.md). `ScanTimingDirectionConfirmed / DetailedMiniGameProposed / TaskValidationSeparated / DesignDocumented / ProductNotImplemented`. 고정 바코드 위 가로 빨간 선의 상하 왕복·중앙 Space 타이밍을 r147의 입고/피킹/포장에 연결한다. 읽기와 품목/위치/수량 검증·재고 확정을 분리하고 같은 SKU의 여러 처리 단위·중복 입력·이완 인계·상위 구간 보너스를 구별했다. 속도/폭·실제 시각안·제품 적용은 후속이다.
+
+## 역할별 미니게임과 현실 기반 카페 레시피 r147 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r147](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-role-minigames-and-realistic-recipes.design.r147.md). `MultiRoleDirectionConfirmed / TaskProfilesProposed / RecipeSourcesReviewed / DesignDocumented / ProductNotImplemented`. r146의 참여 방식·보너스 자격을 기사·바리스타·창고 작업자의 역할별 구간으로 확장하는 기획이다. 카페 제조사 공개 절차와 r68 시범 배합을 구별하고, 중간 재공품·재료 소모·피킹/포장 인계를 보존한다. 조작·배합·경제 수치와 제품 구현은 후속 검토이며 Claude의 Core 통합·우유 5팩 기준선은 유지한다.
+
+## 집중·이완을 오가는 경영 r146 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r146](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/focus-relax-shared-management.design.r146.md). `UserPlanApproved / ParticipationModesDocumented / ControlHandoffPlanned / EconomyValuesPending / GameplayNotImplemented`. 같은 세션에서 직접 조작과 자동 수행/관찰을 전환하고, 동일 기본 수익과 네 업무 구간의 직접 완료 보너스 자격을 정의했다. r144 지도 관점·r145 주행·r58 자동 업무를 연결한다. 실제 구현·경제 금액/귀속은 후속이며 Claude의 Core 통합·우유 5팩 진행 범위는 유지한다.
+
+## 직접 운전하는 배달 미니게임 r145 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r145](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/direct-riding-delivery-minigame.design.r145.md). `DirectRidingDirectionConfirmed / DetailedGamePlanProposed / DesignDocumented / VisualReviewPending / ProductNotImplemented`. 방향키 직접 운전·Space 픽업/전달·일반도로/이면도로·충돌 페널티·가방 적재를 첫 미니게임으로 정리했다. r58 비직접운전의 범위 한정 후속 변경이며 r122 영상 시제품과 구현 증거를 구별한다. 회차 규모·충돌 수치·보상 귀속은 제안/미정이고 Core 통합·우유 5팩 Claude 진행 범위는 유지한다.
+
+## 지도별 OS 경영과 창고 내부 보기 r144 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r144](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/scale-os-management-focus.design.r144.md). `ScaleFocusPlanApproved / WarehouseInteriorDirectionConfirmed / DesignDocumented / VisualReviewPending / ProductUnchanged`. 건물·동네·구·광역별 주 업무, 높이 변경 시 자동 초점과 동일 높이의 OS 선택 유지, 창고 건물에서 내부 모델을 보고 지도로 복귀하는 규칙을 문서화했다. 의미 확대·지역 팩·r141/r143·Claude 시안을 참조하며 제품 구현은 후속이다. Core 통합·우유 5팩은 사용자 전달 기준 Claude 구현 중이며 이번 문서화가 그 실행 소유를 변경하지 않는다.
+
+## 회색 동네와 운영 매장 강조 r143 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r143](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gray-neighborhood-managed-stores-and-walkers.design.r143.md). `UserPlanApproved / DesignDocumented / VisualReviewPending / ProductNotImplemented / VideoDeferred`. 현재 표현 범위는 회색 배경·운영하는 매장 부분의 색 강조·작은 보행자의 생활감이다. r141 거래 흔적과 운영색을 구분하며 r142 입지·시험 영업은 별도 기획으로 보존한다. 시안 검토와 게임 적용은 후속이며 영상 제작 보류를 유지한다.
+
+## 군중 관찰과 매장 입지 시험 r142 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r142](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/crowd-location-trial-business.design.r142.md). `UserPlanApproved / DesignDocumented / VisualProductionNotIncluded / ProductNotImplemented`. r138의 군중 관찰과 r141의 점진 UI를 연결해 관찰 뒤 힌트·음식점/커피집 후보 배치·가상 시험 영업·결과 비교의 기획을 기록했다. 문서화 승인 범위이며 시안·게임 구현·WI/Goal 활성화는 포함하지 않는다.
+
+## 플레이에 따라 UI·장소 표현 확장 r141 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r141](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-focus-ui-and-place-reveal.r141.md). `UserDirectionConfirmed / ConceptDocumented / VisualReviewPending / ProductUnchanged`. 도로·핀·기사부터 시작해 관련 UI를 순차 소개하고 픽업한 매장의 낮은 입체 표현을 거래 흔적으로 유지하는 방향이다. 문서와 순차 시안 네 장의 범위이며 표시 단계·선택 보존·흔적 저장은 미구현이다. r140의 Unity Windows 우선순위와 기존 Core/uGUI 통합 경계는 유지한다.
+
+## Unity Windows 개발 집중 r140 (2026-11-12)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r140](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-windows-development-direction.r140.md). `UserDirectionConfirmed / PlanningAndStatusRefactor / ProductUnchanged`. 현재 개발 대상은 Unity 기반 Windows 실행판이다. Codex 기획·현황 정리와 Claude 구현 계획·개발 반환의 역할을 연결하고 [소비판별 구현 현황](Handoffs/Unity-Windows-구현현황.md)에서 기존 구현·시제품·통합/검증 대기를 구분한다. r139 WPF 우선순위를 대체하며 제품 파일 이동·시제품 승격·새 기능·예약 변경은 이번에 하지 않았다.
+- 이전 방향 [WPF 우선 r139](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/wpf-first-development-direction.r139.md)는 이력으로 보존한다.
+
 ## 기사 새 추천의 단발 진동·홍달배달 음성 r18 (2026-10-27)
 
 - [Approved / ReadyToDispatch 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-recommendation-signal.r18.md) · [구현·검토 APK·감각 검증 구분](../Changes/2026-10-27-driver-recommendation-signal-r18.md): `Implemented / Fast174Passed / Task16353Passed16Skipped / Apk133Packaged / SensoryNotTested`. 같은 추천은 한 번만 예약하고 새 라운드는 허용한다. 알림 설정·무음·야간 제한을 유지하며 서버 배차/FCM 설정과 운영 활성화는 포함하지 않는다.
@@ -80,7 +129,7 @@
 
 - [운영 지도 r9](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/diorama-operating-map.direction.r9.md): `DioramaOperatingMapDirectionConfirmed / MobileDesktopPriorityRetained / PlanningOnly`. 지도 중심의 상태 조회·장소/사람 선택·업무 요약·기존 상세 진입으로 Unity 역할을 좁힌다. 원장 권위·모의/운영·자료 시각·위치 근거를 구분하며 추가 구현·실행은 아직 재개하지 않았다. 직전 보류와 r8 근거는 보존한다.
 
-## 최신 방향 — 모바일·데스크톱 앱 우선, Unity 후속 보류 (2026-10-25)
+## 이전 방향 — 모바일·데스크톱 앱 우선, Unity 후속 보류 (2026-10-25 이력)
 
 - 사용자의 최신 요청으로 Unity 추가 작업을 보류하고 기존 통합 앱 1.0의 모바일·데스크톱 업무 완성도를 우선한다. 기존 Unity 자료와 공유 Simulation 코어는 보존한다.
 - [다중 센터 출고 Unity r8](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-center-fulfillment.unity.r8.md): `LocalUnityPlayValidated / FurtherUnityWorkDeferredByUser / MobileDesktopAppsPriority / OperationalDisabled`. 실제 부분 피킹·저장 복구와 관련 EditMode 46개 통과를 기록했다. 아래 r7의 Scene 미연결은 당시 이력이며 전체 경영 게임·운영 출시를 뜻하지 않는다.
