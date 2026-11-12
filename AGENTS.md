@@ -4,7 +4,7 @@
 
 ## AI 공용 컨텍스트
 
-GPT Chat과 Codex는 대화 기록이 아니라 저장소 문서를 공용 기억으로 사용한다. 작업을 시작할 때 다음 순서로 현재 상태를 확인한다.
+GPT Chat, Codex, Claude Code 등 개발 도구는 대화 기록이 아니라 저장소 문서를 공용 기억으로 사용한다. 작업을 시작할 때 다음 순서로 현재 상태를 확인한다.
 
 1. [공용 프로젝트 컨텍스트](docs/ProjectOverview/GptProjectContext.md)
 2. 게임 기획이면 [기획 목차](docs/AI/PLANNING.md)에서 현재 기획 ID·판본·상태·상하위 관계를 확인
@@ -16,7 +16,9 @@ GPT Chat과 Codex는 대화 기록이 아니라 저장소 문서를 공용 기�
 
 설계실·제작실 사이에서 작업을 인계할 때는 [역할별 인계 진입](docs/Architecture/CodexPlayableLoopGoal운영체계.md#설계실제작실-인계)을 따른다. 서로 다른 계정·데스크톱이 GitHub를 사이에 두고 교대하면 [GitHub 기반 기획·개발 작업실 교대 운영 체계](docs/Architecture/GitHub기반기획개발교대운영체계.md)도 함께 따른다. 설계실은 기존 승인 기획·명세를 준비하고, 제작실은 push된 정확한 commit과 현재 기준선을 점검한 뒤 명시적으로 수용한 범위만 진행한다. 인계 점검 통과는 실행 승인이나 Goal 자동 활성화가 아니다.
 
-현재 계정·모델·장치 이름만으로 작업 역할을 추정하지 않는다. 현재 요청이 기획 작업실이면 제품 코드를 바꾸지 않고 canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md`와 필요한 승인 인계만 갱신한다. 개발 작업실이면 `Approved` 기획과 `ReadyToDispatch` 인계, revision/hash, 작업지시서, 허용 `writePaths`가 일치할 때만 구현한다. 두 작업실의 공용 기억은 push된 저장소 문서와 정확한 Git commit이며 대화 요약이나 로컬 `artifacts/`만으로 개발을 승인하지 않는다.
+2026-11-12 사용자 요청에 따라 게임 개발은 **Unity 기반 Windows 실행판**에 집중한다. Codex는 기획·구현 현황·완료 조건 정리를, Claude는 인계받은 범위의 구현 계획·개발·검증 반환을 기본 역할로 한다. [혼용 운영 기준](docs/AI/Handoffs/Codex-Claude-혼용운영안-2026-11-12.md)과 [Unity Windows 구현 현황](docs/AI/Handoffs/Unity-Windows-구현현황.md)을 읽고 기존 구현·시제품·미구현·검증 대기를 구분한다. 도구 이름만으로 실행권을 부여하지 않는다. 게임 외 개발·수집·통합의 기존 담당과 수집 예약·USB 보호·공유 계약·제품 소유권은 유지하며, 데이터 교대는 [공통 협업 진입](docs/AI/DataCollection/Collaboration.md)을 따른다. 루트 `CLAUDE.md`는 공통 지침과 관련 정본으로 진입하는 역할만 맡는다.
+
+현재 계정·모델·장치 이름만으로 작업 역할을 추정하지 않는다. 현재 요청이 기획 작업실이면 제품 코드를 바꾸지 않고 canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md`와 필요한 승인 인계만 갱신한다. 개발 작업실이면 `Approved` 기획과 `ReadyToDispatch` 인계, revision/hash, 작업지시서, 허용 `writePaths`가 일치할 때만 구현한다. 다른 PC·클라우드 또는 같은 작업본에 직접 접근할 수 없는 별도 계정은 push된 저장소 문서와 정확한 Git commit으로 교대한다. 같은 PC의 미커밋 교대는 혼용 운영 기준에 따라 실제 경로·branch/HEAD·dirty 경계·파일 지문과 수용 범위를 대조한다. 대화 요약이나 로컬 `artifacts/`의 존재만으로 개발을 승인하지 않는다.
 
 Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전체 Ssalddel 도메인을 `World`, `Data`, `Object`, `Interaction`, `Simulation` 관점에서 다루되, 실제 구현은 검증 가능한 좁은 vertical slice로 진행한다. 영역 개발에서는 Farm·Hub·City 각각의 독립 완결 slice를 먼저 만들고, 영역 간 운송 경로를 기본 slice로 삼지 않는다. 서버는 운영 상태의 최종 권위이며 Unity의 simulation과 operational data를 명확히 구분한다.
 
@@ -39,6 +41,7 @@ Unity 개발 순서는 제품 릴리스 버전 순서와 별개다. Unity는 전
 | 작업 경로 또는 종류 | 먼저 읽을 지침 | 핵심 기준 |
 | --- | --- | --- |
 | 앱 기능 개발·보완·마감 | `docs/AI/Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md` | 같은 업무의 준비·구현·서버 완주·휴대폰 확인·제한 사용·공개 준비, 앱별 입력과 기존 제작 대장 연결. 기존 자료로 AI가 먼저 작성하고 필요한 제품 선택만 확인 |
+| 앱·Unity 화면 신설 또는 의미 있는 시각 변경 | `docs/Architecture/화면시안선행제작절차.md` | 현재 화면 확인→시안 이미지 제시·의견 반영→확정 범위 개발→실제 화면 대조. 시안과 실행 근거를 구분 |
 | `Ssalddel/` server·API·Event | `Ssalddel/AGENTS.md` | 업무 실행 책임, Command/Event, metadata |
 | `Ssalddel/Controllers/Common/`, `Ssalddel.Community/`, `Ssalddel.Contracts/Common/Community/` | `Ssalddel/AGENTS.md`, `Ssalddel.Community/AGENTS.md` | Common에 포함되는 커뮤니티 API·contract·규칙 경계 |
 | `Ssalddel/Controllers/Platform/` | `Ssalddel/Controllers/Platform/AGENTS.md` | 업무 공통과 구분되는 플랫폼 기술 API |
