@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "regional-operator-novice-cafe-development-trial.v1",
+  "profileRevision": "r227.trial.1",
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "designDocument": "novice-first-cafe-franchise-growth.confirmed.r227.md",
+  "status": "DefaultRouteConfirmed / DesignerSelectedTrialBalance / NotRuntimePack",
+  "basis": "family-cooperation-and-hiring-balance.r226.json",
+  "route": {
+    "defaultEntryProfiles": ["F", "N"],
+    "defaultEntrantsAreCafeNovices": true,
+    "experiencedRecruitmentIsOptional": true,
+    "experiencedRecruitmentEnabledInDefaultScenario": false,
+    "firstStoreTaskReadinessIsNotWholeStoreResponsibility": true,
+    "trainerReadinessIsSeparate": true,
+    "otherBusinessStartingChoicesRemoved": false
+  },
+  "authority": {
+    "runtimeLoadingAuthorized": false,
+    "realFamilyOrEmployeeDataUsed": false,
+    "playerRetainsProcurementSettlementAndExceptionDecisions": true,
+    "elapsedTrainingCountAutomaticallyGrantsResponsibility": false
+  },
+  "trialAssumptions": {
+    "directMentoringCostKrwPerPersonUnit": 20000,
+    "noviceFAndNInitialPractical": 45,
+    "meaningOf45": "Synthetic unfinished beginner readiness; no previous cafe career",
+    "responsibilityPracticeUnits": 3,
+    "responsibilityPracticeCases": ["normalShiftAndQueueCoordination", "inventoryDifferenceHoldAndReport", "pickupDelayReportAndResumeAfterPlayerDecision"],
+    "oneValidUnitPerPracticeCaseOnFirstPassOnly": true,
+    "retriesIncludedInTrialTotals": false,
+    "actualPerformerMentorTimeAndWorkAreaRequired": true,
+    "personUnitsAreNotElapsedDays": true,
+    "teacherQualificationExtraUnitsIncluded": 0,
+    "teacherQualificationCandidateExtraUnitsUnapproved": 2,
+    "wagesLostCapacityAndOpeningCostsSeparatelyAccounted": true
+  },
+  "candidates": [
+    {"comparisonCode": "F", "route": "defaultNovice", "labelKo": "공동 준비 경험이 있는 카페 실무 초보", "firstTaskPreparationUnits": 3, "responsibilityPracticeUnits": 3, "totalPersonUnits": 6, "recruitmentCostKrw": 0, "directPreparationCostKrw": 120000},
+    {"comparisonCode": "N", "route": "defaultNovice", "labelKo": "새로 합류한 카페 실무 초보", "firstTaskPreparationUnits": 10, "responsibilityPracticeUnits": 3, "totalPersonUnits": 13, "recruitmentCostKrw": 50000, "directPreparationCostKrw": 310000},
+    {"comparisonCode": "E", "route": "optionalExperienced", "labelKo": "별도 선택한 경력 채용 후보", "firstTaskPreparationUnits": 5, "responsibilityPracticeUnits": 3, "totalPersonUnits": 8, "recruitmentCostKrw": 300000, "directPreparationCostKrw": 460000}
+  ],
+  "defaultPreparationComparisons": [
+    {"scope": "outlets2To5WithExistingFirstOutletHeldConstant", "composition": {"F": 1, "N": 3}, "personUnits": 45, "directPreparationCostKrw": 1050000},
+    {"scope": "outlets2To5WithExistingFirstOutletHeldConstant", "composition": {"N": 4}, "personUnits": 52, "directPreparationCostKrw": 1240000},
+    {"scope": "allFiveOutletsIncludingFounderHandoff", "composition": {"F": 1, "N": 4}, "personUnits": 58, "directPreparationCostKrw": 1360000}
+  ],
+  "semantics": {
+    "priorProfilePreservedAsHistory": true,
+    "priorExperiencedFastExpansionIsNotDefault": true,
+    "experiencedPaybackForecastNotAppliedToDefaultNoviceGrowth": true,
+    "familySharedCooperationIsNotBaristaExperience": true,
+    "sameRoleAndWorkUseSamePayBasis": true,
+    "assignmentRequiresObservedPracticeAndAvailableCapacity": "Proposed responsibility gate; actual contract and user choice pending",
+    "actualStaffingMentorAndResponsibilityRuntimeValidated": false
+  }
+}

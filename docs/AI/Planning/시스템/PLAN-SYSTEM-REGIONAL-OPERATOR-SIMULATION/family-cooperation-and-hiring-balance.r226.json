@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "regional-operator-family-cooperation-hiring-trial.v1",
+  "profileRevision": "r226.trial.1",
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "designDocument": "family-cooperation-and-external-talent-growth.design.r226.md",
+  "status": "DesignerSelectedTrialDefaults / SyntheticComparisonOnly / NotRuntimePack",
+  "authority": {
+    "runtimeLoadingAuthorized": false,
+    "realFamilyDataUsed": false,
+    "familyMembershipAloneGrantsAbilityTrustOrRole": false,
+    "sameRoleAndWorkUseSamePayBasis": true,
+    "playerRetainsProcurementSettlementAndExceptionDecisions": true
+  },
+  "semantics": {
+    "scores": "Readiness for one specified task and handoff; not moral trust or family status",
+    "initialValues": "Explicit fictional candidate histories; never generated from kinship alone",
+    "sessions": "Person mentoring units, not elapsed days or guaranteed concurrent completion",
+    "costs": "Direct recruiting and mentoring only; wages and lost capacity separately accounted",
+    "relationshipParity": "Equivalent preparation histories can use the same conditions for any colleague",
+    "noAutomaticExpansionRevenueOrMingde": true
+  },
+  "readinessTrial": {
+    "practicalRequired": 60,
+    "cooperationRequired": 60,
+    "practicalProgressPerValidActiveTask": 5,
+    "cooperationProgressPerValidActiveTask": 4,
+    "stopIncrementingCompletedPreparationTask": true,
+    "dualProgressRequiresBothActivitiesActuallyPerformed": true,
+    "directMentoringCostKrwPerPersonSession": 20000,
+    "formula": "max(0,ceil((requiredPractical-practical)/5),ceil((requiredCooperation-cooperation)/4))"
+  },
+  "candidates": [
+    {
+      "comparisonCode": "F",
+      "labelKo": "기존 공동 준비 경험이 있는 가족 협력자",
+      "historyBasis": "Shared preparation and agreed ways of working in this fictional scenario",
+      "practical": 45,
+      "cooperation": 60,
+      "recruitingRoute": "knownDirectJoin",
+      "recruitingCostKrw": 0,
+      "sessions": 3,
+      "directPreparationCostKrw": 60000,
+      "finalPractical": 60,
+      "finalCooperation": 60
+    },
+    {
+      "comparisonCode": "N",
+      "labelKo": "새로 합류한 초보 직원",
+      "historyBasis": "Initial task skills and limited handoff practice at this business",
+      "practical": 45,
+      "cooperation": 20,
+      "recruitingRoute": "generalRecruitment",
+      "recruitingCostKrw": 50000,
+      "sessions": 10,
+      "directPreparationCostKrw": 250000,
+      "finalPractical": 60,
+      "finalCooperation": 60
+    },
+    {
+      "comparisonCode": "E",
+      "labelKo": "경력과 사전 인계 준비가 있는 외부 인재",
+      "historyBasis": "Verified previous task experience and some pre-start handoff preparation",
+      "practical": 70,
+      "cooperation": 40,
+      "recruitingRoute": "experiencedCandidateSearch",
+      "recruitingCostKrw": 300000,
+      "sessions": 5,
+      "directPreparationCostKrw": 400000,
+      "finalPractical": 70,
+      "finalCooperation": 60
+    }
+  ],
+  "preparationComparisons": [
+    {"scope": "additionalOutlets2To5Only", "composition": {"F": 1, "E": 3}, "personSessions": 18, "directPreparationCostKrw": 1260000},
+    {"scope": "additionalOutlets2To5Only", "composition": {"E": 4}, "personSessions": 20, "directPreparationCostKrw": 1600000},
+    {"scope": "additionalOutlets2To5Only", "composition": {"F": 1, "N": 3}, "personSessions": 33, "directPreparationCostKrw": 810000},
+    {"scope": "allFiveOutletsIncludingFounderHandoff", "composition": {"F": 1, "E": 4}, "personSessions": 23, "directPreparationCostKrw": 1660000},
+    {"scope": "allFiveOutletsIncludingFounderHandoff", "composition": {"E": 5}, "personSessions": 25, "directPreparationCostKrw": 2000000},
+    {"scope": "allFiveOutletsIncludingFounderHandoff", "composition": {"F": 1, "N": 4}, "personSessions": 43, "directPreparationCostKrw": 1060000}
+  ],
+  "newOutletPartialForecast": {
+    "basis": "coffee-one-cup-chain-balance.r214.json",
+    "saleKrwPerCup": 4500,
+    "variableKrwPerCup": 1157,
+    "contributionKrwPerCup": 3343,
+    "baselineFixedKrwPerForecastBusinessDay": 205000,
+    "sameRoleResponsibilityAllowanceKrw": 20000,
+    "totalFixedKrwPerForecastBusinessDay": 225000,
+    "baseStaffCostAlreadyIncludedKrw": 110000,
+    "incrementalDemandCups": 80,
+    "partialOperatingSurplusKrw": 42440,
+    "lowDemandCups": 60,
+    "lowDemandPartialOperatingSurplusKrw": -24420,
+    "operatingBreakevenCups": 68,
+    "experiencedVsNovicePreparationPremiumKrw": 150000,
+    "premiumRecoveryAdditionalForecastOperatingDays": 4,
+    "prepSessionsAreNotOperatingDays": true,
+    "sharedCatchmentDemandDuplicated": false,
+    "actualQueueRosterAndHeadquartersCapacityValidated": false,
+    "excludedOrSeparatelyAccounted": ["headquarters extra review/support", "opening capital", "wages during mentoring", "lost production capacity", "procurement and cash timing", "demand uncertainty and peak queues", "actual manager workload and rest/shift schedule"]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "operating-round-prototype-inputs.v1",
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "revision": "r187",
+  "checkedAtUtc": "2026-11-14T01:03:49.727664+00:00",
+  "planningBaselineSha256": "e09d68920810248d7c3604f3392ef7254a223c45b9bcbffae0e4eabdd73109bc",
+  "repositories": {
+    "Hongdal": {
+      "path": "C:\\Users\\user\\source\\repos\\Hongdal",
+      "branch": "dev/mirror-integration",
+      "head": "7c83c18cf9607b3854120c15f85d5dd8f9ab14d8"
+    },
+    "Unity": {
+      "path": "C:\\Users\\user\\ssalddel",
+      "branch": "unity/workstream-transition",
+      "head": "605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77",
+      "scopedStatus": [
+        "?? Assets/Ssalddel/WindowsGame/"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/결정순회Policy.cs",
+      "bytes": 17857,
+      "sha256": "286483b78ab0c086a15963eccec4e0cc80d9f17224d561d579c99d089ed3c9f0",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/결정순회Checks.cs",
+      "bytes": 7491,
+      "sha256": "dd41ab3e516697d78ba378242589ce84fc9e2961c400996df3d71bf5217da1a1",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchCycle.cs",
+      "bytes": 17686,
+      "sha256": "504c7463238ab19ce7ed76a6248ea2dc55bd57e4d80d0083d318a5545de94ce1",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchEngine.cs",
+      "bytes": 14097,
+      "sha256": "6330af086b88d38e29160c4b554ce65a9d36aea9a4f1e92cf55588bd6b5943e4",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchClock.cs",
+      "bytes": 4325,
+      "sha256": "6b69613b419852bcd1c8bb1fa2f8ea32be961b8a2f66e3b2c5cba2743651bc2d",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Kernel/GameKernel.cs",
+      "bytes": 13611,
+      "sha256": "c14c22207e4cf05ac7ebe9faa48ed46758c22418108b9f5e90c485b9b372bd8a",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Kernel/KernelContracts.cs",
+      "bytes": 10995,
+      "sha256": "e747abdc450aafbe1d1532051fa53cdcf6e7cddce38c26c348a6de1047b5967c",
+      "reviewOnly": true
+    },
+    {
+      "path": "Assets/Ssalddel/WindowsGame/Kernel/FoodDeliveryModule.cs",
+      "bytes": 8020,
+      "sha256": "207c1bf624849af0847dd0eb0a3a04ee1e2f457b45a635b4147fe86594a8406e",
+      "reviewOnly": true
+    }
+  ],
+  "ownership": "Claude existing WindowsGame work; r174 Kernel files read-first and coordinate before writing",
+  "prototypeScope": "same-session two operating rounds using existing delivery targets",
+  "runtimeExecuted": false,
+  "productFilesModified": false
+}
