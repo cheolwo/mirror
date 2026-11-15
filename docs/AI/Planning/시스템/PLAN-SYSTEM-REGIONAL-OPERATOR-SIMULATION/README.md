@@ -1,4 +1,503 @@
-# [기획·제작 · 개인용 설치형 게임 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r151]
+# [기획·제작 · 개인용 설치형 게임 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r241]
+
+[Claude 제작실 첫 읽기](../../../Handoffs/홍달-제작실-기획-첫읽기.md) · [맥락별 첫 읽기](#맥락별-첫-읽기) · [전체 색인](context-index.md)
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r240"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r239"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r238"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r237"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r236"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r235"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r234"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r233"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r232"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r231"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r230"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r229"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r228"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r227"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r226"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r225"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r224"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r223"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r222"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r221"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r220"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r218"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r217"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r216"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r215"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r214"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r213"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r212"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r211"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r210"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r209"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r208"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r207"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r206"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r205"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r204"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r203"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r202"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r201"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r200"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r199"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r198"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r197"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r196"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r195"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r194"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r193"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r192"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r191"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r190"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r189"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r188"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r187"></a>
+
+같은 주제를 찾을 때 판본 번호를 처음부터 훑지 않도록 맥락별로 정리했다. **목차는 탐색용이며 개별 기획의 확정/제안·개발 수용·실행 상태를 대신하지 않는다.**
+
+[맥락별 전체 색인](context-index.md) · [분류/원문 상태/지문 대장](context-index.json) · [프로젝트 전체 기획 목차](../../../PLANNING.md)
+
+## 실제 제작 반환 — 배달 스쿠터 모델-r1
+
+[Blender 첫 모델 반환](../../../Handoffs/2026-11-14-Codex-Blender-배달스쿠터-첫모델-반환.md) · [원본/FBX/검토 이미지](../../../../../artifacts/local/delivery-scooter-model-20261114/README.md). r191/r192 후속으로 사용자가 첫 모델 제작을 요청해 `.blend`1개·FBX4개·Blender 렌더4장을 실제 만들고 왕복 확인했다. 정적 탑승 모델이며 사용자 외형 검토·Unity 적용/게임용 최적화·업무 입력 검증은 대기다. 기존 기획의 승인 범위/코드를 바꾸거나 게임 구현을 자동 활성화하지 않는다.
+
+## 역할을 골라 사람과 인계를 관찰하는 지도
+
+[역할별 지도 관찰 r241](role-centered-observation.design.r241.md)은 역할을 골라 사람이나 사업장에 머물고, 같은 업무의 상대에게 시점을 넘겼다가 돌아오는 흐름을 다룬다. 공통 관찰 입구와 인계 전환은 구현 수용 전이다.
+
+## 라떼 한 잔의 주문·제조·배달·일일 결산 개발 계획
+
+[라떼 한 잔 개발 계획 r240](first-latte-order-delivery-development-plan.r240.md)은 면목제7동 주문자 화면에서 접수한 라떼 한 잔을 5분 제조·픽업·전달·일일 결산까지 추적하는 개발 순서와 검증 기준을 모았다. 같은 주문의 재처리와 저장 복원, 기존 매출과의 중복을 확인하며 공유 주문 계약과 구현 수용은 후속이다.
+
+## 중개업자 인물 카드와 한시적 장소 점수 개입
+
+[인물 카드 후속 r239](traffic-broker-person-card-and-temporary-ranking.design.r239.md)은 정식 광고 노출/결과 확인 뒤 만나는 중개업자에게 계약별 게임 비용을 지급하고, 가상 계정군의 잠정 관심이 다음 색인의 일반 순위에 한시 반영되는 규칙을 제안한다. 기존 검색 본체는 Claude 계획대로 두며, 정상 수요·주문과 중개 관여를 구분한다. 인물/계약·수치·시안은 후속 검토다.
+
+## 인구 기반 가상 검색과 홍달 플레이스 순위·페이지
+
+[검색 우선 기획 r238](hongdal-place-population-keyword-search-and-ranking.proposal.r238.md)은 가상 고객의 검색량·키워드별 점수와 결과 페이지를 먼저 준비한다. 상세 프로필 완성은 선행조건에서 풀고, 한 동의 카페·라떼 검색과 최소 카드·노출 비교를 첫 범위로 제안한다. 기존 주문/동 매출과 중복되지 않는 검색 실험이며 실제 주문 연결은 후속이다.
+
+## 배달했던 음식점의 플레이스 정보를 먼저 채움
+
+[홍달 플레이스 개인 픽업 프로필 r237](hongdal-place-recorded-pickup-profiles-first.proposal.r237.md)은 기록의 장소를 목록·상세로 먼저 확인하고 지도·빛을 잇는 우선순위 제안이다. 로컬 프로필 864곳, 정확 인허가 353곳과 개인 과거 메뉴 관측을 준비했으며 실제 화면은 Claude 시안·개발 계획으로 이어간다.
+
+## M키로 행정동 디오라마를 골라 이동
+
+[행정동 모듈 선택창 r236](m-key-administrative-dong-diorama-selector.confirmed.r236.md)은 M으로 사각형 카드 목록을 열고 클릭한 동의 실제 지도 위치로 가는 확정이다. 미리보기·중앙 창 배치·선택 후 닫기는 첫 시안 제안이며 기존 업무 요약은 화면 버튼으로 전환한다.
+
+## 픽업 매장을 빛으로 보기 전의 위치 검증
+
+[주소·원본 건물·실행판 지붕 연구 r234](pickup-location-verification-before-lighting.research.r234.md)에 여러 동의 픽업 지점 검사와 보완 후보를 저장했다. 첫 동은 검증 결과를 보고 고른다. 이 작업실은 정보 수집·검증과 기획을 중심으로 진행한다.
+
+## 내 배달 기록을 지도에서 보기
+
+[개인 기록의 매핑과 빛 r233](personal-delivery-history-diorama-and-lights.proposal.r233.md)은 픽업 매장 대표점·건물 후보와 전달 도로·지역을 근거 수준대로 연결한다. 첫 비교는 면목제3·8동 하루의 매장 빛이며 선택한 한 건의 연결과 이동 재생을 후속으로 준비한다.
+
+[개발 계획과 시안 r235](personal-delivery-lights-dev-plan-and-mockup.r235.md)는 로컬 기록 집계(4개 구 1,505건), 빛의 두 채널(후광=방문 빈도, 중심·배지=r234 검증 상태), D0~D4 구현 단계와 실제 경계·건물로 그린 시안 세 장을 담는다. 첫 동·날짜·주소 검토 370곳의 표시 방식은 사용자 결정 대기다.
+
+## 브랜드 점포의 외관
+
+[브랜드 외관 팩과 점포 적용 범위 r232](brand-storefronts-in-dong-dioramas.proposal.r232.md)는 같은 건물의 간판·창면부터 전용 건물 실루엣까지 표현하는 제안이다. Claude가 비교할 첫 대상은 같은 자리의 두 가상 카페다.
+
+## Claude에 넘길 모델링 기획
+
+[첫 장면과 사용자 검토 순서 r231](operation-modeling-brief-for-claude.r231.md)를 먼저 읽는다. Claude는 카페 작업 공간의 개발 계획과 시안을 준비하고, 사용자가 구도를 고른 뒤 제작 범위를 인계한다.
+
+## 운영 장면의 모델링 병렬 준비
+
+[모델 제작 묶음 r230](parallel-modeling-for-operation-scenes.proposal.r230.md)은 보유 에셋을 확인해 카페 작업대·장비, 공통 물품, 창고 작업셀과 사람 동작을 병렬 준비하는 제안이다. r229 카페 정면의 색과 외장은 재사용하고 기능 개발은 기존 버튼·임시 도형에서 계속할 수 있다.
+
+## 행정동 디오라마 낮 미술 시안
+
+[낮 미니어처 미술 r228](daylight-miniature-map-art-direction.proposal.r228.md)은 실제 도로와 건물 위에 회색 외장, 민트 운영 점포, 기사 빛을 적용하는 제안이다. 거리 확대와 동 전체를 한 쌍으로 보고, 같은 카페에 반실사 건축 모형 재질을 입힌 [재질 확대 시안](../../../../assets/changes/2026-11-15-hongdal-diorama-art-direction/myeonmok-material-study.png)을 대조한다. 사용자가 [③ 재질의 첫 Unity 시험 r229](daylight-cafe-first-unity-trial.confirmed.r229.md)을 선택했다. 다른 동 확대와 제품 편입은 실제 화면을 보고 판단한다.
+
+## 최근 기본 경로 정정 — 초보 육성으로 카페 가맹점 확장
+
+[초보 기본/경력 옵션 r227](novice-first-cafe-franchise-growth.confirmed.r227.md) · [새 시험 수치](novice-cafe-development-balance.r227.json): 기본 합류자는 가족/외부 모두 카페 실무 초보이며, 익혀서 다음 점포의 현장을 맡기는 육성 순환이 기본이다. r226의 경력자 중심 구성/조기 영업은 선택 비교로 내렸다. 첫 작업 준비와 현장 책임 실습을 나누고 F6/N13/E8 지도 단위·초보 기본 구성의 비용을 제안/검산한다. 명부/지도자·실습 통과/위임 계약과 시안/개발은 후속이며 r225 최종 결정권·다른 분야 출발은 유지한다. 이전 수치/원문은 이력이다.
+
+## 최근 가족 협력의 초기 기반·외부 인재 확장과 수치
+
+[가족 협력/외부 인재 r226](family-cooperation-and-external-talent-growth.design.r226.md) · [시험 수치](family-cooperation-and-hiring-balance.r226.json): 가족과 공동 준비한 경험으로1·2호점의 맡길 기반을 만들고 외부 인재로3~5호점을 넓히는 방향이다. 혈연의 자동 신뢰/직무 보너스 대신 해당 인물의 공동 경험·실무/인계 준비와 모집 경로를 수치화했다. F3/N10/E5 지도 회차·직접 준비비6만/25만/40만원과 확장 구성·제한 손익을 제안/검산한다. 같은 역할 보수·가족 없는 출발/경력·파트너 대안·본부 여력과 r225 플레이어 권한은 유지한다. 가상 시험값이며 실제 인물/자료·Runtime팩/제품 변경은 없다.
+
+## 최근 확정 — 현장 위임·플레이어의 예외/발주/정산
+
+[현장 수행/플레이어 결정 r225](field-work-delegation-and-player-decisions.confirmed.r225.md): 사용자가 몸을 움직이는 현장 작업은 위탁하고 예외·발주·정산은 플레이어가 맡도록 정했다. r224의 판단/예산 위임 후보를 이 범위로 좁히고, 수행/측정·기록/계산 보조와 최종 결정을 구분했다. 현재 발주/검수/제조 명령·즉시 판매, Core 자동 정산과 일일 보고 읽음을 대조했다. 정상 수행/영향 범위 보류·결정 대기와 정확 승인/지급·저장 호환/시안은 후속이다. 기존 제조와 Core 주문 연결 한계도 유지하며 제품은 바꾸지 않았다.
+
+## 최근 사람 육성·업무 위임과 사업 확장
+
+[맡길 사람과 확장 준비 r224](people-development-and-scoped-delegation.design.r224.md): 혼자 운영하는 한계를 넘어 맡길 사람을 길러야 계속 확장할 수 있다는 사용자 방향이다. 함께 익히기/동행→부분 위임→현장 책임→다음 담당자 육성을 제안했다. 직무 숙련·판단/권한·현재 여력·경/명덕을 구분하고 내부 육성·경력자/파트너·작은 사업 유지 대안을 보존한다. 집계 고용/표현 빛·인력 빈 탭과 실제 담당/훈련/권한을 대조했으며 위임 한도/예외·회수/결과 귀환은 후속 계약이다. 제품/시안·실제 입력은 바꾸지 않았다.
+
+## 최근 사업 성장·전사 조율과 정신 차림의 이야기
+
+[본부의 목적 자각 r223](company-wide-coordination-and-mindfulness-story.design.r223.md): 사업이 커지며 연결/전사 조율이 늘고 본부가 깨어 있음·정신 차림의 중요성을 깨닫는 사용자 이야기 방향이다. 한 일→함께 인계→여러 현장→전사 부담/여유→지원 책임의 흐름과 대표 사건을 제안했다. 초반부터의 차림/모든 활동 명덕·작은 사업 유지와 선택적 다자 플랫폼을 보존한다. 기존 기사 점검/첫 본부 사슬·가상 교육 안건과 새 스킬/전사 효과를 구분했다. 사건/효과/귀속·시안/개발은 후속이고 제품은 바꾸지 않았다.
+
+## 최근 동의 사업 선택·지사와 플랫폼 성장
+
+[왼쪽 사업 홈/성장 경로 r222](dong-business-selection-and-platform-growth.design.r222.md): 동 진입 뒤 음식점·음식배달·퀵 등 사업을 고르는 방향을 기록했다. 동 사업 홈→사업 현황→점포/지사 운영을 나누고 하단 사업 버튼·F2/점포 키를 같은 대상으로 잇는 안이다. 기존 동 창/제휴 집계와 실제 창업을 구분하며 자유 출발·기존 플랫폼 시나리오를 보존한다. 작은 일→운영 개선→담당 권역/거점→선택적 플랫폼 확장을 제안했다. 비용/첫 지원·명부/개설/성장 조건·시안/개발은 후속이다. 최신 키/업무 요약 구현 반환을 대조했으며 이번 제품 변경/새 실행은 없다.
+
+## 최근 사계절 정취·가로수·실제 지형
+
+[계절 경관/지형 r221](seasonal-scenery-trees-and-terrain.design.r221.md): 사계절 정취와 식생·실제 산/동네 지형을 살리는 사용자 방향을 기록했다. 현재 Windows 바닥은 평면이며 기존 지형 원본/비공개 격자·다른 소비 경로의 계절/표고 코드가 있다. 원천 높이/수직 기준·Runtime 미승인과 실제 연결을 구분해 재사용 후보로 뒀다. 같은 동의 정적 네 계절 비교→검증된 지형 연결→품질/선택 효과를 제안하며 수치/계절 미리보기·실제 날씨/경영 효과를 분리한다. 새 이미지/제품/자료 적용·공통 규칙 승격은 없다.
+
+## 최근 확정 — 단축키 기본안과 점포의 점진적 성장
+
+[키 기본 확정 r219](screen-shortcut-baseline.confirmed.r219.md): F1~F6/M과 기존 Esc/Enter 의미 유지를 확정했다. F7~F9·Enter 재배정·키 구현은 별개다.
+
+[손님·고용·점포 한계·출점 r220](progressive-demand-staffing-and-store-expansion.design.r220.md): 고객/주문 증가→고용 보강→점포 병목→추가 출점의 방향을 카페/음식점 공통으로 기록했다. 동 집계/실제 주문·단일 카페/직원·입점의 현 구현을 구분하고 병목 최솟값·수요 비복제·고정비/점포별 상태와160잔 비교를 제안했다. 수치/성장 문턱·큐/고용/다점포 결속/개발은 후속이다.
+
+## 최근 화면 단축키 제안
+
+[F키 화면 열기/M 보기 전환 r218](keyboard-shortcuts-and-context-priority.proposal.r218.md): 현재 Esc 설정·Enter 결정 순회와 새 매장 다섯 탭/문자 입력을 대조했다. F1 도움말·F2 동 관리·F3 선택 매장·F4 재료·F5 설비·F6 인력·M 작은 지도/업무 요약을 첫 안으로 권한다. 화면 조회와 업무 확정을 분리하며 모달/텍스트·대상/초안·키 반복을 고려한다. 새 키 채택/실제 입력·재설정/개발은 후속이고 기존 A 기본/B 전환 확정을 유지했다. 제품은 바꾸지 않았다.
+
+## 최근 확정 — 작은 지도 기본·업무 요약 전환
+
+[A 기본/B 전환 r217](minimap-default-and-work-summary-toggle.confirmed.r217.md): 2026-11-15 사용자가 시안 A 작은 지도를 우하단 기본으로, 시안 B 업무 요약을 필요할 때 바꿔 보는 내용으로 확정했다. 시안 B는 기존 r216 후보 C 요약이며 사업 연결 후보 B와 다르다. 최신 Claude의 기존 미니맵을 재사용하고 아직 없는 업무 요약/수동 전환을 결속한다. 동/구 축척·위 회차 버튼·전체 그림의 수치/동작·구현 승인은 별개이며 제품은 바꾸지 않았다.
+
+## 최근 오른쪽 아래 작은 지도·운영 회차 버튼 제안
+
+[작은 지도 내용과 위 버튼 r216](minimap-content-and-round-controls.proposal.r216.md): 현재 동/위치 안내·내 사업 연결·지도 없는 업무 요약을 비교하고, 동 윤곽/선택 대상의 작은 안내와 위 운영 회차 버튼을 첫 안으로 권한다. 현재 오른쪽 결정 순회와 왼쪽 실제 회차·구의 자료 범위를 대조했다. 순회/회차/다음 작업/일일 결산을 분리하고 카메라 시야·자료 준비/미진출을 구분한다. 구성 채택/내용·버튼 책임·시안/제작은 선택 전이며 코드/이미지·실행은 바꾸지 않았다.
+
+## 최근 매장 클릭·왼쪽 점포 운영 창
+
+[매장 전용 왼쪽 창 r215](store-specific-left-management-panel.design.r215.md): 개설한 내 매장을 클릭하면 왼쪽에서 해당 점포의 설비·원두 구매/수입·가맹본부 주문·고용을 시작하는 사용자 방향을 기록했다. 동 관리의 확장과 점포 운영을 구분하고, 기존 카페의 발주/검수/제조를 재사용한다. 현재 단일 점포 결속·일반 클릭의 배차 효과를 대조해 대상/권한·입력 분기를 후속으로 남겼다. 다섯 탭/상세·지도 왕복은 제안이며 시안/코드/실행은 바꾸지 않았다.
+
+## 최근 커피 한 잔의 정밀 과정·지도별 결정과 수치
+
+[커피 공급/제조/균형 r214](coffee-one-cup-chain-and-multiscale-balance.design.r214.md) · [설계 수치 v0.1](coffee-one-cup-chain-balance.r214.json): 수치 조정을 Codex가 맡는 사용자 방향에 따라 아이스라떼 한 잔·300초 공정·원료/손실·비용·80/120/160잔과 공급규모 비교를 설계했다. 전국 계약→구 배분→한 동 점포/내부 작업의 지연된 영향을 같은 로트로 잇는다. 기존 공급/수입/지도 기획과 우유 사슬을 재사용하고, 실제 시세/법정 기간·현재 팩/제품 적용·전망/현실 시계를 구분한다. 첫 장면/실제 시간·저장 계약은 후속이며 코드/게임/DB·예약은 바꾸지 않았다.
+
+## 최근 전반 현황과 다음 우선순위 제안
+
+[현재 부족한 연결과 다음 선택 r213](gameplay-readiness-gaps-and-next-priorities.research.r213.md): 기존 실제 배달/운영 회차를 재사용해 일반 입력 두 회차 검토를 먼저 권한다. 정산→보고·동 고용→개인/점포·카페 시간/자원·명덕/정신 차림·한 동 인구팩 결속을 후속 후보로 나눴다. 소스·Claude 반환·기존 빌드를 구분하며 새 음악 파일 분석 소스의 진행도 반영했다. 새 개발 순서·기본값·착수 승인이 아니며 코드/실행/수집·예약은 바꾸지 않았다.
+
+## 최근 부드러운 배달 연결선·기사색 일치
+
+[픽업/전달 선과 기사 빛 r212](soft-road-following-delivery-lines.design.r212.md): 현재 도로 경로의 점간 선·접근 금색 점선/전달 기사색 실선과 단계별 route 의미를 읽었다. 도로형상을 유지하며 둥근 이음/끝처리와 선택 중심 강조를 제안하고, 사용자 확인으로 접근 점선·전달 실선의 기준색을 기사 빛에 맞춘다. 전체 예정 배송 경로는 이미 계산된 Core 경로의 읽기 투영을 검토하며 현재/예정을 구분한다. 세부 스타일·노출/동 경계·시안/개발 수용은 미정이고 코드/시안은 바꾸지 않았다.
+
+## 최근 외부 음악 자동 분석 제안
+
+[외부 출력/앱 분석과 빛 r211](external-music-auto-analysis-and-light.proposal.r211.md): 곡/BPM을 미리 정하는 내장 BGM 경로 외에 사용자가 듣는 외부 음악을 Windows 루프백으로 받아 로컬 분석하는 안을 조사했다. 강약 반응부터 시작해 온셋/BPM/박 위상·신뢰도가 안정되면 음악 박에 맞추고, 불안정/입력 상실에는 잔잔한 표현으로 돌아가는 제안이다. 앱/출력 범위 선택·실제 서비스/보호 재생 호환·Unity 어댑터는 미검증이다. 공통 시계 교체만으로 기존 점/땅 위상이 같아지는 것은 아님을 보완했다. 실제 캡처/음원·제품/시안·예약 변경은 없다.
+
+## 최근 배경음악·빛 리듬 제안
+
+[음악 박자/저음 보조 r210](music-reactive-light-and-beat-sync.proposal.r210.md): 최신 밀집1·2 소스/반환과19:28 빌드 기록을 확인했다. BGM은 없고 현재 AudioSource는 짧은 알림음이다. BPM/첫 박·실제 음악 재생 위치로 공통 박을 잡고, 대상별 분할 박과 약한 저음 에너지로 빛의 순간 변화를 주는 안을 제안한다. 현재 개별 빛/땅 위상 불일치를 고려해 첫 검토는 개별 빛부터·땅은 잔잔하게 두는 후보이다. 곡/강도/설정·무음/정지 등은 미정이며 명덕/업무 시계는 바꾸지 않는다. 곡 취득/음악 재생·제품/시안 구현은 없다.
+
+## 최근 밀집 빛의 판독 검토
+
+[밀집 빛/정보 의미 제안 r209](dense-light-readability-and-meaning.proposal.r209.md): Claude가 중심점/후광·상한과 매장별 박자 처리를 적용 중이라는 사용자 전달에 맞춰 소스·최신 계획/시안을 읽었다. 새 로컬 반영/빌드는 아직 확인하지 않았다. 식별점과 성장하는 진한/연한 영역, 현재 상태/장식 박자, 정확 선택·밀집/표시 상한과 실제 수치, 간단한 표현/업무 알림을 우선 검토하도록 제안했다. 명덕 외곽 원형선은 다시 기본으로 넣지 않으며3~5번 추가 기능·수치/순서는 미승인이다. 코드/시안·진행 파일은 바꾸지 않았다.
+
+## 최근 픽업 동의 준비·제조·인계 기여
+
+[픽업 전 과정과 지역 누적 r208](pickup-preparation-and-local-mingde.design.r208.md): 직원의 준비/제조/포장·기사의 픽업 등 여러 깨어 있는 활동이 쌓여 픽업 동이 전달 동보다 더 많은 명덕을 얻을 수 있는 방향이다. 도착 동 기여도 유지하며 고정 배율/항상 우세·활동별 환산량은 확정하지 않았다. 현 제조는 생산ID별 즉시 기록이고 작업자/활동 구간·명덕이 없음을 대조했다. 기존 기여의 개인/점포/동 중복 표시와 다른 사람의 실제 활동 누적을 구분하며 제품/시안은 바꾸지 않았다.
+
+## 최근 동간 배달·도착 동 명덕
+
+[동간 배달과 받는 동 기여 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md): A동→B동 배달의 연속성과 도착 동 명덕 증가 방향을 기록했다. 기존 실제 기사/주문ID와 이미 두 동에 걸친 장면을 대조했고 동 집계/배회와 구분했다. 명부는 기존 ID를 연결하고, 한 동 화면에는 외부 배달 안내/선택 귀환을 제안한다. 활동/수혜 역할별 지역기여와 중복 재처리 방지를 구분하며 배분량·정신 차림/동 승급·주문 권위는 미정이다. Claude 종합 계획 전체/그림자 주문/r203 기본값/예약 재개는 승인하지 않았다.
+
+## 최근 명명덕 자료·행정동·빛 성장
+
+[깨어 있는 모든 활동과 정신 차림 스킬 r206](awake-activities-and-mindfulness-skill.design.r206.md): 명덕 증가를 성공/진척 업무에 한정하지 않고 깨어서 하는 모든 활동으로 넓혔다. 플레이어가 정신 차림을 주기적으로 발동해 상태를 유지하는 방향이다. 현 check는 하루 한 번 기록하며 회복/연장 기능이 없어 새 스킬과 다름을 확인했다. 대상·주기·효과·활동 측정/귀속·관찰/위임과 기존 경/일말 성장 관계는 미정이며 누적 명덕→빛 크기 방향은 유지한다. 제품/시안은 바꾸지 않았다.
+
+[누적 명덕 기여와 빛의 크기 r205](mingde-contribution-light-growth.confirmed.r205.md): 기여가 쌓일수록 기사/음식점의 빛이 커지는 사용자 방향을 기록했다. r204 §5의 현재 상태 중심 설명을 크기=누적 기여/현재 상태=별도 판독으로 정밀화하며 반경/곡선·최대 크기·명암/맥동/겹침은 제안/미정이다. 점수/승급·귀속 미정과 선택형 효과를 유지하고 제품/시안은 바꾸지 않았다.
+
+[명명덕 원문/강의와 동 성장 r204](daxue-mingde-and-dong-growth.research.r204.md): 고전 한문 발췌2종과 홍익학당12/13강의 기존 자막3구간을 확인하고 메타데이터·직접 요약을 저장했다. 12강은 ASR 잠정 요약, 13강은 재생 검수 후보다. 깨어 있는 유효 행위→명덕 실천 기여→기사/점포 표현→동 성장의 사용자 방향을 정리했다. 원전/강의에 경험치 산식을 귀속하지 않으며 기존 경 시간/동 승격과 중복되지 않는 통합·점수/귀속·점포 상태는 제안/미정이다. 제품/DB쓰기/예약 변경은 없다.
+
+## 최근 높은 우선순위 기본안
+
+[높은 우선순위 항목의 기본안/첫 검토 r203](priority-defaults-and-first-validation.proposal.r203.md): 실제 현재 코드/팩을 읽고 1잔/1인분·포장 포함시간·작업자/슬롯·예약/소모/완료·부분 원가/미지급/현금·수동 재주문·공간/인구/비교 기록의 구체안을 제안했다. 커피5분/음식10~15분 외의 신규 추천과 첫 검토 선택은 미승인이다. 기존 즉시 제조/held 인계와 가상 경로/순찰·실제 회차를 구분하며 제품/팩/예약은 바꾸지 않았다.
+
+## 최근 제조/조리 기본시간 확정
+
+[커피·음식 기본 준비시간 r202](coffee-food-preparation-time-defaults.confirmed.r202.md): 사용자 확인으로 커피 약5분, 음식10~15분을 게임 기본값으로 기록했다. 기준 수량/포장 포함·메뉴별 변동/복수 주문·동시 처리·실제 표시/배속과 정확 명세는 미정이다. 실제 레시피/추출 조건·현재 집계 처리량이나 제품 코드는 바꾸지 않았다.
+
+## 최근 게임 전반 자료 부족 조사
+
+[게임 전반 부족 자료/우선순위 r201](gameplay-data-gaps-and-collection-priorities.research.r201.md): 다섯 출발·지도/센터/성장과 현재 수집 보고를 대조했다. 업무 대상/공간 결속, 상품/레시피/수량 단위, 작업시간/용량·비용, 공급/납기 조건과 검토 플레이의 결과 묶음이 핵심 공백이다. 추가 공공자료·허용 표본/관찰·게임 설계값을 구분하며 P0/P1/P2는 추천이다. 원자료/DB/예약·제품/시안은 바꾸지 않았고 첫 준비는 선택한 분야의 거점/거래와 작은 업무에 한정한다.
+
+## 최근 행정동 인구·주문 환경 준비
+
+[행정동 인구의 지도 연결과 주문 수요 r200](dong-population-map-and-order-demand.design.r200.md): 실제 추정 유동인구/주민등록 후보·현재 주거연면적 대리값을 구별하고 코드/경계 판본 결속→지도 통계/대표 군중과 가상 수요의 독립 투영을 정리했다. 인구는 주문 기회에 영향을 주되 업종/시간/영업/고객 선택과 처리 여력을 구별한다. 현 동별 소수 집계와 실제 개별 주문은 별도이며 확률/핀 연결은 후속 제안이다. 시안은 Claude 담당, 실제 자료 연결/제품 변경은 대기다.
+
+## 최근 센터 내부 상세 준비
+
+[위치표식과 물류센터 내부 작업 r199](warehouse-location-labels-and-interior-workflow.design.r199.md): 바닥/랙의 위치 라벨과 상품·용기를 구분하고 적치/피킹·포장·층간 이송·분류 출구·팔레트 또는 직접상차의 공간/인계를 구체화했다. 단일 클릭=카드, 더블클릭/내부 보기=준비된 내부 모형으로 진입하며 r198 입점 선택 모드와 구별한다. 큰 3D 모형 화면과 한 층 상세는 제안/시안 대기이고 실제 모델/작업 구현은 아니다. 기존 r163 첫 분류 조각과 r164 층/귀환 기준을 유지한다.
+
+## 최근 운영 진입 정리
+
+[하단 사업 버튼과 선택 동의 고용·입점 r198](business-tabs-and-dong-scoped-expansion.design.r198.md): 동을 고른 뒤 기존 하단 사업 버튼에서 운영 창을 열고 고용/음식점 추가를 시작한다. 지역 카드의 직접 확장 행동을 사업 창으로 옮기는 방향이며 r168의 진입 위치와 Claude 동 화면 후속 배치안만 부분 대체한다. 기존 집계 모집/제휴와 개별 기사/건물 입점 기능을 구별하며 전환/취소·확정 세부는 제안/시안 대기다.
+
+## 최근 절차·지도 연결 준비
+
+[국내 로스터 자료와 절차 노드별 지도 이동 r197](domestic-roaster-data-and-process-map-navigation.design.r197.md): 세계/전국/구/동/시설 내부의 절차별 책임과 노드 선택→대상 강조→같은 계획 귀환을 구체화했다. 공급처 자료는 후보 근거를 조사했으며 전국 로스터 수·업체 본문/실제 좌표·거래 연결은 미확보다. 상세 배정/화면과 개발 수용은 제안/미정이다.
+
+## 맥락별 첫 읽기
+
+| 알고 싶은 것 | 먼저 읽을 기획 | 함께 확인할 상태/범위 |
+| --- | --- | --- |
+| 무엇을 만드는 게임인가 | [공통 통합 기준 r162](integrated-map-management-baseline.r162.md), [Unity Windows 방향 r140](unity-windows-development-direction.r140.md), [개인 설치형 r123](offline-personal-player-first.decision.r123.md) | 공통 진입 기준이며 전문 기획/소비판을 일괄 대체하지 않음 |
+| 처음 무엇을 하고 무엇을 반복하는가 | [운영 회차/첫 안내 r187](operating-round-first-play.prototype.r187.md), [집중·이완 r146](focus-relax-shared-management.design.r146.md), [역할별 지도 관찰 r241](role-centered-observation.design.r241.md), [다직무 r147](multi-role-minigames-and-realistic-recipes.design.r147.md), [다음 작업 r151](next-task-button-confirmed.design.r151.md) | r187은 기본 반복과 첫 검토용 구현 인계 준비. 실제 수용/실행은 별도 |
+| 시간·돈·결산은 어떻게 읽는가 | [자원 아이콘/회차 증감 r188](round-resource-icons-and-deltas.design.r188.md), [현실 달력/일일 결산 r174](live-calendar-daily-management.baseline.r174.md), [운영 회계 r36](operator-integrated-accounting.r36.md) | r188의 기본 지표/배치는 제안. 보유량·확정 회차 증감·예상·일일 누적과 정산/지급을 구분 |
+| 어떤 분야에서 시작해 어떻게 성장하는가 | [초보 육성 기본/경력 옵션 r227](novice-first-cafe-franchise-growth.confirmed.r227.md), [가족 협력/외부 인재 수치 r226](family-cooperation-and-external-talent-growth.design.r226.md), [사람 육성/위임 r224](people-development-and-scoped-delegation.design.r224.md), [전사 조율/정신 차림 이야기 r223](company-wide-coordination-and-mindfulness-story.design.r223.md), [고용/점포 성장 r220](progressive-demand-staffing-and-store-expansion.design.r220.md), [픽업 전 과정/지역 누적 r208](pickup-preparation-and-local-mingde.design.r208.md), [전달지 명덕 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md), [활동/정신 차림 r206](awake-activities-and-mindfulness-skill.design.r206.md), [명덕/빛 크기 r205](mingde-contribution-light-growth.confirmed.r205.md), [명덕 자료/동 성장 r204](daxue-mingde-and-dong-growth.research.r204.md), [자유 출발/연구 r183](multi-entry-management-research-tree.design.r183.md), [엔진 성장 r153](engine-evolution-gameplay.proposal.r153.md), [투자/사람 환류 r175](dispatch-investment-satisfaction-and-awareness.proposal.r175.md) | 자유 출발 방향과 상세 연구 노드/수치·사람 성장의 미정을 구분 |
+| 각 사업에서 무슨 일을 하는가 | [현장 위임/플레이어 결정 r225](field-work-delegation-and-player-decisions.confirmed.r225.md), [동 사업 선택/플랫폼 경로 r222](dong-business-selection-and-platform-growth.design.r222.md), [매장 선택/왼쪽 창 r215](store-specific-left-management-panel.design.r215.md), [커피 정밀 과정/수치 r214](coffee-one-cup-chain-and-multiscale-balance.design.r214.md), [우선 기본안 r203](priority-defaults-and-first-validation.proposal.r203.md), [제조/조리 기본시간 r202](coffee-food-preparation-time-defaults.confirmed.r202.md), [센터 내부/위치표식 r199](warehouse-location-labels-and-interior-workflow.design.r199.md), [사업 창/고용·입점 r198](business-tabs-and-dong-scoped-expansion.design.r198.md), [원두 수입/절차 학습 r196](coffee-import-food-safety-and-learning-flow.research.r196.md), [카페 개업/지도 절차 r190](cafe-opening-supply-chains-and-map-linked-process.proposal.r190.md), [센터 조사 r163](logistics-centers-sortation-skeleton.research.r163.md), [센터 내부 r164](logistics-center-multifloor-cutaway.design.r164.md), [카페 작업 맵 r167](cafe-work-map-and-franchise-interiors.research.r167.md), [입점 r168](district-business-catalog-and-placement.proposal.r168.md), [건축 조사 r170](construction-and-reconstruction-legal-process.research.r170.md) | 조사·공간 제안·업무 규칙·시안/실제 구현은 다른 자료 |
+| 광고로 고객을 어떻게 만나는가 | [홍달 플레이스/자동 등록 r195](hongdal-place-registration-and-store-profile.design.r195.md), [소개 조건 확정 r194](broker-introduction-after-ad-result.confirmed.r194.md), [역 키워드/검색 페이지 r193](station-keywords-and-in-game-place-pages.proposal.r193.md), [검색/광고/유입 r176](place-search-advertising-and-demand.proposal.r176.md), [소개 순서 r178](traffic-broker-introduction.confirmed.r178.md), [광고 입문과 전국 광고망의 구분](multi-entry-management-research-tree.design.r183.md#6-광고-시작과-기존-전국-해금의-정합) | 실제 API 관측·비공개 검색 점수·가상 광고 규칙을 구분. 세부는 제안/미정 |
+| 지도에서 무엇을 보고 어디로 이동하는가 | [낮 미니어처 미술 r228](daylight-miniature-map-art-direction.proposal.r228.md), [사계절 경관/지형 r221](seasonal-scenery-trees-and-terrain.design.r221.md), [기본 키 확정 r219](screen-shortcut-baseline.confirmed.r219.md), [화면 단축키/입력 문맥 r218](keyboard-shortcuts-and-context-priority.proposal.r218.md), [작은 지도 기본/요약 전환 확정 r217](minimap-default-and-work-summary-toggle.confirmed.r217.md), [작은 지도/회차 버튼 r216](minimap-content-and-round-controls.proposal.r216.md), [부드러운 선/기사색 r212](soft-road-following-delivery-lines.design.r212.md), [외부 음악 분석 r211](external-music-auto-analysis-and-light.proposal.r211.md), [음악/빛 리듬 r210](music-reactive-light-and-beat-sync.proposal.r210.md), [밀집 빛 판독 r209](dense-light-readability-and-meaning.proposal.r209.md), [동간 배달/귀환 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md), [인구/주문 환경 r200](dong-population-map-and-order-demand.design.r200.md), [센터 내부 진입 r199](warehouse-location-labels-and-interior-workflow.design.r199.md), [3D 기사/스쿠터 준비 r191](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md), [기사/운송 판독 r189](transport-actors-routes-and-load-visibility.proposal.r189.md), [지도 경로 r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md), [지도별 관점 r144](scale-os-management-focus.design.r144.md), [전국 화물 r155](nationwide-freight-management-map.proposal.r155.md), [한 동 집중 r182](single-dong-crowd-focus.confirmed.r182.md) | 기사/경로/적재 표시는 제안. 구 지도 내 서울 전체보기/구↔전국과 지도/해금 구분은 유지 |
+| 어떤 자료를 내려받아 어떤 층으로 보는가 | [전반 자료 부족 조사 r201](gameplay-data-gaps-and-collection-priorities.research.r201.md), [행정동 인구 결속 r200](dong-population-map-and-order-demand.design.r200.md), [팩/레이어 r160](data-packs-and-observation-layers.proposal.r160.md), [DB 저장 r159](public-data-db-storage.work-order.r159.md), [판본 고정 r54](session-pinned-public-data-revision.r54.md), [실제 자료 수집 상태](../../../DataCollection/README.md) | 원본·DB·팩·배포·게임 적용을 각각 확인 |
+| Claude가 무엇을 구현하고 검증하는가 | [라떼 한 잔 개발 계획 r240](first-latte-order-delivery-development-plan.r240.md), [전반 갭/다음 검토 r213](gameplay-readiness-gaps-and-next-priorities.research.r213.md), [Blender 제작 과정 r192](blender-authoring-and-unity-roundtrip.workflow.r192.md), [현재 작업](../../../CURRENT_WORK.md), [Windows 구현 현황](../../../Handoffs/Unity-Windows-구현현황.md), [첫 운영 회차 인계](../../../Handoffs/2026-11-14-Codex-Claude-짧은운영회차-첫안내-r187.md) | 해당 주제의 승인 판본/hash·현재 쓰기 소유·반환/실행 범위를 확인 |
+
+**주제별로 나란히 읽을 핵심은 운영 회차 r187, 날짜/보고 r174, 자유 출발/연구 r183, 지도 경로 r184이며, 회차 자원 표시 제안 r188과 기사/운송 판독 제안 r189를 함께 읽는다.** r187 하나가 모든 전문 내용을 대체하지 않는다. ‘먼저 읽기’는 개발 승인이나 착수 우선순위가 아니다.
+
+## Claude의 맥락 탐색 순서
+
+[제작실 첫 읽기](../../../Handoffs/홍달-제작실-기획-첫읽기.md)에서 현재 담당과 첫 일감을 고른 뒤, [맥락별 첫 읽기](#맥락별-첫-읽기)에서 그 업무의 기준 원문을 연다. 구현 여부는 [Windows 구현 현황](../../../Handoffs/Unity-Windows-구현현황.md)과 최신 반환·작업본에서 대조한다. 기획 개정과 작업 수용 절차는 [혼용 운영 기준](../../../Handoffs/Codex-Claude-혼용운영안-2026-11-12.md#기획-전-현재-구현-대조)을 따른다.
+
+## 이어 읽기와 부분 대체의 범위
+
+| 이전 내용 | 이어 읽을 문서 | 바뀐 부분 |
+| --- | --- | --- |
+| r180 군중·r181/r182 한 동 시간대 비교 | [r200](dong-population-map-and-order-demand.design.r200.md) | 자료→지도 표현과 자료→가상 수요의 독립 경로를 구체화. 군중 표시/단위·한 동·자료 판본 경계 유지 |
+| r164/r166 센터 선택 즉시 내부 진입 | [r199](warehouse-location-labels-and-interior-workflow.design.r199.md) | 일반 클릭은 카드, 더블클릭/내부 보기는 준비된 모형. 위치/작업 상세를 확장하되 기존 층/귀환/첫 분류 범위 유지 |
+| r168 지역 카드의 입점 진입 · Claude 동 화면 안으로 사업 띠를 모으는 후속안 | [r198](business-tabs-and-dong-scoped-expansion.design.r198.md) | 하단 사업 버튼을 유지하고 선택 동의 고용/입점 창으로 진입. 슬롯/비용/개업 규칙·한 동 집중 유지 |
+| WPF 우선 r139 | [r140](unity-windows-development-direction.r140.md) | 게임의 주 개발 우선순위. WPF 기록 전체 폐기 아님 |
+| 7턴 주문 증가 r128 | [r129](weekly-delivery-demand.proposal.r129.md) | 주문 증가 방식. 부족/사고/대응의 모든 내용을 대체하지 않음 |
+| 현실 달력 r172·일일일생 r173 | [r174](live-calendar-daily-management.baseline.r174.md) | 시간/일일·주간 결산/절기 정본 통합 |
+| 중개업자 접촉 순서 r177 | [r178](traffic-broker-introduction.confirmed.r178.md) | 정식 광고 경험 뒤 소개. 가격/효과/제재는 여전히 미정 |
+| 기초 광고도 전국 단계 선행 r179 | [r183 §6](multi-entry-management-research-tree.design.r183.md#6-광고-시작과-기존-전국-해금의-정합) | 광고 입문 자유 출발. 전국 광고망 확장은 별도 |
+| 독립 서울 단계 r161/r171/Claude 설계 | [r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md) | 구→서울→전국 구간/서울 정거장만 정리 |
+| 첫 안내 여부 r185 | [r186](guided-start-and-recurring-management-cycle.discussion.r186.md) | 안내받는 시작으로 답변. 압박/실패 조건 전체 삭제 아님 |
+| 운영 회차 단위 질문 r186 | [r187](operating-round-first-play.prototype.r187.md) | 같은 날 여러 번 반복하는 운영 회차로 답변 |
+| 운영 반복=하루 해석 r165 | [r187](operating-round-first-play.prototype.r187.md) | 운영 회차와 일일 결산을 구분. 혼합 진행 전체 폐기 아님 |
+| 군중 표현 r180 | [r181](myeonmok-three-period-crowd-comparison.confirmed.r181.md) → [r182](single-dong-crowd-focus.confirmed.r182.md) | 면목·세 시간대·첫 행정동 한 곳으로 정밀화. 원래 방향의 전면 대체 아님 |
+
+옛 Day/Turn에 묶인 r128~r130 예시는 현재 회차/달력과의 연결을 다시 확인한다. 번호만 보고 현재 물량/성장 수치로 적용하지 않는다.
+
+## 전수 목록과 원문 보존
+
+- 별도 Markdown 원문 **209개**와 README의 초기 본문 **32절**을 맥락별 전체 색인에 넣었다. 같은 r번호의 다른 파일/본문을 합치지 않았다.
+- 기존 입력과 r214/r226 수치 프로필을 포함한 지원 JSON **6개**도 별도로 연결했다. 원문 상태가 머리말에 없으면 ‘원문 확인’으로 남겼다.
+- 현재 분류의 실제 범위와 파일 지문은 context-index.json이 기록한다. 분류가 승인 상태를 재판정하지 않는다.
+- 새 문서를 추가하면 해당 주제의 첫 읽기·전체 색인/대장·PLANNING을 함께 갱신한다. 새 게임 규칙은 주제 정본이 소유한다.
+- [행정동 모듈 r55 진입](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md)과 [면목동 관찰 프로필 진입](../PLAN-SYSTEM-MYEONMOK-OBSERVER/README.md)은 각자의 정본/소비판 범위를 유지한다.
+
+## 기존 본문·판본별 안내
+
+아래는 정렬 전 본문을 그대로 보존한 것이다. 독립 정책/미정·원래 질문을 담고 있으므로 모두 폐기/대체된 이력으로 보지 않는다. 현재 질문/인계는 위의 주제별 진입에서 확인한다.
+
+<details>
+<summary>기존 본문 펼치기 — 제목·앵커·원문 유지</summary>
+
+<!-- preserved-original-body:start -->
+
+## 최신 확정·검토용 구현 인계 — 같은 날 반복하는 운영 회차
+
+[운영 회차 r187](operating-round-first-play.prototype.r187.md)에 같은 날 여러 번 도는 짧은 운영 회차의 사용자 승인을 기록했다. 첫 안내는 한 건, 이후 같은 기본 반복을 더 넓은 운영에 사용한다. [Claude 인계](../../../Handoffs/2026-11-14-Codex-Claude-짧은운영회차-첫안내-r187.md)는 기존 배달 업무를 검증 표본으로 같은 세션 두 회차를 실제 결과와 연결하는 범위다. r174 날짜/일일 결산과 r183 자유 출발을 유지하고, 새 게임 초기화/날짜 점프·중복 보상을 마감 동작으로 사용하지 않는다. `ApprovedPlanningBaseline / PrototypeHandoffPrepared / DevelopmentAcceptancePending / RuntimeReviewPending`이며 첫 반환을 본 뒤 세부 문답을 재개한다.
+
+## 최신 성장 문답 — 안내받는 첫 한 건에서 공통 반복을 익힌다
+
+> 짧은 운영 회차의 확정과 첫 구현 범위는 [r187](operating-round-first-play.prototype.r187.md)이 이어받는다.
+
+[반복 경영 흐름 r186](guided-start-and-recurring-management-cycle.discussion.r186.md)은 첫 안내부터 게임 전반의 상황 확인·선택·실행/관찰·결과/다음 준비를 배우는 방향이다. 안내받는 시작은 확정됐고 짧은 운영 회차/마감 경계·시간 연결은 제안/질문 상태다. r174의 현실 날짜/일일 결산과 작업/다음 작업을 구분하며 r183 자유 출발·집중/이완·기존 Claude 인계를 유지한다. `GuidedFirstTaskConfirmed / CycleBoundaryAsked / NotReadyToDispatch`다.
+
+## 최신 성장 문답 — 작은 일 한 건부터 점진적으로
+
+> 안내 여부와 반복 흐름의 후속 문답은 [r186](guided-start-and-recurring-management-cycle.discussion.r186.md)에 이어 기록한다.
+
+[첫 성장 문답 r185](progressive-start-and-first-task.discussion.r185.md)은 지금까지의 방향을 인지하고 처음 시작부터 차근차근 논의하는 문서다. 사용자는 첫 성장 목표로 작은 일 한 건을 선택했다. 자유 출발·집중/이완·선택적 전문화/확장과 공통 시계·지도 기준을 유지하고, 다음으로 첫 한 건의 안내/시간 압박을 묻는다. `FirstSingleTaskConfirmed / FurtherPacingAsked / NotReadyToDispatch`이며 새 성장 수치·구현을 인계하지 않고 기존 Claude 작업/r184 인계는 유지한다.
+
+## 최신 지도 확정 — 구 지도에서 서울까지 연속 축소·전국 직접 전환
+
+[지도 경로 r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md)은 독립 서울 단계를 제외하고 구 지도 내부에서 서울25구 전역까지 축소한 뒤 상위 조작으로 전국에 직접 이동하는 기준이다. r161/r171·기존 Claude 설계의 구→서울→전국 경로/서울 정거장만 부분 대체하며 같은 세션 귀환·기존 안건·OS/업무·시간/해금과 r182/r183을 보존한다. [Claude 인계](../../../Handoffs/2026-11-14-Codex-Claude-구지도서울전체축소-전국직접전환-r184.md), [읽기 입력 지문](district-seoul-map-inputs.r184.json)에 현재 코드와 기존2023 서울25구 후보를 고정했다. `ApprovedPlanningBaseline / HandoffPrepared / DevelopmentAcceptancePending / ProductUnchanged`이며 코드/자료 변경·새 수집·Unity 실행·DB/예약은 없다.
+
+## 최신 성장 기획 — 다섯 분야 자유 출발·연구 테크트리
+
+[자유 출발·연구 r183](multi-entry-management-research-tree.design.r183.md)은 배달·카페·광고·전자상거래·무역 중 시작 분야를 고르고 공통 경영 연구·분야 심화·선택적 연결 연구로 발전하는 구조다. 한 분야만 깊게 운영하거나 같은 세계에서 다른 사업을 추가할 수 있다. r153/r175 운영 기록·개선 과제·도입/결과 환류와 r174 시간·개인 성장/필수 규칙을 유지한다. 광고 입문은 처음부터 가능하도록 r179 일괄 선행을 부분 대체하고 전국 광고망 확장과 구별한다. 세부 노드·자원/기간·UI/저장·실제 구현 준비는 미정이며 제품·DB·수집/예약·WI/Goal은 변경하지 않는다.
+
+## 최신 확정 — 첫 군중 비교는 행정동 하나에 집중
+
+[한 동 집중 r182](single-dong-crowd-focus.confirmed.r182.md)은 몰입 분산을 줄이려는 사용자 선택으로 면목 지역의 행정동 한 곳을 첫 비교 단위로 정했다. 같은 동에서 r181의 오전·점심·저녁을 비교하며 여러 동을 합친 첫 판은 채택하지 않는다. 특정 동 이름·이웃 동 표시/UI·시간/표현 명세는 미정이다. 장기 복수 동 경영·구 지도·r180 자료/업무 경계를 바꾸지 않으며 문서 외 제품·DB·수집/예약도 변경하지 않는다.
+
+## 최신 확정 — 면목동 오전·점심·저녁 군중 비교
+
+[면목동 세 장면 r181](myeonmok-three-period-crowd-comparison.confirmed.r181.md)에 첫 비교 지역을 면목동, 시간대를 오전·점심·저녁으로 정한 사용자 선택을 기록했다. 같은 지도/카메라·분기/표현 척도에서 비교하고 자료상 밀도 순서를 강제하지 않는다. 세부 행정동 모듈/범위·정확 시간 경계와 보정식·표현량/경로·시각/개발 명세는 미정이다. r180의 자료/표현 경계·r174 시계와 문서 전용 범위를 유지한다.
+
+## 최신 표현 후속 — 유동인구에 따른 지도 군중
+
+[자료 기반 대표 군중 r180](population-driven-map-crowds.design.r180.md)은 사용자의 유동인구에 따른 군중 등장 방향을 r138/r143의 후속으로 기록한다. 지역/시간구간별 상대 규모를 대표 보행 밀도로 읽되 개별 위치/골목 동선은 가상 분배로 구분한다. r142 입지 시험·영업 고객·검색 트래픽/광고 해금·충돌 주체와 분리하고 r174 시계·관찰자 모드·숨김/정적 대체 경계를 유지한다. 첫 동·표현량/상한·경로/자산·자료 결속은 미정이며 제품·DB·수집/예약·시안/영상은 변경하지 않는다.
+
+## 최신 확정 — 전국 경영단계에서 매장 광고 해금
+
+> 현행 [r183](multi-entry-management-research-tree.design.r183.md#6-광고-시작과-기존-전국-해금의-정합)은 광고 입문 자유 출발과 전국 규모 광고망 확장을 구별한다. 아래는 r179 당시 순서이며 기초 광고의 전국 선행 해석은 부분 대체됐다.
+
+[광고 해금 r179](national-stage-advertising-unlock.confirmed.r179.md)은 전국 단위 경영단계 해금→정식 광고 활성화→광고 한 번 경험→중개업자 소개의 순서를 기록한다. 잠긴 지도 미리보기/관찰자 열람과 경영 해금을 구별하며 대상은 r176의 가상 매장 홍보다. 전국 해금 자체 조건·광고 경험 완료 기준·화면/도달 범위는 미정이다. r176~r178과 Claude 구현/반환은 보존하고 문서 외 제품·DB·수집/예약은 변경하지 않는다.
+
+## 최신 확정 — 정식 광고 경험 후 중개업자 소개
+
+[소개 순서 r178](traffic-broker-introduction.confirmed.r178.md)에 사용자가 정식 광고를 한 번 경험한 뒤 중개업자를 소개받기로 한 선택을 기록했다. r177의 접촉/해금 미정 중 선후 관계만 확정하며 소개를 계약/비용 지급과 구별한다. 첫 광고 경험의 완료 기준·소개 시점/연출·이력·가격/효과/제재는 미정이다. 기본 검색 r176·중개 경로 r177·시간/보고 r174와 문서 전용 범위를 유지한다.
+
+## 최신 후속 — 뒷세계 트래픽 중개업자와 순위 경쟁
+
+[중개업자 경로 r177](underground-traffic-broker.gameplay.r177.md)은 사용자가 정식 광고 외에 가상 IP·계정 집단을 가진 NPC에게 돈을 주고 일반 검색 순위 상승을 시도하는 방식을 포함하도록 한 방향이다. 중개 계약→합성 관심 신호→잠정 순위 반영→정상 수요 고객의 주문/이행과 지연 검증·신호 제외·제한/회복을 제안한다. 항상 효과를 0으로 만들지 않으며 r176 기본 검색·r174 시간/결산·실제 공개관측/후원 경계를 유지한다. 접촉/해금·가격·효과/검증·제재 수치는 미정이고 문서 외 제품·실제 트래픽·DB·예약은 변경하지 않는다.
+
+## 최신 전문 조사·제안 — 장소 검색·광고·주문 유입
+
+[장소 검색·홍보 r176](place-search-advertising-and-demand.proposal.r176.md)은 네이버 공식 검색/SEO·광고 원문을 조사하고 가상 검색 서비스의 노출→열람→의향→방문/주문→실제 이행 환류를 제안한다. 클릭은 공개된 인기도 요소지만 IP/체류시간별 점수·정확 산식은 미확인이며, 광고 칸과 일반 검색 순위를 구별한다. r142 수요/방문·r175 처리 여력에 연결하고 r174 시간/결산·실제 공개관측/후원 계약은 유지한다. 첫 한 동·가상 카페·검색 의도 하나의 검토와 수치/과금/집계는 제안 상태다. 제품·DB·실플랫폼 트래픽/광고·수집예약·새 WI/Goal은 변경하지 않는다.
+
+## 연결 공간 기획 — 네 구의 동별 디오라마 모듈
+
+[행정동 디오라마 r54](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/four-district-modular-diorama.proposal.r54.md)가 중랑·광진·동대문·노원을 우선 범위로 기존 모듈/자료와 Windows의 고정 동네 지형 소비를 대조한다. 결정 순회/경영 규칙은 이 PLAN에, 동별 manifest/타일·자료 준비도·공간 조립은 행정동 PLAN에 둔다. 최신 캡처3장/시안1장과 기존30개 후보를 확인했고 새 이미지/코드·현재 자료 활성화·통행/배달 승격은 없다.
+
+## 최신 전문 제안 — 배차 투자·만족·경 유지 성장
+
+[배차 투자 환류 r175](dispatch-investment-satisfaction-and-awareness.proposal.r175.md)은 r153 엔진 성장과 r133의 사람/소득 목적을 잇는다. 자본→개선 과제/방침→대기·부담/만족 변화→유효 수행·경 유지 성장→실제 게임 운영 성과의 흐름을 제안한다. 경 유지 대상은 사용자가 기사·현장 작업자로 선택했다. 주체별 만족과 개인 성장/근무시간을 구별하며 비용/지원 강도·상한은 미정이다. 다음 검토는 첫 음식 픽업 대기 개선 과제다. 공통 시간/보고 정본은 아래 r174를 유지하고 코드·학습/배포·경제 규칙을 실행하지 않는다.
+
+## 현재 정본 — 현실 달력·일일일생·결산과 절기 방침
+
+[통합 정본 r174](live-calendar-daily-management.baseline.r174.md)와 [현재 Claude 인계](../../../Handoffs/2026-11-13-Codex-Claude-현실달력일일결산-통합정본-r174.md)부터 읽는다. r172의 현실 시간/절기와 r173의 일일일생을 한 기준으로 통합하고, 결산·정산·지급·확인·기록 기준일·날짜 진행의 표현을 정리했다. 기존 승인 방향·개발 소유는 유지하고 구현/수치·서울 역할을 새로 결정하지 않았다.
+
+이전 [r172 승인안](real-calendar-seasonal-arcana.integration.r172.md)·[r173 추가안](daily-life-and-settlement.integration.r173.md)과 당시 인계/hash는 이력으로 보존한다. 현행 시간/결산/절기 입력을 두 문서에서 따로 조합하지 않는다.
+
+<details>
+<summary>이전 승인/추가 진입 — 현행 정본은 r174</summary>
+
+### 최신 조정 — 일일일생·하루 결산
+
+[r173](daily-life-and-settlement.integration.r173.md)은 당시 일일 결산 추가 지시의 이력이다.
+
+### 최신 승인 — 현실 달력·24절기·운영 카드 통합
+
+[r172](real-calendar-seasonal-arcana.integration.r172.md)은 당시 현실 달력/절기 프로필의 승인 이력이다.
+
+</details>
+
+## 최신 책임 정리 제안 — 동·구·서울·전국에서 결정할 업무
+
+> 독립 서울 단계·순회 경로는 [r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md)가 부분 대체한다. 아래는 r171 당시 책임 제안이며 구 지도 내 서울 전체보기와 구↔전국 이동을 우선 적용한다.
+
+[지도 단위별 결정 책임 r171](map-scale-decision-responsibilities.proposal.r171.md)은 동의 장소/한 건·구의 동별 배분·서울의 거점/구 보충망·전국의 장거리 차량/회차를 비교한다. 입점/건축 준비와 영업 중 한 작업을 국면별로 구분하고 Claude 결정 순회에 안건 있는 범위만 연결하는 안이다. 같은 업무의 중복 확정/비용·올림과 실행·결정 완료와 공정 완료를 구별한다. 사용자 검토 대기이며 서울의 첫 보충 기능·위임/미루기·정확 시간 정합은 미정이다. 기존 전문 기획·Claude 작업·제품 코드를 보존한다.
+
+## 최신 전문 조사 — 건축·해체·재건축의 법적 절차와 혼합 진행
+
+[건축 법적 절차 조사 r170](construction-and-reconstruction-legal-process.research.r170.md)은 2026-11-13 현행 주요 조문으로 일반 건축·해체·도시정비법 조합 재건축을 구별한다. 대지/권리·허가 또는 신고·착공·감리·사용승인과 정비사업의 인가/권리 이전을 별도 관문으로 정리했다. 계획에서 설계/자원 배분을 고르고 시간 흐름에서 보완/공정을 진행하며 결산에서 다음 선택을 읽는 구조를 제안한다. 법정기간과 가상 공사시간을 구분하고 공통 턴의 정확 길이·개별 필지/조례 적용은 미정이다. Claude의 가맹점 설치·두 겹 턴 제안과 기존 r168/r169·제품 코드는 보존한다.
+
+## 최신 시안 — 프로젝트 스타일의 입점·설치 화면
+
+[입점 화면 시안 r169](business-placement-ui.concept.r169.md)은 기존 게임 지도/Claude CSS를 재사용해 사업 목록→카페 위치 확인→한 턴 뒤 준비 중의 PNG3장과 HTML 미리보기를 만들었다. 같은 지도·점포·남색/민트/금색 위계를 유지하고 비용/턴/위치는 가상 예시로 표시했다. 제품/Unity 구현은 아니며 패널/가독성의 사용자 검토 대기다. 기능 정본과 미정 경제 계약은 아래 r168을 유지한다.
+
+## 최신 사업 배치 제안 — 동/구의 입점·설치 목록
+
+[사업 목록과 배치 r168](district-business-catalog-and-placement.proposal.r168.md)은 지역 선택→가상 사업 목록→후보 위치→입점 계획→턴별 준비→개업/내부 작업의 흐름이다. 첫 목록은 소형 카페·배달 음식점·창고형 판매매장을 제안하고 실재 브랜드를 사용하지 않는다. 구에서는 지역/사업 구성, 동네에서는 정확한 후보 공간을 판단하며 기존 건물의 가상 슬롯 우선·별도 가상 부지 후속을 추천한다. 비용/턴·준비/개업·가맹 모델은 검토 전이고 무료 입지 시험/기존 탭·영역 진출과 구별한다. 제품/이미지 구현은 없다.
+
+## 최신 현장 조사·제안 — 카페 내부와 바리스타 작업 맵
+
+[카페 작업 맵 r167](cafe-work-map-and-franchise-interiors.research.r167.md)은 메가MGC커피·이디야·빽다방의 공개 인테리어/설비5페이지와 제조사 공정2페이지를 확인한 후속이다. 고객 주문/대기·제조 바·재료/냉장·정리/세척·픽업이 연결된 가상 한 층을 제안한다. 내부 전체→고정 제조대 상세에서 한 잔을 만드는 r147/r68을 재사용하고 r165 혼합 턴·직무 연속/귀환을 유지한다. 실제 도면·비공개 배합·사진 재사용·새 이미지/코드 구현은 확보/완료하지 않았으며 배치/조작은 시각 검토 전이다.
+
+## 최신 현장 제안 — 동네 배달 맵과 센터 작업 맵
+
+[현장별 작업 맵 r166](delivery-and-center-work-maps.proposal.r166.md)은 동네의 픽업/주행/전달과 센터의 입고/적치/피킹/포장/분류/출고에 맞는 공간을 나눈다. r164 다층 전체에서 선택 층 상세로 내려가 같은 현장의 직무를 수행하는 안이다. 직무 대기열·집중/이완·귀환과 r165 혼합 턴을 유지하고 첫 한 층 시안 입력을 제안한다. 배치/조작·후속 직무는 검토 전이며 제품 코드·새 이미지·Scene 변경은 없다. 첫 분류 후보는 r163 그대로다.
+
+## 최신 공통 진행 — 스테이지와 혼합 턴
+
+[진행 뼈대 r165](stage-turn-progression.framework.r165.md)는 사용자가 선택한 계획→실행·관찰→결산의 혼합 턴을 중심으로 기존 전문들을 경험하는 순서를 정리한다. 스테이지는 대표 경영 질문, 턴은 운영 주기, 작업은 한 건, 지도는 관점으로 구분한다. [Claude 최신 시안6장](../../../Handoffs/2026-11-13-Claude-제안-기획적용로드맵과시안.md)을 직접 확인했고 제작 순서①~⑤를 필수 플레이 순서로 쓰지 않는다. 스테이지4묶음·하루 연결·경계 정지는 제안이며 코드/새 이미지 구현은 없다. r162 공통 업무 계약과 r164 전문 원본/지문은 유지한다.
+
+## 최신 전문 기획 — 지붕 없는 다층 물류센터 모형
+
+[다층 내부 모형 r164](logistics-center-multifloor-cutaway.design.r164.md)은 r144 내부 보기와 r163 센터 조사를 잇는 후속 시각 기획이다. 가상 1~5층의 전체/층별 관찰, 포장물 하향 이송→1층 집결·분류→직원 차량 상차와 지도 귀환을 정리했다. [Claude 시안 입력서](../../../Handoffs/2026-11-13-Codex-Claude-다층물류센터-시안입력-r164.md) 뒤에 나온 위 최신 제안의 시안 D를 전체 모형 초안으로 확인했다. 1층 분류 라인이 2층에 가려지는 부분은 시각 검토 중이며 정식 시안 수용/모델/제품 구현은 아니다. 정확 배치/이송 외형은 제안이고 첫 개발 후보는 r163의 한 소포 분류/보류를 유지한다.
+
+## 전문 조사 — 센터 내부 분류와 배송 인계
+
+[물류센터·자동 분류 뼈대 r163](logistics-centers-sortation-skeleton.research.r163.md)은 아래 r162 공통 기준에 연결한 전문 조사다. 공식 근거24항목·운영사7사례와 실제 NLIC 등록 XLS6,011행을 확인하고, 포장완료 소포 한 개의 정상분류/보류부터 검증하는 독립 센터 뼈대를 제안한다. 실제 배송권/내부 도면·DB/예약·모델/제품 구현은 후속이다. r162와 고정된 인계 입력을 바꾸거나 새 구현을 자동 활성화하지 않는다.
+
+## 현재 통합 진입
+
+1. [통합 기준 r162](integrated-map-management-baseline.r162.md): 지도 경영·참여 방식·역할 작업·사건/효과·자료/팩을 한 공통 기준으로 읽는다.
+2. [현행 Unity Windows 구현 현황](../../../Handoffs/Unity-Windows-구현현황.md): 이미 있는 Core/최소 사슬·구 지도·주문 효과를 보존하고 이번 검증의 상한을 확인한다.
+3. [Claude 준비 인계](../../../Handoffs/2026-11-13-Codex-Claude-지도경영통합-r162.md): 현재 작업본/hash와 첫 구 기사 여력 후보의 비실행 초안을 읽고 구현 계획을 반환한다.
+
+| 주제 | 현행 역할 |
+| --- | --- |
+| 지도 높이·OS·귀환 | r162 공통 기준. 내부 모델과 역할의 전문은 r144/r161 |
+| 집중/이완·직무 큐·미니게임 | r162 공통 흐름. 제어권·배달/카페/스캔·다음 작업은 r145~r151 전문 |
+| 색·핀·효과·구 지도 | 현행 소스/반환 우선 보존. 픽업 매장·기본 간단히는 답변 완료 |
+| 자료·팩·레이어 | r159 DB 완료 유지, r160 소비/표현 제안은 별도 작업줄 |
+| 전국/세계·엔진 성장·입지 시험 | 별도 후속 후보. 통합으로 일괄 구현/자동 실행하지 않음 |
+
+공통 내용과 읽기 순서는 r162가 소유한다. 아래 원문은 전문 계약·사용자 근거·이력이며 당시 ‘다음 질문’/‘통합 대기’를 현행 상태로 다시 적용하지 않는다. 전체23기획 원문의 SHA는 [색인](consolidated-sources.r162.json)에 보존했다. 기획 통합/Claude 계획 검토 준비와 새 기능 코드 실행 승인은 별도다.
+
+<details>
+<summary>r140~r161 전문·근거와 종전 소개</summary>
+
+[지도 높이별 OS 초점과 몰입 r161](map-scale-os-attention-and-immersion.proposal.r161.md)은 높이마다 플레이어의 대표 책임·질문·선택/대가·결과를 바꾸는 제안이다. 건물 작업→동네 한 주문→구 기사 여력→서울 거점→전국 차량 회차→지구본 공급안으로 초점을 정밀화하며 같은 OS의 요약/상세·자료 사실/시나리오·선택과 복귀를 유지한다. 기존 OS/지도 계약을 읽기 전용 대조했고 제품 구현·재미 검증은 후속이다.
+
+[자료팩·관찰 레이어 제안 r160](data-packs-and-observation-layers.proposal.r160.md)은 설치/갱신할 팩과 표시/비교할 레이어를 분리한다. 실제 DB8분야116,735행을 읽기 전용으로 확인해 공통 공간/사전 공유·선택 분야팩·축척별 표현과 결측/권리/시나리오 분리를 제안했다. 서울 생활·상권을 첫 후보로 추천하며 실제 외부팩·레이어 구현은 후속이다.
+
+[공공데이터 DB 저장 r159](public-data-db-storage.work-order.r159.md)은 로컬 DB에 원본/안내41개·정규화45,654행을 실제 추가한 후속 구현이다. 조사 후보26개는 안내로 구별하고 기존 무역12행은 검증·보존했다. 독립 재조회·동일 입력 쓰기0까지 확인했으며 팩/레이어/Drive/Excel/게임 연결·정기DB자동연결은 후속이다.
+
+[자료 관찰·공공데이터 구조 r158](observer-public-data-platform.research.r158.md)은 게임을 하지 않는 자료 보기와 가상 실험/게임 참여를 구별하는 사용자 방향이다. 해양·수산·농지·축산과 공통 기반26후보의 공식 안내, 기존 원문/수집/DB/등록 예약을 조사했다. 기존 정규화·관계·읽기 전용 소비를 재사용해 Excel/자료팩/Windows로 잇는 안이며 이번은 조사·제안이다. 실제 원문 취득·DB 변경·예약 변경·제품 구현은 하지 않았다.
+
+[지도 효과 선택 r157](optional-map-visual-effects.design.r157.md)은 흐르는 빛·핀 낙하·파동을 사용자 선택으로 제공하는 방향을 확정했다. 간단히/효과 사용/개별 설정은 제안이며 기본값·배치·저장은 미정이다. 효과를 꺼도 정보·선택·중요 알림·업무 결과는 유지하고 집중/이완과 독립시킨다. 제품 구현은 후속이다.
+
+[옅은 아치형 운송선 r156](soft-arc-freight-links.design.r156.md)은 사용자가 원한 전국의 부드러운 곡선 연결 방향이다. 미선택은 옅게·선택은 선명하게, 방향·왕복·집계와 실제 도로 경로의 구별을 제안한다. 흐르는 빛은 후속 r157의 선택형 제공으로 정리했으며 이번은 문서화다.
+
+[대한민국 전국 화물 경영 지도 r155](nationwide-freight-management-map.proposal.r155.md)은 사용자가 첫 범위를 대한민국 전국으로 선택한 제안이다. 전국→시·도/운송 권역→시·군·구→현장의 경영 관점과 차량·납기·복귀/공차 선택, 기존 지리/화물 기반 재사용과 실제 결손을 정리했다. 전국 전체 관찰을 먼저 열고 작은 가상 배차 회차로 검증하는 안이며, 데이터 취득·세부 화면·경제·제품 구현은 후속이다.
+
+[지도 사건의 핀·파동 r154](map-event-pin-and-ripple.proposal.r154.md)은 새 주문을 낙하 핀·착지 파동으로 알리고 현재 대기 표식은 유지하는 공통 표현 제안이다. 실제 구 지도에는 Territory용 낙하/파동이 있으며 주문 사건 연결은 후속이다. 현재 상태와 일회 연출, 중복/복원·축척/밀집·집중/이완·움직임 감소를 구별한다. 대화용 동작 개념이며 제품 코드·사건 계약·기존 우선순위는 변경하지 않는다. 첫 핀을 픽업 매장에 둘지는 미정이다.
+
+[판단 엔진의 단계적 진화 제안 r153](engine-evolution-gameplay.proposal.r153.md)은 운영 기록을 검토해 다음 판단 기능을 시험·채택하는 성장안이다. 다섯 단계·개선 과제·비교·분야별 역량을 제안하며 기존 안전/확정·집중/이완·균형 평가를 유지한다. 제안 요청이며 새 성장 코드·실제 모델 학습은 시작하지 않는다. 현재 구현 우선순위는 아래 r152 구 지도 정밀화다.
+
+[구 지도 정밀화 이어받기 r152](district-map-readability-continuation.design.r152.md)은 사용자가 Claude의 중단 작업을 Codex가 이어받고 구 지도를 우선하도록 요청한 범위다. 실제 G2 부분 구현을 보존하고 기존 3구의 큰길·구/동 이름 판독을 먼저 마감한다. 표현 전용 소유·검증·보존 경계는 연결한 작업 명세를 따른다.
 
 [다음 작업 버튼 확정 r151](next-task-button-confirmed.design.r151.md)은 사용자의 선택으로 r150의 시작 방식을 확정했다. 같은 직무·현장을 유지하며 `다음 작업` 버튼으로 다음 준비 작업 한 건을 시작한다. 제안 순서·버튼 배치·제품 구현은 후속이다.
 
@@ -23,6 +522,45 @@
 [집중에 따른 UI·장소 표현 확장 r141](progressive-focus-ui-and-place-reveal.r141.md)은 기능을 접어두고 플레이 성과·필요에 따라 소개하며, 선택한 장소의 임시 상세와 픽업한 매장의 지속 흔적을 나눈다. 문서를 먼저 작성한 뒤 같은 동네의 시작→선택/픽업→정산→관리 필요 시안 네 장을 제시한다. 새 표현·선택 보존·거래 흔적 저장은 미구현이며 게임 코드 변경이 아니다.
 
 현행 개발 방향은 [Unity Windows 집중 r140](unity-windows-development-direction.r140.md)이다. [WPF 우선 r139](wpf-first-development-direction.r139.md)의 우선순위를 대체하며 기존 WPF·모바일·Unity 구현은 보존한다. Codex는 기획·현황 정리, Claude는 인계받은 구현 계획·개발·검증 반환을 기본 역할로 한다. [소비판별 구현 현황](../../../Handoffs/Unity-Windows-구현현황.md)에서 계획과 구현·시제품·남은 통합을 대조한다. 아래 판본별 설명은 해당 기획의 이력이다.
+
+</details>
+
+[기사에서 공장까지의 지도 화면 시안 r137](operator-expansion-map-ui.concept.r137.md)은 기사 운영·가맹점 운영·생산자 연결·공장 운영을 하단 성장 영역과 다음 투자 패널로 표현한다. 이후 [Windows UI와 두 주문 정산](../../../../../artifacts/local/hongdal-unity-operator-expansion-20261111/result.json)을 확인했으며 가맹점·생산·공장 경영 규칙은 정보 미리보기와 구분한다.
+
+[공장 가공과 가맹점 완성의 구분 r136](factory-li-franchise-dui.framework.r136.md)은 리괘의 공장 1차 가공과 태괘 兌·택의 가맹점 최종 조리·조합을 구분한다. 주문은 무토·판매는 기토로 사용자 확인을 반영했다. [r135](trigram-production-order-sales-delivery.proposal.r135.md)는 앞선 분류의 검토 이력이다.
+
+[생산과 소비의 두 축 r134](production-consumption-and-delivery.framework.r134.md)는 준비할 생산량과 실제 소비 주문을 배달·판매·창고·화물로 연결하고, 참여자의 경 유지 시간과 시간당 소득을 함께 높이는 경영 골격이다.
+
+[대칸의 경영 목적 r133](daekan-participant-awakening-and-income.proposal.r133.md)은 사람들의 경·무념 유지 시간과 소득을 함께 높이는 경영자 역할을 정리하고 기사·가맹점·도심 마트·판매자 확보를 그 목적에 연결한다.
+
+[음식점 확보와 기사 업무 흐름 r132](restaurant-coverage-and-rider-flow.proposal.r132.md)는 기사별 시간당 3~4건의 업무 리듬과 해당 시간에 주문을 공급할 음식점의 확보를 연결한다.
+
+[지도에서 기사 모집과 교육 선택 r131](map-rider-recruitment-and-training.proposal.r131.md)은 지도 하단의 모집 아이콘에서 법정동의 기사를 확보하고, 지사 선택에 따라 바로 투입하거나 교육을 거쳐 배차하는 시안이다.
+
+[시간대별 배달 물량과 기사 출근 r130](daypart-dispatch-and-rider-attendance.proposal.r130.md)은 하루의 다섯 시간대에 주문량을 배분하고, 기사 확보와 출근 독려가 피크의 배차 여력으로 이어지는 첫 운영 흐름을 제안한다.
+
+[주말 주문 피크와 주차별 물량 증가 r129](weekly-delivery-demand.proposal.r129.md)는 주말에 추가 주문이 붙고 새 주마다 기본 배정량이 오르는 흐름을 설계한다. 기사 부족과 가상 사고 위험, 기사 C 합류는 [7턴 배달 위기 r128](seventh-turn-delivery-pressure.proposal.r128.md)에서 이어간다.
+
+[기사 네트워크와 광복 r127](rider-network-and-liberation.proposal.r127.md)은 기사 모집·입교·성장으로 동네의 끊긴 배달을 잇고, 그 회복이 주변으로 확장되는 장기 목표를 연결한다.
+
+[기사 개인화와 입교 영상 r126](rider-profile-draw-and-academy-film.proposal.r126.md)은 고정 인물 프로필의 모집, 기사별 시작 등급, 수료 영상과 같은 기사의 지도 등장을 하나의 첫 플레이로 제안한다.
+
+[기사 모집과 무념 성장 제안 r125](rider-recruitment-and-munyeom-growth.proposal.r125.md)은 면목동 가상 공고에서 신규 기사 한 명을 합류시키고, 기사 개인의 누적 유지 기록이 등급으로 이어지는 첫 플레이를 제안한다. 경 시간과 등급을 구별하며 r124 타로 방향을 따른다.
+
+[기사 개인 타로 방향 확정 r124](rider-munyeom-tarot-direction.decision.r124.md)은 역방향 전환의 직접 원인을 **기사의 무념 상태가 깨짐**으로 확정한다. 기사 개인 슬롯과 사유 표시에 적용하며 세부 판정과 수치 효과는 후속이다.
+
+
+[개인용 Windows 게임 우선 r123](offline-personal-player-first.decision.r123.md)은 운영비 부담 때문에 상시 서버·유료 API를 필수로 두지 않는 개인용 게임부터 준비한다는 사용자 확인이다. 기존 `SagajeongFoodLife`의 작은 3D 생활 관찰을 개인용 Windows Release와 설치 파일로 준비하고 실제 재생·일시정지·저장·재실행 복구를 확인했다. 공식 Scene 원본은 보존하며 지정한 결함 농장 객체만 개인용 빌드 사본에서 제외했다. 실제 설치·제거, r53/r114 상세 디오라마 이식·새 경영 규칙·자유 운전은 후속이다. 초기 설정 원문 보존 사고와 미검증 범위는 [변경 기록](../../../../Changes/2026-10-29-sagajeong-personal-player-r123.md)에 남겼다.
+
+[사가정 픽업·라이딩 순환 제안서/시제품 r122](pickup-riding-threeway.prototype.r122.md)은 같은3D 여정의 픽업→라이딩→픽업→라이딩을 실제 Unity에서12초/288프레임으로 출력하고 로컬 체험·롱폼 장면표/MP4·앱 시안 보완으로 연결했다. 실제 배달 경로/기록·정식 게임/역할 앱·Game View·운영/공개와 구분한다. 중랑·동대문·광진·공릉/태릉의 후속 정밀화는 공통 품질 층을 유지하며 확인된 매장/연속 도로부터 확장하는 계획이다.
+
+[롱폼·게임 공통 디오라마 뼈대 r121](longform-game-shared-diorama.framework.r121.md)은 같은 매장·건물·도로를 게임 체험과 롱폼 장소/상황 설명에 재사용하고 자연스러운 소개로 연결하는 방향이다. 공통 공간 판본 위에 용도별 카메라·표시를 두며 장소 소개·상황 설명·짧은 체험 소개의 세 장면을 제안한다. r2의 공간/영상/회차 연결과 r120의 앱 환류를 잇는 기획 뼈대이며 실제 삽입 영상·첫 사건·구현/편집·공개는 미정이다.
+
+[Unity 선행 체험→앱 구체화 순환 r120](unity-first-app-feedback-cycle.proposal.r120.md)은 사용자가 밝힌 제작 목적의 제안이다. 업무 한 건/시안 → Unity 체험 → 역할별 화면·계약/검증 명세 추출 → 앱/서버 반영 → 같은 조건 재검증을 반복한다. 업무 ID/상태·계약·순수 규칙을 먼저 재사용하고 운영 서버·가상 회차·Unity 표현의 권한을 유지한다. 사가정 개인용/한 주문부터는 확정 입력이며 조리 지연 사건과 실제 앱 수정·구현은 미정이다. 기존 AI 학습 환류와 별개로 앱 설계의 환류부터 구체화한다.
+
+[개인용 동북권 경영 게임 첫 시안 r119](sagajeong-solo-northeast-game-visual.proposal.r119.md)은 사가정역 중심·혼자 플레이·시안 선행을 확정하고, 첫 경험은 **주문 한 건의 문제 해결**로 선택한 범위다. 초기 권역 예산 카드를 한 주문의 픽업 지연 카드로 수정해 제시했다. 조리 지연 사건·두 대응·HUD 수치·지도 배치는 제안이며 첫 사건 선택과 실제 게임 명세/구현은 미정이다. r48 전체 품질 층별 누적·r50 제작 추출을 재사용하고 생성 시안을 실제 Unity/배달 DB로 표시하지 않는다.
+
+후속 디오라마 경영 화면은 [화면 시안 선행 제작 절차](../../../../Architecture/화면시안선행제작절차.md)에 따라 현재 디오라마와 가상 게임 표현을 구분한 시안을 먼저 공유하고, 사용자 피드백을 반영해 선택한 범위만 개발한다.
 
 [건물별 상세 외형 교체 r114](detailed-building-representation.r114.md)는 기존 건물·영상 근거를 재사용하는 독립 상세 표현 구조와 사진 참조 세 전면 모델을 연결했다. Unity143/143·최종32PNG/4시점exact복구·16초 비교 MP4와 원본 보존을 확인했고 [변경 기록](../../../../Changes/2026-10-26-detailed-building-representation-r114.md)에 초기 실패와 현재 비실측/전면 한정·불투명 유리·스트리밍/Game View/FPS 상한을 남긴다. 정본0·운영/공개 미실행이다.
 
@@ -1993,3 +2531,7 @@ FallbackEligibleAt = max(ThirdContactFailedAt, SupportCaseOpenedAt) + 3분
 1. `공유 계약 + Domain 전이 + 집중 시험` — 추천. 가장 작은 권위 단위를 먼저 닫는다.
 2. `Local Runtime·Save/Replay까지 한 번에` — 실행 가능성은 빠르지만 회귀 범위가 커진다.
 3. `Unity ScreenModel까지 한 번에` — 화면은 빠르지만 Core 변경 시 재작업이 커진다.
+
+<!-- preserved-original-body:end -->
+
+</details>

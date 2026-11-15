@@ -1,0 +1,1645 @@
+{
+  "schemaVersion": "hongdal-planning-consolidation-sources.v1",
+  "purpose": "Read-only documentation index for implementation planning; not a Goal, WI, executable handoff or approval ledger",
+  "planningId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "revision": "r162",
+  "consolidationAuthorized": true,
+  "reviewReady": true,
+  "handoffStatus": "PreparedForImplementationPlanning",
+  "productExecutionStatus": "NotReadyToDispatch",
+  "productWritePaths": [],
+  "master": {
+    "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/integrated-map-management-baseline.r162.md",
+    "sha256": "1134670b3f8e40d3b69f2a27654192de0ae7eaadad6fbe3ddc8448547bc823f4",
+    "authority": "Common entry and consolidated rules only; specialist contracts and execution approvals retain original ownership"
+  },
+  "sourcePlanCount": 23,
+  "sourceRevisionCount": 22,
+  "sourcePlans": [
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/barcode-scan-timing-minigame.design.r148.md",
+      "revision": "r148",
+      "sha256": "1f19eb13c1732fba9b340287463d7e416fe9799862e112e24dc0b7b2fd80deae",
+      "statusAsRecorded": "ScanTimingDirectionConfirmed / DetailedMiniGameProposed / TaskValidationSeparated / DesignDocumented / ProductNotImplemented",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/crowd-location-trial-business.design.r142.md",
+      "revision": "r142",
+      "sha256": "aab191acd89f21e4cb0e3079bfc854f771badb6530ca610008eb7bbe2a6865b0",
+      "statusAsRecorded": "UserPlanApproved / DesignDocumented / VisualProductionNotIncluded / ProductNotImplemented",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/data-packs-and-observation-layers.proposal.r160.md",
+      "revision": "r160",
+      "sha256": "b6dbaa6b987c3d491d625185b077226dc6ac109696d956cf17e6d7049616c1c8",
+      "statusAsRecorded": "PackAndLayerDesignProposed / CurrentDbReadOnlyReviewed / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/direct-riding-delivery-minigame.design.r145.md",
+      "revision": "r145",
+      "sha256": "c016ba5fdc7d28c2f6935a6b7ab6195dbcad8e094d4b65d7e342857165b6f4f6",
+      "statusAsRecorded": "DirectRidingDirectionConfirmed / DetailedGamePlanProposed / DesignDocumented / VisualReviewPending / ProductNotImplemented",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability-continuation.design.r152.md",
+      "revision": "r152",
+      "sha256": "def3deb2e20be60b94f1c7730746121be4e4ed83a500ac80054e83fe2e63ad99",
+      "statusAsRecorded": "UserContinuationRequested / ScopedPresentationFixAccepted / Implemented / IsolatedWindowsRenderVerified / NameSelectionDetailPending",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability.work-order.r152.md",
+      "revision": "r152",
+      "sha256": "396934925f27f6c49e3123ad63a19b06f729b9d48c2c6505b5bdb81eba8b9581",
+      "statusAsRecorded": null,
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/engine-evolution-gameplay.proposal.r153.md",
+      "revision": "r153",
+      "sha256": "7f3495662fe956b324a88224ab232bdb283789bf6fb8c6cec3c043ef7808cdb8",
+      "statusAsRecorded": "EngineEvolutionRequested / ProposedDesign / ProgressionNotImplemented / TrainingNotStarted",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/focus-relax-shared-management.design.r146.md",
+      "revision": "r146",
+      "sha256": "6643251f2a7778189fad5da7873b902c5c1a238bb62d8925e9aa6fc2d7ad170f",
+      "statusAsRecorded": "UserPlanApproved / ParticipationModesDocumented / ControlHandoffPlanned / EconomyValuesPending / GameplayNotImplemented",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gray-neighborhood-managed-stores-and-walkers.design.r143.md",
+      "revision": "r143",
+      "sha256": "101c6208904eb32ae4ca46093c43507bc8df8d1110710f3a68d169bd21889a7a",
+      "statusAsRecorded": "UserPlanApproved / DesignDocumented / VisualReviewPending / ProductNotImplemented / VideoDeferred",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-event-pin-and-ripple.proposal.r154.md",
+      "revision": "r154",
+      "sha256": "9452d30470d40fa09ae99e5006572e48fa6b1f2254a8383f9cdd6d7b8e28bba0",
+      "statusAsRecorded": "PinDropRippleDirectionRequested / SharedPresentationProposed / MotionConceptPrepared / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-scale-os-attention-and-immersion.proposal.r161.md",
+      "revision": "r161",
+      "sha256": "0cdda124a01a8df4abe9bd4f4735ec50584e432c6430db62d364495df4a4f276",
+      "statusAsRecorded": "ScaleSpecificAttentionRequested / OsAndProcessReviewed / ImmersionDesignProposed / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-role-minigames-and-realistic-recipes.design.r147.md",
+      "revision": "r147",
+      "sha256": "9422942a5b7758c17143d5fb71a04c0aa63121b077defce3020b9297f0bc5e65",
+      "statusAsRecorded": "MultiRoleDirectionConfirmed / TaskProfilesProposed / RecipeSourcesReviewed / DesignDocumented / ProductNotImplemented",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/nationwide-freight-management-map.proposal.r155.md",
+      "revision": "r155",
+      "sha256": "6ad51ac8d88ce5c41f04c2c6be5039d547111c08d29853844e1f3f9d21339088",
+      "statusAsRecorded": "NationwideFreightViewRequested / RepublicOfKoreaFirstConfirmed / FreightManagementDesignProposed / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/next-task-button-confirmed.design.r151.md",
+      "revision": "r151",
+      "sha256": "b202f32d87b6ade3e9e448ceef23db2009fdee74fcc1a5a9e13a8c0deb71e7ef",
+      "statusAsRecorded": "NextTaskButtonConfirmed / DesignDocumented / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/observer-public-data-platform.research.r158.md",
+      "revision": "r158",
+      "sha256": "7349e550f9a35096a894d0074f3c53e04c0830465a1b17092a42055bbf8a0809",
+      "statusAsRecorded": "ObserverUseRequested / CrossSectorResearchCompleted / CollectionAndDataArchitectureProposed / NoNewCollectionOrScheduleChange",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/optional-map-visual-effects.design.r157.md",
+      "revision": "r157",
+      "sha256": "51f1332ca227cf599269f7ffaaf809f848c55feddd6b2106148dd9647a5e8e3a",
+      "statusAsRecorded": "OptionalMapEffectsConfirmed / EffectsControlsProposed / DefaultsPending / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/preferred-role-continuous-tasks.design.r150.md",
+      "revision": "r150",
+      "sha256": "32e44458c4ebf042e62e3ec5537a8140ca244c71390de85a45374e9b8ad514c4",
+      "statusAsRecorded": "PreferredRoleDirectionConfirmed / ContinuousTaskFlowDocumented / NextTaskStartProposed / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-focus-ui-and-place-reveal.r141.md",
+      "revision": "r141",
+      "sha256": "7312d234c5dbcd82763b85cc3b5def3cf830d0073a2cc8791041764ac139338a",
+      "statusAsRecorded": "UserDirectionConfirmed / ConceptDocumented / VisualReviewPending / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/public-data-db-storage.work-order.r159.md",
+      "revision": "r159",
+      "sha256": "08d1e40852343ac4367ca897cfb39159375b2f0fe7f3f7ac68dc6ef958d0e59a",
+      "statusAsRecorded": "LocalDbStored / IndependentReadbackVerified / StrictNoOpVerified / PackAndLayersDeferred",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/scale-os-management-focus.design.r144.md",
+      "revision": "r144",
+      "sha256": "95c4eba49e799602b50849b22948b990a48912130766d4803f2783b068e1260e",
+      "statusAsRecorded": "ScaleFocusPlanApproved / WarehouseInteriorDirectionConfirmed / DesignDocumented / VisualReviewPending / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-arc-freight-links.design.r156.md",
+      "revision": "r156",
+      "sha256": "5141c49a87f0401a2db93e3e4beab3eaefc4abc42cda9bfbe22fa1ad8066ace5",
+      "statusAsRecorded": "SoftArcTransportLinesRequested / ShapeDirectionDocumented / MotionOptional / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/task-queue-role-minigame.concept.r149.md",
+      "revision": "r149",
+      "sha256": "1de3fdc0c086c1f3be4b961d9dccefdff5bf2d234c985faac288b5b8431e973c",
+      "statusAsRecorded": "TaskQueueDirectionConfirmed / ImageConceptGenerated / VisualReviewPending / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    },
+    {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-windows-development-direction.r140.md",
+      "revision": "r140",
+      "sha256": "9c9218b7189303cc7c21a54e003e0607db84afc3fd49995dbc56a510dcf44c3f",
+      "statusAsRecorded": "UserDirectionConfirmed / PlanningAndStatusRefactor / ProductUnchanged",
+      "preservation": "OriginalBytesPreserved;SpecialistOrHistoricalSource"
+    }
+  ],
+  "referenceDocuments": [
+    {
+      "path": "docs/AI/Handoffs/2026-11-12-Claude-0단계뼈대와첫인계사슬-반환.md",
+      "sha256": "8082a2f95f72603645cf6e4eaea3e4f6a6fc041bbbf59fca4eb1b313029f3cea"
+    },
+    {
+      "path": "docs/AI/Handoffs/2026-11-12-Claude-WindowsGame-1단계-반환.md",
+      "sha256": "521ffd2281e358243d05746a5cad15446ccfd3f5d80e5d6d27b94a2cd5f8cf81"
+    },
+    {
+      "path": "docs/AI/Handoffs/2026-11-13-Claude-새주문핀파동과효과선택-반환.md",
+      "sha256": "57b39091a55ec36767e9c65b678af18c8aaf77edd330f5ec03269ea71f1dc8de"
+    },
+    {
+      "path": "docs/AI/Handoffs/2026-11-13-Claude-제안-선박해양항공자료표현.md",
+      "sha256": "79184fc127bf9257b68a4b7297934a3a5214b3c6a88807bbcc211fb573287d90"
+    },
+    {
+      "path": "docs/AI/Handoffs/Codex-Claude-혼용운영안-2026-11-12.md",
+      "sha256": "ea1a3242cf309f570f3c95f9431a21ac004a446792f6eb4381876dbee1821ff4"
+    },
+    {
+      "path": "docs/AI/Handoffs/Unity-Windows-구현현황.md",
+      "sha256": "b549ba328670fe8ebec8afdb200f70b4a81f0275a8266d98cffbe806713bdd3e"
+    },
+    {
+      "path": "docs/Architecture/CodexPlayableLoopGoal운영체계.md",
+      "sha256": "3f40f5b6b0b2837a886b38e8386db8af5799af50fa119413967d5c23c4d8078a"
+    },
+    {
+      "path": "docs/Architecture/E1-E7수직폐루프와E8-E10수평증거체계.md",
+      "sha256": "e6dc331692c21003a6dc5affd9932e0b53935ddcf114ffefaabc6084db8a22bc"
+    },
+    {
+      "path": "docs/Architecture/GitHub기반기획개발교대운영체계.md",
+      "sha256": "35b44bd81468c4c5b0b567b445cc0d69849cd19b107f9763fe4a13dc9eddb6f9"
+    },
+    {
+      "path": "docs/Architecture/기획문서독립관리체계.md",
+      "sha256": "362fa5ab74f8691bff72ad2d65d97ffcc4046a540552e82c581693c9061d058e"
+    },
+    {
+      "path": "docs/Changes/2026-11-13-hongdal-gu-map-names-r152.md",
+      "sha256": "2e7e7d2ccdccdc6945c3066ac4762a7424373105d3f441a9767f561c7f92c5db"
+    }
+  ],
+  "repositories": [
+    {
+      "root": "C:\\Users\\user\\source\\repos\\Hongdal",
+      "branch": "dev/mirror-integration",
+      "head": "7c83c18cf9607b3854120c15f85d5dd8f9ab14d8",
+      "dirtyEntryCount": 614,
+      "relevantDirtyEntries": [
+        "?? Ssalddel.Sagajeong.Core/",
+        "?? docs/AI/Handoffs/2026-11-12-Claude-0단계뼈대와첫인계사슬-반환.md",
+        "?? docs/AI/Handoffs/2026-11-12-Claude-2A-축소전환과건물주소-반환.md",
+        "?? docs/AI/Handoffs/2026-11-12-Claude-WindowsGame-1단계-반환.md",
+        "?? docs/AI/Handoffs/2026-11-12-Claude-제안-구지도정밀도.md",
+        "?? docs/AI/Handoffs/2026-11-12-Claude-제안-넓어지는지도와위험신호.md",
+        "?? docs/AI/Handoffs/2026-11-13-Claude-구지도정밀화G2-반환.md",
+        "?? docs/AI/Handoffs/2026-11-13-Claude-새주문핀파동과효과선택-반환.md",
+        "?? docs/AI/Handoffs/2026-11-13-Claude-위험신호와넓어지는영역-반환.md",
+        "?? docs/AI/Handoffs/2026-11-13-Claude-제안-선박해양항공자료표현.md",
+        "?? docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability-continuation.design.r152.md",
+        "?? docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability.work-order.r152.md",
+        "?? docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-event-pin-and-ripple.proposal.r154.md",
+        "?? docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/optional-map-visual-effects.design.r157.md"
+      ]
+    },
+    {
+      "root": "C:\\Users\\user\\ssalddel",
+      "branch": "unity/workstream-transition",
+      "head": "605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77",
+      "dirtyEntryCount": 125,
+      "relevantDirtyEntries": [
+        "?? Assets/Ssalddel/MobileGame/",
+        "?? Assets/Ssalddel/WindowsGame/"
+      ]
+    }
+  ],
+  "protectedPackAndPackageFingerprints": [
+    {
+      "path": "C:\\Users\\user\\ssalddel\\Packages\\manifest.json",
+      "sha256": "16bcb8129dc577b72f3cb54c028e85e20e205356ac52e199a6948eb88c53ae7b",
+      "sizeBytes": 3871
+    },
+    {
+      "path": "C:\\Users\\user\\ssalddel\\Packages\\packages-lock.json",
+      "sha256": "7ebfc3603db1ea1a44412774b3c8dff3aed22dad65903377b5c767924efe1c50",
+      "sizeBytes": 18679
+    },
+    {
+      "path": "C:\\Users\\user\\ssalddel\\Assets\\Ssalddel\\WindowsGame\\Resources\\hongdal-packs.json",
+      "sha256": "24e409a9b1d5c7ad12470ed0eee6763105a152a68479cb6a7384b0db5aa27e2a",
+      "sizeBytes": 6773
+    }
+  ],
+  "resolvedChoices": [
+    {
+      "sourceRevision": "r154",
+      "choice": "pickup-store-pin",
+      "basis": "docs/AI/Handoffs/2026-11-13-Claude-새주문핀파동과효과선택-반환.md",
+      "basisType": "RecordedUserAnswerAndMatchingSource",
+      "implementationEvidence": "ReturnedArtifactsAndSourceOnly;NoNewRuntime"
+    },
+    {
+      "sourceRevision": "r157",
+      "choice": "simple-default-effects",
+      "basis": "docs/AI/Handoffs/2026-11-13-Claude-새주문핀파동과효과선택-반환.md",
+      "basisType": "RecordedUserAnswerAndMatchingSource",
+      "implementationEvidence": "ReturnedArtifactsAndSourceOnly;NoNewRuntime"
+    }
+  ],
+  "independentWorkstreams": [
+    {
+      "key": "preserve-existing-windows",
+      "state": "SourceAndReturnsReconciled",
+      "autoActivate": false
+    },
+    {
+      "key": "district-rider-support-review",
+      "state": "PriorityRefinementOnly",
+      "directResultRecommendation": "WaitingPlanConfirmation;ArrivalIsSeparateCandidate",
+      "directResultApproved": false,
+      "subjectAndWorkItemRegistered": false,
+      "requiredResearchDecision": "NeedsScopeReview",
+      "candidatePresentationReadRefs": [
+        "unity:Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchGu.cs",
+        "unity:Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchGuLabels.cs",
+        "unity:Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+        "unity:Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchView.cs"
+      ],
+      "autoActivate": false
+    },
+    {
+      "key": "observation-pack-consumer",
+      "state": "FirstPackAndSpatialBindingPending",
+      "dependsOnDistrictRiderFeature": false,
+      "autoActivate": false
+    },
+    {
+      "key": "role-task-minigame",
+      "state": "ChooseOnePreparedRoleAndResult",
+      "autoActivate": false
+    },
+    {
+      "key": "nationwide-or-global-operations",
+      "state": "SeparateIndependentSlicePlanning",
+      "autoActivate": false
+    },
+    {
+      "key": "engine-evolution-or-location-trial",
+      "state": "ProposalBacklog",
+      "autoActivate": false
+    }
+  ],
+  "reviewReturnCandidate": "docs/AI/Handoffs/2026-11-13-Claude-r162-구지도구현계획-검토반환.md",
+  "sourceOnlyEvidenceCeiling": {
+    "reportedByClaude": "두 기존 빌드 성공, 커널56/56·새주문15/15, 실제 동네 새주문/간단히 및 최대화 구지도 관찰은 반환 기록이다.",
+    "independentlyObservedNow": "소스 존재·정확 SHA/반환 prefix·기존 build-result/kernel-checks 파일을 읽기 확인했다.",
+    "notPerformedNow": "실제 Windows 창/GameView/입력·재실행·새 빌드·dotnet 검사·원본 Unity 프로젝트 컴파일·프레임 측정은 실행하지 않았다.",
+    "remaining": "r154 구/서울 요약·다른 사건 및 r157 개별설정/OS 움직임감소/취향저장 확정·재실행 유지·세로창·낙하중간·타PC는 별도 미검증/미구현.",
+    "concurrentInputsAdvancedAfterB0": true
+  },
+  "transport": {
+    "samePcDirtyCheckoutOnly": true,
+    "gitCommitPerformed": false,
+    "gitPushPerformed": false,
+    "includedInRecordedHead": false,
+    "remoteHandoffReady": false
+  },
+  "unchangedScope": {
+    "productFiles": true,
+    "sourcePlanOriginals": true,
+    "database": true,
+    "schedules": true,
+    "personalSave": true,
+    "goalAndWorkItemLedgers": true,
+    "graphMap": true,
+    "evidenceStages": true
+  },
+  "protectedSourceInventoriesAtB0": [
+    {
+      "name": "WindowsGame",
+      "basePath": "C:\\Users\\user\\ssalddel\\Assets\\Ssalddel\\WindowsGame",
+      "fileCount": 52,
+      "aggregateSha256": "3aedd7e3d37a3a7db199563382daa042bf0062b4b14f40f5a796edaaab9282aa",
+      "hashRule": "SHA256(UTF8(sorted(relativePath + NUL + fileSHA256 + LF)))",
+      "files": [
+        {
+          "path": "Checks~/GuLabelPlacementChecks.csproj",
+          "sha256": "5645caa6fb7a17e781ec8ed29a746a5a7c4488d017257cd802b85ad2cdbe280f",
+          "sizeBytes": 532,
+          "lastWriteUtc": "2026-11-12T23:32:49.880517+00:00"
+        },
+        {
+          "path": "Checks~/MapOrderEvents/MapOrderEventChecks.csproj",
+          "sha256": "b83a26b7056eb37353817cc77ff4128b807a6ad335669cb8cf444dc51c86000d",
+          "sizeBytes": 757,
+          "lastWriteUtc": "2026-11-13T01:38:06.498108+00:00"
+        },
+        {
+          "path": "Checks~/MapOrderEvents/Program.cs",
+          "sha256": "06aed34c4ae8f8584b868b822e10435eda7eeb46285bf1e6e7b823e1771c00c6",
+          "sizeBytes": 633,
+          "lastWriteUtc": "2026-11-13T01:38:06.845575+00:00"
+        },
+        {
+          "path": "Checks~/Program.cs",
+          "sha256": "559a15487df1fbf785c73c893b6b7557dedc333b437608883465d617706c8716",
+          "sizeBytes": 11301,
+          "lastWriteUtc": "2026-11-12T23:33:43.836879+00:00"
+        },
+        {
+          "path": "Editor/Ssalddel.WindowsGame.Editor.asmdef",
+          "sha256": "8701d7206c45c2822e5026d811c0a96dc3c1c663e65a580c0549e8fd144d7558",
+          "sizeBytes": 447,
+          "lastWriteUtc": "2026-11-12T05:26:07.449368+00:00"
+        },
+        {
+          "path": "Editor/WindowsGameBuild.cs",
+          "sha256": "21ed149d02ac5533efe29d91b7293ec4abcb7cf926cd0f1c141d67635a48698b",
+          "sizeBytes": 6042,
+          "lastWriteUtc": "2026-11-12T07:28:02.737197+00:00"
+        },
+        {
+          "path": "Kernel/CargoTransportModule.cs",
+          "sha256": "4942079e30c6877cc7ca452e5ec819e79248ee20a874d5a59d7ba4113cb60c5c",
+          "sizeBytes": 9025,
+          "lastWriteUtc": "2026-11-12T07:27:57.087239+00:00"
+        },
+        {
+          "path": "Kernel/FirstChainPack.cs",
+          "sha256": "9db4133f6c50dea3577c9f853201df5313ad40f3e44d5557d62e7c2178581a4d",
+          "sizeBytes": 3284,
+          "lastWriteUtc": "2026-11-12T07:27:55.654496+00:00"
+        },
+        {
+          "path": "Kernel/FirstChainProjection.cs",
+          "sha256": "3b134d346f0ede1f99ff004a4f4fd056356d86e4d42033c7ec47cfe5d60d3111",
+          "sizeBytes": 8467,
+          "lastWriteUtc": "2026-11-12T07:37:36.575079+00:00"
+        },
+        {
+          "path": "Kernel/FoodDeliveryModule.cs",
+          "sha256": "207c1bf624849af0847dd0eb0a3a04ee1e2f457b45a635b4147fe86594a8406e",
+          "sizeBytes": 8020,
+          "lastWriteUtc": "2026-11-12T14:28:38.344804+00:00"
+        },
+        {
+          "path": "Kernel/FranchiseSupplyModule.cs",
+          "sha256": "a2868336038356da08f710e65957fe2310154ac38162987732b6c7614d707f0f",
+          "sizeBytes": 17452,
+          "lastWriteUtc": "2026-11-12T07:27:56.346611+00:00"
+        },
+        {
+          "path": "Kernel/GameKernel.cs",
+          "sha256": "c14c22207e4cf05ac7ebe9faa48ed46758c22418108b9f5e90c485b9b372bd8a",
+          "sizeBytes": 13611,
+          "lastWriteUtc": "2026-11-12T14:28:37.263283+00:00"
+        },
+        {
+          "path": "Kernel/KernelChecks.cs",
+          "sha256": "b2c5bb6c7090630dd305511a9422a76e43871e254a2abc53cc5668e8ef7d8e6f",
+          "sizeBytes": 30929,
+          "lastWriteUtc": "2026-11-12T14:59:27.549470+00:00"
+        },
+        {
+          "path": "Kernel/KernelContracts.cs",
+          "sha256": "f0acca8e8e860a29299438beb565fb408b122937c0596f5daf363d6e09d78a6a",
+          "sizeBytes": 10208,
+          "lastWriteUtc": "2026-11-12T14:28:37.633614+00:00"
+        },
+        {
+          "path": "Kernel/KernelSignals.cs",
+          "sha256": "5a097191c6e6d2ac6f8068d9ee5b1c194eb0939cc00337d6cf0cb00e9f989fcb",
+          "sizeBytes": 1582,
+          "lastWriteUtc": "2026-11-12T14:28:32.733883+00:00"
+        },
+        {
+          "path": "Kernel/LogisticsCenterModule.cs",
+          "sha256": "76fe64bb5927ded9e435add5ace759a88a434bb3e3f51231eca74d7211339e3e",
+          "sizeBytes": 10332,
+          "lastWriteUtc": "2026-11-12T07:27:56.668679+00:00"
+        },
+        {
+          "path": "Kernel/Ssalddel.WindowsGame.Kernel.asmdef",
+          "sha256": "27661001412ab0e47a0a12cf3eebfd409c9b1ee6cbdc869c988d9d0a482ac642",
+          "sizeBytes": 537,
+          "lastWriteUtc": "2026-11-12T07:27:54.501702+00:00"
+        },
+        {
+          "path": "Kernel/StoreOperationsModule.cs",
+          "sha256": "c7cf3dc7ca69a544e3b7a2fb69301e35e832a325ab76696ed5ec4b178c36143e",
+          "sizeBytes": 20244,
+          "lastWriteUtc": "2026-11-12T14:28:37.991074+00:00"
+        },
+        {
+          "path": "Kernel/TerritoryModule.cs",
+          "sha256": "54b162b921a18638ca41f5e08b5bcdcd6a1d508c90098a42665df18f1ec01bee",
+          "sizeBytes": 23709,
+          "lastWriteUtc": "2026-11-12T14:28:33.083393+00:00"
+        },
+        {
+          "path": "README.md",
+          "sha256": "5ce9f038a2e8f8026bb4a78ba6dfdfea7280f5e906047762d422202bad670c13",
+          "sizeBytes": 14807,
+          "lastWriteUtc": "2026-11-13T01:57:52.865294+00:00"
+        },
+        {
+          "path": "Runtime/HongdalKernelHost.cs",
+          "sha256": "5bb1da2c81355d456b328afb2aa3cd2e11e52aa19bceeb34089b577469671f69",
+          "sizeBytes": 5314,
+          "lastWriteUtc": "2026-11-13T01:38:02.479132+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchBuildings.cs",
+          "sha256": "54716b1df26869be371b946ef1938d1e702ed42be4bc6e999c4b75da48835aae",
+          "sizeBytes": 16481,
+          "lastWriteUtc": "2026-11-12T07:37:37.883066+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchBusiness.cs",
+          "sha256": "29e36908eb6d32e2acaa3cfc15fd942b1803f8e48cb915b14c282de82e04c679",
+          "sizeBytes": 32110,
+          "lastWriteUtc": "2026-11-12T07:37:36.948031+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchCampaign.cs",
+          "sha256": "f84355f2468730caafcb81c289e0a5886eb5c8313a4b0897d1c90d11e30dd9d3",
+          "sizeBytes": 13426,
+          "lastWriteUtc": "2026-11-12T05:26:09.139513+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchCampaignProof.cs",
+          "sha256": "13ad89b1324348ada5959da9a64d81adaf0e1f744113e58ddd6aa55e5ef05e94",
+          "sizeBytes": 23386,
+          "lastWriteUtc": "2026-11-12T05:54:58.275746+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchCityBoard.cs",
+          "sha256": "3721e9a90889f12f51476da931eb125b0aaa0e4f4b549bc4e6a766b153eb52ed",
+          "sizeBytes": 5805,
+          "lastWriteUtc": "2026-11-12T05:26:09.863333+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchClock.cs",
+          "sha256": "6b69613b419852bcd1c8bb1fa2f8ea32be961b8a2f66e3b2c5cba2743651bc2d",
+          "sizeBytes": 4325,
+          "lastWriteUtc": "2026-11-12T05:26:10.197633+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchDiorama.cs",
+          "sha256": "ab3938c44a649377ba92c83b926b01add388ed5fe72a848da1990cf3573daeed",
+          "sizeBytes": 19447,
+          "lastWriteUtc": "2026-11-13T01:51:07.955482+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchDong.cs",
+          "sha256": "2806b8969c542ab8835f9fa54afed15e5a4333d06db76b31258843d6c1ee03e7",
+          "sizeBytes": 7440,
+          "lastWriteUtc": "2026-11-12T05:54:58.651923+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchEngine.cs",
+          "sha256": "6330af086b88d38e29160c4b554ce65a9d36aea9a4f1e92cf55588bd6b5943e4",
+          "sizeBytes": 14097,
+          "lastWriteUtc": "2026-11-12T07:27:59.603672+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchExpansion.cs",
+          "sha256": "967de7ba71207c75f44a40f9555430a3c7ca74997f41079d56bbdf5e140af6d3",
+          "sizeBytes": 15467,
+          "lastWriteUtc": "2026-11-13T01:38:02.845342+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchExpansionProof.cs",
+          "sha256": "8f6bfff7f2a19b0a880ea88bce3a1e199c075ded011dec5c9a634549ed02e1b3",
+          "sizeBytes": 7733,
+          "lastWriteUtc": "2026-11-12T05:26:12.014078+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchFocus.cs",
+          "sha256": "8936d755da590bafa42eb7653a1889b226713b7026ba5a3721f583008b1e5f27",
+          "sizeBytes": 6234,
+          "lastWriteUtc": "2026-11-12T05:26:12.383980+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchGu.cs",
+          "sha256": "99131616f07c69105ab246cb709e03681231786d79f81788cab693ccf7e58f7e",
+          "sizeBytes": 56687,
+          "lastWriteUtc": "2026-11-13T01:51:07.336944+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchGuLabels.cs",
+          "sha256": "f3c16f25a1d5a9dc8aec94374518254f42295e115d3719b7badc085d7ff647c2",
+          "sizeBytes": 10843,
+          "lastWriteUtc": "2026-11-13T01:38:03.564521+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchLevelPrompt.cs",
+          "sha256": "128210daf4cdf9d0c909b4d37a7e2c6dfcb357840444094ee53c40f4c4e9766e",
+          "sizeBytes": 12204,
+          "lastWriteUtc": "2026-11-12T07:28:01.714671+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchMap.cs",
+          "sha256": "ca447b9eace05bfe6b087534e7955369c28ece6c074087648b499083dee354fe",
+          "sizeBytes": 27229,
+          "lastWriteUtc": "2026-11-13T01:51:06.938070+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchMapEvents.cs",
+          "sha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+          "sizeBytes": 9678,
+          "lastWriteUtc": "2026-11-13T01:38:05.504046+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchMind.cs",
+          "sha256": "af2292b7ef2a013eea7cf841aa2bf7755aa27452e72e9d7ed7beac67c1bc13b7",
+          "sizeBytes": 19203,
+          "lastWriteUtc": "2026-11-12T05:26:13.144321+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchMotorcycle.cs",
+          "sha256": "92577099978c1da767218a8bc68d5d8db22ecd83e82f573fd5bcf6912a1212f6",
+          "sizeBytes": 5716,
+          "lastWriteUtc": "2026-11-13T01:51:08.282520+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchPanelVisibility.cs",
+          "sha256": "198fc905de7470098582c0704e38e59b2df00d55585791d9fe89bce34d455395",
+          "sizeBytes": 2654,
+          "lastWriteUtc": "2026-11-12T05:26:13.863094+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchProof.cs",
+          "sha256": "2f8e14207d40f2069c4428a7522dbcf95e246065ae7714e9bb607118361a0aba",
+          "sizeBytes": 11340,
+          "lastWriteUtc": "2026-11-12T05:26:14.212092+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchSignals.cs",
+          "sha256": "ebbcd8e4d071f0e9f7aeec29d68f3f1ea1f8ed84042c8850b682ce5ec1363c25",
+          "sizeBytes": 13236,
+          "lastWriteUtc": "2026-11-13T01:38:04.546637+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchTiles.cs",
+          "sha256": "9879794bb9860322f3a0ebea90533c8ecb1c8c1c69b508f9096e7a1a72f92b05",
+          "sizeBytes": 6793,
+          "lastWriteUtc": "2026-11-12T06:05:02.465109+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchView.cs",
+          "sha256": "b68d9ae03e0fb1240f91faa70c2778d30e1ba908f24a9b2bdb0775d3772dd02c",
+          "sizeBytes": 25331,
+          "lastWriteUtc": "2026-11-13T01:38:04.879823+00:00"
+        },
+        {
+          "path": "Runtime/SagajeongDispatchZones.cs",
+          "sha256": "ac8d701ffc7f8b4f0a240fd902485976cc6324f948ff53e412bb0b9245adff2c",
+          "sizeBytes": 11179,
+          "lastWriteUtc": "2026-11-12T05:26:15.256861+00:00"
+        },
+        {
+          "path": "Runtime/Ssalddel.WindowsGame.asmdef",
+          "sha256": "47a79c36d5c472e380ffa0ffc96a26cc3c328a633cd84d0eedc5e83e8fe8e994",
+          "sizeBytes": 452,
+          "lastWriteUtc": "2026-11-12T07:27:59.265180+00:00"
+        },
+        {
+          "path": "Runtime/구지도이름배치Policy.cs",
+          "sha256": "8d67c83d66416c3e104c636a98f8682c1aa15a4c507b1a10ce1dcc946d3c303d",
+          "sizeBytes": 7278,
+          "lastWriteUtc": "2026-11-12T23:33:43.835877+00:00"
+        },
+        {
+          "path": "Runtime/지도새주문표현Checks.cs",
+          "sha256": "52a048c3b2e47c7b9069d0cd7473ed41627b7033ce5b6287cb0c9740adde15ff",
+          "sizeBytes": 10420,
+          "lastWriteUtc": "2026-11-13T01:38:06.163387+00:00"
+        },
+        {
+          "path": "Runtime/지도새주문표현Policy.cs",
+          "sha256": "a0e6b5a70cdcb6c1a2e19c103ba1794551c7a12acd5c22130046c3897cbb893b",
+          "sizeBytes": 8202,
+          "lastWriteUtc": "2026-11-13T01:38:05.840164+00:00"
+        },
+        {
+          "path": "SimulationBridge/SessionFranchiseSupplyPort.cs",
+          "sha256": "70007892513994fb7e28845603c23b2d3a56dea07e56a29865773cb111946371",
+          "sizeBytes": 11586,
+          "lastWriteUtc": "2026-11-12T07:27:58.914567+00:00"
+        },
+        {
+          "path": "SimulationBridge/Ssalddel.WindowsGame.SimulationBridge.asmdef",
+          "sha256": "2cd497432c04b65fe43770bd599b61b5b5f7481d2eb4dafb96e6ef24f1ea7062",
+          "sizeBytes": 734,
+          "lastWriteUtc": "2026-11-12T07:27:58.550214+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Core",
+      "basePath": "C:\\Users\\user\\source\\repos\\Hongdal\\Ssalddel.Sagajeong.Core",
+      "fileCount": 16,
+      "aggregateSha256": "a9066a0e91193f184de1ed8f33eac3a3b4995590b5a98c2c0f4be01dcb10b3f2",
+      "hashRule": "SHA256(UTF8(sorted(relativePath + NUL + fileSHA256 + LF)))",
+      "files": [
+        {
+          "path": "Checks~/Program.cs",
+          "sha256": "82c19a8bb643e8641dbf7a1edb2815decb26643feb34584a3b671527b50846af",
+          "sizeBytes": 9925,
+          "lastWriteUtc": "2026-11-11T06:48:03.967681+00:00"
+        },
+        {
+          "path": "Checks~/Ssalddel.Sagajeong.Core.Checks.csproj",
+          "sha256": "fb281e112fb0d2af32220e8edcf58e3debc5fcb90f326fac87676d16ad538d7a",
+          "sizeBytes": 400,
+          "lastWriteUtc": "2026-11-11T06:36:36.142746+00:00"
+        },
+        {
+          "path": "Directory.Build.props",
+          "sha256": "f16de0bb7495d81d57fce68464f0cf6b8d7bed4b477d55cf93498b887ae3d61d",
+          "sizeBytes": 580,
+          "lastWriteUtc": "2026-11-11T06:37:25.286641+00:00"
+        },
+        {
+          "path": "README.md",
+          "sha256": "75180dcd723d5f98cf08ca3ec12398c9576a06763fd4104fc1b1b6a6e8e2cdfd",
+          "sizeBytes": 3559,
+          "lastWriteUtc": "2026-11-11T06:59:25.867779+00:00"
+        },
+        {
+          "path": "Ssalddel.Sagajeong.Core.csproj",
+          "sha256": "c49ac02613eacf16e368518396c17770b668a37fa11187fdbef9e06df54fafbc",
+          "sizeBytes": 564,
+          "lastWriteUtc": "2026-11-11T06:59:25.864516+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/Compatibility.cs",
+          "sha256": "57859bf977fd152adf6a3552ff56f584a580d21620eca0a878f6e1a790068426",
+          "sizeBytes": 2398,
+          "lastWriteUtc": "2026-11-11T06:32:34.366875+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/DeliveryRoadNetwork.cs",
+          "sha256": "7ada762e486e9834762d5a1f37d23093a4d3b275b7b1cadc2977ecc35abc678e",
+          "sizeBytes": 5409,
+          "lastWriteUtc": "2026-11-11T06:30:27.787032+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/DeliverySimulation.cs",
+          "sha256": "ccbfbd4fa629f3ec2ef570d35aa1372a0f5aa0a22e0b947e4299badc09658a7f",
+          "sizeBytes": 17305,
+          "lastWriteUtc": "2026-11-11T06:28:47.010752+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/FoodCampaignStage.cs",
+          "sha256": "97e60af3397a2e74e5bb90c25d75fadbf908110bec2b707ead674ed2e4433fa1",
+          "sizeBytes": 3992,
+          "lastWriteUtc": "2026-11-11T06:28:47.045861+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/FoodManagementRound.cs",
+          "sha256": "f1a1a991ce912317d91af1486429de1ed04c869f684598f2b630e2f83a8f6ab7",
+          "sizeBytes": 10035,
+          "lastWriteUtc": "2026-11-11T06:32:34.367875+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/FoodManagementSession.cs",
+          "sha256": "fb396448bb3c0b2e7d2831a7fe22280cb0b2248b1b462f630c93ce421f905b3b",
+          "sizeBytes": 21746,
+          "lastWriteUtc": "2026-11-11T06:34:58.977933+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/FreightReplay.cs",
+          "sha256": "204b0efc775cfcea1e0bee6039e02e0a7aedeed0b8da602808c351c6f6dc7b8b",
+          "sizeBytes": 8263,
+          "lastWriteUtc": "2026-11-11T06:28:47.014003+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/LocalCampaign.cs",
+          "sha256": "dc5cf0925ff5dbdfbc8d68b2479838529a7a103ad55a9ef41c8d462c622d7d38",
+          "sizeBytes": 7113,
+          "lastWriteUtc": "2026-11-11T06:32:34.368876+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/SagajeongSimulationCore.cs",
+          "sha256": "a0e85c233533c78d6e2c57570fec774c2890ff379d0faca73e1bebf316c50759",
+          "sizeBytes": 21710,
+          "lastWriteUtc": "2026-11-11T06:48:03.966680+00:00"
+        },
+        {
+          "path": "UnityPackage/Runtime/Ssalddel.Sagajeong.Core.asmdef",
+          "sha256": "9bcfa6efbdba2dc4c36df49d15c87915fe3b54fb96c3d7c1207fec40cec6ea67",
+          "sizeBytes": 358,
+          "lastWriteUtc": "2026-11-11T06:30:27.785027+00:00"
+        },
+        {
+          "path": "UnityPackage/package.json",
+          "sha256": "be807c3f40175222b77124daf8bd614e6848fbdec2037782cb0dacdf54943774",
+          "sizeBytes": 400,
+          "lastWriteUtc": "2026-11-11T06:30:27.784453+00:00"
+        }
+      ]
+    },
+    {
+      "name": "MobileGame",
+      "basePath": "C:\\Users\\user\\ssalddel\\Assets\\Ssalddel\\MobileGame",
+      "fileCount": 19,
+      "aggregateSha256": "4c3e86db0b444d409f704e0e497823597341bd310b60bd4143ae24046012e103",
+      "hashRule": "SHA256(UTF8(sorted(relativePath + NUL + fileSHA256 + LF)))",
+      "files": [
+        {
+          "path": "Editor/MobileGameAssembly.cs",
+          "sha256": "eccc790bf17f440b143c3a61a6d5d483d1650255679848c5ea10a4549824e732",
+          "sizeBytes": 876,
+          "lastWriteUtc": "2026-11-11T07:10:51.474272+00:00"
+        },
+        {
+          "path": "Editor/MobileGameBuild.cs",
+          "sha256": "fa9a007806396914c9b25dc0536509610a3ce11084c895e097a94be633339fac",
+          "sizeBytes": 4286,
+          "lastWriteUtc": "2026-11-11T06:54:25.779366+00:00"
+        },
+        {
+          "path": "IMobileGameSession.cs",
+          "sha256": "580ebdec1b0f75151ec6c10460760ed7a314c189e7222df83142dd784d35bd4f",
+          "sizeBytes": 413,
+          "lastWriteUtc": "2026-11-11T06:29:11.770354+00:00"
+        },
+        {
+          "path": "Integration/MobileGameExchangeValidator.cs",
+          "sha256": "4260f1d128b34066d4f7633161d0ef3e6c4f399eeddb0de1a7af95a38a72b84c",
+          "sizeBytes": 4469,
+          "lastWriteUtc": "2026-11-11T06:32:28.811752+00:00"
+        },
+        {
+          "path": "Integration/MobileGameExperienceLog.cs",
+          "sha256": "ffe50d95b25fdb63c70f72c16f969e7e73da93f83e05cff15f7af488db159bed",
+          "sizeBytes": 6326,
+          "lastWriteUtc": "2026-11-11T07:08:40.482666+00:00"
+        },
+        {
+          "path": "Integration/MobileGameFileExchange.cs",
+          "sha256": "d1037cf83c3392009f7562149314f7db9aec0cea85eb0c60cebbbe5481707e83",
+          "sizeBytes": 353,
+          "lastWriteUtc": "2026-11-11T06:32:28.810752+00:00"
+        },
+        {
+          "path": "Integration/MobileGameSession.cs",
+          "sha256": "41a2b005ddcdc1a6697f8d0dc25a42e18b8dba7ca5d8fe9187a203773cf0e4a0",
+          "sizeBytes": 23204,
+          "lastWriteUtc": "2026-11-11T07:09:16.522551+00:00"
+        },
+        {
+          "path": "Integration/README.md",
+          "sha256": "f1be2bc79228bc9692130ac24b60c208782284027f987b307d4e0966755b2d08",
+          "sizeBytes": 3663,
+          "lastWriteUtc": "2026-11-11T07:09:16.523552+00:00"
+        },
+        {
+          "path": "MobileGameBootstrap.cs",
+          "sha256": "813a78740c3e7c5b6fb0251cba0c00890416560fda121959172d5e7a59f47553",
+          "sizeBytes": 1043,
+          "lastWriteUtc": "2026-11-11T07:10:51.473271+00:00"
+        },
+        {
+          "path": "MobileGameController.cs",
+          "sha256": "8f32731da8de3d6217fa236b8c5a5f09317d612d9f4f1036eb1df589fded84d2",
+          "sizeBytes": 25729,
+          "lastWriteUtc": "2026-11-11T07:08:56.843738+00:00"
+        },
+        {
+          "path": "MobileGameEntry.cs",
+          "sha256": "8450dfe70ef213515473f34a3dc6e332a16aa8a681cff89142efd78427dd870a",
+          "sizeBytes": 2184,
+          "lastWriteUtc": "2026-11-11T06:42:49.111512+00:00"
+        },
+        {
+          "path": "MobileGameModels.cs",
+          "sha256": "08a089c93b16def64e59a0db52cc340c937cd774e55942e8a7f13eddb919c2a6",
+          "sizeBytes": 2792,
+          "lastWriteUtc": "2026-11-11T07:05:16.551615+00:00"
+        },
+        {
+          "path": "MobileMapGraphic.cs",
+          "sha256": "b956ede9440aea199452067f968cd9a881a490792dc5ae8baa5b5a8ce74632b7",
+          "sizeBytes": 15288,
+          "lastWriteUtc": "2026-11-11T07:03:05.651718+00:00"
+        },
+        {
+          "path": "MobileTouchState.cs",
+          "sha256": "e3e956d4355957d64bd52e2449cc4c7df8be4015b8ee50eaeedc326a3c192d25",
+          "sizeBytes": 1502,
+          "lastWriteUtc": "2026-11-11T06:29:11.772352+00:00"
+        },
+        {
+          "path": "MobileTouchStateChecks.cs",
+          "sha256": "cdf1048faff6aa60ce8132f7400dc3ce4cce53ad8ef104482945189d11d84e63",
+          "sizeBytes": 1556,
+          "lastWriteUtc": "2026-11-11T06:36:11.784941+00:00"
+        },
+        {
+          "path": "Platform/MobileAndroidDocumentExchange.cs",
+          "sha256": "e2f7063d424e6b2e715a4a28de65086aac3c0e25ee0ce918551ce640e94a46c9",
+          "sizeBytes": 3813,
+          "lastWriteUtc": "2026-11-11T06:49:08.300063+00:00"
+        },
+        {
+          "path": "Platform/MobileGameFileExchangeFactory.cs",
+          "sha256": "f22479b58341738a0508d1ce51ed96698c0aef13c7cb572f62a82f5a526d6795",
+          "sizeBytes": 6400,
+          "lastWriteUtc": "2026-11-11T06:41:00.916791+00:00"
+        },
+        {
+          "path": "README.md",
+          "sha256": "041d0abf8033e5290821ef60bf92b0427a232f636fa6fc0b4d80c83a811e63e8",
+          "sizeBytes": 2872,
+          "lastWriteUtc": "2026-11-11T07:18:45.704523+00:00"
+        },
+        {
+          "path": "Verification/MobileGamePlayerProof.cs",
+          "sha256": "6bfa5f9cf23d4a6baed0f6012cc413435cbdb9d971afbc53ff87fbeaf99cecb6",
+          "sizeBytes": 13079,
+          "lastWriteUtc": "2026-11-11T07:11:32.836357+00:00"
+        }
+      ]
+    }
+  ],
+  "returnedSourceFingerprintComparisonAtB0": [
+    {
+      "relativePath": "Runtime/지도새주문표현Policy.cs",
+      "returnedSha256Prefix": "a0e6b5a70cdcb6c1",
+      "exists": true,
+      "currentSha256": "a0e6b5a70cdcb6c1a2e19c103ba1794551c7a12acd5c22130046c3897cbb893b",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/지도새주문표현Checks.cs",
+      "returnedSha256Prefix": "52a048c3b2e47c7b",
+      "exists": true,
+      "currentSha256": "52a048c3b2e47c7b9069d0cd7473ed41627b7033ce5b6287cb0c9740adde15ff",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchMapEvents.cs",
+      "returnedSha256Prefix": "16ce4d87a9cf1bc6",
+      "exists": true,
+      "currentSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Checks~/MapOrderEvents/MapOrderEventChecks.csproj",
+      "returnedSha256Prefix": "b83a26b7056eb373",
+      "exists": true,
+      "currentSha256": "b83a26b7056eb37353817cc77ff4128b807a6ad335669cb8cf444dc51c86000d",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Checks~/MapOrderEvents/Program.cs",
+      "returnedSha256Prefix": "06aed34c4ae8f858",
+      "exists": true,
+      "currentSha256": "06aed34c4ae8f8584b868b822e10435eda7eeb46285bf1e6e7b823e1771c00c6",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchView.cs",
+      "returnedSha256Prefix": "b68d9ae03e0fb124",
+      "exists": true,
+      "currentSha256": "b68d9ae03e0fb1240f91faa70c2778d30e1ba908f24a9b2bdb0775d3772dd02c",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchMap.cs",
+      "returnedSha256Prefix": "ca447b9eace05bfe",
+      "exists": true,
+      "currentSha256": "ca447b9eace05bfe6b087534e7955369c28ece6c074087648b499083dee354fe",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchExpansion.cs",
+      "returnedSha256Prefix": "967de7ba71207c75",
+      "exists": true,
+      "currentSha256": "967de7ba71207c75f44a40f9555430a3c7ca74997f41079d56bbdf5e140af6d3",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchGuLabels.cs",
+      "returnedSha256Prefix": "f3c16f25a1d5a9dc",
+      "exists": true,
+      "currentSha256": "f3c16f25a1d5a9dc8aec94374518254f42295e115d3719b7badc085d7ff647c2",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchGu.cs",
+      "returnedSha256Prefix": "99131616f07c6910",
+      "exists": true,
+      "currentSha256": "99131616f07c69105ab246cb709e03681231786d79f81788cab693ccf7e58f7e",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchSignals.cs",
+      "returnedSha256Prefix": "ebbcd8e4d071f0e9",
+      "exists": true,
+      "currentSha256": "ebbcd8e4d071f0e9f7aeec29d68f3f1ea1f8ed84042c8850b682ce5ec1363c25",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchMotorcycle.cs",
+      "returnedSha256Prefix": "92577099978c1da7",
+      "exists": true,
+      "currentSha256": "92577099978c1da767218a8bc68d5d8db22ecd83e82f573fd5bcf6912a1212f6",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/SagajeongDispatchDiorama.cs",
+      "returnedSha256Prefix": "ab3938c44a649377",
+      "exists": true,
+      "currentSha256": "ab3938c44a649377ba92c83b926b01add388ed5fe72a848da1990cf3573daeed",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "Runtime/HongdalKernelHost.cs",
+      "returnedSha256Prefix": "5bb1da2c81355d45",
+      "exists": true,
+      "currentSha256": "5bb1da2c81355d456b328afb2aa3cd2e11e52aa19bceeb34089b577469671f69",
+      "prefixMatch": true
+    },
+    {
+      "relativePath": "README.md",
+      "returnedSha256Prefix": "5ce9f038a2e8f802",
+      "exists": true,
+      "currentSha256": "5ce9f038a2e8f8026bb4a78ba6dfdfea7280f5e906047762d422202bad670c13",
+      "prefixMatch": true
+    }
+  ],
+  "finalObservationB1": {
+    "checkedAtUtc": "2026-11-13T03:26:42.982128+00:00",
+    "meaning": "Read-only snapshot after concurrent work; not acceptance of changed source or runtime equivalence",
+    "basePath": "C:\\Users\\user\\ssalddel\\Assets\\Ssalddel\\WindowsGame",
+    "fileCount": 57,
+    "aggregateSha256": "19ef5eb7eb9f081b5a34f75358db6d07cb71a6faeea08f2486c315762406671d",
+    "hashRule": "SHA256(UTF8(sorted(relativePath + NUL + fileSHA256 + LF)))",
+    "files": [
+      {
+        "path": "Checks~/GuLabelPlacementChecks.csproj",
+        "sha256": "5645caa6fb7a17e781ec8ed29a746a5a7c4488d017257cd802b85ad2cdbe280f",
+        "sizeBytes": 532,
+        "lastWriteUtc": "2026-11-12T23:32:49.880517+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/MapOrderEvents/MapOrderEventChecks.csproj",
+        "sha256": "b83a26b7056eb37353817cc77ff4128b807a6ad335669cb8cf444dc51c86000d",
+        "sizeBytes": 757,
+        "lastWriteUtc": "2026-11-13T01:38:06.498108+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/MapOrderEvents/Program.cs",
+        "sha256": "06aed34c4ae8f8584b868b822e10435eda7eeb46285bf1e6e7b823e1771c00c6",
+        "sizeBytes": 633,
+        "lastWriteUtc": "2026-11-13T01:38:06.845575+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/NationFlows/NationFlowChecks.csproj",
+        "sha256": "83ea6a19624d0aaa3eb8f1554275b7f0463cbc07772ad102aee43f83f165e2fa",
+        "sizeBytes": 760,
+        "lastWriteUtc": "2026-11-13T03:15:24.698025+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/NationFlows/Program.cs",
+        "sha256": "b02c0839d45978e6ad8f423f8bdf137f25dda661dcdc06d83bc28cdef762b521",
+        "sizeBytes": 623,
+        "lastWriteUtc": "2026-11-13T03:15:25.026025+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/Program.cs",
+        "sha256": "559a15487df1fbf785c73c893b6b7557dedc333b437608883465d617706c8716",
+        "sizeBytes": 11301,
+        "lastWriteUtc": "2026-11-12T23:33:43.836879+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Editor/Ssalddel.WindowsGame.Editor.asmdef",
+        "sha256": "8701d7206c45c2822e5026d811c0a96dc3c1c663e65a580c0549e8fd144d7558",
+        "sizeBytes": 447,
+        "lastWriteUtc": "2026-11-12T05:26:07.449368+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Editor/WindowsGameBuild.cs",
+        "sha256": "21ed149d02ac5533efe29d91b7293ec4abcb7cf926cd0f1c141d67635a48698b",
+        "sizeBytes": 6042,
+        "lastWriteUtc": "2026-11-12T07:28:02.737197+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/CargoTransportModule.cs",
+        "sha256": "4942079e30c6877cc7ca452e5ec819e79248ee20a874d5a59d7ba4113cb60c5c",
+        "sizeBytes": 9025,
+        "lastWriteUtc": "2026-11-12T07:27:57.087239+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/FirstChainPack.cs",
+        "sha256": "9db4133f6c50dea3577c9f853201df5313ad40f3e44d5557d62e7c2178581a4d",
+        "sizeBytes": 3284,
+        "lastWriteUtc": "2026-11-12T07:27:55.654496+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/FirstChainProjection.cs",
+        "sha256": "3b134d346f0ede1f99ff004a4f4fd056356d86e4d42033c7ec47cfe5d60d3111",
+        "sizeBytes": 8467,
+        "lastWriteUtc": "2026-11-12T07:37:36.575079+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/FoodDeliveryModule.cs",
+        "sha256": "207c1bf624849af0847dd0eb0a3a04ee1e2f457b45a635b4147fe86594a8406e",
+        "sizeBytes": 8020,
+        "lastWriteUtc": "2026-11-12T14:28:38.344804+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/FranchiseSupplyModule.cs",
+        "sha256": "a2868336038356da08f710e65957fe2310154ac38162987732b6c7614d707f0f",
+        "sizeBytes": 17452,
+        "lastWriteUtc": "2026-11-12T07:27:56.346611+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/GameKernel.cs",
+        "sha256": "c14c22207e4cf05ac7ebe9faa48ed46758c22418108b9f5e90c485b9b372bd8a",
+        "sizeBytes": 13611,
+        "lastWriteUtc": "2026-11-12T14:28:37.263283+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/KernelChecks.cs",
+        "sha256": "b2c5bb6c7090630dd305511a9422a76e43871e254a2abc53cc5668e8ef7d8e6f",
+        "sizeBytes": 30929,
+        "lastWriteUtc": "2026-11-12T14:59:27.549470+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/KernelContracts.cs",
+        "sha256": "f0acca8e8e860a29299438beb565fb408b122937c0596f5daf363d6e09d78a6a",
+        "sizeBytes": 10208,
+        "lastWriteUtc": "2026-11-12T14:28:37.633614+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/KernelSignals.cs",
+        "sha256": "5a097191c6e6d2ac6f8068d9ee5b1c194eb0939cc00337d6cf0cb00e9f989fcb",
+        "sizeBytes": 1582,
+        "lastWriteUtc": "2026-11-12T14:28:32.733883+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/LogisticsCenterModule.cs",
+        "sha256": "76fe64bb5927ded9e435add5ace759a88a434bb3e3f51231eca74d7211339e3e",
+        "sizeBytes": 10332,
+        "lastWriteUtc": "2026-11-12T07:27:56.668679+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/Ssalddel.WindowsGame.Kernel.asmdef",
+        "sha256": "27661001412ab0e47a0a12cf3eebfd409c9b1ee6cbdc869c988d9d0a482ac642",
+        "sizeBytes": 537,
+        "lastWriteUtc": "2026-11-12T07:27:54.501702+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/StoreOperationsModule.cs",
+        "sha256": "c7cf3dc7ca69a544e3b7a2fb69301e35e832a325ab76696ed5ec4b178c36143e",
+        "sizeBytes": 20244,
+        "lastWriteUtc": "2026-11-12T14:28:37.991074+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Kernel/TerritoryModule.cs",
+        "sha256": "54b162b921a18638ca41f5e08b5bcdcd6a1d508c90098a42665df18f1ec01bee",
+        "sizeBytes": 23709,
+        "lastWriteUtc": "2026-11-12T14:28:33.083393+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "README.md",
+        "sha256": "3e67f1ba7eba6f6db8ab115bd4f2e3ad6c9d1c2c1b8ec7b0a8f3a7e81cfa54af",
+        "sizeBytes": 17651,
+        "lastWriteUtc": "2026-11-13T03:15:20.868518+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/HongdalKernelHost.cs",
+        "sha256": "b0c4a3bdf15c774b70b71971892261a1db81cd1605a380a173ef71ed57bc9dfc",
+        "sizeBytes": 6089,
+        "lastWriteUtc": "2026-11-13T03:15:17.848732+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchBuildings.cs",
+        "sha256": "54716b1df26869be371b946ef1938d1e702ed42be4bc6e999c4b75da48835aae",
+        "sizeBytes": 16481,
+        "lastWriteUtc": "2026-11-12T07:37:37.883066+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchBusiness.cs",
+        "sha256": "85315c28e911d66deb79711dc250d35e1894c2b0d0b99a9b8eb7965dfba697b5",
+        "sizeBytes": 32141,
+        "lastWriteUtc": "2026-11-13T03:15:18.201180+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchCampaign.cs",
+        "sha256": "328f83b2ca7ac8ee30042609ea187cac6544d2670459f65f1f9d99a3ff8a4f70",
+        "sizeBytes": 13522,
+        "lastWriteUtc": "2026-11-13T03:15:18.539426+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchCampaignProof.cs",
+        "sha256": "13ad89b1324348ada5959da9a64d81adaf0e1f744113e58ddd6aa55e5ef05e94",
+        "sizeBytes": 23386,
+        "lastWriteUtc": "2026-11-12T05:54:58.275746+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchCityBoard.cs",
+        "sha256": "3721e9a90889f12f51476da931eb125b0aaa0e4f4b549bc4e6a766b153eb52ed",
+        "sizeBytes": 5805,
+        "lastWriteUtc": "2026-11-12T05:26:09.863333+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchClock.cs",
+        "sha256": "6b69613b419852bcd1c8bb1fa2f8ea32be961b8a2f66e3b2c5cba2743651bc2d",
+        "sizeBytes": 4325,
+        "lastWriteUtc": "2026-11-12T05:26:10.197633+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchDiorama.cs",
+        "sha256": "ab3938c44a649377ba92c83b926b01add388ed5fe72a848da1990cf3573daeed",
+        "sizeBytes": 19447,
+        "lastWriteUtc": "2026-11-13T01:51:07.955482+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchDong.cs",
+        "sha256": "ac0c4c1dc0d3614f7210c6837eb21dcc0ce74d87657d29db53f971e68b3d6fec",
+        "sizeBytes": 7463,
+        "lastWriteUtc": "2026-11-13T03:15:18.865621+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchEngine.cs",
+        "sha256": "6330af086b88d38e29160c4b554ce65a9d36aea9a4f1e92cf55588bd6b5943e4",
+        "sizeBytes": 14097,
+        "lastWriteUtc": "2026-11-12T07:27:59.603672+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchExpansion.cs",
+        "sha256": "abd7bb74a944d065cbc6c6300856fb13e561b3db0836fc1959b4390d5dde1810",
+        "sizeBytes": 16387,
+        "lastWriteUtc": "2026-11-13T03:15:19.190823+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchExpansionProof.cs",
+        "sha256": "8f6bfff7f2a19b0a880ea88bce3a1e199c075ded011dec5c9a634549ed02e1b3",
+        "sizeBytes": 7733,
+        "lastWriteUtc": "2026-11-12T05:26:12.014078+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchFocus.cs",
+        "sha256": "8936d755da590bafa42eb7653a1889b226713b7026ba5a3721f583008b1e5f27",
+        "sizeBytes": 6234,
+        "lastWriteUtc": "2026-11-12T05:26:12.383980+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchGu.cs",
+        "sha256": "99131616f07c69105ab246cb709e03681231786d79f81788cab693ccf7e58f7e",
+        "sizeBytes": 56687,
+        "lastWriteUtc": "2026-11-13T01:51:07.336944+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchGuLabels.cs",
+        "sha256": "f3c16f25a1d5a9dc8aec94374518254f42295e115d3719b7badc085d7ff647c2",
+        "sizeBytes": 10843,
+        "lastWriteUtc": "2026-11-13T01:38:03.564521+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchLevelPrompt.cs",
+        "sha256": "e8a94e5a711badced22e3531a77d6f56382af439f576b602b8229e35c5cf7d1b",
+        "sizeBytes": 12699,
+        "lastWriteUtc": "2026-11-13T03:15:19.531983+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchMap.cs",
+        "sha256": "aad4feb6b55c1d0646b7ec94dea73f3038e3ec5f4b71ed065843a1feb9a13e63",
+        "sizeBytes": 29586,
+        "lastWriteUtc": "2026-11-13T03:15:19.860668+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchMapEvents.cs",
+        "sha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+        "sizeBytes": 9678,
+        "lastWriteUtc": "2026-11-13T01:38:05.504046+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchMind.cs",
+        "sha256": "af2292b7ef2a013eea7cf841aa2bf7755aa27452e72e9d7ed7beac67c1bc13b7",
+        "sizeBytes": 19203,
+        "lastWriteUtc": "2026-11-12T05:26:13.144321+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchMotorcycle.cs",
+        "sha256": "92577099978c1da767218a8bc68d5d8db22ecd83e82f573fd5bcf6912a1212f6",
+        "sizeBytes": 5716,
+        "lastWriteUtc": "2026-11-13T01:51:08.282520+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchNation.cs",
+        "sha256": "d426083e0fced3948784531d35ba97018cf7dd51580cc9cbc8f11e5534ac07af",
+        "sizeBytes": 58038,
+        "lastWriteUtc": "2026-11-13T03:15:22.043233+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchPanelVisibility.cs",
+        "sha256": "198fc905de7470098582c0704e38e59b2df00d55585791d9fe89bce34d455395",
+        "sizeBytes": 2654,
+        "lastWriteUtc": "2026-11-12T05:26:13.863094+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchProof.cs",
+        "sha256": "2f8e14207d40f2069c4428a7522dbcf95e246065ae7714e9bb607118361a0aba",
+        "sizeBytes": 11340,
+        "lastWriteUtc": "2026-11-12T05:26:14.212092+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchSignals.cs",
+        "sha256": "558107d97928718bb81358783abd57c87aecfe335b87bce6c380ca2eef9c2656",
+        "sizeBytes": 13267,
+        "lastWriteUtc": "2026-11-13T03:15:20.187858+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchTiles.cs",
+        "sha256": "9879794bb9860322f3a0ebea90533c8ecb1c8c1c69b508f9096e7a1a72f92b05",
+        "sizeBytes": 6793,
+        "lastWriteUtc": "2026-11-12T06:05:02.465109+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchView.cs",
+        "sha256": "285d837e1acd3c79fa26ad8a26b83d67c4b582b95305720ede6d98e26c1d0597",
+        "sizeBytes": 25445,
+        "lastWriteUtc": "2026-11-13T03:15:20.519880+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchZones.cs",
+        "sha256": "ac8d701ffc7f8b4f0a240fd902485976cc6324f948ff53e412bb0b9245adff2c",
+        "sizeBytes": 11179,
+        "lastWriteUtc": "2026-11-12T05:26:15.256861+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/Ssalddel.WindowsGame.asmdef",
+        "sha256": "47a79c36d5c472e380ffa0ffc96a26cc3c328a633cd84d0eedc5e83e8fe8e994",
+        "sizeBytes": 452,
+        "lastWriteUtc": "2026-11-12T07:27:59.265180+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/구지도이름배치Policy.cs",
+        "sha256": "8d67c83d66416c3e104c636a98f8682c1aa15a4c507b1a10ce1dcc946d3c303d",
+        "sizeBytes": 7278,
+        "lastWriteUtc": "2026-11-12T23:33:43.835877+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/전국흐름표현Checks.cs",
+        "sha256": "919e989f9529cc0c8d56eb634dbfec5af116725fca6b0c385faeac96be341fde",
+        "sizeBytes": 6024,
+        "lastWriteUtc": "2026-11-13T03:15:22.729384+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/전국흐름표현Policy.cs",
+        "sha256": "3c1c073b7b357fa4b4de37d738fcf52f090b22519256217543bb1bafd609a0be",
+        "sizeBytes": 6406,
+        "lastWriteUtc": "2026-11-13T03:15:22.367837+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/지도새주문표현Checks.cs",
+        "sha256": "52a048c3b2e47c7b9069d0cd7473ed41627b7033ce5b6287cb0c9740adde15ff",
+        "sizeBytes": 10420,
+        "lastWriteUtc": "2026-11-13T01:38:06.163387+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/지도새주문표현Policy.cs",
+        "sha256": "a0e6b5a70cdcb6c1a2e19c103ba1794551c7a12acd5c22130046c3897cbb893b",
+        "sizeBytes": 8202,
+        "lastWriteUtc": "2026-11-13T01:38:05.840164+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "SimulationBridge/SessionFranchiseSupplyPort.cs",
+        "sha256": "70007892513994fb7e28845603c23b2d3a56dea07e56a29865773cb111946371",
+        "sizeBytes": 11586,
+        "lastWriteUtc": "2026-11-12T07:27:58.914567+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "SimulationBridge/Ssalddel.WindowsGame.SimulationBridge.asmdef",
+        "sha256": "2cd497432c04b65fe43770bd599b61b5b5f7481d2eb4dafb96e6ef24f1ea7062",
+        "sizeBytes": 734,
+        "lastWriteUtc": "2026-11-12T07:27:58.550214+00:00",
+        "stableDuringRead": true
+      }
+    ],
+    "changedSinceB0": [
+      {
+        "path": "README.md",
+        "beforeSha256": "5ce9f038a2e8f8026bb4a78ba6dfdfea7280f5e906047762d422202bad670c13",
+        "observedSha256": "3e67f1ba7eba6f6db8ab115bd4f2e3ad6c9d1c2c1b8ec7b0a8f3a7e81cfa54af"
+      },
+      {
+        "path": "Runtime/HongdalKernelHost.cs",
+        "beforeSha256": "5bb1da2c81355d456b328afb2aa3cd2e11e52aa19bceeb34089b577469671f69",
+        "observedSha256": "b0c4a3bdf15c774b70b71971892261a1db81cd1605a380a173ef71ed57bc9dfc"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchBusiness.cs",
+        "beforeSha256": "29e36908eb6d32e2acaa3cfc15fd942b1803f8e48cb915b14c282de82e04c679",
+        "observedSha256": "85315c28e911d66deb79711dc250d35e1894c2b0d0b99a9b8eb7965dfba697b5"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchCampaign.cs",
+        "beforeSha256": "f84355f2468730caafcb81c289e0a5886eb5c8313a4b0897d1c90d11e30dd9d3",
+        "observedSha256": "328f83b2ca7ac8ee30042609ea187cac6544d2670459f65f1f9d99a3ff8a4f70"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchDong.cs",
+        "beforeSha256": "2806b8969c542ab8835f9fa54afed15e5a4333d06db76b31258843d6c1ee03e7",
+        "observedSha256": "ac0c4c1dc0d3614f7210c6837eb21dcc0ce74d87657d29db53f971e68b3d6fec"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchExpansion.cs",
+        "beforeSha256": "967de7ba71207c75f44a40f9555430a3c7ca74997f41079d56bbdf5e140af6d3",
+        "observedSha256": "abd7bb74a944d065cbc6c6300856fb13e561b3db0836fc1959b4390d5dde1810"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchLevelPrompt.cs",
+        "beforeSha256": "128210daf4cdf9d0c909b4d37a7e2c6dfcb357840444094ee53c40f4c4e9766e",
+        "observedSha256": "e8a94e5a711badced22e3531a77d6f56382af439f576b602b8229e35c5cf7d1b"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchMap.cs",
+        "beforeSha256": "ca447b9eace05bfe6b087534e7955369c28ece6c074087648b499083dee354fe",
+        "observedSha256": "aad4feb6b55c1d0646b7ec94dea73f3038e3ec5f4b71ed065843a1feb9a13e63"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchSignals.cs",
+        "beforeSha256": "ebbcd8e4d071f0e9f7aeec29d68f3f1ea1f8ed84042c8850b682ce5ec1363c25",
+        "observedSha256": "558107d97928718bb81358783abd57c87aecfe335b87bce6c380ca2eef9c2656"
+      },
+      {
+        "path": "Runtime/SagajeongDispatchView.cs",
+        "beforeSha256": "b68d9ae03e0fb1240f91faa70c2778d30e1ba908f24a9b2bdb0775d3772dd02c",
+        "observedSha256": "285d837e1acd3c79fa26ad8a26b83d67c4b582b95305720ede6d98e26c1d0597"
+      }
+    ],
+    "addedSinceB0": [
+      {
+        "path": "Checks~/NationFlows/NationFlowChecks.csproj",
+        "sha256": "83ea6a19624d0aaa3eb8f1554275b7f0463cbc07772ad102aee43f83f165e2fa",
+        "sizeBytes": 760,
+        "lastWriteUtc": "2026-11-13T03:15:24.698025+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Checks~/NationFlows/Program.cs",
+        "sha256": "b02c0839d45978e6ad8f423f8bdf137f25dda661dcdc06d83bc28cdef762b521",
+        "sizeBytes": 623,
+        "lastWriteUtc": "2026-11-13T03:15:25.026025+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/SagajeongDispatchNation.cs",
+        "sha256": "d426083e0fced3948784531d35ba97018cf7dd51580cc9cbc8f11e5534ac07af",
+        "sizeBytes": 58038,
+        "lastWriteUtc": "2026-11-13T03:15:22.043233+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/전국흐름표현Checks.cs",
+        "sha256": "919e989f9529cc0c8d56eb634dbfec5af116725fca6b0c385faeac96be341fde",
+        "sizeBytes": 6024,
+        "lastWriteUtc": "2026-11-13T03:15:22.729384+00:00",
+        "stableDuringRead": true
+      },
+      {
+        "path": "Runtime/전국흐름표현Policy.cs",
+        "sha256": "3c1c073b7b357fa4b4de37d738fcf52f090b22519256217543bb1bafd609a0be",
+        "sizeBytes": 6406,
+        "lastWriteUtc": "2026-11-13T03:15:22.367837+00:00",
+        "stableDuringRead": true
+      }
+    ],
+    "removedSinceB0": [],
+    "returnedSourceComparison": [
+      {
+        "relativePath": "Runtime/지도새주문표현Policy.cs",
+        "returnedSha256Prefix": "a0e6b5a70cdcb6c1",
+        "observedSha256": "a0e6b5a70cdcb6c1a2e19c103ba1794551c7a12acd5c22130046c3897cbb893b",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/지도새주문표현Checks.cs",
+        "returnedSha256Prefix": "52a048c3b2e47c7b",
+        "observedSha256": "52a048c3b2e47c7b9069d0cd7473ed41627b7033ce5b6287cb0c9740adde15ff",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchMapEvents.cs",
+        "returnedSha256Prefix": "16ce4d87a9cf1bc6",
+        "observedSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Checks~/MapOrderEvents/MapOrderEventChecks.csproj",
+        "returnedSha256Prefix": "b83a26b7056eb373",
+        "observedSha256": "b83a26b7056eb37353817cc77ff4128b807a6ad335669cb8cf444dc51c86000d",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Checks~/MapOrderEvents/Program.cs",
+        "returnedSha256Prefix": "06aed34c4ae8f858",
+        "observedSha256": "06aed34c4ae8f8584b868b822e10435eda7eeb46285bf1e6e7b823e1771c00c6",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchView.cs",
+        "returnedSha256Prefix": "b68d9ae03e0fb124",
+        "observedSha256": "285d837e1acd3c79fa26ad8a26b83d67c4b582b95305720ede6d98e26c1d0597",
+        "matchesOriginalReturn": false
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchMap.cs",
+        "returnedSha256Prefix": "ca447b9eace05bfe",
+        "observedSha256": "aad4feb6b55c1d0646b7ec94dea73f3038e3ec5f4b71ed065843a1feb9a13e63",
+        "matchesOriginalReturn": false
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchExpansion.cs",
+        "returnedSha256Prefix": "967de7ba71207c75",
+        "observedSha256": "abd7bb74a944d065cbc6c6300856fb13e561b3db0836fc1959b4390d5dde1810",
+        "matchesOriginalReturn": false
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchGuLabels.cs",
+        "returnedSha256Prefix": "f3c16f25a1d5a9dc",
+        "observedSha256": "f3c16f25a1d5a9dc8aec94374518254f42295e115d3719b7badc085d7ff647c2",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchGu.cs",
+        "returnedSha256Prefix": "99131616f07c6910",
+        "observedSha256": "99131616f07c69105ab246cb709e03681231786d79f81788cab693ccf7e58f7e",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchSignals.cs",
+        "returnedSha256Prefix": "ebbcd8e4d071f0e9",
+        "observedSha256": "558107d97928718bb81358783abd57c87aecfe335b87bce6c380ca2eef9c2656",
+        "matchesOriginalReturn": false
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchMotorcycle.cs",
+        "returnedSha256Prefix": "92577099978c1da7",
+        "observedSha256": "92577099978c1da767218a8bc68d5d8db22ecd83e82f573fd5bcf6912a1212f6",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/SagajeongDispatchDiorama.cs",
+        "returnedSha256Prefix": "ab3938c44a649377",
+        "observedSha256": "ab3938c44a649377ba92c83b926b01add388ed5fe72a848da1990cf3573daeed",
+        "matchesOriginalReturn": true
+      },
+      {
+        "relativePath": "Runtime/HongdalKernelHost.cs",
+        "returnedSha256Prefix": "5bb1da2c81355d45",
+        "observedSha256": "b0c4a3bdf15c774b70b71971892261a1db81cd1605a380a173ef71ed57bc9dfc",
+        "matchesOriginalReturn": false
+      },
+      {
+        "relativePath": "README.md",
+        "returnedSha256Prefix": "5ce9f038a2e8f802",
+        "observedSha256": "3e67f1ba7eba6f6db8ab115bd4f2e3ad6c9d1c2c1b8ec7b0a8f3a7e81cfa54af",
+        "matchesOriginalReturn": false
+      }
+    ],
+    "matchedReturnedFileCount": 9,
+    "nationalPackAndToolRefs": [
+      {
+        "path": "Tools~/make_nation_pack.py",
+        "exists": true,
+        "sha256": "bdf245c4025266b355c45c779b010cfa045275b9ed3b9e09e65db6009d65e7e1",
+        "sizeBytes": 27267
+      },
+      {
+        "path": "Resources/hongdal-nation-space.json",
+        "exists": true,
+        "sha256": "12cc2010d544d99e7e146be48826e834592c312e50dd11e8d04057f04316c354",
+        "sizeBytes": 110368
+      },
+      {
+        "path": "Resources/hongdal-nation-base.bytes",
+        "exists": true,
+        "sha256": "172ad74b949b0c3b779e800c92f11684b93d29ac93efb96a649b5c05713a9292",
+        "sizeBytes": 544424
+      }
+    ],
+    "productFilesWrittenByThisTask": 0
+  },
+  "codeAcceptanceRequiresSourceReconciliation": true,
+  "parallelChangeFeedback": [
+    {
+      "topic": "nation-observation-clock-policy",
+      "state": "NeedsPlanningReconciliation",
+      "observed": "Unity README says national view pauses game clock and restores prior speed",
+      "canonicalRule": "r144/r162 height transition alone does not change common simulation clock",
+      "acceptance": "NotApprovedByThisConsolidation",
+      "blocksPlanningReview": false,
+      "requiresOwnerReviewBeforeSharedCodeWrite": true
+    }
+  ]
+}
