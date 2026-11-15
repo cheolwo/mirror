@@ -4,6 +4,18 @@
 
 사람·사물·환경 사이의 행동과 변화를 이야기·게임 규칙·Unity 공간으로 구성하는 프로젝트입니다.
 
+## 홍달 경영 시뮬레이션
+
+한 동네에서 가게와 배달을 운영하는 Unity Windows 게임입니다. 지도를 넓게 보며 가게의 위치를 살피고, 가까이 다가가 기사와 주문을 따라갑니다. 동네 디오라마와 배달·매장·창고의 역할 화면을 이 게임에 모아가고 있습니다.
+
+| 사가정 일대 전경 | 가게와 배송지를 가까이 본 모습 |
+| --- | --- |
+| [![사가정 일대의 건물과 도로를 한눈에 본 모습](docs/assets/changes/2026-11-13-hongdal-diorama/overview.png)](docs/assets/changes/2026-11-13-hongdal-diorama/overview.png) | [![동네 도로 사이로 보이는 가상 매장과 배송지](docs/assets/changes/2026-11-13-hongdal-diorama/neighbourhood.png)](docs/assets/changes/2026-11-13-hongdal-diorama/neighbourhood.png) |
+
+2026년 11월 13일 개발판에서 촬영한 장면입니다. 일부 건물은 예시로 배치했고, 지도와 화면 구성은 개발하면서 달라집니다. 지도 자료 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
+
+[현재 Windows판의 구현 현황](docs/AI/Handoffs/Unity-Windows-구현현황.md)
+
 ## 기획과 구조
 
 - [관찰 중심 개인 세계 · 리팩토링 단계](docs/AI/Planning/시스템/PLAN-SYSTEM-OBSERVER-WORLD/README.md)
