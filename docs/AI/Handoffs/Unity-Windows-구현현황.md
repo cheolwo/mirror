@@ -1,5 +1,192 @@
 # 홍달 경영 시뮬레이션 — Unity Windows 기획·구현 현황
 
+## 2026-11-15 20:11 일반판의 화물·센터·음식점 관찰 화면
+
+빌드 `20261115-201128`은 20:11:52 KST 성공, 오류·경고 0, 16묶음 402개 검사 통과다. 자동 촬영은 142장이다. 100~103번은 화물의 하차지 도착과 수락 재연, 센터의 출고 표시, 기존 음식점 A의 캠페인 주문 수신 표시(화면 번호 D5-01A)를 확인한다. 시험 대본의 손가락 연출은 플레이어 명령을 실행하지 않는다. 가게 A/B 지원 중 이번 음식점 촬영은 A 한 곳이다. 카페 1호점의 플레이스 주문 단추와 실제 제조 대기열은 후속이다. 이번 확인은 기존 산출물·작업본 대조까지다. 빌드 기록 (로컬 검토 자료 `artifacts/local/hongdal-windows-build-20261112/player-auto/build-result.json`) · 자동 촬영 결과 (로컬 검토 자료 `artifacts/local/hongdal-windows-build-20261112/view-proof/view-proof.json`) · [제작실 첫 읽기](홍달-제작실-기획-첫읽기.md)
+
+같은 경로를 다음 빌드가 다시 사용한다. 이 판본의 SHA-256은 빌드 기록 `f621e2645adef73362c83ec1b7d64c55b5ebee9093682a9f86d53f1d5e4b5789`, 촬영 결과 `35fa0c2e5eb5d0984d4ec7a70e656488d418c049717cd393dfe833e967995748`이다.
+
+## 2026-11-15 19:34 일반판의 기사 휴대폰과 카페 후속
+
+일반판 빌드 `20261115-193338`이 19:34:01 KST에 성공했다. 오류·경고 0, 16묶음 394개 검사 통과다. 자동 촬영 98번에서 선택한 기사의 기존 주문을 표시했고, 99번에서 시험 대본으로 수락을 재연했다. 휴대폰이 켜진 동안 시간·원장·주문 단계가 유지되는 검사도 통과했다. 플레이스 상세는 여전히 ‘주문 · 준비 전’이며, [첫 라떼 개발 계획 r240](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-latte-order-delivery-development-plan.r240.md)이 주문 접수에서 일일 결산까지의 작업 단위와 미정 사항을 정리한다. 이 대조에서 사람이 직접 Windows판을 조작하지 않았다.
+
+## 2026-11-15 19:20 최신 구현·기획 재대조
+
+[기획 대비 구현 상태](2026-11-15-Codex-기획대비구현상태-재점검.md)에 현재 일반판·부분 구현·별도 검토판/자료·계획·사람 검증 대기를 정리했다. 최신 18:44:39 일반판은 오류/경고 0·기존 검사 383건 실패 0이다. 카페/라떼 검색 목록·두 페이지·지도 핀·장소 상세/복귀가 들어갔으며, 현재는 가상 점포 시험 자료로 순수 점수/쪽을 읽는 주문자 뷰 첫 조각이다. 주민 검색량·정본 저장·운영자/근거 뷰·실제 주문·정식 광고/중개 계약은 후속이다. 이전 ‘홍달 플레이스 미구현’은 이제 고객 조회 화면까지 이 범위에서 갱신한다.
+
+하루 마감 요약/알림·회차 진행 저장과 명덕에 따른 빛 크기/밝기 표현 자리도 추가됐다. 실제 명덕 원장은 아직 없고, 제조5분·카페 제조물의 배달 수용·같은 주문의 일일 결산·개별 직원/점포 성장은 남았다. M키의 일반6동 카드 이동은 구현됐으며 정밀65동 팩·층/음식점 자료는 별도다. 최신 역할 앱 휴대폰 재연은 제안이다. 이번 대조는 기존 소스·빌드·촬영을 읽었고 새 게임 실행·실제 사람 입력/첫날 완주는 하지 않았다.
+
+## 2026-11-15 13:30 미완성 연결 재대조
+
+최신 일반판의 맡김·매장 운영 창·파일 음악과 별도 정밀 지도·카페 시험판을 구분해 [현재 잔여와 근거](2026-11-15-Codex-경영시뮬레이션-미완성연결-현황.md)를 정리했다. 일반판 지도는 기존 2023년 후보 6동이며 r4의 새 공간 자료는 미통합이다. 아래 시점별 기록 중 음악 없음·매장 운영 창 미연결 등은 당시 범위다. 현재는 파일 음악과 매장 운영 창이 들어갔고, 제조 시간·외부 제조물의 배달 수용·일일 배달 금액·명덕·점포 직원 연결이 남았다.
+
+## 2026-11-15 면목제3·8동 카페 낮 재질 시험
+
+③ 반실사 건축 모형을 선택해 Blender에서 가상 카페 외장을 제작하고 면목제3·8동 한 건물에 결속했다. 별도 검토판에서 동 전체·300m·65m 줌, 미술 켬·끔과 원본 건물 선택을 비교한다. 기존 1호점은 사용한 경계 후보에서 면목7동에 있다. 일반 게임 편입과 다른 행정동 확대는 미정이다. [실행판·실제 화면과 검증](2026-11-15-Codex-면목38동-카페-재질시험.md)
+
+## 2026-11-15 기사 빛과 4구 행정동 전환
+
+현재 WindowsGame 소스에서 배차 기사 A·B를 빛으로 그린다. r4 검토판은 면목제3·8동·면목본동·화양동·신설동·용두동·월계1동을 단독 지도로 열고, 동별 건물·도로·녹지와 지번을 보여 준다. 여섯 동 실제 실행과 네 구 65동 자료 전수를 검증했다. 새 동의 배달 시나리오와 공식 현행 경계 대조는 후속이다. [실행판·사진·검증 자료](2026-11-15-Codex-기사빛-행정동-디오라마-r4.md)
+
+## 2026-11-15 면목제3·8동 정밀 디오라마 별도 실행판
+
+2026년 경계 후보의 면목제3·8동을 HDIO v2로 구워 별도 Windows 실행판에서 확인했다. 건물 2,722개·도로 중심선 149개·지표 도보선 951개와 공원 계획면이 표시된다. 건물 카드에서 실제 지번과 동일 필지 인허가 후보 수를 읽을 수 있다. 기본 실행 창, 세 화면과 복합 도형 선택 4조건을 확인했다. 기존 6동 제품 작업본 및 나머지 64동의 상황은 이전과 같다. [실행판·캡처·검증 결과](2026-11-15-Codex-면목38동-정밀디오라마-Unity-실행.md)
+
+## 2026-11-15 카페 초보 육성 기본 경로 정정 r227
+
+[r227](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/novice-first-cafe-franchise-growth.confirmed.r227.md)은 가족/외부 모두 카페 실무 초보로 합류해 배우고 현장 책임을 맡는 기본 경로다. 경력 채용은 별도 옵션이며 r226의 경력자 중심 기본 비교는 더 이상 기본 안내가 아니다. 첫 작업 준비와 점포 책임/지도자 준비를 구분한 새 수치 프로필을 뒀다.
+
+r226 소스3/재사용38개 지문은 같고 이후 새 인력/교육·카페 업무 구현 반환은 없다. 기존 직원/명부·훈련/위임 미연결 상태와 명시 카페 명령의 대조를 재사용한다. 이번에 실제 모집 풀/직원 데이터를 바꾸거나 새 육성/책임자 순환을 실행하지 않았다. 구체 실습/지도자·권한/근무·시안/개발 수용은 후속이며 r225 최종 결정권을 유지한다.
+
+## 2026-11-15 가족 협력/외부 인재 확장 r226 — 신규 관계·수치 설계
+
+[r226](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/family-cooperation-and-external-talent-growth.design.r226.md)과 시험JSON은 가족과 공동 준비한 경험으로 초기 점포의 맡길 기반을 만들고 외부 인재로 확장하는 설계다. 현재 관련 WindowsGame Runtime/Kernel·Resources에서 가족·사람 간 관계/친밀·협업 경험/책임자 준비 계약은 확인 못했다. 건물 관리 강조·음악 분석 신뢰도·첫 사슬 조직/장소를 사람 관계 수치로 재사용하지 않는다. 인력/명부 미연결은 이전 반환 그대로다.
+
+r225 현재 소스/재사용 지문은 같아 직전 대조를 재사용했다. 새 수치는 공동준비/모집경로·같은역할보수와 인물/본부 여력을 구분한 가상 비교다. 실제 가족/계정 데이터·신뢰/직무 보너스·Runtime팩/제품/게임입력을 추가한 것이 아니다. 관계/인물/근무·위임/비용·시안/개발 수용은 후속이며 r225 발주/정산/예외 최종결정권을 유지한다.
+
+## 2026-11-15 현장 위임/플레이어 결정 확정과 현재 돈/명령 경로 r225
+
+[r225](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/field-work-delegation-and-player-decisions.confirmed.r225.md)는 현장 수행 위임과 플레이어의 예외·조달 발주·정산 최종결정을 구분한 확정이다. 현재 발주/검수/제조는 StoreDesk→Business→Engine→Kernel 확정이며, 발주는 본부 전량수락/미지급금 기록·센터 인계, 제조는 즉시 재고소모/판매 매출까지 함께 기록한다. 정상 검수/제조의 담당자 위임 정책은 없다.
+
+소비 Core는 음식 배달의 시간 진행으로 전달/수령·Settled/기사 보수·가상 정산을 자동 기록한다. 오늘 결산 확인은 읽음 상태뿐이며 별도 플레이어 정산 승인/지급 계약이 아니다. FoodDeliveryModule의 외부 준비 인계는 보관만 하므로 카페 매출과 Core 정산을 같은 주문의 연결 원장으로 합치지 않는다. 기존 확정 금액/완료를 새 대기라고 바꾸거나 승인 시 중복 지급하지 않을 호환/결과 계약이 후속이다.
+
+이번에는 r224와 같은 인력 지문을 재사용해 관련 명령/정산·현재 패키지 연결만 읽었다. 새 위임/승인 코드·제품/실제 입력·DB/예약 변경 없음. 구체 승인 단위·예외 영향/재개·명부/시안/개발 수용은 후속이다.
+
+## 2026-11-15 맡길 사람 육성/위임 기획과 현재 인력 기반 r224
+
+[r224](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/people-development-and-scoped-delegation.design.r224.md)는 맡길 주체를 육성해 지속 확장하는 기획이다. 현재 DongDemand의 고용은 비용/한도 검사 뒤 동 기사 집계를 늘린다. 그 수의 배회 빛과 별도 실제 배차 기사를 새 직원/책임자 명부로 동일시하지 않는다. 점포 인력 탭/F6·그림은 있지만 직원 명부/고용·근무/자리 배치는 미연결이다.
+
+기사 점검/경 성장과 가상 본부 교육 안건을 새 직무 숙련/관리자 권한·반복 차림으로 올리지 않는다. 이번 관련 Kernel/Runtime/Claude 반환에서 육성 이력·책임자 직무·범위 위임/예외 보고 계약은 확인 못했다. r223 소스/재사용 UI 지문은 같고, 좁은 추가 읽기만 수행했다. 새 실행/시험·육성/위임 완료 증거가 아니다.
+
+사람 명부 결속·동행/실습·작은 위임/회복·현장 책임의 설계와 계약/시안·개발 수용이 후속이다. 기존 고용/성장·자동 배달/공급은 유지하며 제품/DB/예약은 바꾸지 않았다.
+
+## 2026-11-15 전사 조율/정신 차림 이야기의 현재 기반 r223
+
+[r223](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/company-wide-coordination-and-mindfulness-story.design.r223.md)은 규모 성장에서 본부가 깨어 있음과 현장 지원의 필요를 자각하는 이야기 방향이다. 기사 무념 Kernel 모듈/정책과 Mind UI는 기존 점검/배달시간 소진·성장/기사 합계다. 점검은 Day당1회 기록이며 반복 회복/유지 스킬이나 전사 구성원의 상태 판정이 아니다.
+
+FranchiseSupply는 첫 고정 사슬의 본부 공급/수락/대금/인계를 처리한다. 결정 순회의 본부 교육 안건은 업무 효과가 없는 가상 뼈대다. 현장/본부 인력의 의식 상태·모든 활동 명덕/귀속·전사 지원/플랫폼 창업은 이번 관련 소스에서 확인되지 않았다. 이전 이관 반환의 검사/빌드·첫 화면/입력0과 최신 UI/키 촬영을 새 정신 차림의 실제 입력/효과로 올리지 않는다.
+
+이번에는 좁은 소스/반환 대조와 기획 기록만 했다. 현재 기반 재사용과 신규 이야기/지원 효과를 나누며 정확 사건/스킬/귀속·작업 명세/시안/개발은 후속이다. 제품/새 실행·DB/예약 변경 없음.
+
+## 2026-11-15 동 사업 선택 기획과 최신 왼쪽/키 대조 r222
+
+[r222](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dong-business-selection-and-platform-growth.design.r222.md)는 동 진입의 왼쪽 사업 선택·음식점/배달/퀵과 선택적 플랫폼 성장 기획이다. 현재 동 창은 고용/건설/내 곳/공통 엔진, 하단 사업 버튼은 그 묶음의 지름길이다. 제휴 음식점 추가와 내 점포 창업, 기사 집계와 실제 회사/지사 명부는 다르다. 음식점 차리기는 준비 중이고 WindowsGame 범위에서 배달지사/퀵/플랫폼 창업 경로는 찾지 못했다.
+
+최신 [그3 나머지 반환](2026-11-15-Claude-왼쪽창-그3나머지-반환.md)은 08:49 빌드/114장면의 시험 스위치 뒤 점포 그림 표현이다. [키1~키3 반환](2026-11-15-Claude-단축키-키1키3-반환.md)은 `ok 20261115-090404`/116장면으로 F1~F6와 M 지도/업무 요약을 확인했다. 현재 소스를 대조했으며 아래 과거 r219/r217의 미연결 기록 이후 구현된 범위다. 실제 키보드는 해당 반환에서도 미검증이다. 단일 카페 점포 창은 있으나 설비/인력 업무는 미연결이다.
+
+이번 Codex는 기존 동 창 촬영 열람·소스/반환/문서만 확인했다. 새 사업 홈 시안·제품 빌드/실제 게임입력·새 사업체/초기 지원·DB/예약은 수행하지 않았다. 시작 모델/비용/명부·성장 조건·시안/개발 수용은 후속이다.
+
+## 2026-11-15 사계절 경관/지형 대조 r221
+
+[r221](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-scenery-trees-and-terrain.design.r221.md)은 가로수/녹지·실제 지형으로 사계절을 느끼는 방향과 단계 제안이다. 현재 WindowsGame은 바닥/길이 평면이며 건물은 표현 높이를 사용한다. 지형 원본/비공개 격자·같은 Unity 프로젝트 다른 경로의 표고/계절 코드는 있으나 현재 소비 결속은 확인하지 못했다. 나무/계절/비·눈이 현 실행판에 적용된 것으로 보고하지 않는다.
+
+지형 검토는 높이 단위/수직 기준 미검증·Runtime/Collider 미승인이다. 기존 물리미터 조립기에 그대로 넣지 않고 검증/권한·도로/건물 공통 기준·타일 연속을 후속 결속한다. 정적 네 계절 비교와 가상 식재/실제 위치·계절/날씨·장식/업무를 구분한다. 이번에는 읽기/문서만 수행했으며 제품/새 시안·지형 반입/규칙 승격/DB/예약은 바꾸지 않았다.
+
+## 2026-11-15 키 기본 확정 r219·고용/점포 성장 현황 r220
+
+[r219](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/screen-shortcut-baseline.confirmed.r219.md)은 F1~F6/M 기본 배치를 확정한 문서이며 새 키 구현이 아니다. 기존 Esc 설정/Enter 결정 순회는 유지한다. [r220](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-demand-staffing-and-store-expansion.design.r220.md)은 손님/주문 증가→고용 보강→점포 병목→추가 출점의 사용자 방향과 수요/비용/개별 상태를 다룬다.
+
+현 동 수요는 기사/제휴 집계의 처리·미충족 모델, Core는 실제 개별 배달 주문이다. 현재 카페는 초기 waitingCups1·즉시 제조이고 방문 고객/점포 큐·직원/설비·복수 점포 상태는 연결되지 않았다. 매장 창의 설비/인력은 업무 미연결을 표시한다. 지역 진출/승급·핀 생성은 있으나 실제 새 점포/재고/능력을 만드는 연결과 다르다. 이번에는 소스/반환 대조·비제품 산술과 문서만 수행하고 제품/새 이미지·실제 입력/DB/예약은 바꾸지 않았다.
+
+## 2026-11-15 작은 지도 현황·A 기본/B 요약 전환 확정 r217
+
+[r217](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/minimap-default-and-work-summary-toggle.confirmed.r217.md)은 A 작은 지도 기본·필요할 때 시안 B 업무 요약으로 전환하는 사용자 선택을 기록한다. 시안 B는 기존 제안 후보 C이며 사업 연결 후보 B와 다르다. 선택 동/매장·진행/초안·회차를 보존하며 위 회차 버튼/전체 수치·구현 승인은 별개다.
+
+기존 r216 조사 뒤 Claude가 미니맵을 구현했다. 현 MiniMap SHA는 최신23:37 반환과 일치하고 동/구 범위·현재 위치/지면 프레임·복귀/준비된 동 클릭이 있다. 현재 동네 지도에서만/오른쪽 카드가 없을 때 보인다. 업무 요약/수동 A/B 전환은 소스에서 확인되지 않았다. 동/구 축척과 보기 형식을 구분하며 기존 지도를 재사용해 후속 결속한다. 방향 촬영/빌드 반환은 실제 마우스 검증과 별개이며 이번 Codex는 읽기/기존 촬영 열람과 문서만 수행했다.
+
+## 2026-11-14 매장 클릭/왼쪽 운영창 — 기획과 현 연결 r215
+
+[r215](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/store-specific-left-management-panel.design.r215.md)은 내 점포를 클릭하면 왼쪽에 설비·조달/본부발주·고용을 여는 방향을 정리했다. 현 동 관리는 지역 집계이며 카페 발주/검수/제조는 오른쪽 카드에 있고 단일 StoreOperations 점포를 읽는다. Core 실제매장ID와 카페 장소ID·건물 역할은 구분돼 있다. 일반 실제매장 클릭의 배정 효과도 확인해 조회/배차/입점 입력 분기를 후속 명세로 남겼다.
+
+기존17:21 동1·동2 방향 촬영을 열람했다.21:03 성공 빌드는 기존 개발의 기록이며 새 매장창의 구현/실제 입력 증거가 아니다. 현재 카페 한 곳의 틀/업무 재배치와 범용 다점포·신규 설비/수입/고용의 연결을 구분한다. 다섯 탭/상세·귀환/권한 결속·시안은 후속이고 이번에는 코드/이미지·게임/DB/예약을 바꾸지 않았다.
+
+## 2026-11-14 커피 정밀 기획 — 현 제조/물류와 설계 수치 r214
+
+[r214](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-one-cup-chain-and-multiscale-balance.design.r214.md)은 수치 조정 위임에 따라 아이스라떼300초·원료/손실·처리량/원가·공급규모의 초기 수치를 설계/검산했다. 현재 StoreOperations는 여전히 즉시 제조이며 FoodDelivery 외부 수용은Held다. 센터 피킹/상차와 화물 이동에는 기존 경과시간이 있다. 새 원두 수입/제조 팩·UI/제품을 만든 결과가 아니다.
+
+전국 계약→구 배분→한 동 점포/시설 내부의 새 로트/작업부터 장기 영향을 적용하는 기획이다. 현재 우유팩·과거 기록·현실 날짜/작업 시간과 별도인 비제품 전망 수치를 구분했다. 실제 가격/법정 기간·검역 확정/시간·저장/주체 계약·게임 실행/개발 수용은 이 검산으로 대체하지 않는다. 이번 범위는 기획/수치 JSON·색인/현황과 문서 검증이며 제품/시안/DB·예약 변경은 없다.
+
+## 2026-11-14 전반 대조 — 현재 기반과 남은 연결 r213
+
+[r213](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gameplay-readiness-gaps-and-next-priorities.research.r213.md)은 실제 주문/기사/매장ID·배정/이동/정산·운영 회차·재고/검수·Core+커널 저장 기반을 확인했다. 회차의 일반 입력/실패·보류 검토, 기존 정산의 회차/일일 보고 결속, 동 집계 고용과 실제 대상 결속, 시간 제조, 명덕/정신 차림, 한 동 인구팩 연결이 다음 후보다. 새 개발 순서/기본값 승인은 아니다.
+
+19:28:50 KST 빌드 성공0오류/0경고는 기존 밀집 빛 판의 근거다. 현재 DailyReport는 그 뒤 수정됐고 음악 파일 선택/재생·분석 소스도 새로 관측했다. 조사 중20:40:41 KST 새 빌드 성공0오류/0경고 기록도 읽었다. 음악을 전부 미구현으로 보지 않으며, 새 빌드의 정확 입력 지문/반환·실제 조작 결속은 별도다. 아래 과거 시점별 현황은 해당 시점의 범위이며 현재 진행과 구분한다. 이번에는 소스/반환/팩/기록 읽기와 문서 검증만 수행하고 제품/Unity/DB/예약은 변경하지 않았다.
+
+## 2026-11-14 배달선 대조 — 기존 선·단계별 경로와 기사색
+
+[r212](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-road-following-delivery-lines.design.r212.md)은 현재 Map의 점간 직선·접근 금색 점선/전달 기사색 실선, 기사 빛의 RiderColor 연결을 확인했다. 사용자 방향은 부드러운 연결과 두 선의 기준색을 기사빛에 맞추는 것이다. 전달선은 이미 같은 색 조회를 쓰며 접근 금색은 다르다. 새 선 스타일/색 변경은 아직 구현/실행하지 않았다.
+
+Core route는 접근/배송 전체 경로이고 픽업 정차/완료 때 비어 있다. 이미 계산된 deliveryRoute의 주문별 읽기 투영은 검토 후보이며, 실제 진행 구간/예정을 구분해야 한다. 현재 숨긴 동의 선분은 생략되며 새 이어 보기/선택 범위는 미정이다. 지문은 `artifacts/local/soft-delivery-lines-r212-20261114/`에 둔다. 제품·시안·새 게임/입력은 변경/수행하지 않았다.
+
+## 2026-11-14 외부 음악 검토 — 입력/분석 어댑터 없음
+
+[r211](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/external-music-auto-analysis-and-light.proposal.r211.md)은 외부 앱/출력 음악을 자동 분석하는 경로를 추가 제안한다. 현재 WindowsGame에는 외부 PCM/BGM 입력이 없으며 Claude 음악 메모도 검토/계획이다. 기존 공통 시계와 대상/공간 위상이 다름을 확인했으므로 시계만 바꿔 위상 문제도 해결됐다고 보지 않는다. 밀집1·2/19:28 빌드는 기존 근거이고 음악 분석은 구현/실행하지 않았다.
+
+Windows 루프백/프로세스 샘플·알고리즘과 OS 빌드26200은 자료/메타데이터 확인이다. 실제 앱/출력 장치 취득·서비스/보호 재생·BPM/지연은 미검증이며 원음/계정에 접근하지 않았다. 출처/지문은 `artifacts/local/external-music-analysis-r211-20261114/`에 둔다. 제품·음악 캡처/재생·시안/새 실행은 변경/수행하지 않았다.
+
+## 2026-11-14 음악 기획 전 대조 — 밀집1·2 반영, BGM은 미연결
+
+[밀집1·2 반환](2026-11-14-Claude-빛이몰렸을때-1-2-반환.md)과 현재 Roam/LightCrowd/Policy·셰이더에서 중심점 마지막 그리기·밀집 후광 완화·개별 위상을 확인했다. 빌드 기록은19:28:50 KST 성공·오류0·경고0이다. 72장면·12프레임 GIF는 Claude 보고이며 실제 밀집 클릭/여러 축척 확인은 미완료다. 크기 상한/명덕 연결은 후속이며 개별 빛과 땅/벽의 박자는 아직 다르다. 아래 r209 당시의 미확인 이후 들어온 근거다.
+
+[음악/빛 리듬 r210](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/music-reactive-light-and-beat-sync.proposal.r210.md)은 현재 AudioSource가0.42초 합성 위험 알림음이고 BGM 재생 경로/음원 파일은 확인 범위에 없음을 대조했다. BPM/오디오 시계·저음 보조는 제안이며 아직 BGM/박 검출·음악 동기 빛 구현/실행 근거가 아니다. source-readback은 `artifacts/local/music-reactive-light-r210-20261114/`에 둔다. 이번에 코드·음악 재생·새 게임/시안은 변경/수행하지 않았다.
+
+## 2026-11-14 밀집 빛 검토 — 사용자 전달의1·2번 적용 중
+
+[r209](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dense-light-readability-and-meaning.proposal.r209.md)은 Claude의 중심점/후광·상한과 매장별 박자 처리 진행을 사용자 전달로 기록한다. 이번 소스 읽기에서는 기존 중심점/후광과 위치 위상·주문 대기의 같은 맥동을 확인했으며 새1·2번의 소스/화면·검증 반환은 아직 확인하지 못했다. 최초 `player-auto`17:21:42 KST 기록 이후 검토 중19:22:31 KST의 새 성공 빌드/오류0·경고0이 생성돼 재조회했다. 새 빌드와 해당 효과의 결속/실제 판독은 미확인이다. 기존 구현 또는 최신 계획/시안·빌드 성공만으로 새 작업 완료를 선언하지 않는다.
+
+진한/연한 영역이 함께 커지는 시안을 직접 열람해 식별용 점과 성장 영역·장식/상태·선택·실제 누적과 밀집/상한의 구분을 제안했다. 근거 시각/지문은 `artifacts/local/dense-light-readability-r209-20261114/source-readback.json`에 둔다. Claude 진행 파일·제품·시안/새 실행을 수정/수행하지 않았다.
+
+## 2026-11-14 기획 전 부분 대조 — 빛·기사 상태·동 관리
+
+[기획 전 현재 구현 대조](Codex-Claude-혼용운영안-2026-11-12.md#기획-전-현재-구현-대조)를 적용해 명덕/빛 질문과 관련된 반환·현행 소스를 읽었다. 아래는 **반환의 증거와 이번 읽기 확인**이며 새 게임 실행/입력 검증이 아니다. 전체 기능을 다시 감사한 표도 아니다. 아래쪽의 오래된 ‘통합 대기/미실행’은 해당 시점의 이력으로 읽고 현행 소스와 대조한다.
+
+| 관련 범위 | 현재 확인한 것 | 증거 수준·아직 남은 것 |
+| --- | --- | --- |
+| 최신 관련 빌드/동 관리 창 | [동1·동2 반환](2026-11-14-Claude-동관리창-동1동2-반환.md), build-result.json (로컬 검토 자료 `artifacts/local/hongdal-windows-build-20261112/player-auto/build-result.json`)을 읽음. 2026-11-14 17:21:42 KST의 `Succeeded`, 오류0·경고0 | 46장면/검사는 Claude 반환의 근거. 실제 마우스·동 넘김/여러 버튼 입력은 미확인. `player-auto`는 바뀔 수 있는 경로이므로 시각/지문과 함께 기록하며 현재 사용자가 띄운 창과 동일하다고 단정하지 않음 |
+| 빛의 맥동 | [빛의 숨 반환](2026-11-14-Claude-빛의숨-반환.md)과 `Runtime/SagajeongDispatchRoam.cs` 확인. 종류별 맥동과 정지 중 실제 시간 연출이 있음 | 16:43 빌드/시간차 정지화면41장면의 Claude 보고. 움직임을 직접 관찰한 검증은 아니며 맥동은 경 상태의 권위 근거가 아님 |
+| 기사/점포·명덕 연결 | 배회 객체는 동/순번 기반이고 개인 기사 ID가 없음. 실제 배차 기사 상태 위치 조회는 별도. 기사 무념/경 커널과 `kernelJson` 저장은 소스에 있음 | [r205](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/mingde-contribution-light-growth.confirmed.r205.md)의 명덕 누적→빛 크기와 점포 경 상태는 대조한 구현에 없음. 기존 빛/상태를 재사용하되 실제 인물/기여의 결속과 점수/귀속 기획이 필요 |
+| 무념 반환의 첫 화면 | [무념 이관 반환 덧붙임](2026-11-14-Claude-보류묶음넣기와무념규칙층이관-반환.md#덧붙임--첫-화면-확인-같은-날-사용자-백업-후-실행)에 백업 후00:43판 첫 화면 확인·입력0이 보고됨 | 과거 ‘게임 미실행’ 요약과 구별. 경 점검 버튼/다시 켠 뒤 유지·저장 복원 UI의 직접 입력 검증을 완료한 것은 아님 |
+
+후속 [픽업 전 과정/지역 누적 r208](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/pickup-preparation-and-local-mingde.design.r208.md)은 현 produce가 생산ID별 즉시 결과를 기록하며 직원ID/준비·제조·포장 활동 구간이 없음을 대조했다. 여러 직원/기사의 실제 깨어 있는 활동을 연결해 픽업 동이 더 많이 쌓일 수 있는 방향이며 도착 동 기여는 유지한다. 환산량·고용/시간 작업·명덕은 미정/후속이고 현재 제조 기록을 복제해 다단계 기여로 승격하지 않는다. 새 실행/제품 변경은 없다.
+
+후속 [동간 배달/받는 동 명덕 r207](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/cross-dong-delivery-and-recipient-mingde.design.r207.md)은 최신 Claude 종합 계획과 실제 Core ID/경로를 대조했다. 동 집계/배회와 달리 실제 배달에는 기사/주문ID·주문에 결속된 목적지가 있다. 첫 화면 반환은 이미 면목제3·8동→면목7동 장면과 다른 동 표식 숨김을 보고한다. 경계 통과 순간의 직접 입력은 미확인이다. 명부/기존 ID 결속·화면 밖 안내·지역 귀속은 보완 기획이며 종합 계획 전체/그림자 주문/예약 재개를 수용하지 않았다.
+
+후속 [정신 차림/모든 활동 r206](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/awake-activities-and-mindfulness-skill.design.r206.md)의 사전 대조에서 현 `check`가 현재 Day에1회만 점검을 기록하고 남은 경/용량을 회복·연장하지 않음을 확인했다. 화면도 출발 전 점검/점검 완료이며, 주기적 유지 스킬·모든 깨어 있는 활동의 명덕 기록은 이번 대조 구현에 없다. 이 신규 효과와 기존 경/일말 성장의 관계·타깃/주기는 아직 기획 미정이다. 근거는 `artifacts/local/awake-activity-mingde-skill-r206-20261114/source-readback.json`이며 새 실행은 없다.
+
+이번 입력 지문/읽기 범위는 `artifacts/local/planning-current-state-first-20261114/current-state-readback.json`에 둔다. 제품·사용자 실행 창/저장·자료/DB·예약·개발 소유를 변경하지 않았다.
+
+## 2026-11-14 운영 회차 기획 확정 — r187, 첫 검토용 구현 수용 대기
+
+[r187](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operating-round-first-play.prototype.r187.md)·[Claude 인계](2026-11-14-Codex-Claude-짧은운영회차-첫안내-r187.md)는 같은 날 여러 번 도는 짧은 운영 회차를 확정하고 기존 배달 한 건의 안내/실제 결과와 같은 세션 두 회차 반복을 첫 검토 범위로 둔다. 현재 결정 순회 Press는 실제 작업 확인 없이 단계를 바꾸므로 대상 ID/Revision·권위 결과 조건의 연결이 필요하다. 다음 회차에 start/campaign-start·영업일 경계 Tick을 쓰지 않으며 기존 상태·원장/인계·저장을 보존한다. 현실 시각/일일 보고 r174 진행 소유는 유지한다. 이번에는 읽기/기획/인계 준비이며 새 제품 코드·빌드/Runtime 검증이 아니다.
+
+## 2026-11-14 지도 경로 기획 보충 — r184, 구현 수용 대기
+
+[구 지도 서울 전체 축소·전국 직접 전환 r184](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md)와 [Claude 인계](2026-11-14-Codex-Claude-구지도서울전체축소-전국직접전환-r184.md)가 r162/r171 및 과거 설계의 독립 구→서울→전국 경로만 부분 대체한다. 현재 코드는 아직 구→서울→전국과 서울 순회 안건이 있고, 구 바탕도 서울 동북권 일부다. 기존2023 서울25구 경계 후보를 재사용하는 저상세 바탕·연속축소·구↔전국·기존 서울 안건의 구 공통 귀속/호환을 개발 범위로 정리했다. 코드/자료 후보13파일 지문을 읽기 고정했으며 제품·Unity 빌드/Runtime·WI/Goal·자료/수집/예약은 변경하지 않았다. 이후 실제 수용/구현/검증은 Claude 반환으로 대조한다.
+
+## 2026-11-13 현행 대조 — r162 통합 기준
+
+현재 읽기 진입은 [통합 기준 r162](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/integrated-map-management-baseline.r162.md)와 [Claude 준비 인계](2026-11-13-Codex-Claude-지도경영통합-r162.md)다. 기존 [혼용 운영 기준](Codex-Claude-혼용운영안-2026-11-12.md)의 소유와 실행 경계를 유지한다. **아래 11월12일 이력의 ‘통합 대기’를 현재의 Core/커널 재구현 지시로 사용하지 않는다.**
+
+| 기능 | 현행 소스/반환 판정 | 검증의 상한과 잔여 |
+| --- | --- | --- |
+| WindowsGame의 Core 직접 실행·저장/이어하기 | [Windows1단계 반환](2026-11-12-Claude-WindowsGame-1단계-반환.md)과 현재 WindowsGame→GameKernel→FoodDeliveryModule→Core 연결 확인 | 수행자 실행/저장 보고와 현재 소스 대조. 이번 새 빌드·Runtime 아님 |
+| 우유5팩 최소 사슬 | [0단계 반환](2026-11-12-Claude-0단계뼈대와첫인계사슬-반환.md), 커널4모듈·규칙/큰 Simulation 감싸기·제조까지 소스 존재 | 배달 연결은 반환상 잔여. 전체 공급망/창고/화물 기능 완성으로 확대하지 않음 |
+| 구 지도 정밀화 r152 | [Codex 제한 구현·실행](../../Changes/2026-11-13-hongdal-gu-map-names-r152.md), 이후 [Claude 선택/최대화 회귀 반환](2026-11-13-Claude-새주문핀파동과효과선택-반환.md) | 수행자가 동/구·표식 선택과 최대화 회귀를 보고. B0 소스 지문 일치, 이후 공유 Map 등 B1 변화는 재대조 필요. 이번 입력 재검증 없음 |
+| 새 주문 핀·효과 r154/r157 | 픽업 매장 핀·복원 기준선·회차 중복방지·연출 큐·기본 간단히·PlayerPrefs 분리 및 회전 보정의15파일이 B0 감사에서15/15 일치, B1 마감에서는6파일 변화로9/15 일치 | 기존 두 빌드·커널56/새주문15 산출물 존재 확인. 구/서울 집계·다른 사건·개별 설정·취향 유지 재실행은 별도 잔여 |
+| r141 점진 UI/거래 흔적 | 선택 유지 일부는 Windows1단계 반환에 있음. 단계별 소개·픽업 흔적·표현 기록 전체는 별도 | 시안/일부 구현/전체 통합을 구분. 전체를 재구현 또는 완료로 단정하지 않음 |
+| 지도별 OS·창고 내부·역할 큐/미니게임 | r162 공통 규칙과 전문 기획의 준비 상태 | 지도/외형/애니메이션 존재가 직접 조작·역할 큐·새 운영 Command의 완료 증거는 아님 |
+| 공공자료 DB r159 / 선택 팩·레이어 r160 | DB 저장/독립 재조회/no-op 완료. 팩/외부 소비는 제안·기반 | 공공자료를 바로 현재 게임 수요로 사용하지 않음. 선택 다운로드/외부팩/원자 갱신 미검증 |
+| 구 기사 여력·전국/세계·엔진 성장 | 구 후보 우선 정밀화와 후속 전문 기획 | 새 WI/직접 결과/Ready 주체·쓰기 경로·검증 결속 전. 구현 승인 자동 부여 없음 |
+
+**병행 입력:** 문서 통합 중 WindowsGame 관련10파일 변화와 `SagajeongDispatchNation.cs`·전국 흐름 규칙/검사·NationFlows 등 N0/N1 파일 추가를 관찰했다. 기존 감사/빌드와 현재 입력을 같다고 보지 않는다. README의 ‘전국 진입 시 게임 시계 자동 정지’는 r144/r162 공통 시간 계약과 검토 차이로 남겼다. 전국 자료·표현 소스가 있다는 사실이 실행 검증/기획 수용이나 실제 배차·항로의 완성은 아니다. 현재 진행 작업을 재착수·덮어쓰기하지 않는다.
+
+대상은 `ssalddel/Assets/Ssalddel/WindowsGame`의 현재 미커밋 작업본이다. Hongdal `dev/mirror-integration@7c83c18cf9607b3854120c15f85d5dd8f9ab14d8`, Unity `unity/workstream-transition@605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`과 관련 전체 SHA를 [입력 색인](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/consolidated-sources.r162.json)에 고정한다. 같은 HEAD라도 실제 입력/소유를 편집 직전에 대조한다.
+
+이번 대조는 문서·소스·기존 산출물 확인이다. 수행자의 관찰을 새로운 Codex Runtime 성공·E 승격으로 보고하지 않는다. 사용자 저장·실행 창·빌드 소유를 이번 문서 정리로 인수하지 않았다. 모바일/WPF/옛2.5D 복사본은 재사용 근거/보존 소비판이며 자동 수정·승격하지 않는다.
+
+<details>
+<summary>2026-11-12 대조 이력 — 당시 구현/미구현·통합 대기와 근거 보존</summary>
+
 기준일: **2026-11-12**. 현재 방향은 [r140](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-windows-development-direction.r140.md), 역할과 반환 양식은 [혼용 운영 기준](Codex-Claude-혼용운영안-2026-11-12.md)이 소유한다. 이 문서는 Claude가 다음 구현을 준비할 때 읽는 기능별 대조표이며 별도 실행·승인 원장이 아니다.
 
 후속 표현 기획은 [점진 UI·장소 표현 r141](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-focus-ui-and-place-reveal.r141.md)이다. 문서·이미지 시안은 구현과 구분하며 현재 Core/uGUI 통합 계획의 승인이나 실행 소유를 변경하지 않는다.
@@ -12,12 +199,12 @@
 
 | 구분 | 실제 위치 | 현재 의미 |
 | --- | --- | --- |
-| 보존 Windows 게임 | [r137 프로젝트와 결과](../../../artifacts/local/hongdal-unity-operator-expansion-20261111/result.json), [실행판](../../../artifacts/local/hongdal-unity-operator-expansion-20261111/player-release/HongdalSimulation.exe) | 검은 지도·성장 안내 UI와 음식 두 주문의 실제 조작 근거. 별도 엔진 EXE 사용 |
-| Claude 2.5D 시제품 | [작업 안내](../../../artifacts/local/hongdal-unity-claude-20261112/README.md), [반환](2026-11-12-Claude-Unity-2.5D-반환.md) | 독립 복사 프로젝트와 overlay. 반환에서 지목한 판본은 `player-20261112-114341`. 정식 프로젝트로 승격·통합하지 않음 |
-| 재사용할 Core·uGUI | [공통 Core](../../../Ssalddel.Sagajeong.Core/UnityPackage), [구현·검증 기록](../../../artifacts/local/hongdal-mobile-unity-20261111/completion.json) | `C:/Users/user/ssalddel/Assets/Ssalddel/MobileGame`의 별도 소비 모듈에 Core 내장·uGUI·저장 구현. Windows 비율 검토와 Android 실기기는 별개 |
+| 보존 Windows 게임 | r137 프로젝트와 결과 (로컬 검토 자료 `artifacts/local/hongdal-unity-operator-expansion-20261111/result.json`), 실행판 (로컬 검토 자료 `artifacts/local/hongdal-unity-operator-expansion-20261111/player-release/HongdalSimulation.exe`) | 검은 지도·성장 안내 UI와 음식 두 주문의 실제 조작 근거. 별도 엔진 EXE 사용 |
+| Claude 2.5D 시제품 | 작업 안내 (로컬 검토 자료 `artifacts/local/hongdal-unity-claude-20261112/README.md`), [반환](2026-11-12-Claude-Unity-2.5D-반환.md) | 독립 복사 프로젝트와 overlay. 반환에서 지목한 판본은 `player-20261112-114341`. 정식 프로젝트로 승격·통합하지 않음 |
+| 재사용할 Core·uGUI | [공통 Core](../../../Ssalddel.Sagajeong.Core/UnityPackage), 구현·검증 기록 (로컬 검토 자료 `artifacts/local/hongdal-mobile-unity-20261111/completion.json`) | `ssalddel/Assets/Ssalddel/MobileGame`의 별도 소비 모듈에 Core 내장·uGUI·저장 구현. Windows 비율 검토와 Android 실기기는 별개 |
 | WPF와 Claude WPF 작업본 | [기존 WPF](../../../tools/Ssalddel.BatchMonitor.Windows/README.md), [Claude WPF](../../../tools/Ssalddel.BatchMonitor.Windows.Claude/README.md) | 기존 규칙·자료 참고. 현재 주 개발 대상은 Unity Windows이며 이 작업본들을 자동 수정하지 않음 |
 
-Hongdal 기준은 `dev/mirror-integration` / `e67cdbf0bbb086dc9ed547bdcd640074c9a18c86`, 별도 Unity checkout은 `unity/workstream-transition` / `605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`이다. **둘 다 미커밋 변경이 있으므로 commit만으로 현재 작업본을 재현할 수 없다.** 같은 PC에서는 [이번 대조 기록](../../../artifacts/local/unity-windows-handoff-refactor-20261112/completion.json)과 실제 소스를 다시 확인한다. 다른 PC·클라우드에는 이 로컬 경로가 자동 전달되지 않는다.
+Hongdal 기준은 `dev/mirror-integration` / `e67cdbf0bbb086dc9ed547bdcd640074c9a18c86`, 별도 Unity checkout은 `unity/workstream-transition` / `605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`이다. **둘 다 미커밋 변경이 있으므로 commit만으로 현재 작업본을 재현할 수 없다.** 같은 PC에서는 이번 대조 기록 (로컬 검토 자료 `artifacts/local/unity-windows-handoff-refactor-20261112/completion.json`)과 실제 소스를 다시 확인한다. 다른 PC·클라우드에는 이 로컬 경로가 자동 전달되지 않는다.
 
 ## 기능별 대조
 
@@ -26,16 +213,16 @@ Hongdal 기준은 `dev/mirror-integration` / `e67cdbf0bbb086dc9ed547bdcd640074c9
 | 기능 묶음 | 구현 상태·위치 | 확보된 근거 | Claude가 이어받을 때 남은 부분 |
 | --- | --- | --- | --- |
 | 점진 UI 소개·관여 매장 1.5D·거래 흔적 유지 | [r141 기획·순차 시안](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-focus-ui-and-place-reveal.r141.md), 제품 미구현 | 문서·시안 제작 기록. 실제 게임 입력·저장 검증 아님 | 닫기 시 선택 보존·픽업 기반 흔적·표현 기록 저장·단계별 소개는 후속 구현 요구 |
-| 기사→매장 지정, 수락·픽업·도로 이동·전달·수령·가상 정산 | r137 보존 구현 | [실제 Windows 두 주문 정산](../../../artifacts/local/hongdal-unity-operator-expansion-20261111/result.json) | 2.5D 소비판의 동일 입력·사건·금액 회귀를 별도로 결속 |
+| 기사→매장 지정, 수락·픽업·도로 이동·전달·수령·가상 정산 | r137 보존 구현 | 실제 Windows 두 주문 정산 (로컬 검토 자료 `artifacts/local/hongdal-unity-operator-expansion-20261111/result.json`) | 2.5D 소비판의 동일 입력·사건·금액 회귀를 별도로 결속 |
 | 휠 확대·끌기·지도 중심 화면·선택과 패널 복귀 | r137 구현, Claude 투영·회전 중심 보정 시제품 | r137 실제 창 기록 + Claude 반환·화면 | 2.5D의 표식/클릭·작은 창·경계에서 실제 조작 대조 |
-| 공통 배차·정산 Core | [Runtime](../../../Ssalddel.Sagajeong.Core/UnityPackage/Runtime)에 구현 | [52검사·5시나리오/54명령 동등성](../../../artifacts/local/hongdal-mobile-unity-20261111/completion.json), 당시 소스 지문 | 기존 규칙 재작성보다 소비판 연결을 우선. 새 규칙은 별도 범위 |
+| 공통 배차·정산 Core | [Runtime](../../../Ssalddel.Sagajeong.Core/UnityPackage/Runtime)에 구현 | 52검사·5시나리오/54명령 동등성 (로컬 검토 자료 `artifacts/local/hongdal-mobile-unity-20261111/completion.json`), 당시 소스 지문 | 기존 규칙 재작성보다 소비판 연결을 우선. 새 규칙은 별도 범위 |
 | Unity 내부 Core 실행 | 별도 MobileGame 세션에 구현, Claude 2.5D에 통합 대기 | `Integration/MobileGameSession.cs`의 `SagajeongSimulationCore`; Claude 판은 여전히 외부 엔진 실행 | 기존 세션·명령·결과 계약을 재사용하여 외부 EXE 교체 범위 명시 |
-| uGUI 지도·HUD·선택 | 별도 MobileGame에 구현, Claude 2.5D에 통합 대기 | `MobileGameController.cs`·`MobileMapGraphic.cs`, [Windows 렌더/uGUI 43항목 기록](../../../artifacts/local/hongdal-mobile-unity-20261111/completion.json) | 기존 입력과 2.5D 투영의 연결 및 Windows 화면 설계 확정 |
+| uGUI 지도·HUD·선택 | 별도 MobileGame에 구현, Claude 2.5D에 통합 대기 | `MobileGameController.cs`·`MobileMapGraphic.cs`, Windows 렌더/uGUI 43항목 기록 (로컬 검토 자료 `artifacts/local/hongdal-mobile-unity-20261111/completion.json`) | 기존 입력과 2.5D 투영의 연결 및 Windows 화면 설계 확정 |
 | 저장·이전 정상본 복구·백그라운드 정지 | 별도 MobileGame에 구현 | 같은 모바일 검토 기록의 저장·손상 복구 | 2.5D와 임시 무념 규칙까지 포함한 저장·재실행은 미확인 |
 | 무념·경 시간·등급·타로 방향·시간당 순소득 | Claude `SagajeongDispatchMind.cs` 임시 계산 | 소스·빌드 로그·화면과 수행자 반환 | Core 정본화·계산 계약·저장·하루 소진·성장 검증. 수치 효과 전체 완료로 보지 않음 |
 | 동네 정사영 2.5D·표식·이동 범위 제한 | Claude 시제품 구현 | [수행자 반환](2026-11-12-Claude-Unity-2.5D-반환.md), 빌드 로그·화면 11장 존재 | 정식 경로·통합 범위와 2.5D 전용 입력/화면 검증 |
-| 건물 외곽·합성 채움 | 구운 메시 시제품, 외곽 1,058동·합성 3,414동 | [작업 안내](../../../artifacts/local/hongdal-unity-claude-20261112/README.md), `diorama-bake/diorama-summary.json` | 실제 도형·추정 높이·합성을 구분. 자료 배포·굽기·로딩 정책은 미정 |
-| 기사·가맹점·생산자·공장 성장 탭 | r137 정보 미리보기 구현 | [r137 실제 조작 결과](../../../artifacts/local/hongdal-unity-operator-expansion-20261111/result.json) | 생산·소비 상한의 임시 표시와 별개로 가맹·생산·공장 경영 규칙은 이 판에서 미구현 |
+| 건물 외곽·합성 채움 | 구운 메시 시제품, 외곽 1,058동·합성 3,414동 | 작업 안내 (로컬 검토 자료 `artifacts/local/hongdal-unity-claude-20261112/README.md`), `diorama-bake/diorama-summary.json` | 실제 도형·추정 높이·합성을 구분. 자료 배포·굽기·로딩 정책은 미정 |
+| 기사·가맹점·생산자·공장 성장 탭 | r137 정보 미리보기 구현 | r137 실제 조작 결과 (로컬 검토 자료 `artifacts/local/hongdal-unity-operator-expansion-20261111/result.json`) | 생산·소비 상한의 임시 표시와 별개로 가맹·생산·공장 경영 규칙은 이 판에서 미구현 |
 | 모집·입교·9단계 성장·주말/주차·다섯 시간대 수요 | [r124~r132 기획](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md)과 별도 초기 시제품 보존 | 기획·기존 Core 기능은 개별 대조 필요 | 최신 2.5D에서 전 흐름 구현·밸런스·저장 검증 완료 여부는 미확인. 전부 새 기능으로 재구현하지 않음 |
 | 화물·창고·가맹·공장·생산과 소비의 경영 연결 | [r3~r7 및 r133~r136](../Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md), 기존 별도 업무/Simulation 구현 | 기존 앱·Simulation 증거는 있음. 현재 음식 게임과 소비판이 다름 | Unity Windows 게임의 연속 플레이 통합은 후속. 앱 구현을 게임 완료로 세지 않음 |
 | 내 운영 현황 창·유동인구/교통·구매 Synty 외형 | 이미지/정적 렌더 시안과 개별 자료 | [현재 작업의 시안 근거](../CURRENT_WORK.md) | 게임 입력·규칙·실행 적용은 후속. 시안을 완료 기능으로 세지 않음 |
@@ -53,3 +240,6 @@ Hongdal 기준은 `dev/mirror-integration` / `e67cdbf0bbb086dc9ed547bdcd640074c9
 r140 정리 당시에는 2.5D Windows 소비판에 기존 Core·uGUI를 연결하는 구현 계획이 다음 개발 준비였다. 이후 사용자 전달 기준 Core 통합·우유 5팩 구현이 진행 중이므로 그 범위를 다시 착수 대기로 처리하지 않는다. [Claude 반환의 빈 것](2026-11-12-Claude-Unity-2.5D-반환.md) 중 Core 내장·uGUI는 기존 모듈의 통합 차이로 대조하고, 무념 계산의 Core 이관은 별도 변경 범위·보호 시험과 함께 반환받는다. 현재 Codex 문서 검토는 r144 지도별 경영 관점과 창고 내부 표현이며 r141/r143의 기존 표현 기준도 함께 유지한다.
 
 Claude는 대상 프로젝트·기준 지문·허용 경로·재사용 파일·이번에 비워 둘 부분·같은 두 주문에서 보존할 사건과 금액·검증 방법을 [인계 양식](Codex-Claude-혼용운영안-2026-11-12.md)에 채운다. 구현 반환에는 이 표의 해당 행만 새 소스·결과 링크로 갱신하고 남은 한 가지를 적는다. 이번 정리는 제품 이동·새 규칙 구현·시제품 채택·실행권 부여를 수행하지 않았다.
+
+
+</details>
