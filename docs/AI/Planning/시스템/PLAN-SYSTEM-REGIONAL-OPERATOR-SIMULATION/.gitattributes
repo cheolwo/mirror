@@ -49,10 +49,10 @@ public-data-observation-game-baseline.r53.md text eol=crlf
 qian-yu-hidden-germination.r91.md text eol=crlf
 qian-yu-pair-review.r90.md text eol=crlf
 review-supported-delay-choice.r108.md text eol=crlf
-rider-munyeom-tarot-direction.decision.r124.md text eol=crlf
-rider-network-and-liberation.proposal.r127.md text eol=crlf
-rider-profile-draw-and-academy-film.proposal.r126.md text eol=crlf
-rider-recruitment-and-munyeom-growth.proposal.r125.md text eol=crlf
+rider-munyeom-tarot-direction.decision.r124.md -text !eol
+rider-network-and-liberation.proposal.r127.md -text !eol
+rider-profile-draw-and-academy-film.proposal.r126.md -text !eol
+rider-recruitment-and-munyeom-growth.proposal.r125.md -text !eol
 sagajeong-lunch-normal-delivery.r43.md text eol=crlf
 sagajeong-myeonmok38-living-pilot.r42.md text eol=crlf
 sagajeong-station-blender-binding.r46.md text eol=crlf
