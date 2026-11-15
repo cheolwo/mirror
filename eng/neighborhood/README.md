@@ -1,5 +1,7 @@
 # 동네 지도·경로 사전 검사
 
+행정동 HDIO 디오라마는 [면목제3·8동 기준 생성 절차](../../docs/Architecture/행정동디오라마공통생성절차.md)에 따라 만든다. [공통 생성 명령](prepare_dong_dioramas.py)은 지정한 동 또는 전 동을 같은 설정으로 굽고 비교 그림과 품질표를 출력한다.
+
 실제 GIS 전처리 결과를 받기 위한 **후보 검증기**다. 현재 제공하는 표본은 합성 좌표이며 면목동 지도가 아니다. 서버 실행·배차 확정·Unity 배치를 하지 않는다. [기획과 남은 작업](../../docs/AI/Planning/시스템/PLAN-SYSTEM-MYEONMOK-OBSERVER/implementation.md).
 
 ## 중랑구 색인·면목동 배치 참고 지도

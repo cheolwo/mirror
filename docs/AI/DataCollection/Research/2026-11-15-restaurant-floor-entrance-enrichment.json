@@ -1,0 +1,228 @@
+{
+  "schema": "restaurant-floor-entrance-enrichment-report.v1",
+  "atUtc": "2026-11-15T07:34:23.497555+00:00",
+  "role": "information-collection-and-planning",
+  "baseLinkedLicenseKeys": 16988,
+  "moduleCount": 65,
+  "licenseFloorEvidence": {
+    "all": {
+      "keys": 19804,
+      "floorStates": {
+        "noFloorInRecordedAddresses": 3613,
+        "explicitNumberedFloor": 13725,
+        "explicitFloorRange": 93,
+        "explicitUnnumberedLevel": 246,
+        "candidateFloorNeedsReview": 373,
+        "explicitMultipleFloors": 213,
+        "roomOnlyNoFloorDerived": 1514,
+        "conflictingOrDifferentlyScopedFloorRecords": 27
+      },
+      "withSomeExplicitRoomString": 4829,
+      "withAgreedExplicitFloor": 14277
+    },
+    "bound": {
+      "keys": 16988,
+      "floorStates": {
+        "noFloorInRecordedAddresses": 2985,
+        "explicitNumberedFloor": 12250,
+        "explicitFloorRange": 77,
+        "explicitUnnumberedLevel": 205,
+        "candidateFloorNeedsReview": 237,
+        "roomOnlyNoFloorDerived": 1082,
+        "explicitMultipleFloors": 134,
+        "conflictingOrDifferentlyScopedFloorRecords": 18
+      },
+      "withSomeExplicitRoomString": 3610,
+      "withAgreedExplicitFloor": 12666
+    },
+    "resultSha256": "322368397f9535a66c251932f6c64101fd5e6f76666b05807745a4c8b0998d36"
+  },
+  "semasFloorEvidence": {
+    "snapshot": "2026-06-30",
+    "bound": {
+      "keys": 16988,
+      "matchStates": {
+        "uniqueNameAndScopedAddress": 10717,
+        "noExactNamedAddressRow": 5990,
+        "sameNameOneAddressOtherAddressDiffers": 124,
+        "multiplePublicRows": 110,
+        "onePublicRowMultipleLicenses": 47
+      },
+      "floorRelations": {
+        "publicOnlyCandidateReview": 1561,
+        "agreesWithSingleLicenseLevel": 6381,
+        "noPublicFloorValue": 2314,
+        "withinLicenseRange": 27,
+        "floorValuesDifferAcrossSources": 329,
+        "broadBasementCompatibleNumberUnconfirmed": 42,
+        "withinLicenseLevels": 61,
+        "publicFloorNotationUnresolved": 1,
+        "publicAndLicenseRangeNeedReview": 1
+      },
+      "nonemptyPublicRoomObservations": 0,
+      "wherePermitHadNoFloorOrOnlyRoom": 1455
+    },
+    "resultSha256": "c2abcef31cc458c9f285deaf07bf80b71c1aa7762f52cb57a83c7c7910424e39"
+  },
+  "buildingFloorEvidence": {
+    "sourceBuildingRows": 116780,
+    "r4BuildingPieces": 117551,
+    "aboveStatus": {
+      "missing": 1,
+      "positive": 93940,
+      "reported_zero": 22839
+    },
+    "belowStatus": {
+      "missing": 136,
+      "positive": 65750,
+      "reported_zero": 50894
+    },
+    "derivedTotalAvailableSourceRows": 93804,
+    "databaseSha256": "09c03c283a41aaf3fb927b7c7f81d2f71d4888ef673227eec2ff5535782df965"
+  },
+  "officialEntranceEvidence": {
+    "pointCount": 2254,
+    "byKindAndBasis": {
+      "pedestrian": {
+        "surveyFacilityObserved": 742,
+        "surveyFacilityParcelReview": 1017,
+        "surveyFacilitySingleBuildingParcelCandidate": 180
+      },
+      "vehicle": {
+        "surveyFacilityParcelReview": 229,
+        "surveyFacilitySingleBuildingParcelCandidate": 63,
+        "surveyFacilityObserved": 21,
+        "reviewUnresolved": 2
+      }
+    },
+    "byDistrict": {
+      "11260": {
+        "pedestrian": 406,
+        "vehicle": 75
+      },
+      "11215": {
+        "pedestrian": 329,
+        "vehicle": 60
+      },
+      "11350": {
+        "pedestrian": 826,
+        "vehicle": 116
+      },
+      "11230": {
+        "pedestrian": 378,
+        "vehicle": 64
+      }
+    },
+    "sourceDates": {
+      "facilities": {
+        "2022-12-07": 3606
+      },
+      "pedestrian": {
+        "2022-11-23": 16786
+      },
+      "vehicle": {
+        "2022-12-10": 2273
+      }
+    },
+    "singleBuildingParcelCandidates": 243,
+    "candidateWithinOrNear3m": 188,
+    "candidateOutside3m": 55
+  },
+  "osmEntranceEvidence": {
+    "attribution": "© OpenStreetMap contributors, ODbL. https://www.openstreetmap.org/copyright",
+    "osmSnapshotUtc": "2026-11-15T07:26:38Z",
+    "inScopeEntranceTaggedNodes": 4718,
+    "uniqueDongs": 46,
+    "byDistrict": {
+      "11230": 1248,
+      "11215": 552,
+      "11350": 489,
+      "11260": 2429
+    },
+    "nodesOnClosedBuildingWay": 4567,
+    "individualLicensedRestaurantEntrances": 0
+  },
+  "overlay": {
+    "sourceFloorStates": {
+      "noFloorInRecordedAddresses": 2985,
+      "explicitNumberedFloor": 12250,
+      "explicitUnnumberedLevel": 205,
+      "explicitMultipleFloors": 134,
+      "explicitFloorRange": 77,
+      "candidateFloorNeedsReview": 237,
+      "conflictingOrDifferentlyScopedFloorRecords": 18,
+      "roomOnlyNoFloorDerived": 1082
+    },
+    "buildingRestaurantComparisonOccurrences": {
+      "noNumberedStoreFloor": 13115,
+      "sourceReportsZeroNeedsReview": 9316,
+      "withinSourceBuildingCount": 18336,
+      "exceedsSourceBuildingCount": 313,
+      "buildingCountPartlyOrWhollyUnknown": 7
+    },
+    "allCandidateBuildingsHaveLowerKnownFloorCount": 28,
+    "someCandidateBuildingsHaveLowerKnownFloorCount": 81,
+    "buildingPiecesWithPublicFacilityEntranceCandidates": 25
+  },
+  "files": [
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/catalog.json",
+      "sha256": "c123a60da8f93820e98625e0cc978fdc6645f8525d3843446103b6c1e2564dfc"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/verification.json",
+      "sha256": "dc3e58e1b10c2082bb8c910147083cfcb233ab399cf942783c371cec4d288be1"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/floors/license-summary.json",
+      "sha256": "05aba0bda41be0e686994c4928195d6acc565f2bf8a6deeb1e6a834074f2ec9b"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/floors/verification.json",
+      "sha256": "27c7f0ad010bb019b7aea284df91b7b8b6af7ce0836a4e87cb1f39e61286679f"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/floors/semas-summary.json",
+      "sha256": "f69b44bfb223f87ce43d3fd9655cf7d83524e1f7658aa624935192a5c2ef28e4"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/building-floors/summary.json",
+      "sha256": "61f697ef33531217288f993c89a358b86f90168a45826b17b437bf2dc463abc8"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/entrances/official-summary.json",
+      "sha256": "c1f23fc2080e010c00fd965c3b0ea8065ae560792e847ad1972d34ec83ef36f4"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/entrances/osm/summary.json",
+      "sha256": "cc660b9f22f1eda2e0b96718ebca169da9b5c611da66fd878f58fb0634cdb79d"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/entrances/verification.json",
+      "sha256": "6c069c3f285df14c05c2ad1d0e97a98be59c9e197186a49366e1573c8916eea6"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/sources/receipts.json",
+      "sha256": "ce7f0f5362454d0733052288ffde88c86e87b18d6b14ea998d8910614c0c89bd"
+    }
+  ],
+  "officialSources": {
+    "pedestrian": "https://data.seoul.go.kr/dataList/OA-21699/S/1/datasetView.do",
+    "vehicle": "https://data.seoul.go.kr/dataList/OA-21700/S/1/datasetView.do",
+    "facilities": "https://data.seoul.go.kr/dataList/OA-21698/S/1/datasetView.do",
+    "buildingFieldDefinition": "https://www.ktdb.go.kr/DATA/pblcte/20250805093928585.pdf",
+    "navigationDb": "https://www.data.go.kr/data/15050419/fileData.do",
+    "sgis": "https://sgis.mods.go.kr/developer/html/openApi/api/data.html"
+  },
+  "additionalAccess": {
+    "navigationWholeDb": "notAcquiredApplicationAndIdentityVerificationRequired",
+    "sgisTargetFloorData": "notAcquiredTargetBuildingIdentityAndAuthorizedTokenRequired"
+  },
+  "existingSourceDbChanged": false,
+  "createdLocalBuildingFloorSqlite": true,
+  "productCodeChangedByThisTask": false,
+  "unityRuntimeExecuted": false,
+  "schedulesChanged": false,
+  "confirmedIndividualStorefrontDoors": 0,
+  "newDioramaRuleCandidates": []
+}

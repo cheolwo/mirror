@@ -1,0 +1,42 @@
+{
+  "schema": "hongdal-dong-diorama-reference.v1",
+  "profileId": "myeonmok38-common-v1",
+  "referenceDongCode": "1126057500",
+  "baseline": {
+    "sourceModuleSha256": "3bd002e2be0aed9ec9ec18f75024b3159b16ad6fb4e785593981ab3f50266a03",
+    "meshSha256": "fb920aa34ce7add663f87bc57461216bc2398fa33433023a4ec97264cb342f76",
+    "buildingIndexSha256": "5db32512ced38773daf4c84be5ba4656f5dfd11fdda83452282316ec0a7ac433"
+  },
+  "surfaces": {
+    "ground":   {"yMetres": 0.005, "rgb": [33, 50, 63]},
+    "parkPlan": {"yMetres": 0.034, "rgb": [68, 103, 86]},
+    "walk":     {"yMetres": 0.065, "rgb": [72, 88, 99]},
+    "roadEdge": {"yMetres": 0.086, "rgb": [82, 95, 105]},
+    "carriage": {"yMetres": 0.106, "rgb": [56, 68, 80]},
+    "lane":     {"yMetres": 0.131, "rgb": [143, 143, 126]}
+  },
+  "strokeHalfWidthMetres": {
+    "walkMixed": 1.65,
+    "walkOther": 0.92,
+    "roadEdge": 4.2,
+    "carriage": 3.45,
+    "lane": 0.2
+  },
+  "buildings": {
+    "floorHeightMetres": 3.0,
+    "fallbackHeightMetres": 4.0,
+    "compressAboveMetres": 14.0,
+    "compressionRatio": 0.32,
+    "maxDisplayHeightMetres": 24.0,
+    "parapetMetres": 0.45,
+    "roofRgbPalette": [[95, 113, 128], [117, 132, 146], [105, 125, 138], [126, 140, 151]],
+    "wallRgb": [146, 155, 165],
+    "wallAmbient": 0.69,
+    "wallDirectional": 0.25,
+    "shadowMaxHeightMetres": 8.0,
+    "shadowScale": 0.95,
+    "shadowEast": 0.931,
+    "shadowNorth": 0.364,
+    "shadowYMetres": 0.198
+  }
+}

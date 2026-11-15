@@ -1,0 +1,253 @@
+{
+  "schemaVersion": "ssalddel.diorama-construction-extract.v1",
+  "revision": "sagajeong-construction-extract.r1",
+  "planRef": "PLAN-SYSTEM-ADMIN-DONG-DIORAMA.r50",
+  "auditKind": "WorkingTreeSourceAndSerializedCatalogOnly",
+  "liveSceneModeVerified": false,
+  "implementationAuthorizedByThisExtract": false,
+  "entryPoint": "Presentation/World/사가정운영디오라마View.cs::Initialize",
+  "baseResourceSnapshot": {
+    "revision": "sagajeong-reference.r3",
+    "halfExtentMeters": 500,
+    "offsetX": 550,
+    "offsetZ": 8,
+    "baseBuildingCount": 602,
+    "baseRoadSegmentCount": 2397,
+    "countsAreNotActiveOverlayCounts": true
+  },
+  "paths": {
+    "legacySyntyCondition": "requested && !spatialOverlayApplied",
+    "legacySynty": [
+      "사가정Synty표현Planner.Build",
+      "사가정지리MeshBuilder.Build",
+      "BuildSyntyVisuals"
+    ],
+    "procedural": [
+      "사가정공간표현OverlayPipeline",
+      "사가정모형MeshBuilder.BuildBatches",
+      "사가정모형명암.shader"
+    ],
+    "privateThreeStoreStudy": "SeparateOptInEditorStudy;NotCanonicalFullArea"
+  },
+  "synty": {
+    "pack": "PolygonCity",
+    "prefabDirectory": "Assets/Synty/PolygonCity/Prefabs/Buildings/",
+    "catalogResource": "SagajeongSyntyVisualCatalog",
+    "catalogPrefabGuidMatchesVerified": 4,
+    "definitions": {
+      "legal.city.building.apartment": "SM_Bld_OfficeSquare_01.prefab",
+      "legal.city.building.shop": "SM_Bld_Shop_03.prefab",
+      "legal.city.building.office": "SM_Bld_OfficeOld_Small_01.prefab",
+      "legal.city.building.civic": "SM_Bld_Shop_05.prefab"
+    },
+    "currentPolicyValuesNotNewRegionalDefaults": {
+      "uniformScaleMin": 0.8,
+      "uniformScaleMax": 1.25,
+      "relativeHeightTolerance": 0.1,
+      "maxVerticalCopies": 24,
+      "viewCandidateLimit": 120,
+      "viewRadiusHalfExtentMultiplier": 1.5,
+      "specialLegacySample": "150m / 13 targets;separate source-specific branch"
+    },
+    "fitFailure": "PreserveOriginalFootprintMesh",
+    "instancePolicy": "SharedPrefabAndMaterial;PropertyBlockTint;RemoveCollider;PresentationOnly",
+    "doesNotSupply": [
+      "RealMerchantIdentity",
+      "Actors",
+      "Vehicles",
+      "SurveyedFacade"
+    ]
+  },
+  "procedural": {
+    "buildOrder": [
+      "Ground",
+      "ValidatedOverlaySurfaces",
+      "RoadsAndNodeJoins",
+      "BuildingsAndAnalyticShadows",
+      "OptionalGreenery"
+    ],
+    "chunkAxisCount": 4,
+    "rendererLimit": 128,
+    "materialLimit": 12,
+    "surfaceData": "wall=1;roof=2;awning=3;world-space shader windows",
+    "windowGeometryVertices": 0,
+    "illustrativeNotSurveyed": [
+      "RoadWidthByKind",
+      "WindowGrid",
+      "TallUpperMassingScale0.84",
+      "StationDetailRadius135m",
+      "AnalyticShadowMax8m"
+    ],
+    "roadWidthByKindMeters": {
+      "primary": 15,
+      "secondary": 12,
+      "secondary_link": 8,
+      "tertiary": 8,
+      "residential": 5.5,
+      "service": 4.5,
+      "footway": 2.2,
+      "steps": 2.2,
+      "path": 2.2,
+      "cycleway": 2.2,
+      "pedestrian": 2.2,
+      "default": 3.5
+    }
+  },
+  "regionalProfileFieldsToReplace": [
+    "StableIds",
+    "BoundaryAndWindow",
+    "OriginAndOffsetsAndCRS",
+    "RawAndResourceHashes",
+    "BuildingsAndHeightEvidence",
+    "RoadsAndSurfaces",
+    "MissingCoverage",
+    "PlacesAndStationAnchors",
+    "ExplicitIdentityBindings",
+    "UsageAndPublicationStatus",
+    "AssetAndPerformanceBudgets"
+  ],
+  "adoptionOrderCandidate": [
+    "KeepAreaWideBaseLayer",
+    "ExplicitSurfaceDataAndWindowShaderAdapter",
+    "CommonBuildingAndRoadComposition",
+    "OptionalFittedSynty"
+  ],
+  "doNotCopy": [
+    "SagaResourceNamesAsOtherArea",
+    "SagaCoordinatesOrHashes",
+    "SagaSpecific135mDetailIsland",
+    "150m13TargetSpecialCase",
+    "PrivateStoreFacadeAsOtherMerchant",
+    "SyntheticActorAsRealPerson"
+  ],
+  "refreshRule": "Read this JSON and r50 Markdown first; verify sourceFiles hashes; inspect only changed files and affected stage; do not rerender for an extraction-only refresh.",
+  "sourceFiles": [
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/사가정운영디오라마View.cs",
+      "sha256": "ca3a3e3d4fdb223ea825f0bd52181e0a20d82c6433528edb01af26516ebcac87"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/사가정공간표현ModePolicy.cs",
+      "sha256": "0895510dc567249ac2dcfc9369df67180a765e2954490cc7af77110b850507e8"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/사가정모형MeshBuilder.cs",
+      "sha256": "e29aadaecdd54c383970c44c0ccd49706731cffbb226daa489440d4056aacf6d"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/사가정지리MeshBuilder.cs",
+      "sha256": "f3b78ad5a1b16d737657b86e10b1a54021e66c08bc8a0a7b0d6b0e025b821122"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/사가정Synty표현Planner.cs",
+      "sha256": "ad1fb9161cbd6acc2782bcbca943a6a423111636f75f2401ff70acbc8670b095"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Editor/사가정Synty표현CatalogBuilder.cs",
+      "sha256": "e625d3f71018ad364c57aecacbe1190e8b597373471fea7740bfc38c94375bb2"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Runtime/World/사가정공간표현OverlayComposer.cs",
+      "sha256": "7ab87f7ea14c547228aa5344ded207c16103feb9a2dd8f8676c1fab2eb177b54"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Runtime/World/사가정공간표현OverlayLoader.cs",
+      "sha256": "e89dce818dd2c26e7177a1ba98c3e5c4bc13ec12e420233862af5c586cb08ffe"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/사가정모형명암.shader",
+      "sha256": "f0bc460fe58caca33d461b0e8321e12bd7ea6e9616f6e9e4ba3806fadd6ac302"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongReference.json",
+      "sha256": "4b81e60c3c389a69aa765c8cc8d20e4457102c359a5ffbcd7ebdfa880f7e84e3"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongSyntyVisualCatalog.asset",
+      "sha256": "aa39f352dce31d232ce9db88319033d3b819112f2b70f63b3054345595cfc5e9"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongObservationPlacement.json",
+      "sha256": "b8e9c5d699a7f7be05d8f645781d888c021018d80a6d4682865c4cb785715630"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongBuildingHeightOverlay.json",
+      "sha256": "c470b3110567294fed0fe3e8ed2640a9e1f8bc7f3c77af1fbaf2af9cda5c978d"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongRoadNameOverlay.json",
+      "sha256": "26b2c32fd6f89934bf25e3415287486e625c6ef0369e8c2e0bb6fcbdc43b9dac"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Resources/SagajeongStationOrientationAnchors.json",
+      "sha256": "d1a6874f86512a67f40b96f8d054c61f51f8e6226010150f781e694223309bab"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/행정동디오라마검토MeshBuilder.cs",
+      "sha256": "2798f1ca1ed64505149acdcdf26996ad4129c8850d189a5f9409d67f7d196ded"
+    },
+    {
+      "relativeTo": "Assets/Ssalddel",
+      "path": "Presentation/World/행정동디오라마검토View.cs",
+      "sha256": "70a3a930707a94158129bf4189936ee80154320f8ff841d6a0aca2a2c3bbce12"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_OfficeSquare_01.prefab",
+      "sha256": "4f833cab8a8338373f22bbe1b4bff0dddde3e51def55192c5af11a3be8eaca19"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_OfficeSquare_01.prefab.meta",
+      "sha256": "02f782227ce3238d203c12582a53385ab3dc26d0198c2d45154d11b9fd5575ef"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_Shop_03.prefab",
+      "sha256": "0e02f9aadf64d062abef5f80846e27af935147c4f12590ccdf3bbbc9cc4db7dc"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_Shop_03.prefab.meta",
+      "sha256": "beb6c77594a4e1964eb07879ad0d06b695880cd9dab243c97d108e87ddea193e"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_OfficeOld_Small_01.prefab",
+      "sha256": "e1b2515839dc4f3499cd38b16b197eb88f651c5a064a14e57f5f8ee3e738cf78"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_OfficeOld_Small_01.prefab.meta",
+      "sha256": "bbb8e3539ada4706fd86cab4eab2287f92d8075693b79bb357334bc74ed51b0d"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_Shop_05.prefab",
+      "sha256": "1578536345bfbe06ad4ec3106522078efe497d0d279f13ed1be55c4ac948aec7"
+    },
+    {
+      "relativeTo": "Assets/Synty/PolygonCity/Prefabs/Buildings",
+      "path": "SM_Bld_Shop_05.prefab.meta",
+      "sha256": "26daa092c4a6eaa2b9d877af1df7deed400bb7920e0128ddbaf09cf94bcfa227"
+    }
+  ],
+  "auditedAt": "2026-10-29T17:56:25.9608581+09:00",
+  "unityHeadCommit": "605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77"
+}

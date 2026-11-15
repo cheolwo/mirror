@@ -1,0 +1,241 @@
+{
+  "schemaVersion": "hongdal-dong-map-source-intake.v1",
+  "checkedAtUtc": "2026-11-13T12:01:03.571593+00:00",
+  "requestedScope": [
+    "중랑구",
+    "광진구",
+    "동대문구",
+    "노원구"
+  ],
+  "priority": "CollectInformationBeforeImplementation",
+  "newRawDatasetFiles": [
+    {
+      "path": "artifacts/local/dong-map-source-intake-20261113/raw-network/nowon.csv",
+      "bytes": 5602162,
+      "sha256": "C4E7299158D1398F1F0E2FA0AEDA18D06F5C77F5278BF153F0EC96C6C636FC4F"
+    },
+    {
+      "path": "artifacts/local/dong-map-source-intake-20261113/raw-reference/jscode20261026.zip",
+      "bytes": 2114284,
+      "sha256": "CCE7299A01BFB29EDC234884DBD4AFA87B4A3A899AE3AEFB9D6E4D0FE7B82509"
+    }
+  ],
+  "receipts": [
+    {
+      "path": "artifacts/local/dong-map-source-intake-20261113/network-receipts.json",
+      "bytes": 2391,
+      "sha256": "C895C9961CEDB57BB08ECDDD09E0F9178A03A456A2B7ED1F3D8E3E13704A906E"
+    },
+    {
+      "path": "artifacts/local/dong-map-source-intake-20261113/reference-receipts.json",
+      "bytes": 2035,
+      "sha256": "AD4FFD9117E26C7FB463D9813C9F8AF34CCFC60450F88E41337E03C458FD11EC"
+    }
+  ],
+  "walkNetwork": {
+    "officialPage": "https://data.seoul.go.kr/dataList/OA-21208/A/1/datasetView.do",
+    "sourceReferenceYear": "2020",
+    "totals": {
+      "rows": 83950,
+      "nodeRows": 36353,
+      "linkRows": 47597,
+      "districtMismatchRows": 0,
+      "missingOrMalformedLegalDongRows": 0,
+      "legalDongCodeDifferentDistrictPrefixRows": 53,
+      "unknownNodeLinkTypeRows": 0,
+      "unknownTypeCodeRows": 0,
+      "missingOrMalformedOwnIdRows": 0,
+      "oppositeTypeWktPopulatedRows": 0,
+      "geometryIssueRows": 0,
+      "missingExpectedWktRows": 0,
+      "invalidExpectedWktRows": 0,
+      "outsideSeoulEnvelopeRows": 0,
+      "geometryCoordinatePairs": 153413,
+      "missingOrInvalidCollectionDateRows": 0
+    },
+    "sourceDistricts": [
+      {
+        "name": "중랑구",
+        "rows": 21448,
+        "nodes": 9267,
+        "links": 12181,
+        "sourceFile": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/jungnang.csv",
+        "sha256": "55192969525242522C0335C56605B1286EC7D19C7365A65532291BBA5DEE4321",
+        "newlyAcquired": false
+      },
+      {
+        "name": "광진구",
+        "rows": 16288,
+        "nodes": 6935,
+        "links": 9353,
+        "sourceFile": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/gwangjin.csv",
+        "sha256": "BB485FDF1B31963F1109E4433E660DC6E4B2AF63A15B07D8356EE7F33F365915",
+        "newlyAcquired": false
+      },
+      {
+        "name": "동대문구",
+        "rows": 21988,
+        "nodes": 9478,
+        "links": 12510,
+        "sourceFile": "artifacts/local/public-data/admin-dong-walk-network-northeast-seoul-20260915-g3c-r1/raw/dongdaemun.csv",
+        "sha256": "5DFBF2F0C237B680FFD2BF2B7CA8D6B43D35110C87398133F13B3F1C5B3B37C6",
+        "newlyAcquired": false
+      },
+      {
+        "name": "노원구",
+        "rows": 24226,
+        "nodes": 10673,
+        "links": 13553,
+        "sourceFile": "artifacts/local/dong-map-source-intake-20261113/raw-network/nowon.csv",
+        "sha256": "C4E7299158D1398F1F0E2FA0AEDA18D06F5C77F5278BF153F0EC96C6C636FC4F",
+        "newlyAcquired": true
+      }
+    ],
+    "summary": {
+      "path": "artifacts/local/dong-map-source-intake-20261113/walk-summary/summary.json",
+      "bytes": 46799,
+      "sha256": "C88E0E9D53EC8F67A3D5832CB3D76DA15D19A8E1A7BA32DD3A451DF54EFFAF5C"
+    },
+    "districtFilterBoundaryHaloComplete": false,
+    "linkRowsWithMissingEndpointNodeInFourDistrictSet": 499,
+    "administrativeDongClippingPerformed": false
+  },
+  "administrativeCodes": {
+    "officialPage": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=130674",
+    "publicationReferenceDate": "2026-10-30",
+    "archiveNameRevision": "20261026",
+    "administrativeRows": 65,
+    "jurisdictionRows": 67,
+    "districts": [
+      {
+        "codePrefix": "11215",
+        "name": "광진구",
+        "administrativeDongCount": 15,
+        "jurisdictionRows": 15
+      },
+      {
+        "codePrefix": "11230",
+        "name": "동대문구",
+        "administrativeDongCount": 15,
+        "jurisdictionRows": 16
+      },
+      {
+        "codePrefix": "11260",
+        "name": "중랑구",
+        "administrativeDongCount": 16,
+        "jurisdictionRows": 16
+      },
+      {
+        "codePrefix": "11350",
+        "name": "노원구",
+        "administrativeDongCount": 19,
+        "jurisdictionRows": 20
+      }
+    ],
+    "txtXlsxAdministrativeCodesAgree": true,
+    "readinessInventory": {
+      "path": "artifacts/local/dong-map-source-intake-20261113/jurisdictions/four-district-source-readiness.csv",
+      "bytes": 10409,
+      "sha256": "F71B367618AF1AFCA53EF88B0AA3F6F2E1F639E46ECCF537B4EB560FAA3377BB"
+    },
+    "geometry": "NotCollected"
+  },
+  "buildingParcelCandidates": {
+    "existingRawSource": {
+      "path": "artifacts/local/neighborhood-source-acquisition/AL_D010_11_20260809.zip",
+      "sha256": "674C5A9583996DD6B8946525EDAD8197BE79A634F1DB00D39E2B3133D0D2A755",
+      "bytes": 135675376,
+      "evidenceAsOf": "2026-08-09",
+      "firstAcquiredAtUtcFromExistingParser": "2026-09-06T14:42:52.765Z",
+      "localRecoveryRecordedAtUtc": "2026-09-26T01:46:46.9040832Z",
+      "dbfRecordCount": 695761,
+      "dbfDeletedRecords": 0,
+      "dbfHeaderLength": 961,
+      "dbfRecordLength": 1815,
+      "licenseCode": "RightsConflictUnresolved"
+    },
+    "counts": {
+      "thirtyDongBuildings": 61897,
+      "sixDongSourceBuildings": 13390,
+      "sixDongConsumerIncluded": 13383,
+      "sixDongConsumerExcluded": 7,
+      "multipleSourceOccurrenceBuildings": 27,
+      "ambiguousSourceFieldBuildings": 0
+    },
+    "file": {
+      "path": "artifacts/local/dong-map-source-intake-20261113/local-reuse/building-parcel-address-candidates.jsonl",
+      "bytes": 84014697,
+      "sha256": "8A66933C198D1B2EA75644CD822B84F7F1EEBD48EED91CD2773D1C260535470F"
+    },
+    "sixDongFile": {
+      "path": "artifacts/local/dong-map-source-intake-20261113/local-reuse/six-dong-building-parcel-address-candidates.jsonl",
+      "bytes": 18128819,
+      "sha256": "CB4F117695A1D3E7D4089C928D771EBFFE6B7E074EF64C993F544615C27F589D"
+    },
+    "summary": {
+      "path": "artifacts/local/dong-map-source-intake-20261113/local-reuse/local-reuse-report.json",
+      "bytes": 27271,
+      "sha256": "98701A584AE6BBFC15A7206A814F7E74D230D557DD5874C811A950F13D5E5EDE"
+    },
+    "roadNameAddress": "NotCollected",
+    "entrance": "NotCollected",
+    "sourceFeatureIdMultipleOccurrenceBuildings": 27,
+    "sourceReferenceLinkageKeyMissingBuildings": 2107,
+    "licenseCode": "RightsConflictUnresolved"
+  },
+  "administrativeListSourceConflict": {
+    "status": "SourceConflictObservedOAPointListNotCurrentAdministrativeAuthority",
+    "seoulOAPointListCount": 64,
+    "moisPublishedAdministrativeListCount": 65,
+    "seoulOnlyRows": [
+      {
+        "administrativeCode": "1123053600",
+        "name": "용신동"
+      }
+    ],
+    "moisOnlyRows": [
+      {
+        "administrativeCode": "1123051500",
+        "name": "신설동",
+        "created": "20250701"
+      },
+      {
+        "administrativeCode": "1123053300",
+        "name": "용두동",
+        "created": "20250701"
+      }
+    ],
+    "commonCodeCount": 63,
+    "authoritativeCodeListReferenceForNewWork": "jurisdictions/four-district-administrative-codes.csv",
+    "moisSourceId": "mois-resident-registration-codes",
+    "moisDatasetId": "korea-administrative-legal-jurisdictions",
+    "moisPublicationReferenceDate": "2026-10-30",
+    "moisArchiveNameRevision": "20261026",
+    "moisArchiveSha256": "CCE7299A01BFB29EDC234884DBD4AFA87B4A3A899AE3AEFB9D6E4D0FE7B82509",
+    "moisDerivedCsvSha256": "C652B12BBFFC95EDC61B08C56A58A772287321FCD9485867D8C97A16999D6EBF",
+    "moisSummaryPath": "artifacts/local/dong-map-source-intake-20261113/jurisdictions/summary.json",
+    "geometryCompared": false,
+    "currentBoundaryEstablished": false,
+    "currentPointerUpdated": false,
+    "disposition": "PreserveOARowsAsOlderPointListReference;UseMOIS65ForCodeCatalog;NoBoundaryOrModuleReassignment"
+  },
+  "uncollected": [
+    "CurrentAuthoritativeAdministrativeDongGeometry",
+    "RoadNameAddressBuildingGeometry",
+    "BuildingEntrance"
+  ],
+  "officialReferencePages": {
+    "historicalBoundary": "https://data.seoul.go.kr/dataList/OA-22160/F/1/datasetView.do",
+    "addressProducts": "https://business.juso.go.kr/jst/jstAddressCuration",
+    "sgisStatisticalBoundary": "https://sgis.mods.go.kr/view/pss/openDataIntrcn"
+  },
+  "consumerCatalogReadOnlySnapshotSha256": "584B5B39A8207036B6E95FD96FC9282F6C8E1633955284D1878AB18BC71AE3FF",
+  "unityFilesWritten": false,
+  "dbIngested": false,
+  "scheduledJobsChanged": false,
+  "currentPointerUpdated": false,
+  "distributionApproved": false,
+  "traversalReady": false,
+  "gameplayReady": false,
+  "evidenceLimit": "RawAcquisitionAndPrivateCandidatePreparationOnly; NotCurrentGeometryOrRuntimeEvidence"
+}

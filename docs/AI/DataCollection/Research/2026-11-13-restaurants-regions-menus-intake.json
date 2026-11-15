@@ -1,0 +1,581 @@
+{
+  "schemaVersion": "hongdal-region-restaurant-menu-intake.v1",
+  "generatedAtUtc": "2026-11-13T12:25:30.178260+00:00",
+  "requestedScope": [
+    "중랑구",
+    "광진구",
+    "동대문구",
+    "노원구"
+  ],
+  "regions": {
+    "sourceId": "mois-resident-registration-codes",
+    "datasetId": "korea-administrative-legal-jurisdictions",
+    "sourceRevision": "mois-jscode:20261026",
+    "publicationReferenceDate": "2026-10-30",
+    "newDownloadPerformedThisStep": false,
+    "counts": {
+      "legalDongs": 28,
+      "administrativeDongs": 65,
+      "jurisdictionRelations": 67,
+      "countryLegalCodes": 20570,
+      "codeGoCountryRows": 53403
+    },
+    "districts": [
+      {
+        "prefix": "11215",
+        "name": "광진구",
+        "legalDongs": 7,
+        "administrativeDongs": 15,
+        "jurisdictionRelations": 15
+      },
+      {
+        "prefix": "11230",
+        "name": "동대문구",
+        "legalDongs": 10,
+        "administrativeDongs": 15,
+        "jurisdictionRelations": 16
+      },
+      {
+        "prefix": "11260",
+        "name": "중랑구",
+        "legalDongs": 6,
+        "administrativeDongs": 16,
+        "jurisdictionRelations": 16
+      },
+      {
+        "prefix": "11350",
+        "name": "노원구",
+        "legalDongs": 5,
+        "administrativeDongs": 19,
+        "jurisdictionRelations": 20
+      }
+    ],
+    "relationIsNotOneToOne": true,
+    "geometryCollected": false,
+    "officialUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=130674"
+  },
+  "licenses": {
+    "sourceId": "seoul-open-data-local-licensing",
+    "datasetIds": [
+      "OA-23056",
+      "OA-23059"
+    ],
+    "newRawCsvFiles": 8,
+    "sourceObservationRows": 92690,
+    "distinctDatasetManagementKeys": 92655,
+    "statusCounts": {
+      "ClosedReported": 72851,
+      "OperatingReported": 19804
+    },
+    "duplicateManagementGroups": 35,
+    "rawIssueCounts": {
+      "LegalDongCodeMissing": 44470,
+      "RoadAddressDistrictMismatch": 3,
+      "LotAddressDistrictMismatch": 3,
+      "LegalDongDistrictMismatch": 3
+    },
+    "sourceDeclaredLegalCodeMissingRows": 44470,
+    "legalBindingMethods": {
+      "ExactParcelAddressTextCandidate": 44459,
+      "SourceDeclaredCode": 48177,
+      "Unresolved": 4,
+      "SourceCodeParcelAddressConflict": 7,
+      "AddressOutsideLicensingDistrict": 8
+    },
+    "administrativeBindingMethods": {
+      "MultipleCurrentJurisdictionsUnresolved": 77313,
+      "UniqueCurrentJurisdictionCandidate": 15323,
+      "Unresolved": 19
+    },
+    "rawDatasetSources": [
+      {
+        "datasetId": "OA-23056",
+        "district": "중랑구",
+        "rows": 17679,
+        "statuses": {
+          "ClosedReported": 14225,
+          "OperatingReported": 3454
+        },
+        "legalBindingMethods": {
+          "ExactParcelAddressTextCandidate": 9612,
+          "SourceDeclaredCode": 8067
+        },
+        "rawSha256": "632A1F5A73DC9B59D258754298D2288309ED39E9DD053907D53378FD83F3CD17"
+      },
+      {
+        "datasetId": "OA-23056",
+        "district": "광진구",
+        "rows": 18332,
+        "statuses": {
+          "ClosedReported": 14123,
+          "OperatingReported": 4209
+        },
+        "legalBindingMethods": {
+          "ExactParcelAddressTextCandidate": 8421,
+          "SourceDeclaredCode": 9907,
+          "Unresolved": 2,
+          "SourceCodeParcelAddressConflict": 2
+        },
+        "rawSha256": "0125E048F31F245581547C7387170F1B6F595465E0E299FE9A58368C34625F14"
+      },
+      {
+        "datasetId": "OA-23056",
+        "district": "동대문구",
+        "rows": 22030,
+        "statuses": {
+          "ClosedReported": 18139,
+          "OperatingReported": 3891
+        },
+        "legalBindingMethods": {
+          "SourceDeclaredCode": 9387,
+          "ExactParcelAddressTextCandidate": 12639,
+          "SourceCodeParcelAddressConflict": 3,
+          "AddressOutsideLicensingDistrict": 1
+        },
+        "rawSha256": "FD10E95C6CFA569DFA3B997BB56DF1911DA6E4E603D0872B3566006FA1915916"
+      },
+      {
+        "datasetId": "OA-23056",
+        "district": "노원구",
+        "rows": 16535,
+        "statuses": {
+          "ClosedReported": 13000,
+          "OperatingReported": 3535
+        },
+        "legalBindingMethods": {
+          "ExactParcelAddressTextCandidate": 8091,
+          "SourceDeclaredCode": 8441,
+          "AddressOutsideLicensingDistrict": 2,
+          "Unresolved": 1
+        },
+        "rawSha256": "6863884CFA0A8F82D9B8BDCF5A5409227313FCE7001C87A50FAC8FCDBCA216C2"
+      },
+      {
+        "datasetId": "OA-23059",
+        "district": "중랑구",
+        "rows": 3473,
+        "statuses": {
+          "ClosedReported": 2573,
+          "OperatingReported": 900
+        },
+        "legalBindingMethods": {
+          "SourceDeclaredCode": 2262,
+          "ExactParcelAddressTextCandidate": 1209,
+          "AddressOutsideLicensingDistrict": 2
+        },
+        "rawSha256": "23540415CAB3BEC8E0C589C445CB4A907D98FDF9756EE3A15FD979217F09D013"
+      },
+      {
+        "datasetId": "OA-23059",
+        "district": "광진구",
+        "rows": 4932,
+        "statuses": {
+          "ClosedReported": 3686,
+          "OperatingReported": 1246
+        },
+        "legalBindingMethods": {
+          "SourceDeclaredCode": 3496,
+          "ExactParcelAddressTextCandidate": 1435,
+          "Unresolved": 1
+        },
+        "rawSha256": "8A413A070D1E59D4D0B13E1AE4EC528750B3FE408BF4076D75498D26F67DEF5B"
+      },
+      {
+        "datasetId": "OA-23059",
+        "district": "동대문구",
+        "rows": 4833,
+        "statuses": {
+          "ClosedReported": 3549,
+          "OperatingReported": 1284
+        },
+        "legalBindingMethods": {
+          "ExactParcelAddressTextCandidate": 1638,
+          "SourceDeclaredCode": 3194,
+          "AddressOutsideLicensingDistrict": 1
+        },
+        "rawSha256": "7DD1B7066A3AAA58D254733BAD3B11B992A0009B0B8A31C5C2469D886860465F"
+      },
+      {
+        "datasetId": "OA-23059",
+        "district": "노원구",
+        "rows": 4876,
+        "statuses": {
+          "OperatingReported": 1301,
+          "ClosedReported": 3575
+        },
+        "legalBindingMethods": {
+          "SourceDeclaredCode": 3456,
+          "ExactParcelAddressTextCandidate": 1416,
+          "AddressOutsideLicensingDistrict": 2,
+          "SourceCodeParcelAddressConflict": 2
+        },
+        "rawSha256": "538E90E2B284ADF4426B68D0C302F51ADD6A641D8C0B8A989709B55B551DAB5E"
+      }
+    ],
+    "coordinateProviderDescription": "GRS80; two raw coordinate column pairs preserved separately",
+    "coordinateEpsgVerified": false,
+    "coordinateTransformPerformed": false,
+    "textNormalization": "TrimForLookup;OriginalCsvAndSourceOccurrenceReferencesPreserved",
+    "officialUrls": [
+      "https://data.seoul.go.kr/dataList/OA-23056/S/1/datasetView.do",
+      "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do"
+    ],
+    "licenseKeysAreNotUniquePhysicalStoreCount": true
+  },
+  "menus": {
+    "newRawCsvFiles": 7,
+    "sources": [
+      {
+        "sourceId": "seoul-fair-price-products",
+        "datasetId": "OA-1174",
+        "sourceRows": 4255,
+        "acquiredAtUtc": "2026-11-13T12:06:13.623719+00:00",
+        "rawSha256": "F9D2B88FCB94D249078AD82E4DC0647BC72D99D7153347C72BEE24541E58E71F",
+        "portalDataUpdateDate": "2026-11-10",
+        "referenceYearMonthSource": null,
+        "designationDateMin": null,
+        "designationDateMax": null,
+        "fourDistrictMenuRows": {
+          "광진구": 118,
+          "중랑구": 84,
+          "노원구": 72,
+          "동대문구": 161
+        },
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-1174/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "seoul-fair-price-stores",
+        "datasetId": "OA-1173",
+        "sourceRows": 1867,
+        "acquiredAtUtc": "2026-11-13T12:06:12.865388+00:00",
+        "rawSha256": "2AE992A1184F87E12C27A99FFED7D2C77E26349E0867E04F9060A3BAF266D132",
+        "portalDataUpdateDate": "2026-11-10",
+        "referenceYearMonthSource": [
+          "24-10"
+        ],
+        "designationDateMin": null,
+        "designationDateMax": null,
+        "fourDistrictMenuRows": null,
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-1173/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "jungnang-model-restaurants",
+        "datasetId": "OA-10294",
+        "sourceRows": 79,
+        "acquiredAtUtc": "2026-11-13T12:06:14.214503+00:00",
+        "rawSha256": "11FDC05F18FE8222DB162A4C25FFCCB2C7596B515F19085D8FBCB45B7AA8BA67",
+        "portalDataUpdateDate": null,
+        "referenceYearMonthSource": null,
+        "designationDateMin": "20011019",
+        "designationDateMax": "20251126",
+        "fourDistrictMenuRows": {
+          "중랑구": 79
+        },
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-10294/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "gwangjin-model-restaurants",
+        "datasetId": "OA-9909",
+        "sourceRows": 112,
+        "acquiredAtUtc": "2026-11-13T12:06:16.105637+00:00",
+        "rawSha256": "AC5A35ED72F1E163316D97C984FD534A404E0DACDFE873C6674A7E11A92DB31A",
+        "portalDataUpdateDate": "2026-11-13",
+        "referenceYearMonthSource": null,
+        "designationDateMin": "19980220",
+        "designationDateMax": "20241031",
+        "fourDistrictMenuRows": {
+          "광진구": 112
+        },
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-9909/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "dongdaemun-model-restaurants",
+        "datasetId": "OA-10371",
+        "sourceRows": 56,
+        "acquiredAtUtc": "2026-11-13T12:06:15.427648+00:00",
+        "rawSha256": "BFD393232A7610C0A86221ACABE57680695FAF655A2ED1C534DF4CA2436999B7",
+        "portalDataUpdateDate": "2026-11-13",
+        "referenceYearMonthSource": null,
+        "designationDateMin": "20010701",
+        "designationDateMax": "20241212",
+        "fourDistrictMenuRows": {
+          "동대문구": 55
+        },
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-10371/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "nowon-model-restaurants",
+        "datasetId": "OA-10987",
+        "sourceRows": 105,
+        "acquiredAtUtc": "2026-11-13T12:06:17.217957+00:00",
+        "rawSha256": "BF6E448A974D5B6CA4A71EA0B76D89A9F9F461171A23D9791D68287BBE8706A3",
+        "portalDataUpdateDate": "2026-11-13",
+        "referenceYearMonthSource": null,
+        "designationDateMin": "20020628",
+        "designationDateMax": "20251212",
+        "fourDistrictMenuRows": {
+          "노원구": 105
+        },
+        "sourcePageUrl": "https://data.seoul.go.kr/dataList/OA-10987/S/1/datasetView.do"
+      },
+      {
+        "sourceId": "mois-fair-price-20260930",
+        "datasetId": "3045247",
+        "sourceRows": 12935,
+        "sourceReferenceDate": "2026-09-30",
+        "acquiredAtUtc": "2026-11-13T12:09:37.977491+00:00",
+        "rawSha256": "69B72468BC1BCD2C97D6D7F1604D54CF359054DEFCF36ACDAFD69EF8C27E305A",
+        "portalDataUpdateDate": "2026-10-16",
+        "fourDistrictFoodStoreSourceRecords": 231,
+        "fourDistrictMenuRows": {
+          "광진구": 81,
+          "노원구": 95,
+          "중랑구": 76,
+          "동대문구": 217
+        },
+        "sourcePageUrl": "https://www.data.go.kr/data/3045247/fileData.do"
+      }
+    ],
+    "sourceFacts": {
+      "seoulFairPriceProductMenuRows": 435,
+      "seoulModelMainFoodRows": 351,
+      "seoulSourceMenuRows": 786,
+      "moisFourDistrictMenuRows": 469
+    },
+    "latestNationalReferenceDate": "2026-09-30",
+    "fourDistrictFoodStoreSourceRows": 231,
+    "latestFourDistrictMenuItems": 469,
+    "olderSeoulMenuObservations": 786,
+    "countsFromDifferentSourcesAreNonAdditive": true,
+    "isFullMenu": false,
+    "menuAndLicenseLinkingDoesNotEstablishCurrentMenu": true
+  },
+  "menuLicenseLinkEvidence": {
+    "status": "StrictSourceReferencesAndUnconfirmedCandidatesPrepared",
+    "generatedAtUtc": "2026-11-13T12:21:12.155836+00:00",
+    "rawLicenseRows": 92690,
+    "uniqueDatasetManagementKeys": 92655,
+    "missingManagementNumberRows": 0,
+    "menuObservationRows": 1255,
+    "menuSourceRecordGroups": 1008,
+    "observationsByMethod": {
+      "ExactFullMGTNOReference": 351,
+      "WhitespaceOnlyNameRoadAddressCandidate": 70,
+      "Unresolved": 834
+    },
+    "multipleCandidateMenuObservations": 0,
+    "linkedCandidateRows": 421,
+    "linkedCandidateRowsToClosedLicenses": 9,
+    "linkedCandidateRowsWithTimingComparisons": 421,
+    "byMenuDataset": {
+      "3045247": {
+        "Unresolved": 437,
+        "WhitespaceOnlyNameRoadAddressCandidate": 32
+      },
+      "OA-10294": {
+        "ExactFullMGTNOReference": 79
+      },
+      "OA-10371": {
+        "ExactFullMGTNOReference": 55
+      },
+      "OA-10987": {
+        "ExactFullMGTNOReference": 105
+      },
+      "OA-1174": {
+        "Unresolved": 397,
+        "WhitespaceOnlyNameRoadAddressCandidate": 38
+      },
+      "OA-9909": {
+        "ExactFullMGTNOReference": 112
+      }
+    },
+    "reasonCountsPerMenuObservation": {
+      "NoPermitNumberInMenuSource": 904,
+      "NoWhitespaceExactNameAndRoadAddressMatch": 834
+    },
+    "outputs": [
+      {
+        "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/menu-license-links.csv",
+        "rows": 421,
+        "bytes": 547285,
+        "sha256": "9E3219280813C23B8CEEF7E41BD2B4B0C4FD39FAE9AFF7D51DD21CD08D55D25D"
+      },
+      {
+        "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/menu-observation-link-status.csv",
+        "rows": 1255,
+        "bytes": 791669,
+        "sha256": "0057AA2AC0D920B5EE2B6904B1D407107F9288E154EDA0CBA29E97A0E384CCDB"
+      },
+      {
+        "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/unresolved-menu-observations.csv",
+        "rows": 834,
+        "bytes": 522308,
+        "sha256": "C3166640DB12D4CB6D24876E59FF56873A8834439FA20F1DB59F69CB15DA1EFE"
+      },
+      {
+        "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/input-provenance.json",
+        "bytes": 7700,
+        "sha256": "979F002F8D0AC1B3371D790942BCD1F905664C432BD310EAD394B63397EC8C42"
+      }
+    ],
+    "limitations": [
+      "Representative menus and source observations only; no full-menu or currently sold-menu claim.",
+      "Full MGTNO identity references do not prove current business operation or current prices.",
+      "Fallback requires both name and full road-address text after whitespace-only normalization; name-only matching is never used.",
+      "Permit/source aliases, floor text and parentheses are preserved; unresolved rows remain unresolved.",
+      "General/cafe license keys and multiple candidates are not merged or arbitrarily selected.",
+      "Designation dates, portal update dates, menu reference dates and license system update dates have different meanings.",
+      "No raw, menus, regions, database, schedule, current pointer or Unity source changed."
+    ]
+  },
+  "products": [
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/regions/four-district-legal-dongs.csv",
+      "bytes": 8495,
+      "sha256": "FDE4A504058E2348C1978A5D543FA3B223F06064A6A0D53CAE5B263EB3BB5166"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/regions/four-district-administrative-dongs.csv",
+      "bytes": 19510,
+      "sha256": "C8D27D4AA1A5453C55FACC6230A547EBB3D8D86DA1C5DBEEE73E6846FBC37716"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/regions/four-district-administrative-legal-crosswalk.csv",
+      "bytes": 26734,
+      "sha256": "6218C9EFE3C07E7B15E3B62FECBEB47AF8C5B69E0D7A97D83CCAA014AE875858"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/regions/source-provenance.json",
+      "bytes": 2706,
+      "sha256": "CFE65545095570A246B732FB2741FC26B7D182E92E0C9EE5D56E57AB0F28D989"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/regions/verification.json",
+      "bytes": 558,
+      "sha256": "9FBF5F3920C8C5661177D0CDE60A88FDBB119C55E7E521439B82B40E25B0289A"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/receipt.json",
+      "bytes": 12512,
+      "sha256": "8C20586611BA4227ECFDF737C8FE4DBA39A5F2D1950DC806EA3564F860DE4F11"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/download-summary.json",
+      "bytes": 11837,
+      "sha256": "EC10F9D37742E0DCA19C4DBBDF897BC2D2F47220818D9D877A63A9CA14ED9DDD"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/restaurant-source-observations.csv",
+      "bytes": 79548324,
+      "sha256": "0BEAD7B45710C648F8F12C6DE5CCF83AB4E819C886C677F25B4A9BAE12E8876C"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/restaurants.csv",
+      "bytes": 89640969,
+      "sha256": "1E94365FB21F43825466C71B271E545ED33CF3FF672E3C2F33ED0B54C6F9B93C"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/by-legal-dong.csv",
+      "bytes": 1711,
+      "sha256": "DC5F515DCB9266BEC8FBEA7A653DBF12209B9D75C424C4688CB3AE97FB525371"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/by-administrative-dong-candidates.csv",
+      "bytes": 3797,
+      "sha256": "C15EA19C8DE0268388862BE832179CC9F955C52EE8D204BE5500FECD25DDB62D"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/region-unresolved-records.csv",
+      "bytes": 17492,
+      "sha256": "51F750837E0E2F60D77A8ED16026A433FC28F3BCF16D1359EE7D9FD6EE177333"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/normalized/summary.json",
+      "bytes": 12307,
+      "sha256": "343B2CBA5D22E3B1E59C7951AC605003A8CFEE087B66F2E56B46DA8248FCA8F3"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/license-review/raw-audit.json",
+      "bytes": 19393,
+      "sha256": "D6B2371F2E75376EA6E83016DB146849D7F4EED0A035923B981B74305FEF3DB6"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/license-review/duplicate-comparison.json",
+      "bytes": 26921,
+      "sha256": "EB9B8F182F3660D8C07AB968B04E101E1BA2EB7E1DC7160D612584188820BFB4"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/license-review/address-diagnostics.json",
+      "bytes": 7736,
+      "sha256": "8CA18269D94FED41E2C3DB4C3F9A24F2B3B7A967023C20CB1C3F892A1F22446B"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menus/collection-summary.json",
+      "bytes": 4826,
+      "sha256": "DC5468A79D151B2E0E9000B180EF4DF84F4AEA0CBD501ED815E1E279A923A4B8"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menus/validation.json",
+      "bytes": 1632,
+      "sha256": "EF25E9A953715138668063BB6263C8F8C4B8D1BCF25C49F655770356780ED5F3"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menus/national-four-district-stores.csv",
+      "bytes": 51268,
+      "sha256": "F8D6C2AF3F84FB43079B0E46C1B8455242BCE3868DDEC44C4ADD0BB3D3D137EC"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menus/national-four-district-menu-items.csv",
+      "bytes": 117080,
+      "sha256": "F53C6ABFD250680D3F440E6138798756CB20B9BA4EA1CE2B0DDDD38838665AF9"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menus/four-district-menus.csv",
+      "bytes": 193085,
+      "sha256": "E9C09025C315DCB4BD9107D73CA8368FA9D2962DAED4C0279BD37AD6E38B778F"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/license-review/normalized-verification.json",
+      "bytes": 6325,
+      "sha256": "764FB593D83E43AAC11080DDAF8ECB4762BCC91371334F36D754D3607402D0BC"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/link-summary.json",
+      "bytes": 4528,
+      "sha256": "2CAA1CF4B6C99F89887B9162D9F3FEBD7A8AD3171C03F64162B2F83FE7210F39"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/menu-license-links.csv",
+      "bytes": 547285,
+      "sha256": "9E3219280813C23B8CEEF7E41BD2B4B0C4FD39FAE9AFF7D51DD21CD08D55D25D"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/menu-observation-link-status.csv",
+      "bytes": 791669,
+      "sha256": "0057AA2AC0D920B5EE2B6904B1D407107F9288E154EDA0CBA29E97A0E384CCDB"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/unresolved-menu-observations.csv",
+      "bytes": 522308,
+      "sha256": "C3166640DB12D4CB6D24876E59FF56873A8834439FA20F1DB59F69CB15DA1EFE"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/verification.json",
+      "bytes": 1132,
+      "sha256": "9F5286D1C4E6682BE63189904ACC615BA1B32F58484AB661FDC91120B7A5486E"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/menu-license-links/input-provenance.json",
+      "bytes": 7700,
+      "sha256": "979F002F8D0AC1B3371D790942BCD1F905664C432BD310EAD394B63397EC8C42"
+    }
+  ],
+  "evidenceLimit": "PublicRawAcquisitionAndOfflineNormalization;NoOperationalOrUnityEvidence",
+  "privateDeliveryRecordsUsed": false,
+  "operationalDatabaseAccessed": false,
+  "dbIngested": false,
+  "scheduledJobsChanged": false,
+  "unityFilesWritten": false,
+  "currentPointerUpdated": false,
+  "gamePackCreated": false
+}

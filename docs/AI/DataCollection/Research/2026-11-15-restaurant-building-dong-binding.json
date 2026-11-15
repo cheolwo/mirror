@@ -1,0 +1,89 @@
+{
+  "schema": "dong-restaurant-building-data-review.v1",
+  "checkedAtUtc": "2026-11-15T07:14:56.076945+00:00",
+  "role": "collection-and-planning",
+  "sourceOperatingLicenseKeys": 19804,
+  "baselineLinkedKeys": 12131,
+  "preparedLinkedKeys": 16988,
+  "newlyLinkedKeys": 4857,
+  "unboundKeys": 2816,
+  "moduleCount": 65,
+  "bindingKinds": {
+    "multipleBuildingCandidates": 3530,
+    "singleBuildingSingleDong": 13273,
+    "unbound": 2816,
+    "singleBuildingCrossDong": 185
+  },
+  "candidateBuildingPieces": 16639,
+  "candidateModuleOccurrences": 17384,
+  "bidirectionalCandidateRelations": 41087,
+  "historicalRepresentativeMenuObservations": 315,
+  "licenseKeysWithExactHistoricalMenuReferences": 313,
+  "unconfirmedNameAddressMenuObservations": 59,
+  "ordinarySixDongReference": {
+    "ordinaryBuildings": 13383,
+    "provenRawRowMatches": 13381,
+    "unmatchedRawBuildingReferences": 2,
+    "linkedBuildingReferences": 1263,
+    "distinctLicenseKeysReferenced": 1437
+  },
+  "localArtifacts": [
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/pack/supplemented-r4/catalog.json",
+      "sha256": "d9775880351cf12efc15dd14bf86102f7cdda96abeb156737362567d1e987998"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/pack/supplemented-r4/verification.json",
+      "sha256": "78790bb69384f4c1fca747b89bcce5d994f3b8a185c48b158a2de7c86265d5c5"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/verification-supplemented-r4.json",
+      "sha256": "66bb917728d55134cd19150fc3ff675ca68ffaf4cb67776332d9285007495713"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/address-supplement/summary.json",
+      "sha256": "6eeb2c2ac9d85b8f58e29ec6aaabbf96d51054ff5924636c0f82a83f47882e6f"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/address-supplement/parcel-key-supplement.jsonl.gz",
+      "sha256": "4f82154e8ea9b03a6a965b89dace8e4657590f81a0824d0aa5d1dd0bc14b9134"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/runtime-audit/receipt.json",
+      "sha256": "ed265fb8256f335fa3c70e39a3c560e51f9ca299778f3798f64ec3d4b66f5853"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/runtime-audit/ordinary-source-row-proof.json",
+      "sha256": "1114868d9aa6c2be6eb88f10dc160b205927a9a8b503fbc8c47e1df36b1d0be7"
+    },
+    {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/ordinary-reference/catalog.json",
+      "sha256": "8335ae699a58f62f50e119e58afa63cc18b711b6c4625aee10455bb2f75f854c"
+    }
+  ],
+  "moduleFileCatalog": "artifacts/local/dong-restaurants-building-binding-20261115/pack/supplemented-r4/catalog.json",
+  "sources": {
+    "licenses": [
+      "https://data.seoul.go.kr/dataList/OA-23056/S/1/datasetView.do",
+      "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do"
+    ],
+    "parcelAddressCrosscheck": "https://www.data.go.kr/data/15083033/fileData.do",
+    "buildingSource": "https://www.data.go.kr/data/15083092/fileData.do",
+    "boundary": "https://github.com/vuski/admdongkor/tree/d5d5a821c8de6cc337d47eeca604d7af76271c9b/ver20261001"
+  },
+  "vintages": {
+    "licenseCsvAcquired": "2026-11-13",
+    "semasObservation": "2026-06-30",
+    "buildingRaw": "2026-08-09",
+    "administrativeBoundaryCandidate": "2026-10-01",
+    "boundaryOfficialCurrentVerification": "Pending"
+  },
+  "countsAreUniquePhysicalRestaurants": false,
+  "sourceDbWritten": false,
+  "productCodeChanged": false,
+  "unityRuntimeExecuted": false,
+  "schedulesChanged": false,
+  "newRawNetworkDownloads": 0,
+  "externalDistributionApproved": false,
+  "newDioramaRuleCandidates": []
+}
