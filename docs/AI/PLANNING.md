@@ -1,5 +1,391 @@
 # Mirror 기획 목차
 
+## 경영 시뮬레이션 — 맥락별로 읽기
+
+| 찾으려는 것 | 먼저 열 문서 |
+| --- | --- |
+| Claude가 이어받을 작업과 남은 결정 | [제작실 첫 읽기](Handoffs/홍달-제작실-기획-첫읽기.md) · [첫 라떼 개발 계획 r240](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-latte-order-delivery-development-plan.r240.md) |
+| 지도·시간·성장·사업·광고·데이터 등 분야별 기준 | [아홉 분야의 첫 읽기](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md#맥락별-첫-읽기) · [판본 사이에서 달라진 부분](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md#이어-읽기와-부분-대체의-범위) |
+| 개별 기획과 근거 찾기 | [전체 원문 색인](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/context-index.md) · [분류·지문 대장](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/context-index.json) · [Windows 구현 현황](Handoffs/Unity-Windows-구현현황.md) |
+
+
+## 역할을 골라 사람과 인계를 관찰하는 지도 r241 (2026-11-15)
+
+[역할별 지도 관찰](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-centered-observation.design.r241.md) · RoleSelectionRequested / ObservationFlowProposed / NotReadyToDispatch. 지도에서 역할을 고른 뒤 그 사람이나 사업장에 머물고, 궁금할 때 같은 업무의 상대에게 시점을 넘겼다가 돌아오는 흐름을 제안한다.
+
+## 라떼 한 잔의 주문·제조·배달·일일 결산 개발 계획 r240 (2026-11-15)
+
+[라떼 한 잔 개발 계획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-latte-order-delivery-development-plan.r240.md) · DevelopmentPlanProposed / ExistingRulesReused / SharedOrderContractPending / NotReadyToDispatch. 첫 주문의 접수·제조·배달·하루 결산을 기존 화면과 업무 규칙에 연결하는 개발 순서를 제안한다. 기존 하루 결산·제조시간·커피 공급 및 홍달 플레이스 기획을 함께 읽는다.
+
+## 트래픽 중개업자 인물 카드와 장소 점수 개입 r239 (2026-11-15)
+
+[연락·의뢰 카드 기획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/traffic-broker-person-card-and-temporary-ranking.design.r239.md) · BrokerPersonCardRequested / PaidSyntheticAccountTrafficInfluenceConfirmed / ExistingCardAndSearchPlansReviewed / ContactContractAndTemporaryScoreProposed / BalanceAndVisualsPending / SeparateFromClaudeSearchWork / NotReadyToDispatch / ProductUnchanged. 사용자는 인물에게 비용을 지불해 가상 주문자 계정의 관여로 장소 점수·일반 순위를 올리는 경로를 요청했다. r177을 카드·계약과 다음 색인의 잠정 가산으로 구체화하고 r194 소개 조건을 유지한다. 기간/감쇠·검증/회복은 제안이며 검색 본체 Claude 계획과 별도다.
+
+## 인구 기반 가상 검색량·홍달 플레이스 순위와 페이지 r238 (2026-11-15)
+
+[검색·순위 우선 기획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-population-keyword-search-and-ranking.proposal.r238.md) · PopulationBasedVirtualSearchRequested / KeywordVolumeAndRankedPagesRequested / ExistingDemandAndPlacePlansReviewed / SearchFirstSliceProposed / BalanceValuesProposed / ClaudePlanningInputPrepared / NotReadyToDispatch / ProductUnchanged. 사용자는 인구 기반 가상 고객 검색과 키워드별 검색량·순위·결과 페이지를 먼저 원했다. 한 동·카페/라떼·최소 결과 카드와 노출 비교를 제안하며, 상세 프로필 완성 선행 해석만 조정한다. 수요 보존·조회 불변·안정 정렬과 기존 주문 원장 연결을 분리했고 수치/시안·개발 수용은 후속이다.
+
+## 홍달 플레이스에 픽업 음식점 정보 먼저 채움 r237 (2026-11-15)
+
+[개인 픽업 프로필 우선 준비](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-recorded-pickup-profiles-first.proposal.r237.md) · `PlaceBeforeLightsRequested / SourcesAndImplementationReviewed / LocalProfileDraftPrepared / DetailedUIProposed / ClaudePlanningInputPrepared` 흐름을 제안한다. 기록에 있는 864지점을 로컬 목록으로 준비하고 프로필·방문 요약·개인 과거 메뉴를 연결한 뒤 지도·빛을 잇는다.
+
+## M키 행정동 디오라마 선택창 r236 (2026-11-15)
+
+[행정동 모듈 카드와 지도 이동](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/m-key-administrative-dong-diorama-selector.confirmed.r236.md) · `MKeyDongSelectorConfirmed / ModuleCardNavigationConfirmed / ExistingNavigationReviewed / CardLayoutProposed / ClaudeMockupPending`. M으로 직사각형 카드 목록을 열고 선택한 동 지도로 이동한다. 이전 M 배정을 대체하며 기존 작은 지도/업무 요약은 화면 버튼으로 전환한다.
+
+## 픽업 매장의 주소·건물 사전 검증 r234 (2026-11-15)
+
+[위치 검사와 보완 연구](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/pickup-location-verification-before-lighting.research.r234.md) · `CollectionAndPlanningScopeConfirmed / PickupLocationsAudited / LocalSupplementCandidatesSaved / ClaudeVisualReviewInputPrepared`. 지역 제한을 넓혀 922지점·연결 배달 1,581건을 대조하고, 위치 시안 후보 312곳과 새 공공 대표점 6곳, 주소 기반 건물 후보 11곳을 별도 저장했다. 이 작업실은 정보 수집·검증과 기획 중심으로 진행한다.
+
+## 개인 배달 기록의 디오라마 매핑과 빛 r233 (2026-11-15)
+
+[내 배달 기록 매핑·빛 제안](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/personal-delivery-history-diorama-and-lights.proposal.r233.md) · `PersonalDeliveryMappingRequested / SourcesAndCurrentViewReviewed / MappingAndLightDesignProposed / ClaudePlanningInputPrepared`. r160 개인 자료, r207 동간 연속성과 r212 선 표현을 이어 픽업 매장·전달 범위·기사 빛을 제안한다.
+
+## 브랜드 점포 외관 수용 r232 (2026-11-15)
+
+[행정동 디오라마의 브랜드 점포 외관](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/brand-storefronts-in-dong-dioramas.proposal.r232.md) · `BrandAppearanceRequested / StorefrontStructureProposed / ClaudeMockupPending`. r168 입점, r229 외장 시험과 r231 시안 인계를 이어 점포별 외관 적용 범위를 제안한다.
+
+## 운영 공간 모델링 기획 인계 r231 (2026-11-15)
+
+[Claude 개발 계획·시안용 기획 뼈대](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operation-modeling-brief-for-claude.r231.md) · `ModelingBriefPrepared / ClaudePlanAndMockupNext / UserVisualReviewPending`. r230 제작 후보를 바탕으로 카페 첫 장면을 제안하고 사용자 검토 뒤 제작할 범위를 고른다.
+
+## 운영 장면 모델링 병렬 준비 r230 (2026-11-15)
+
+- [모델 제작과 병렬 작업 제안](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/parallel-modeling-for-operation-scenes.proposal.r230.md) · `ParallelModelingPreparationRequested / ExistingAssetsReviewed / WorkPackagesProposed`. r229·r214·r199와 이어지는 카페/물류 작업 장면의 모델링 준비다. 보유 프리팹과 신규 제작 후보·조립 접점·추천 순서를 정리했다.
+
+## 면목제3·8동 카페 첫 재질 시험 r229 (2026-11-15)
+
+- [첫 Unity 시험 범위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daylight-cafe-first-unity-trial.confirmed.r229.md) · `FirstCafeMaterialTrialApproved / LocalWindowsReview`. r228 시안 ③을 선택해 카페 한 곳의 실제 축척별 표현을 비교한다.
+
+## 행정동 디오라마 낮 미술 시안 r228 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r228](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daylight-miniature-map-art-direction.proposal.r228.md) · `Proposed / ArtDirectionPreview / NotReadyToDispatch`. r143·r205·r212·r221과 이어지는 낮 미술 제안이며 실제 도로·건물 위에서 운영 점포와 기사 빛을 읽는 두 축척, 같은 카페의 반실사 건축 재질을 총 세 장으로 검토한다.
+
+## 카페 초보 육성 기본·경력 채용 옵션 r227 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r227](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/novice-first-cafe-franchise-growth.confirmed.r227.md) · [새 시험 프로필](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/novice-cafe-development-balance.r227.json). `NoviceFirstCafeFranchiseGrowthConfirmed / ExperiencedRecruitmentOptionalConfirmed / PreviousDefaultRouteCorrected / StagedReadinessAndBalanceProposed / TrainerAndResponsibilityGatePending / NotReadyToDispatch / ProductUnchanged`. 가족/외부 모두 카페 실무 초보로 들어와 배워 현장을 맡는 것이 기본이다. r226의 경력자 중심 구성/조기 영업은 선택 경로로 내리고 첫 작업·현장 책임·지도자 준비를 분리했다. 기본 초보 구성의 지도/비용을 제안/검산하며 실제 실습/지도자·근무/위임·시안/개발은 후속이다. 기존 원문/수치는 이력으로 보존한다.
+
+## 가족 협력의 초기 기반·외부 인재 확장/수치 r226 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r226](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/family-cooperation-and-external-talent-growth.design.r226.md) · [시험 프로필](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/family-cooperation-and-hiring-balance.r226.json). `FamilyCooperationEarlyGrowthDirectionConfirmed / ExternalTalentExpansionRequested / CurrentPeopleAndRelationshipImplementationReviewed / DesignerSelectedTrialBalance / ArithmeticChecked / RelationshipAndStaffingContractsPending / NotReadyToDispatch / ProductUnchanged`. 가족과 함께한 준비로 초기 점포를 맡기고 외부 인재로 넓히는 방향이다. 실무/협업 준비·모집 경로/동일 역할 보수와 가용/본부 여력을 구분해 준비 회차/비용·확장 구성/부분 손익을 제안/검산했다. 혈연에 따른 자동 신뢰/능력이나 실제 가족 정보는 쓰지 않으며 정확 관계/인물/근무/비용 계약·시안/개발은 후속이다.
+
+## 현장 위임·플레이어 예외/발주/정산 확정 r225 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r225](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/field-work-delegation-and-player-decisions.confirmed.r225.md). `PlayerExceptionsProcurementSettlementConfirmed / PhysicalWorkDelegationConfirmed / CurrentCommandsAndAutoSettlementReviewed / PriorDelegationScopeNarrowed / ApprovalAndWorkflowBindingPending / NotReadyToDispatch / ProductUnchanged`. 물리 현장 작업은 위임/위탁, 예외·조달 발주·정산 최종결정은 플레이어다. r224의 결정 한도 위임 후보를 좁히고 수행/계산 보조·정상 기록과 최종 승인을 구분했다. 현재 명시 발주/검수·즉시 제조/매출·Core 자동 정산/보고 읽음과 연결 한계를 대조했다. 정확 승인 단위/지급·예외 영향/작업 계약·시안/개발은 후속이다.
+
+## 사람 육성·업무 위임과 확장 준비 r224 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r224](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/people-development-and-scoped-delegation.design.r224.md). `PeopleDevelopmentForExpansionConfirmed / ExistingRecruitmentAndDelegationPlansReviewed / MentoringAndScopedDelegationProposed / RolesAndReadinessContractsPending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 맡길 사람을 길러 계속 확장하는 방향이다. 동행/실습→부분 위임→현장 책임→다음 사람 육성과 한도/예외·회수/귀환을 제안했다. 숙련/판단·권한/현재 여력·경/명덕과 내부/외부 관계를 나누고 경력/파트너·교육 선택·작은 사업 대안을 유지한다. 현재 집계 고용/직원 미연결과 실제 담당자 계약을 구분했으며 직무/비용·위임 계약/시안·개발은 후속이다.
+
+## 사업 성장·전사 조율과 정신 차림 이야기 r223 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r223](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/company-wide-coordination-and-mindfulness-story.design.r223.md). `BusinessGrowthMindfulnessStoryDirectionConfirmed / AllFieldsCoordinationArcRequested / CurrentMindAndHeadquartersImplementationReviewed / ExperientialStoryAndPolicyChoicesProposed / EventsAndSkillContractsPending / NotReadyToDispatch / ProductUnchanged`. 커질수록 본부가 깨어 있음/정신 차림과 현장 지원의 필요를 깨닫는 공통 서사 방향이다. r133 목적과 r206의 모든 깨어 있는 활동·초반 접근을 유지하고 전사 조율과 선택적 다자 플랫폼을 구분했다. 실제 경영 사건/대가·업종별 연결과 현재 기사 점검/고정 본부 사슬·가상 교육 안건을 대조했다. 정확 사건/효과·스킬 계약/귀속·개발은 후속이다.
+
+## 동의 사업 선택·음식배달/퀵·플랫폼 성장 r222 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r222](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dong-business-selection-and-platform-growth.design.r222.md). `DongBusinessSelectionDirectionConfirmed / FoodDeliveryQuickAndPlatformGrowthRequested / CurrentLeftPanelsAndBusinessTabsReviewed / BusinessHomeAndBranchingGrowthProposed / StartupAndProgressionDetailsPending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 동 진입 뒤 왼쪽 사업 선택과 음식점/배달/퀵·플랫폼 성장 방향이다. 동 홈/사업/점포·지사의 책임과 하단/단축키 재사용을 제안했다. 작은 시작·운영 개선·선택적 플랫폼과 자유 출발/기존 플랫폼 시나리오를 구분하며 정확 시작 모델/조건·시안/개발은 후속이다. 현재 동 창·단일 카페/빈 탭·최신 키/업무 요약 반환을 대조했고 제품은 바꾸지 않는다.
+
+## 사계절 정취·가로수·실제 지형 r221 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r221](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-scenery-trees-and-terrain.design.r221.md). `SeasonalSceneryDirectionConfirmed / ExistingTerrainAndSeasonSourcesReviewed / TreesAndReliefBindingProposed / TerrainReferenceValidationPending / VisualAndPreviewDetailsPending / NotReadyToDispatch / ProductUnchanged`. 자연 경관/실제 지형으로 사계절을 느끼는 방향을 기록했다. 기존 지형 원본/격자와 계절/표고 소스는 있으나 현 Windows 바닥은 평면이다. 상대 높이/수직 기준·미승인 소비와 다른 코드의 물리미터 전제를 구분한다. 같은 동의 네 계절 정적 비교·검증 지형 연결과 자연색/운영색·계절/날씨/시각 미리보기를 제안했다. 매핑/배치·시안/소비 권한/개발은 후속이고 제품·자료/DB/예약·공통 규칙 대장은 바꾸지 않는다.
+
+## 단축키 기본 확정 r219·고객과 점포의 점진적 성장 r220 (2026-11-15)
+
+- [r219 기본 키 확정](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/screen-shortcut-baseline.confirmed.r219.md). `ScreenShortcutBaselineConfirmed / F1ToF6AndMConfirmed / ExistingEscEnterPreserved / FollowupKeysUnapproved / InputImplementationPending / NotReadyToDispatch / ProductUnchanged`. 직전 기본표 F1~F6/M을 채택했다. 기존 Esc/Enter 의미 유지, F7~F9/새 입력 구현은 별개다.
+- [r220 고용·점포 성장](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-demand-staffing-and-store-expansion.design.r220.md). `CustomerOrderStaffingStoreGrowthDirectionConfirmed / CurrentDemandAndStoreImplementationReviewed / CapacityAndDemandRulesProposed / ProfileAndOrderBindingPending / NotReadyToDispatch / ProductUnchanged`. 손님/주문 증가→고용 보강→공간/설비 등 병목→추가 출점의 방향을 기록했다. 같은 지역 수요를 여러 점포에 복제하지 않고 비용/여력·점포별 상태를 비교한다. 고객/큐·직원/다점포·정확 성장/출점 수치는 후속이며 제품/새 이미지·DB/예약은 바꾸지 않는다.
+
+## 화면 단축키·입력 문맥 제안 r218 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r218](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/keyboard-shortcuts-and-context-priority.proposal.r218.md). `ShortcutLayoutRequested / ExistingBindingsAudited / FunctionKeyAndMLayoutProposed / ContextAndActionBoundariesDocumented / KeyChoicePending / NotReadyToDispatch / ProductUnchanged`. 현재 Esc 설정/Enter 결정 순회·매장 다섯 탭·TextField를 읽고 F1 도움/F2 동/F3 매장/F4 재료/F5 설비/F6 인력/M 지도·요약 전환을 제안했다. F7 이력/F8 오늘 결산/F9 회차 상태는 후속 후보다. 조회와 실행·설정/모달/텍스트·반복/수정키·대상/초안 보존을 구분한다. 키 채택/재설정/구현은 미정이며 r217 A 기본/B 전환 확정과 기존 업무·입력은 유지한다.
+
+## 작은 지도 기본·업무 요약 전환 확정 r217 (2026-11-15)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r217](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/minimap-default-and-work-summary-toggle.confirmed.r217.md). `MiniMapDefaultConfirmed / WorkSummaryToggleConfirmed / VisualReferenceSelectedInScope / ExistingMiniMapImplementationRechecked / ToggleRuntimeUnverified / DetailedControlsPending / NotReadyToDispatch / ProductUnchanged`. 사용자 선택은 우하단 시안 A 작은 지도를 기본으로, 필요할 때 시안 B 업무 요약으로 수동 전환하는 범위다. 시안 B는 r216 후보 C에 해당하고 사업 연결 B를 승인하지 않았다. 최신 미니맵 구현을 재사용하며 업무 요약/전환은 후속이다. 동/매장/업무/회차·초안을 보존하고 위 회차 버튼/단축키·재실행 선호 저장·전체 구현 수용은 별개로 둔다. 제품/새 이미지·자료/DB/예약은 바꾸지 않는다.
+
+## 오른쪽 아래 작은 지도·운영 회차 버튼 제안 r216 (2026-11-14)
+
+- 시각 검토 자료: [A 작은 지도형/B 업무 요약형 시안과 생성 프롬프트](Handoffs/2026-11-14-Codex-작은지도와업무요약-시안-r216.md). 사용자 요청으로 내장 imagegen 이미지2장을 생성했다. 가상 배치/수치·구현 전이며 생성 당시 선택 전이었고, 2026-11-15 A 기본/B 전환만 r217로 확정했다. 게임 개발 수용은 별도다. 기획 원문/수치/제품은 유지했다.
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r216](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/minimap-content-and-round-controls.proposal.r216.md). `MiniMapAndUpperButtonInterestRequested / CurrentCycleAndOperatingRoundReviewed / LocalOverviewRecommended / OperatingRoundButtonProposed / ContentAndButtonChoicePending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 사용자의 작은 지도/위 진행 버튼 관심을 세 구성으로 비교했다. 동 윤곽/선택 위치의 A안과 위 실제 운영 회차 버튼을 권하고 지도 없는 요약/접기를 후보로 뒀다. 현재 결정 순회/실제 회차·지도 범위/독립 서울 코드의 차이를 대조했다. 내용/버튼 채택·시야/배치/입력·시안/제작 수용은 선택 전이며 제품/새 이미지·시간/DB/예약은 바꾸지 않는다.
+
+## 매장 클릭·왼쪽 점포 운영 창 r215 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r215](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/store-specific-left-management-panel.design.r215.md). `StoreSelectionLeftPanelDirectionConfirmed / EquipmentProcurementHiringRequested / ExistingDongDeskAndCafeCardReviewed / StoreScopedActionsProposed / SelectionAndAuthorityBindingPending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 내 매장 클릭→왼쪽 해당 점포 운영창에서 설비·원두 구매/수입·본부 주문·고용을 시작하는 방향을 확정했다. 기존 동 관리/오른쪽 카페 카드와 단일 점포 명령·클릭 배차 효과를 대조했다. 다섯 탭/지도 왕복·일반 조회/배차/입점 분기는 제안/후속이며 점포/자금·권한/저장 계약·시안/개발 수용은 미정이다. 원본/수치·코드/이미지·실행/DB/예약은 바꾸지 않는다.
+
+## 커피 한 잔의 정밀 공급·제조·지도별 결정과 수치 r214 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r214](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-one-cup-chain-and-multiscale-balance.design.r214.md) · [설계 수치 v0.1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-one-cup-chain-balance.r214.json). `CoffeeChainPrecisionRequested / BalanceAuthoringDelegated / ExistingSupplyAndCafeReviewed / DesignerSelectedTrialDefaults / ForecastArithmeticChecked / RuntimeTimingBindingPending / NotReadyToDispatch / ProductUnchanged`. 커피 과정 정밀화/수치 조정 위임을 기록했다. 기존 국내/직접수입·법적 책임/지도 왕복을 재사용해 원두 로트→점포 재고→300초 아이스라떼→인수/판매를 설계했다. 전국 계약/구 배분의 미래 영향, 수율/손실·비용·수요/투자·조달 규모 비교를 검산했다. 수치는 Codex 초기 게임 기준이며 실제 시세/법정 기간·제품팩 변경 아님. 실제 장기 시간/저장·주체/인계 계약은 후속이며 게임/DB·예약은 바꾸지 않는다.
+
+## 전반 현황·부족한 연결·다음 우선순위 r213 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r213](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gameplay-readiness-gaps-and-next-priorities.research.r213.md). `CurrentImplementationAndClaudeReturnsReviewed / GameplayGapsPrioritized / ExistingDeliveryReviewRecommended / PriorityChoicePending / NotReadyToDispatch / ProductUnchanged`. 기존 배달 두 회차의 일반 입력 검토를 P0로 권하고, 기존 정산→회차/일일 보고·집계 고용→실제 대상·카페 시간/자원·명덕/정신 차림·한 동 자료팩 결속을 별도 후보로 제시했다. 현재 소스·반환·빌드와 새 음악 작업 진행을 대조했다. 우선순위·기본값·착수는 미확정이며 코드/실행·DB/예약·개발 소유는 바꾸지 않는다.
+
+## 부드러운 픽업·전달 선과 기사색 일치 r212 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r212](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-road-following-delivery-lines.design.r212.md). `SoftPickupDeliveryLinkRequested / RiderLightRouteColorMatchConfirmed / ExistingRoutePolylineReviewed / RoundedLineAndSelectionProposed / StateAndGeometryDetailsUnresolved / NotReadyToDispatch / ProductUnchanged`. 현 경로선/단계별 route와 기존 Core 배송 경로를 읽고 부드러운 이음/끝처리·현재/예정 연결을 제안했다. 접근 점선·전달 실선의 기준색을 해당 기사 빛과 맞추는 사용자 방향을 확정했고 현 접근 금색/전달 기사색의 차이를 명시했다. 세부 팔레트/스타일·선택 범위·전체 예정 경로 투영/경계·시안/구현은 미정이며 코드·새 실행/개발 수용은 없다.
+
+## 외부 음악 자동 분석과 빛 제안 r211 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r211](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/external-music-auto-analysis-and-light.proposal.r211.md). `ExternalMusicAutoAnalysisRequested / WindowsLoopbackAndBeatTrackingResearched / CurrentMusicAdapterMissing / CaptureAndEstimatorDesignProposed / ServiceCompatibilityUnverified / NotReadyToDispatch / ProductUnchanged`. 선택한 외부 앱/출력의 신호를 로컬에서 분석해 강약 반응→온셋/BPM/위상·신뢰도 안정→음악 반응으로 잇는 안이다. Microsoft 루프백/프로세스 샘플과 비트 추적 자료·현재 소스/Claude 메모/OS 빌드만 확인했다. 서비스/보호 재생·장치/앱 취득/실시간 정확도·어댑터·설정은 미검증이다. 같은 시계가 대상 위상 일치를 자동 해결하지 않음을 보완했고 명덕/업무 권위는 유지한다. 실제 캡처/음원·제품/시안·DB/예약·새 실행은 없다.
+
+## 배경음악과 빛의 리듬 제안 r210 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r210](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/music-reactive-light-and-beat-sync.proposal.r210.md). `MusicReactiveLightRequested / CurrentAudioAndDenseLightReviewed / BeatGridWithBassAccentProposed / TrackAndPlaybackRulesUnresolved / NotReadyToDispatch / ProductUnchanged`. 밀집1·2는 최신 소스/반환·19:28 빌드에서 확인했고, 현재 알림음과 미구현 BGM을 구별했다. BPM/첫 박·오디오 재생 시각을 기준으로 대상별 음악 박 배정·제한된 저음 보조를 제안한다. 명덕/업무·정신 차림은 음악과 독립이며 첫 비교는 개별 빛부터·땅은 잔잔하게 두는 후보이다. 곡/방식·강도/설정·무음/정지·시안/구현은 미정이다. 실제 곡 취득/재생·제품·자료/DB/예약·새 실행은 없다.
+
+## 밀집 빛의 판독과 정보 의미 제안 r209 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r209](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dense-light-readability-and-meaning.proposal.r209.md). `DenseLightWorkInProgressReported / CurrentSourceAndMockupReviewed / AdditionalConsiderationsProposed / DenseLightIntegrationUnverified / NotReadyToDispatch / ProductUnchanged`. 사용자 전달의 Claude1·2번 작업과 로컬 구현/새 빌드 미확인을 구분했다. 식별점/성장 영역·장식/상태·정확한 선택·밀집/상한과 실제 성장·알림/간단한 표현·성능을 점검하도록 제안한다. 최신 시안의 진한/연한 영역 동반 성장·원형 경계선 없이 퍼지는 방향을 유지한다. 추가3~5번/수치·시안/실행·제품 변경/개발 수용은 없다.
+
+## 픽업 전 준비·제조·인계의 지역 명덕 r208 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r208](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/pickup-preparation-and-local-mingde.design.r208.md). `PickupLocalActivityAccumulationConfirmed / OriginCanAccumulateMoreConfirmed / CurrentProductionReviewed / ContributionAmountsUnresolved / NotReadyToDispatch / ProductUnchanged`. 픽업까지 직원의 준비/제조/포장과 기사의 인수 등 깨어 있는 활동이 누적돼 픽업 동이 전달 동보다 더 많은 명덕을 얻을 수 있는 방향이다. 현 produce의 생산ID별 즉시 결과·작업자/구간 부재를 먼저 대조했고, 도착 동 기여/성공 비조건과 실제 복수 인물의 활동을 유지한다. 고정 배율·항상 우세·환산량/시간·컵 수 배율과 전체 제조/고용 구현은 확정하지 않았다. 제품/시안·자료/DB/예약·새 실행은 없다.
+
+## 동간 배달과 도착 동 명덕 r207 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r207](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/cross-dong-delivery-and-recipient-mingde.design.r207.md). `CrossDongDeliveryDirectionConfirmed / RecipientDongContributionConfirmed / CurrentOrdersAndMapReviewed / AttributionDetailsProposed / NotReadyToDispatch / ProductUnchanged`. 최신 Claude 종합 계획·현재 소스/반환을 읽고 같은 기사/주문의 A→B 연속성과 받는 동 명덕 증가 방향을 기록했다. 실제 배달 ID와 동 집계/배회를 구분하고 기존 두 동 장면을 재사용 후보로 뒀다. 활동/수혜 역할별 귀속·경계 밖 안내/선택 귀환은 제안이며 배분량·주문 권위/저장·정신 차림/동 승급은 미정이다. 전체 개발계획·그림자 주문·r203 추천/예약 재개를 승인하지 않았고 제품/시안·새 실행은 없다.
+
+## 깨어 있는 모든 활동과 정신 차림 스킬 r206 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r206](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/awake-activities-and-mindfulness-skill.design.r206.md). `AwakeActivityGrowthConfirmed / PeriodicMindfulnessSkillRequested / ExistingOnceDailyCheckReviewed / SkillScopeAndTimingUnresolved / NotReadyToDispatch / ProductUnchanged`. 현재 경 커널/화면과 반환을 먼저 대조했다. 명덕은 성공·수익·정산을 필수 조건으로 삼지 않고 깨어서 하는 모든 활동에서 쌓이며 플레이어가 정신 차림을 주기적으로 발동하는 방향이다. 기존 check는 하루 한 번 표시하며 유지/회복 효과가 없어 반복 스킬로 재명명만 하지 않는다. r204/r205의 성공·실제 진척 한정만 부분 대체하고 빛 확대/동 성장 방향은 유지한다. 대상·주기·효과/활동 측정·관찰/위임·기존 경 용량/일말 성장·수치는 미정이다. 제품/시안·자료/DB/예약·새 실행/개발 수용은 없다.
+
+## 명덕 기여에 따른 빛 크기 확대 r205 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r205](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/mingde-contribution-light-growth.confirmed.r205.md). `ContributionLightGrowthConfirmed / StateAndAccumulationSeparated / VisualDetailsProposed / NotReadyToDispatch / ProductUnchanged`. 명덕 기여가 누적될수록 기사/음식점의 빛이 더 커지는 방향을 사용자 확인으로 기록했다. r204 §5의 빛 표현만 부분 대체하며 현재 경 상태·누적 기여를 구분한다. 크기 곡선/상한·상태 명암/맥동·겹침/효과 감소·정확 점포 귀속은 제안/미정이며 점수/동 승급은 확정하지 않았다. 제품/시안·자료/DB/예약·개발 수용은 없다.
+
+## 명명덕 원문·강의 자료와 행정동 성장 r204 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r204](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daxue-mingde-and-dong-growth.research.r204.md). `MingdeDirectionRequested / ClassicalSourcesCollected / ExistingLectureSegmentsReviewed / AsrSummaryNeedsHumanReview / ScoringAndPromotionUnresolved / NotReadyToDispatch / ProductUnchanged`. 고전 원문/주석2발췌·공식 영상 메타데이터3편·기존 저장 자막2편3구간을 정리했다. 깨어 있는 유효 행위→명덕 실천→기사/점포 표현→행정동 성장은 사용자 방향이며 정확한 점수/귀속·기존 승격과의 통합·점포 상태는 미정이다. 12강 요약은 ASR 기반, 13강은 재생 검수 후보이며 강의/원전이 게임 경험치 산식을 제시한 것으로 해석하지 않는다. DB쓰기·제품/예약·개발 수용은 없다.
+
+## 높은 우선순위 기본안·첫 검토 제안 r203 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r203](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/priority-defaults-and-first-validation.proposal.r203.md). `PriorityDefaultsProposalRequested / CurrentRuntimeAndPacksReviewed / ConcreteDefaultsProposed / ProposalNotApproved / NotReadyToDispatch / ProductUnchanged`. 현재 즉시 제조/재고/원장·held 인계, 사업 창/회차·가상 경로/순찰을 읽고 구체 업무 단위/시간/자원·비용/공급·공간/수요·검토 결과의 기본안을 제안했다. 1잔/1인분·포장 포함·음식10/12/15·슬롯1·비교6/10/14건 등은 미승인이며 r202 기본시간만 사용자 확정이다. 기존 라떼 시간 작업을 첫 검토 후보로 권하되 다른 분야 시작/기존 이력·위치는 유지한다. 제품/팩/DB/예약·시안/실행·개발 수용은 없다.
+
+## 커피·음식 기본 준비시간 확정 r202 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r202](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-food-preparation-time-defaults.confirmed.r202.md). `PreparationTimeDefaultsConfirmed / TimingScopeAndCapacityUnresolved / NotReadyToDispatch / ProductUnchanged`. 커피 약5분/음식10~15분은 사용자 지정 게임 기본값이다. 기준 수량·포장 포함/시간 범위·메뉴별 변동·동시 처리/배속·정확 명세는 미정이며 기존 실제 레시피/추출 조건·집계 처리량·제품은 유지한다.
+
+## 게임 전반 부족 자료·준비 우선순위 조사 r201 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r201](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/gameplay-data-gaps-and-collection-priorities.research.r201.md). `CrossGameDataGapResearchRequested / ExistingSourcesAndGameplayNeedsReviewed / OfficialSourceCandidatesReviewed / PrioritiesProposed / NoNewDatasetAcquired / NotReadyToDispatch / ProductUnchanged`. 다섯 출발/지도/센터/성장의 보유 자료와 공식 후보를 대조해 업무 대상 결속·상품/단위·시간/용량·비용·공급/납기와 검토 결과의 부족을 정리했다. 공공자료/허용표본/게임설계값을 나누고 선택 분야의 작은 업무별 준비를 추천한다. 전 분야의 선행 구현/수집을 요구하지 않으며 자료/신청·DB/예약·코드/시안·개발 수용은 없다.
+
+## 행정동 인구·지도 연결·주문 수요 r200 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r200](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dong-population-map-and-order-demand.design.r200.md). `AdministrativeDongPopulationMappingRequested / PopulationTypesAndCurrentProxyReviewed / DemandInfluenceDirectionConfirmed / BindingAndOrderModelProposed / NotReadyToDispatch / ProductUnchanged`. 주민등록 후보·실제 추정 유동인구·현 주거연면적 대리값을 구별하고 행정동 코드/경계 판본과 인구 자료를 연결할 계획을 정리했다. 인구→지도/군중과 인구→가상 잠재수요를 분리하고 업종/시간/영업·고객 선택/처리와 개별 주문의 후속 연결을 제안한다. 같은 동/표시·회차와 무관한 기준/중복 방지·현재 소수 집계의 의미를 보존한다. 시안은 Claude 담당이며 자료/코드/예약 변경과 개발 수용은 없다.
+
+## 물류센터 위치표식·내부 작업 상세 r199 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r199](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warehouse-location-labels-and-interior-workflow.design.r199.md). `DetailedWarehouseInteriorDirectionConfirmed / LocationAndGoodsIdentitySeparated / DoubleClickEntryDocumented / WorkflowsAndViewportProposed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 바닥/랙 위치 라벨·상품/용기와 직원의 검수/적치/피킹/포장·이송/분류·팔레트/직접상차 인계를 구체화했다. r5/r164/r166을 확장하고 센터 일반 클릭=카드·더블클릭/내부 보기=모형 진입으로 부분 대체한다. 큰 3D 화면/상세 배치와 입력은 제안이며 실제 모델/게임 구현·첫 분류 조각의 범위를 확대하지 않는다.
+
+## 하단 사업 버튼·선택 동의 고용·입점 r198 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r198](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/business-tabs-and-dong-scoped-expansion.design.r198.md). `BusinessTabEntryDirectionConfirmed / DongScopedActionsDocumented / DetailedInteractionProposed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 동 선택→기존 하단 사업 창→기사 고용/음식점 추가→후보/건물 검토→명시 확정→같은 동 귀환을 정리했다. r168의 지역 카드 기본 진입과 Claude 동 화면 후속 배치안만 부분 대체하며 기존 집계 모집/제휴를 개별 기사/건물 입점 완료로 해석하지 않는다. 비용/준비·개업·모드/회차는 유지하고 시안/상세 계약·개발 수용은 대기다.
+
+## 국내 로스터 자료·절차 노드별 지도 이동 r197 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r197](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/domestic-roaster-data-and-process-map-navigation.design.r197.md). `ProcessNodeMapNavigationDirectionConfirmed / DomesticRoasterSourcesReviewed / MapResponsibilitiesProposed / NationwideRoasterCountUncollected / NotReadyToDispatch / ProductUnchanged`. r190/r196의 절차 그래프를 세계/전국/구/동/시설 지도에 배정하고 노드 선택→지도/대상→상태/자료→같은 계획 귀환을 구체화했다. 등록공장·품목제조보고 등 국내로스터 후보 근거와 KSIC판본/집계 단위를 조사했으며 전국 총수/업체 본문·실제 위치/공급관계는 미확보다. 지도 미준비·위치 미확인과 관찰/실행 권위를 유지한다. 제품/Unity·DB/수집/예약·Graph Map/Goal/WI·개발 수용은 수행하지 않았다.
+
+## 원두 수입 절차·실무 학습 r196 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r196](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-import-food-safety-and-learning-flow.research.r196.md). `CoffeeImportLearningDirectionConfirmed / OfficialProcedureSourcesReviewed / GreenRoastedProfilesSeparated / CountrySpecificQuarantineUnresolved / NotReadyToDispatch / ProductUnchanged`. r190 직접수입 가지를 식약처/법령·관세청/검역 관련 공식 근거로 심화했다. 국내 수입자 영업/교육·해외시설 등록·화물별 식품검사/검역·세관 수리/반출과 입고를 구별하며 국내 조달/관찰·직접 수입을 선택하는 학습 카드를 제안한다. 국가별 수입허용/증명서·볶은 커피 가공품 판정·세율/세부 프로필은 미확정이다. 실제 신고/등록·제품/Unity·DB/수집/예약·개발 수용은 수행하지 않았다.
+
+## 홍달 플레이스 자동 등록·매장 페이지 r195 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r195](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-registration-and-store-profile.design.r195.md). `HongdalPlaceNameConfirmed / RegistrationLinkedListingDirectionConfirmed / FieldMappingResearched / DetailedRulesProposed / NotReadyToDispatch / ProductUnchanged`. 이름을 홍달 플레이스로 변경하고 게임 사업자등록 완료→개별 점포 페이지 자동 생성 방향을 기록했다. 네이버 공식 항목/필수·선택/업종 조건을 조사해 기본정보·메뉴·가상사진·일정·서비스·후기와 공개/관리 화면을 제안했다. 페이지 생성과 개업/주문/매출을 구별하고 r194 소개 조건을 유지한다. 실제 네이버 등록과 게임 편의 규칙은 별도이며 시안/상태 계약·사진 자산·개업 전 검색 상세/개발은 미정이다. 문서만 변경했다.
+
+## 첫 광고 결과 확인 뒤 중개업자 소개 r194 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r194](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/broker-introduction-after-ad-result.confirmed.r194.md). `AdExposureAndResultReviewCriterionConfirmed / IntroductionEligibilityDocumented / PresentationTimingUnresolved / NotReadyToDispatch / ProductUnchanged`. r193 마지막 질문에 대한 사용자 승인으로, 정식 광고가 게임 고객에게 실제 노출되고 플레이어가 결과를 확인하면 소개 조건을 충족한다. 점주/가상 고객사 캠페인에 동일 적용하며 매출 성공·특정 순위는 요구하지 않는다. 소개 시점/연출·계약·전체 r193/개발 승인은 미정이다.
+
+## 역세권 키워드·게임 내 장소 검색 페이지 r193 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r193](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/station-keywords-and-in-game-place-pages.proposal.r193.md). `StationFoodKeywordsPrepared / InGamePlacePageRequested / DetailedDesignProposed / NotReadyToDispatch / ProductUnchanged`. r176/r177의 화면·반복을 정밀화한 제안이다. 역3×음식12 기본36·배달/포장66으로 후보102개를 로컬 준비하고 실제 수치/순위0행과 구별했다. 광고칸/일반페이지·플레이어 조회/가상 고객 행동·NPC 납품/정상 주문을 분리하며 r178 소개순서·r183 초기 광고입문을 유지한다. 상세 규칙/첫 광고 완료 기준·개발 수용은 미정. 새 API·제품/Unity·DB/예약·WI/Goal·Graph Map·commit/push 없음.
+
+## 로컬 Blender 제작·FBX·Unity 왕복 과정 r192 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r192](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/blender-authoring-and-unity-roundtrip.workflow.r192.md). `LocalBlenderChosen / InstallationAndVersionVerified / AuthoringWorkflowDocumented / ModelAndVisualReviewPending / NotReadyToDispatch / ProductUnchanged`. r191의 도구 미정 중 로컬 Blender 사용을 선택했다. 실제5.2.1 LTS 버전/경로를 확인하고 작업용blend→차체/배송함/기사 자세→치수/축/피벗→선별FBX→Unity 정렬/재질→Blender 수정 왕복을 추가했다. 모델/시안·설정/담당/적용은 미정이며 기존 인계·모델 생성/Unity/제품 코드·Runtime·DB/예약·Goal/WI는 변경하지 않았다.
+
+## 3D 기사·배달 스쿠터 모델과 Unity 적용 준비 r191 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r191](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md). `ThreeDimensionalRiderModelDirectionRequested / ExistingAssetsInspected / ModelingSpecificationProposed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`. 3D 지도에 맞는 스쿠터·배송함·기사/헬멧 조합과 모델 원본→FBX→프로젝트 Prefab/동작 검토를 제안했다. 기존2D 표시/캡처·Unity 설정·Synty4후보를 읽고 본체 미확인/City 몸체 재사용·탑승 Clip 미준비를 구별했다. 모델링 담당/외형·치수/연결·시안/적용은 미정이며 모델/Prefab 생성·제품/Runtime·기존 Claude3D 개편/인계·DB/예약·Goal/WI는 변경하지 않았다.
+
+## 카페 개업 공급·설치 자료와 지도 연결 절차 제안 r190 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r190](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/cafe-opening-supply-chains-and-map-linked-process.proposal.r190.md). `CafeOpeningSupplyChainRequested / OfficialEvidenceCollectedAndIndexed / MapLinkedProcessProposed / NotReadyToDispatch / ProductUnchanged`. 원두·설비·공간·운영 준비의 병렬 그래프와 노드→관련 지도/정보 강조→점포 귀환을 제안한다. [자료 수집/색인](DataCollection/Research/2026-11-14-cafe-opening-supply-chain-intake.md)은 실제 저장했으며 네 가지/13세부노드·16조건부연결은 기획 제안이다. 국내 재고 구매·선택적 직접수입/제조와 카페 독립 시작을 유지한다. 실제 공급망/좌표·개업 조건/주체·시안/개발 수용은 미정이고 기존 인계·제품/Runtime·운영/공용 DB·예약·Goal/WI는 변경하지 않았다.
+
+## 기사·운송 경로·적재 상태의 지도 판독 제안 r189 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r189](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/transport-actors-routes-and-load-visibility.proposal.r189.md). `TransportVisibilityRequested / ExistingFlowPresentationReviewed / ReadabilityLayersProposed / NotReadyToDispatch / ProductUnchanged`. Codex 기획/Claude 구현 분담을 유지하며 기사 형상·위치·다음 정차 경로·적재/단계의 네 층과 선택형 방향 흐름을 제안했다. 동네 도로 경로·구/전국 관계 요약, 공공 통계/게임 운송/후보를 구분하고 간단히 기본값·관리색/선택·권위 결과를 유지한다. 한 동/한 기사 시안·위치/경로/적재 필드·개발 수용은 미정이다. 기존 인계/진행 소유·제품/Runtime·자료/DB/예약·Goal/WI는 변경하지 않았다.
+
+## 운영 회차 자원 아이콘·증감 요약 r188 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r188](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/round-resource-icons-and-deltas.design.r188.md). `ResourceIconsAndSignedDeltasRequested / DirectionDocumented / MetricLayoutProposed / NotReadyToDispatch / ProductUnchanged`. 아이콘·간단한 값/부호로 회차 변화를 읽는 방향을 기록했다. 기본 가용자금·회차 완료량·사업 핵심 가용자원과 조건부 활성 연구는 제안이다. r187 운영 회차·r174 일일 결산·r183 연구·r37 회계 전문 요약과 병행하며 지표/원장·시안/명세는 미정이다. r187 구현 인계/승인·제품/Runtime·자료/DB/예약·Goal/WI는 변경하지 않았다. 추가 질문 없이 첫 반환과 함께 검토한다.
+
+## 같은 날 반복하는 운영 회차 확정·첫 검토용 구현 r187 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r187](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operating-round-first-play.prototype.r187.md). `OperatingRoundConfirmed / ApprovedPlanningBaseline / PrototypeHandoffPrepared / DevelopmentAcceptancePending / RuntimeReviewPending / ProductUnchanged`. 사용자가 같은 날 여러 번 도는 운영 회차를 기본 단위로 확정하고 Claude 구현을 본 뒤 세부를 재판단하기로 했다. 첫 검토는 기존 배달 한 건의 안내/실제 결과와 같은 세션 두 회차 반복으로 한정한다. [Claude 인계](Handoffs/2026-11-14-Codex-Claude-짧은운영회차-첫안내-r187.md)에 실제 작업 마감 조건·전체 초기화/날짜 건너뛰기 방지·집계 범위·기존 저장/소유 보호와 반환 기준을 연결했다. r174 일일 결산·r183 자유 출발 등은 유지하며 제품·빌드/Runtime·자료/DB/수집/예약·WI/Goal은 변경하지 않았다. 추가 질문 없이 첫 구현 반환 대기.
+
+## 안내받는 시작·반복 경영 흐름 문답 r186 (2026-11-14)
+
+> 회차 단위 질문은 [r187](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operating-round-first-play.prototype.r187.md)에서 같은 날 여러 번 반복하는 운영 회차로 확정했다. 아래는 당시 제안/문답 이력이다.
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r186](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/guided-start-and-recurring-management-cycle.discussion.r186.md). `GuidedFirstTaskConfirmed / RepeatingManagementLoopRequested / CycleBoundaryAsked / NotReadyToDispatch / ProductUnchanged`. 첫 한 건은 안내받으며 시작하고 게임 전체의 반복 행위를 처음부터 익히게 한다는 사용자 답변을 기록했다. 상황 확인→계획/선택→실행/관찰→결과 정리→다음 준비를 제안하며 작업 완료/다음 작업·운영 회차 마무리·일일 결산을 구분한다. 다음 질문은 같은 날 여러 번 반복할 짧은 운영 회차를 단위로 둘지다. r174 시간·r183 자유 출발·집중/이완과 기존 Claude 인계를 유지하고 새 구현·DB/수집/예약·WI/Goal은 변경하지 않았다.
+
+## 점진적 성장·첫 한 건부터 시작하는 문답 r185 (2026-11-14)
+
+> 후속 [r186](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/guided-start-and-recurring-management-cycle.discussion.r186.md)에서 안내받는 시작을 선택했다. 아래 질문은 당시 문답 이력이며 전체 시간 압박/실패 조건 삭제를 승인한 것은 아니다.
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r185](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/progressive-start-and-first-task.discussion.r185.md). `ProgressiveGrowthRequested / FirstSingleTaskConfirmed / FurtherPacingAsked / NotReadyToDispatch / ProductUnchanged`. 사용자가 ‘점진적으로’ 성장하는 첫 흐름을 논의하고 첫 목표를 작은 일 한 건으로 선택했다. r183 자유 출발/선택적 확장·r147 집중/이완·r174 시간·r184 지도를 유지한다. 다음 질문은 안내/시간 압박이 적은 첫 한 건과 일반 영업 조건 중 어느 출발로 할지다. 정확 작업/자원/회복·첫 개선·후속 단계는 미정이며 기존 Claude 인계/진행·제품·자료/DB/수집/예약·WI/Goal은 변경하지 않았다.
+
+## 구 지도 서울 전역 연속 축소·전국 직접 전환 r184 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r184](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md). `UserDirectionConfirmed / ApprovedPlanningBaseline / HandoffPrepared / DevelopmentAcceptancePending / ProductUnchanged`. 독립 서울 단계/순회 정차를 제외하고 구 지도 안에서 서울25구까지 연속 축소하며 구↔전국으로 직접 이동한다. r161/r171·기존 Claude 설계의 해당 경로만 부분 대체하고 r174 시간·r182 한 동 집중·r183 자유 출발/해금 경계를 유지한다. [Claude 인계](Handoffs/2026-11-14-Codex-Claude-구지도서울전체축소-전국직접전환-r184.md)와 코드/기존25구 후보의 지문을 연결했다. 기존 서울 안건의 구 공통 귀속·enum 값·같은 세션 귀환을 보존하고, 새 원본 수집·제품/Runtime·Goal/WI·DB/예약·commit/push는 변경하지 않았다. 다음 질문 없음, 개발 수용 대기.
+
+## 다섯 분야 자유 출발·경영 연구 테크트리 r183 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r183](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-entry-management-research-tree.design.r183.md). `FiveStartingFieldsChosen / ResearchAndCrossFieldExpansionRequested / TreeFrameworkDocumented / DetailedNodesProposed / NotReadyToDispatch / ProductUnchanged`. 배달·카페·광고·전자상거래·무역의 독립 시작과 공통/분야 심화/선택 연결 연구를 구조화했다. r153/r175·r174·분야 성장/업무 원장을 재사용하고 광고 입문과 전국 광고망 확장으로 r179의 선행 제한을 부분 대체한다. 노드/비용/기간·선행 대체·첫 작업/지도·UI/저장은 미정이며 제품·DB·자료/수집/예약·실제 학습/거래·WI/Goal은 변경하지 않았다.
+
+## 한 행정동에 집중하는 군중 비교 확정 r182 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r182](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/single-dong-crowd-focus.confirmed.r182.md). `SingleAdministrativeDongChosen / ImmersionFocusRecorded / DongSelectionUnresolved / NotReadyToDispatch / ProductUnchanged`. 몰입 분산을 줄이기 위해 면목 지역의 행정동 하나에서 r181의 오전·점심·저녁을 비교하기로 했다. 특정 동/이웃 동 표시·UI·시간/표현 명세는 미정이며 r180 자료 경계·기존 복수 동/구 경영은 유지한다. 제품·Claude 진행 작업·자료/DB·수집/예약·시안·WI/Goal은 변경하지 않았다.
+
+## 면목동 오전·점심·저녁 군중 비교 확정 r181 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r181](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/myeonmok-three-period-crowd-comparison.confirmed.r181.md). `MyeonmokThreePeriodComparisonConfirmed / DesignDocumented / SpatialAndTimeMappingUnresolved / NotReadyToDispatch / ProductUnchanged`. r180 후속으로 면목동과 오전·점심·저녁 세 비교 장면을 확정했다. 같은 지도/카메라·기간/척도와 원본 검증 경계를 유지하며 세부 모듈/범위·시간구간 후보·보정/상한·시안/구현은 미정이다. 기존 기획·Claude 진행 작업·자료/DB·수집/예약·제품·WI/Goal은 변경하지 않았다.
+
+## 유동인구에 따른 지도 군중 표현 r180 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r180](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/population-driven-map-crowds.design.r180.md). `PopulationDrivenCrowdsRequested / DirectionDocumented / RenderingRulesProposed / NotReadyToDispatch / ProductUnchanged`. r138/r143을 잇고 지역/시간구간 집계에 따른 대표 군중 밀도·축척별 요약·가상 분배/결측 표시를 제안한다. r142 시험·r145 충돌·r174 시간·r176~r179 검색/광고와 관찰자 모드 경계를 유지한다. 첫 동/구간·상한/경로·자료/자산 결속은 미정이며 제품·DB·수집/예약·시안/영상·WI/Goal은 변경하지 않았다.
+
+## 전국 경영단계에서 매장 광고 해금 확정 r179 (2026-11-14)
+
+- 후속 대체 관계: [r183](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-entry-management-research-tree.design.r183.md#6-광고-시작과-기존-전국-해금의-정합)이 광고 입문 자유 출발과 전국 규모 광고망 확장을 구분한다. 기초 광고의 전국 선행 해석만 부분 대체하며 아래 r179 요약은 당시 이력이다.
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r179](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/national-stage-advertising-unlock.confirmed.r179.md). `NationalStageAdvertisingUnlockConfirmed / DesignDocumented / UnlockCriteriaUnresolved / NotReadyToDispatch / ProductUnchanged`. 전국 경영단계 해금 뒤 r176의 매장 정식 광고를 활성화하고 광고 경험 뒤 r178의 중개업자 소개로 잇는다. 지도 미리보기/관찰과 해금을 구별하며 전국 해금 자체 조건·경험 완료 기준·광고 대상/화면은 미정이다. r174 및 r176~r178·Claude 진행 작업을 보존하고 제품·DB·실제 광고/트래픽·수집/예약·WI/Goal은 변경하지 않았다.
+
+## 정식 광고 경험 후 중개업자 소개 확정 r178 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r178](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/traffic-broker-introduction.confirmed.r178.md). `AdvertisingFirstIntroductionConfirmed / DesignDocumented / CompletionCriterionUnresolved / NotReadyToDispatch / ProductUnchanged`. 사용자 선택으로 정식 광고 한 번 경험→중개업자 소개의 순서를 확정했다. r177의 접촉 선후 관계만 대체하며 소개와 계약/비용을 구별한다. 광고 경험 완료 기준·소개 시점/이력·상세 규칙은 미정이고 r176/r174 및 제품·DB·수집/예약·WI/Goal 경계를 유지한다.
+
+## 트래픽 중개업자와 순위 경쟁 후속 r177 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r177](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/underground-traffic-broker.gameplay.r177.md). `BrokerChannelRequestedByUser / InclusionDirectionConfirmed / DetailedRulesProposed / NotReadyToDispatch / ProductUnchanged`. 사용자가 정식 광고 외에 트래픽 중개업자 NPC·합성 IP/계정 집단의 순위 개입 경로를 포함하도록 했다. r176의 기본 검색에 잠정 관심 반영·정상 수요 주문/이행·지연 검증·신호 제외/제한/회복을 연결하며 r174 시간/결산을 유지한다. 접촉/가격·신호/검증·제재/회복·화면/명세는 미정이고 제품·실제 트래픽·공공자료/DB·예약·WI/Goal은 변경하지 않았다.
+
+## 장소 검색·광고·주문 유입 조사·제안 r176 (2026-11-14)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r176](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/place-search-advertising-and-demand.proposal.r176.md). `PlaceSearchMechanicRequested / OfficialSourcesReviewed / ProposedDesign / NotReadyToDispatch / ProductUnchanged`. 네이버 공식 검색·SEO·광고 구조와 공개 한계를 확인하고 가상 업체의 검색/홍보→유입→이행·만족 환류를 제안한다. 상위 r162·시간/결산 r174, 방문 r142·자료 r160·지도별 책임 r171·투자 r175와 실제 공개관측/후원 경계를 연결한다. 첫 질문은 한 동의 가상 카페 검색 광고로 검토할지다. 점수/과금·집계/날짜 경계·시안/구현은 미정이고 제품·DB·실제 트래픽/광고·수집/예약·WI/Goal은 변경하지 않았다.
+
+## 동 모듈 자료 수집·소비판 반환 보완 r55 (2026-11-13)
+
+- [실제 자료 수집](DataCollection/Research/2026-11-13-dong-map-source-intake.md): 새 노원 도보망/행안부 관할코드 ZIP 취득, 기존3구 도보망과30동 지번 후보를 재사용했다. 네 구 노드/링크83,950행·최신 행정동65개·건물 지번 후보61,897개를 저장했다. 현행 경계·도로명주소·출입구는 미취득이며 Unity·DB·예약은 변경하지 않았다.
+
+- [PLAN-SYSTEM-ADMIN-DONG-DIORAMA r55](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/windows-dong-return-hardening.review.r55.md). `ReturnReviewed / OfflineResourceAuditPassed / RuntimeFixesNotIntegrated / ClaudeWriteOwnershipPreserved / PrivateCandidateOnly`. r54의 4구 목표를 유지하며 Claude 첫 6동 소비판·실제 자원을 검토하고 독립 감사기/회귀를 추가했다. 두 정거장·여섯 공간 모듈을 구별하고 내부 역사 후보를 유지한다. [후속 입력](Handoffs/2026-11-13-Codex-Claude-행정동모듈-반환보완-r55.md)에 색인 hash·손상 목록 실패 경로를 전달한다. Claude 동시 수정 파일·Unity 제품/자원/실행판은 건드리지 않았다. 4구 목록/골목/주소·현행 자료/r16·기존 타일/Interpreter 연결은 미완료다.
+
+## 배차 투자·만족·경 유지 성장 제안 r175 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r175](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/dispatch-investment-satisfaction-and-awareness.proposal.r175.md). `InvestmentFeedbackRequested / ExistingGrowthPlansReviewed / ParticipantScopeConfirmed / ProposedDesign / ProductUnchanged`. r153 엔진 성장·r124~r133 개인/참여자 목적에 r174 공통 시간/결산을 연결한다. 기사·현장 작업자의 경 유지라는 사용자 선택을 기록하고 투자·품질/주체별 만족·유효 수행/경 성장·장기 소득/운영 성과의 환류를 제안한다. 다음 질문은 첫 과제를 음식 픽업 대기 개선으로 둘지다. 수치/상한·비용/기간/직무별 규칙·저장/UI는 미정이고 코드·WI/Goal·연구/E·학습/배포·DB/예약은 변경하지 않았다.
+
+## 현실 달력·일일일생의 문서 통합 정본 r174 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r174](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/live-calendar-daily-management.baseline.r174.md). `ApprovedDirectionsPreserved / EditorialConsolidationCompleted / HandoffPrepared / ProductUnchanged`. r172/r173의 승인·추가 방향을 계승하는 현행 정본이며 [현재 Claude 인계](Handoffs/2026-11-13-Codex-Claude-현실달력일일결산-통합정본-r174.md)를 하나로 정리했다. 결산/정산/지급/확인·시간/기간·원본 기준시각과 적용/관측 자료의 표현을 명확히 했다. 개발 수용에서 각 원장의 필드/검증을 연결하며 새 사용자 선택 질문은 없다. 기존 코드/승인·WI/Goal·연구/E·DB/예약은 변경하지 않았다.
+
+<details>
+<summary>r172·r173 승인/추가 이력 — 현행 정본은 r174</summary>
+
+### 일일일생·일일 결산 조정 r173 (2026-11-13)
+
+- [r173](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daily-life-and-settlement.integration.r173.md): 일일일생·하루 결산의 추가 지시 이력. 당시 [인계](Handoffs/2026-11-13-Codex-Claude-일일일생결산-r173.md)와 원문/hash 보존.
+
+### 현실 달력·절기·아르카나 통합 승인 r172 (2026-11-13)
+
+- [r172](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/real-calendar-seasonal-arcana.integration.r172.md): 현실 달력·주간·절기 운영 프로필의 승인 이력. 당시 [인계](Handoffs/2026-11-13-Codex-Claude-현실달력절기통합-r172.md)와 원문/hash 보존.
+
+</details>
+
+## 지도 단위별 사용자 결정 책임 제안 r171 (2026-11-13)
+
+> 지도 경로/서울 독립 단계의 현행 기준은 [r184](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md)다. 아래 r171의 책임 제안 전체를 확정한 것은 아니며 서울 독립 정차/단계에 관한 질문은 새 방향으로 대체됐다.
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r171](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-scale-decision-responsibilities.proposal.r171.md). `ScaleDecisionResponsibilitiesProposed / ExistingPlansReconciled / AwaitingUserReview / ProductUnchanged`. 상위 r144/r161/r162, 국면 r165·입점 r168·건축 r170과 Claude의 높이별 질문/행정동 지사장·두 겹 턴/결정 순회 제안을 잇는 책임 정밀화다. 동=장소·한 건, 구=동별 배분, 서울=거점-구 보충망, 전국=장거리 차량·회차를 제안한다. 다음 질문은 서울의 보충 회차 중심 역할이 맞는지다. 기본 책임·안건/자원 계약·위임/시간/UI는 검토 전이며 기존 담당·기획/시안·제품·WI/Goal·연구/E·예약은 변경하지 않았다.
+
+## 건축·해체·재건축 법적 절차 전문 조사 r170 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r170](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/construction-and-reconstruction-legal-process.research.r170.md). `CurrentSelectedLawSourcesVerified / ProcedureBranchesDocumented / HybridGameMappingProposed / SiteSpecificApplicationUnresolved / ProductUnchanged`. 상위 혼합 국면 r165·지도 책임 r161과 연결하고 일반 건축/해체·조합 재건축·기타 사업의 경로를 구별했다. 현행 주요 조문·공식 출처와 법정기간/현실 공사기간/게임 시간을 나눠 관문·보완·공정·사용/권리 완료를 제안한다. 첫 검토는 가상 대지1곳의 일반 건축에서 필요한 확인과 다음 선택이 읽히는지다. 개별 필지·조례·정확 시간 환산/구현 명세는 미정이며 Claude의 가맹점 설치·두 겹 턴 제안·기존 r168/r169·제품/예약·WI/Goal은 변경하지 않았다.
+
+## 프로젝트 스타일의 입점·설치 시안 r169 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r169](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/business-placement-ui.concept.r169.md). `ProjectStyleReused / ThreeMockupsRendered / VisualFeedbackPending / ProductUnchanged`. 기능 정본 r168의 첫 시각 입력이다. 기존 지도 촬영본/Claude CSS로 같은 카페·점포의 목록/위치확인/준비중 PNG3장과 HTML을 제작했다. 4일차 계획/예약 예측과5일차 준비비 사용/남은 턴을 구별하며 위치·금액·일차는 가상이다. 다음 검토는 오른쪽 목록/상세 판독과 지도 선택 공간이다. 제품 코드·Scene·Unity실행·시각 승인·새 WI/Goal·예약은 변경하지 않았다.
+
+## 동/구 사업 목록과 입점 배치 제안 r168 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r168](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-business-catalog-and-placement.proposal.r168.md). `BusinessPlacementCatalogRequested / PlacementFlowProposed / VisualReviewPending / ProductUnchanged`. 상위 r162/r165와 입지/관리색 r142/r143·높이 r144/r161·현장 r166/r167을 잇는다. 구/동 선택→입점·설치 목록→가상 슬롯/부지 미리보기→계획 확정→준비→개업을 제안했다. 실재 브랜드 없이 카페·음식점·창고형 판매매장의 세 유형을 첫 후보로 두며 창고형 매장 역할/비용·턴·가맹/경제·준비 명세는 미정이다. 다음 검토는 같은 동에서 소형 카페 한 건의 위치·필요 준비·개업 후 일이 읽히는지다. 무료 시험·기존 영역 진행과 구별하고 코드·WI/Goal·예약을 변경하지 않았다.
+
+## 프랜차이즈 공개 인테리어를 참고한 카페 작업 맵 r167 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r167](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/cafe-work-map-and-franchise-interiors.research.r167.md). `OfficialReferencesReviewed / CafeWorkMapProposed / VisualReviewPending / ProductUnchanged`. 상위 r162/r165/r166, 업무 전문 r147·가맹 카페 r68에 연결한다. 브랜드3곳의 공개 인테리어/설비5페이지·제조사 공정2페이지를 확인하고 고객/제조 바/보관·정리/픽업의 가상 한 층과 고정 작업대 상세를 제안했다. 다음 검토는 기다리는 고객→한 잔 제조→인수의 공간 판독이다. 규모/배치·조작·직접 결과 명세는 미정이며 실제 도면/브랜드 배합·시안/제품 구현·새 WI/Goal·예약 변경은 아니다.
+
+## 동네 배달 현장과 물류센터 작업 맵 제안 r166 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r166](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/delivery-and-center-work-maps.proposal.r166.md). `MapRoleSeparationRequested / InteriorWorkMapProposed / VisualReviewPending / ProductUnchanged`. 상위 공통 r162/r165와 직무 r147/r148·센터 r163/r164를 연결한다. 동네는 픽업/주행/전달, 센터는 입고/적치/피킹/포장/분류/출고의 현장으로 구분하고 다층 전체→선택 층→작업대 상세를 제안했다. 같은 세계/시계/작업 대기열·집중이완·귀환을 유지하며 첫 한 층의 작업 위치/다음 인계 판독이 다음 검토다. 조작·재고/인계 경계·후속 WI는 미정이고 기존 r163 첫 분류 후보·코드·Scene·예약은 변경하지 않았다.
+
+## 스테이지와 혼합 턴의 공통 진행 r165 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r165](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/stage-turn-progression.framework.r165.md). `HybridTurnChosenByUser / LatestSixMockupsReviewed / StageFrameworkProposed / VisualReviewPending / ProductUnchanged`. 사용자 선택은 계획→실행·관찰→결산의 혼합 턴이다. 상위 공통 기준 r162와 전문 r129/r130·r141/r146/r150/r151/r153/r161/r164를 잇고 최신 Claude 기획적용 시안6장을 직접 확인했다. 스테이지=대표 경영 질문, 턴=운영 주기, 작업=한 건, 지도=관점으로 구분한다. 스테이지4묶음·하루 매핑·경계 정지·진급/이월은 제안/미정이며 개발순서①~⑤를 필수 플레이 순서로 승인하지 않았다. 다음 검토는 같은 배달 화면의 세 국면에서 선택→결과→다음 판단이 읽히는지다. 코드·새 이미지·Goal/WI·공용 E·예약은 변경하지 않았다.
+
+## 다층 물류센터 내부 모형·Claude 시안 준비 r164 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r164](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/logistics-center-multifloor-cutaway.design.r164.md). `UserDirectionConfirmed / MultifloorLayoutProposed / PreparedForClaudeVisualDesign / VisualReviewPending / ProductUnchanged`. 상위 공통 정본 r162, 전문 선행 r144/r163의 후속이다. 센터 선택→지붕 없는 가상 1~5층 모형→층 탐색/동일 소포 추적→1층 집결·분류·직원 상차→원래 지도 귀환을 정리했다. [Claude 시안 입력](Handoffs/2026-11-13-Codex-Claude-다층물류센터-시안입력-r164.md)을 준비했으며 다음 검토는 전체 모형 한 장에서 층별 업무와 물건의 흐름이 읽히는지다. 층별 배치·이송 외형은 시각 검토 대기이고 이미지·모델·제품 구현·새 WI/Goal·연구 Accepted는 아니다.
+
+## 물류센터·배송거점·자동 분류 전문 조사 r163 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r163](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/logistics-centers-sortation-skeleton.research.r163.md). `OfficialSourcesCollected / RegistryRawAcquired / CenterProcessSkeletonProposed / ResearchNotYetAccepted / ProductUnchanged`. 상위 공통 정본은 r162다. 공식 근거24항목·운영사7시설 사례와 NLIC 등록원본 XLS6,011행·9열을 확보/구조 확인했다. FC/허브/배송캠프와 센서 관측·라벨/경로·출구 도달·사람 인계를 구분하고, 독립 센터의 포장완료 소포1개 정상분류/보류를 첫 후보로 제안한다. 실제 역할/노선/배송권·내부 도면 전수 확보나 DB·예약·모델/제품 구현·연구 Accepted는 아니다.
+
+## 지도 경영 통합 기준·Claude 준비 r162 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r162](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/integrated-map-management-baseline.r162.md). `CommonBaselineConsolidated / ExistingImplementationReconciled / PreparedForClaudePlanning`. r140~r161의 공통 진입/중복·후속 답변을 통합하고 전문/승인/명세 원본23개는 보존했다. 현행 Core·우유 최소사슬·구 지도·주문 효과를 재개발 과제로 돌리지 않으며 r159 DB 완료를 유지한다. [Claude 검토 인계](Handoffs/2026-11-13-Codex-Claude-지도경영통합-r162.md)에 지문·보존 경계·구 기사 여력 초안·미정을 준비했다. 새 게임 기능은 NotReadyToDispatch이고 실행 원장/제품·수집예약은 변경하지 않았다.
+
+<details>
+<summary>r140~r161 전문 판본·승인/완료 근거 — 현행 공통 진입은 r162</summary>
+
+## 지도 높이별 OS 정보 초점과 몰입 제안 r161 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r161](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-scale-os-attention-and-immersion.proposal.r161.md). `ScaleSpecificAttentionRequested / OsAndProcessReviewed / ImmersionDesignProposed / ProductUnchanged`. 동네의 개별 약속·구의 기사 여력·서울 도시 거점·전국 차량 회차·지구본 공급안으로 대표 질문을 바꾸는 안이다. 기존 OS10개와 단계·건물 내부·같은 업무/인계·공통 시간·선택과 복귀·자료 사실/시나리오를 구별한다. 구 지도 기사 배분의 작은 검토를 추천하며 대표 질문/화면·도시/세계 상세·재미 검증은 미정이다. 제품·DB·팩·수집/예약·Goal/WI·공용 E·배포는 변경하지 않았다.
+
+## 자료팩 분할과 관찰 레이어 제안 r160 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r160](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/data-packs-and-observation-layers.proposal.r160.md). `PackAndLayerDesignProposed / CurrentDbReadOnlyReviewed / ProductUnchanged`. 실제 공공자료 DB116,735행을8분야로 확인하고 공통 지도/사전과 선택 분야팩·다대다 표현 레이어를 제안했다. 자료 사실·게임 시나리오·개인업무와 설치/게시/표시 상태를 구별한다. 서울 생활·상권을 첫 후보로 추천하며 공간 대응·공개사업장0·항만원문행·NOAA63 등 실제 준비 상한을 기록했다. 팩/레이어·게임·DB쓰기·수집/예약·배포 구현은 하지 않았다.
+
+## 공공데이터 DB 저장 단계 r159 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r159](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/public-data-db-storage.work-order.r159.md). `LocalDbStored / IndependentReadbackVerified / StrictNoOpVerified / PackAndLayersDeferred`. 원본/안내41개·관측45,654행을 기존 로컬 DB에 추가했다. 후보26개는 안내로 구별하고 기존 무역12행은 검증·보존했다. 실제 commit·독립 재조회·동일 입력 쓰기0을 확인했다. 팩·레이어·Drive·Excel·게임 소비·정기DB자동연결·예약 변경은 후속이다.
+
+## 자료 관찰·공공데이터 수집/정규화/팩 구조 조사 r158 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r158](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/observer-public-data-platform.research.r158.md). `ObserverUseRequested / CrossSectorResearchCompleted / CollectionAndDataArchitectureProposed / NoNewCollectionOrScheduleChange`. 게임 없이 자료만 보는 사용 방향과 주요 분야26후보의 공식 안내·기존 수집/DB/등록 예약을 조사했다. 원본→계보/정규화·관계→Excel/읽기 전용 팩→Windows 소비를 제안하고 기존 이완/집중과 실행모드를 유지한다. 신규 취득·반입·예약·제품/배포는 후속이다.
+
+## 지도 시각 효과의 선택형 제공 r157 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r157](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/optional-map-visual-effects.design.r157.md). `UserChoicesConfirmed / ImplementationReturned / SourceReviewedAtB0 / ParallelInputsAdvanced / RuntimeNotRerun`. 사용자가 간단히 보고 싶은 사람도 있으므로 장식 효과를 선택형으로 제공하도록 정했다. r156 흐르는 빛과 r154 낙하/파동을 선택형으로 연결하고 정적 정보·선택·중요 알림·업무 결과는 유지한다. 집중/이완과 독립이다. 후속 Claude 반환의 사용자 답으로 첫 기본값은 간단히이며 첫 소비판 소스가 확인됐다. 개별 설정·취향 재실행은 잔여다.
+
+## 전국 운송의 옅은 아치형 곡선 방향 r156 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r156](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-arc-freight-links.design.r156.md). `SoftArcTransportLinesRequested / ShapeDirectionDocumented / MotionOptional / ProductUnchanged`. r155의 전국 운송 관계선을 옅고 부드러운 아치로 표현하는 사용자 방향을 기록했다. 선택 강조·정적 방향·왕복/밀집·r154 연출 연결과 실제 도로/업무 상태의 구별을 제안한다. 선 위 움직임은 후속 r157의 선택형 제공으로 정리했으며 세부 시각값·제품 적용은 미정이다.
+
+## 대한민국 전국 화물 경영 지도 제안 r155 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r155](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/nationwide-freight-management-map.proposal.r155.md). `NationwideFreightViewRequested / RepublicOfKoreaFirstConfirmed / FreightManagementDesignProposed / ProductUnchanged`. 사용자가 대한민국 전국부터를 선택했다. 전국/권역/지역/현장의 책임, 화물·차량·납기와 복귀/공차 선택, 경계/도로/거점/수요 팩과 기존 기반·결손을 제안한다. r144/r153/r154와 기존 한반도/행정 기획을 연결하고 전국 판 위의 작은 가상 회차를 권한다. 자료 취득·세부안·제품 구현은 후속이다.
+
+## 지도 사건의 핀 낙하·착지 파동과 공통 표현 제안 r154 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r154](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-event-pin-and-ripple.proposal.r154.md). `PickupStoreConfirmed / FirstConsumerReturned / SourceReviewedAtB0 / ParallelInputsAdvanced / RuntimeNotRerun`. 주문의 낙하→파동→현재 표식 유지와 사건 관찰·중복/복원·위치/축척·연출 큐의 공통 책임이다. 후속 사용자 답으로 픽업 매장 기준을 확정했고 첫 소비판이 반환됐다. 연출 수치는 반환판의 구현값이며 구/서울 집계·추가 사건은 별도 잔여다. 기존 Territory 연출/운영색·경영 관점·집중/이완·다음 작업의 의미를 유지한다.
+
+## 운영 경험으로 발전하는 판단 엔진 제안 r153 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r153](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/engine-evolution-gameplay.proposal.r153.md). `EngineEvolutionRequested / ProposedDesign / ProgressionNotImplemented / TrainingNotStarted`. 수기 운영→추천 보조→시간 관리→묶음 조율→권역 계획의 성장안과 운영 기록·검토·비교·플레이어 적용을 제안한다. 기존 정책/게임 성장/실제 모델 학습을 구별하고 수익·배송 품질·참여자 보수 균형과 필수 제약을 유지한다. r152 지도 정밀화 우선순위는 유지하며 첫 엔진·해금/비용·구현은 미정이다.
+
+## 구 지도 정밀화 이어받기 r152 (2026-11-13)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r152](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability-continuation.design.r152.md). `Implemented / CodexRenderVerified / FollowupSelectionReturned / SourceMatchedAtB0 / ParallelInputsAdvanced / RuntimeNotRerun`. G2 바탕·도로명·확대/이동과 회전 교정을 보존·병합한 [Codex 반환](../Changes/2026-11-13-hongdal-gu-map-names-r152.md)에 기하23·커널56·빌드·세 축척 실행 근거가 있다. 이후 Claude가 동/구·표식 선택과 최대화 회귀를 보고했고 현행 소스가 그 반환 지문과 일치한다. 이번 통합은 새 Runtime/공용 E 승격이 아니며 자료 재굽기·경제/영역 규칙·역 추가는 별도다.
+
 ## 다음 작업 버튼 확정 r151 (2026-11-12)
 
 - [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r151](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/next-task-button-confirmed.design.r151.md). `NextTaskButtonConfirmed / DesignDocumented / ProductUnchanged`. r150의 미정이던 시작 방식을 사용자의 `다음 작업 버튼` 선택으로 해소했다. 같은 직무·현장을 유지하고 버튼을 눌러 다음 준비 작업 한 건을 시작한다. 제안 순서·버튼 세부 배치·제품 적용은 후속이다.
@@ -49,6 +435,63 @@
 - [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r140](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-windows-development-direction.r140.md). `UserDirectionConfirmed / PlanningAndStatusRefactor / ProductUnchanged`. 현재 개발 대상은 Unity 기반 Windows 실행판이다. Codex 기획·현황 정리와 Claude 구현 계획·개발 반환의 역할을 연결하고 [소비판별 구현 현황](Handoffs/Unity-Windows-구현현황.md)에서 기존 구현·시제품·통합/검증 대기를 구분한다. r139 WPF 우선순위를 대체하며 제품 파일 이동·시제품 승격·새 기능·예약 변경은 이번에 하지 않았다.
 - 이전 방향 [WPF 우선 r139](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/wpf-first-development-direction.r139.md)는 이력으로 보존한다.
 
+## 유동인구와 교통이 보이는 지도 r138 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r138](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/population-traffic-map.proposal.r138.md). 공식 자료 검토 · 점심 피크 이미지 시안 생성 · 사용자 검토 대기 · 미구현. 기존 지도에서 작은 사람·일반 차량과 선명한 기사 오토바이를 대비했다. 다음은 사람·차량의 크기와 밀도에 관한 시안 의견 확인이다.
+
+## 기사에서 공장까지의 Unity 화면 r137 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r137](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/operator-expansion-map-ui.concept.r137.md). 채택 시안을 별도 Unity Windows 검토판에 적용했다. 네 성장 영역의 미리보기와 기존 매장 상세를 연결하고 실제 창에서 두 주문 배차·수령·가상 정산을 확인했다. 가맹점·생산·공장 경영 규칙은 후속이다.
+
+## 공장 가공과 가맹점 완성의 구분 r136 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r136](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/factory-li-franchise-dui.framework.r136.md). 사용자 역할 구분 확정. 리괘는 공장 1차 가공, 태괘 兌·택은 가맹점의 최종 조리·조합으로 읽고 무토 주문·기토 판매를 함께 적용한다.
+
+## 괘상으로 보는 생산과 거래 r135 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r135](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/trigram-production-order-sales-delivery.proposal.r135.md). 무토 주문·기토 판매 사용자 확인. 공장과 가맹점의 역할은 r136에서 구체화했다.
+
+## 생산과 소비의 두 축 r134 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r134](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/production-consumption-and-delivery.framework.r134.md). 사용자 방향 확정 · 경영 골격. 생산과 소비를 배달·판매·창고·화물로 잇고, 경 유지 시간과 시간당 소득의 동반 향상을 목표로 둔다.
+
+## 대칸의 경영 목적 r133 (2026-11-11)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r133](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daekan-participant-awakening-and-income.proposal.r133.md). 사용자 목적 정리 · 평가 제안. 기사·가맹점·도심 마트·판매자 확대를 참여자의 경 유지 시간과 소득 증가에 연결하고, 대칸을 경영자의 역할과 칭호 후보로 둔다.
+
+## 음식점 확보와 기사 업무 흐름 r132 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r132](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/restaurant-coverage-and-rider-flow.proposal.r132.md). 사용자 방향 확정 · 밸런스 제안. 기사별 시간당 3~4건의 업무 흐름과 해당 시간에 주문을 공급할 수 있는 음식점의 확보를 연결한다.
+
+## 지도에서 기사 모집과 교육 선택 r131 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r131](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-rider-recruitment-and-training.proposal.r131.md). 사용자 방향 확정 · 지도 시안. 선택한 법정동에서 기사를 모집하고, 지사가 바로 투입과 교육 후 투입을 고른다.
+
+## 시간대별 배달 물량과 기사 출근 r130 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r130](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daypart-dispatch-and-rider-attendance.proposal.r130.md). 사용자 방향 확정 · 운영 설계. r129의 하루 물량을 다섯 시간대로 나누고, 기사 확보와 시간대별 출근 독려를 배차 부족에 연결한다.
+
+## 주말 주문 피크와 주차별 물량 증가 r129 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r129](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/weekly-delivery-demand.proposal.r129.md). 사용자 방향 확정 · 밸런스 제안. [r128](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seventh-turn-delivery-pressure.proposal.r128.md)의 주문 증가를 매주 주말 추가량과 주차별 기본 배정량으로 구분한다.
+
+## 기사 네트워크와 광복 r127 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r127](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/rider-network-and-liberation.proposal.r127.md). 장기 목표 사용자 확정 · 지역 플레이 제안. 기사 모집과 성장을 동네 배송 회복과 세계 광복의 확장으로 잇는다. 정신 차림 시간과 소득의 동반 상승을 광복 시작, 임계점 통과를 광복기 진입으로 구분한다.
+
+## 기사 개인화와 입교 영상 r126 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r126](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/rider-profile-draw-and-academy-film.proposal.r126.md). 설계 제안. 모집으로 만나는 기사마다 고정 프로필·시작 등급을 두고, 교육에서 배운 의식적 신성 일깨움과 본래 능력의 발휘를 같은 기사의 지도 등장으로 연결한다.
+
+## 기사 모집과 무념 성장 r125 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r125](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/rider-recruitment-and-munyeom-growth.proposal.r125.md). 설계 제안 · 구현 대기. 동네 공고 → 입교 신청·교육 → 0번 바보 수여·신사 등록 → 별도 배차, 자기 점검 → 무념 유지 기록 → 기사 등급을 사가정 첫 플레이로 연결한다. 신사부터 대종사까지 아홉 단계의 명칭과 순서를 사용자 요청으로 확정했다.
+
+## 기사 개인 타로의 방향 r124 (2026-11-10)
+
+- [PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION r124](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/rider-munyeom-tarot-direction.decision.r124.md). 사용자 확정 · 구현 대기. 기사 개인 슬롯의 타로는 무념이 깨질 때 역방향으로 전환한다.
+
+
 ## 기사 새 추천의 단발 진동·홍달배달 음성 r18 (2026-10-27)
 
 - [Approved / ReadyToDispatch 범위](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/driver-recommendation-signal.r18.md) · [구현·검토 APK·감각 검증 구분](../Changes/2026-10-27-driver-recommendation-signal-r18.md): `Implemented / Fast174Passed / Task16353Passed16Skipped / Apk133Packaged / SensoryNotTested`. 같은 추천은 한 번만 예약하고 새 라운드는 허용한다. 알림 설정·무음·야간 제한을 유지하며 서버 배차/FCM 설정과 운영 활성화는 포함하지 않는다.
@@ -64,6 +507,38 @@
 ## 화물 검증 결손 보완 r15 (2026-10-27)
 
 - [승인 범위·완료 조건](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.implementation.r15.md) · [실제 결과](../Changes/2026-10-27-cargo-runtime-followup-r15.md): `Approved / ScopedRemediationVerified / ActualDevice128 / IsolatedReadiness200`. 화주 다음 행동·운영자 제목·기사 안전 영역을 수정하고 실제 기기에서 확인했다. Fast49/49·Task16,305통과/환경16생략·CLI15/15, 새 격리 DB migration98/pending0·ready200·같은 화물 서버 재시작/SQL/Mongo를 검증했다. [짧은 DB 이름](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.schema-name-fix.r15.md)과 [HTTP 소비 결속](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-runtime-followup.consumer-binding.r15.md)은 좁은 후속 명세다. 제품 운영 게이트·기존 DB·외부 효과는 보존했고 전체 앱 출시/운영 migration 준비·실금융·공개 운영은 별도다.
+
+## 사가정 공통 표면층 실제 고도화 r53 (2026-10-29)
+
+- [공통 표면층 r53](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/common-surface-depth.prototype.r53.md): `CommonSurfacePreviewValidated / BeforeAfterJourneyVerified / CanonicalUnchanged`. 사용자 진행 요청으로 공통16batch의 지붕 경계·벽 하단과 도로fan 겹침을 보완하고 실제4시점/전후12초 주행·복구를 검증했다. r48/r50/r52를 이어 입력/실높이/원본을 보존하며 [실제 변경·검증·잔여](../Changes/2026-10-29-sagajeong-common-surface-r53.md)에 근거를 연결한다. 정본/Play Mode/Game View·실제 높이·운영은 별도다.
+
+## 확인된 입력부터 디오라마 고도화 r52 (2026-10-29)
+
+- [근거 우선 고도화 r52](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/verified-inputs-first-refinement.decision.r52.md): `EvidenceFirstRefinementConfirmed / ExistingDailyScheduleUpdated / NoNewRenderThisTurn`. 사용자의 ‘고도화’ 정정을 반영해 확인된 자료의 작은 실제 보완·짧게 검증 가능한 항목의 확인/진행·미확인 부분 분리를 기존 일일 예약에 보강했다. r51의 시간/대화/활성 상태와 r48/r50을 유지하며 이번은 지침/문서 변경이다.
+
+## 디오라마 일일 정밀화 r51 (2026-10-29)
+
+- [일일 작업 순환 r51](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/daily-refinement-cycle.decision.r51.md): `DailyRefinementAuthorized / DailyHeartbeatActive / WholeAreaLayeredQualityMaintained / FirstScheduledRunPending`. 사가정부터 공간 자체의 밀도/현실감과 전체 구역의 품질층을 높이고 픽업/라이딩 영상을 추출한다. 매일 오전9시 현재 대화에서 증분 점검·작은 실제 수집/보완·검증·필요 자료/에셋 보고를 이어가도록 예약했다. r48/r50과 운영자 r122를 재사용하며 이번에는 설정/문서만 변경했다.
+
+## 운영비 부담을 줄이는 개인용 Windows 게임 우선 r123 (2026-10-29)
+
+- [확인 방향·포장 범위 r123](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/offline-personal-player-first.decision.r123.md): `OfflinePersonalGameFirstConfirmed / WindowsReleasePrepared / PackagePayloadVerified / NativePlaybackSaveRestartVerified / SystemInstallNotPerformed`. r119/r120/r122 아래 개인용 Windows 관찰판·설치 파일을 준비하고 실제 재생/정지·저장·재실행 복구를 확인했다. 상세 디오라마 이식·새 경영·자유 운전·설치/제거·운영/공개는 후속이며 초기 설정 보존 한계는 개별 기획과 변경 기록을 따른다.
+
+## 사가정 픽업·라이딩 순환 시제품 r122 (2026-10-29)
+
+- [제안서·가벼운 구현 r122](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/pickup-riding-threeway.prototype.r122.md): `PickupRidingDirectionConfirmed / UnityPreviewMovieVerified / LocalThreeWayPrototypeVerified / ProductIntegrationPending`. r2/r120/r121을 이어 같은 여정을 Unity3D의 픽업/라이딩12초 영상, 로컬 장면표/파일 받기, 앱 시안 보완/재체험으로 묶었다. 실제 배달 경로·정식 게임 조작·실제 앱·운영은 미연결이며 중랑·동대문·광진·공릉/태릉은 후속 정밀화 계획이다. 범위/실패/검증은 [변경 기록](../Changes/2026-10-29-sagajeong-pickup-riding-r122.md)을 따른다.
+
+## 롱폼·게임 공통 디오라마 뼈대 r121 (2026-10-29)
+
+- [공통 디오라마 제작 뼈대 r121](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/longform-game-shared-diorama.framework.r121.md): `SharedDioramaLongformDirectionConfirmed / ProductionFrameworkProposed / ImplementationNotRequested`. 같은 사가정 공간의 게임 체험과 롱폼 장소/상황 설명·자연스러운 소개를 연결한다. r2의 장소/영상 연결과 r120의 앱 환류를 재사용하며 세 장면 구성표와 공통 자산/용도별 표현·후속 시안 순서를 제안했다. 첫 사건·삽입 대상/비중·실제 제작은 미정이고 구현/편집/공개를 수행하지 않는다.
+
+## Unity 선행 체험과 앱 구체화 순환 r120 (2026-10-29)
+
+- [제작 순환 제안 r120](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/unity-first-app-feedback-cycle.proposal.r120.md): `UnityFirstProductFeedbackRequested / WorkflowCycleProposed / ExistingAuthorityPreserved / NoImplementationChange`. 업무/시안→Unity 체험→화면·계약/검증 명세→앱/서버 반영→같은 조건 재검증을 작은 업무 단위로 반복한다. r119의 개인용·사가정·한 주문부터를 유지하고 공통 계약/규칙을 재사용한다. 첫 사건·앱별 변경과 실제 연결은 미정이며 코드/운영/학습 자동 적용은 없다.
+
+## 사가정 개인용 동북권 경영 게임 시안 r119 (2026-10-29)
+
+- [첫 시안·한 주문부터 시작](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/sagajeong-solo-northeast-game-visual.proposal.r119.md): `SagajeongStartConfirmed / PersonalSoloConfirmed / OneOrderFirstConfirmed / VisualProposalRevised / PrepDelayScenarioProposed / ImplementationNotStarted`. 사용자가 사가정역 중심과 첫 주문 문제 해결을 선택했다. 권역 예산 카드 시안을 한 주문의 픽업 지연 카드로 수정했다. 조리 지연·정확 대응/대가·HUD/지역 지도는 제안이며 생성 시안·게임 실행·실제 DB를 구분한다. 기존 동북권 운영자 기획·전체 품질 층별 누적·제작 방식 추출을 재사용한다.
 
 ## 영상 일괄 실행·정확 대상·결과 환류 r118 (2026-10-26)
 

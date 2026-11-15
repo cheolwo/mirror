@@ -1,5 +1,9 @@
 # Ssalddel AI Shared Decisions
 
+## 홍달 경영 시뮬레이션으로 디오라마와 역할 화면을 모은다
+
+2026-11-15 사용자 결정. 동네 디오라마를 보는 게임은 Unity 기반 홍달 경영 시뮬레이션 Windows판 하나로 이어간다. 이전에 별도로 열던 시제품은 퇴역시키고, 공용 지도 자료와 배달·매장·물류 규칙은 이 게임에서 재사용한다. 역할 앱에서 다루던 업무는 게임 안에서 각 역할의 화면으로 연결해 간다. 실제 주문·배차·정산의 권한은 기존 운영 앱과 서버가 맡는다. [Windows 구현 현황](Handoffs/Unity-Windows-구현현황.md) · [게임 속 역할 화면](Handoffs/2026-11-15-Claude-역할휴대폰-화물창고가게-반환.md)
+
 ## 2026-10-26 앱 개발은 같은 업무의 준비부터 복구와 마감까지 연결한다
 
 상태: `ApprovedByUser / WorkflowToolingScope / OperationalDisabled`. 사용자는 앱 개발을 공통 처리 절차로 정리하는 제안 뒤 작업 진행을 요청했다. [공통 제작 절차](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md)를 기존 제작 대장과 통합 1.0 업무별 마감표의 진입점으로 사용한다. AI가 기존 자료로 입력을 먼저 작성하고 제품 선택이 필요한 부분만 확인하며, 동일 업무의 원장·역할 인계·결과 재조회·미확정/재실행 복구를 묶어 마감한다.
