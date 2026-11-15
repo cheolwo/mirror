@@ -1,6 +1,6 @@
 # 관찰 가능한 운영 디오라마 r2
 
-> 현행 표현 확장: [사가정역 생활 디오라마 r3](diorama.r3.md). 아래 r2는 서버·상태 사본 호환 기준으로 보존한다.
+> 2026-11-15부터 동네 관찰 화면은 [홍달 경영 시뮬레이션](../../../../../README.md#홍달-경영-시뮬레이션)으로 모은다. [사가정역 생활 디오라마 r3](diorama.r3.md)는 퇴역한 전용 화면의 기록이다. 아래 r2는 서버·상태 사본 호환 기준으로 보존한다.
 
 - 기획 ID: `PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001`
 - 분야·판본: 시스템 / `observable-operations-diorama.r2`

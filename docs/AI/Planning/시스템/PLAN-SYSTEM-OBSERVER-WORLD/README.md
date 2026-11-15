@@ -1,5 +1,7 @@
 # 관찰 중심 개인 세계
 
+> 사가정 음식 생활 r6의 독립 실행은 2026-11-15에 퇴역했다. 현재 게임에서 음식점과 기사를 관찰하는 경로는 [홍달 경영 시뮬레이션](../../../../../README.md#홍달-경영-시뮬레이션)의 역할 화면을 따른다.
+
 - 기획 ID: `PLAN-SYSTEM-OBSERVER-WORLD`
 - 분야·판본: 시스템 / `observer-world.r5`
 - 상태: `ApprovedPlanningBaseline / FoundationImplementation / ObservationDefaultConfirmed / OutcomeSummaryConfirmed / ParticipationTimingAndInteractionFormSeparated / CriticalInterventionPending`
