@@ -1,0 +1,570 @@
+{
+  "schemaVersion": "hongdal.planning.coffee-chain-balance.v1",
+  "profileRevision": "r214.trial.0.1",
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "designDocument": "coffee-one-cup-chain-and-multiscale-balance.design.r214.md",
+  "status": "DesignerSelectedTrialDefaults / DesignOnly / NotRuntimePack",
+  "authority": {
+    "balanceAuthoringDelegatedByUser": true,
+    "existingPackModified": false,
+    "implementationAuthorizedByThisProfile": false,
+    "historicalRecommendationsRetroactivelyApproved": false
+  },
+  "clock": {
+    "productionElapsedSeconds": 300,
+    "forecastBusinessDayWorkSeconds": 36000,
+    "forecastDayIsRealCalendarDay": false,
+    "runtimeLongLeadBinding": "Unresolved",
+    "forecastCreatesOrdersStockOrSales": false,
+    "offlineOperatingAccrualAllowed": false
+  },
+  "recipe": {
+    "dose_g": 18,
+    "espresso_output_g": 36,
+    "bean_process_loss_g": 1,
+    "roasted_draw_g": 19,
+    "milk_in_drink_ml": 170,
+    "milk_process_loss_ml": 5,
+    "milk_draw_ml": 175,
+    "ice_g": 150
+  },
+  "recipeNoteKo": "아이스라떼.170mL는 음료 우유,5mL는 신규 취급 손실.18g은 추출 투입,1g은 계량/분쇄 손실.추출액36g에는 물이 포함됨.스팀 없음.",
+  "process": {
+    "stages": [
+      {
+        "name": "주문 확인/컵 준비",
+        "elapsed_s": 30,
+        "staff_active_s": 30
+      },
+      {
+        "name": "계량/분쇄/탬핑",
+        "elapsed_s": 45,
+        "staff_active_s": 45
+      },
+      {
+        "name": "추출",
+        "elapsed_s": 30,
+        "staff_active_s": 10
+      },
+      {
+        "name": "얼음/찬 우유 계량",
+        "elapsed_s": 45,
+        "staff_active_s": 45
+      },
+      {
+        "name": "결합/뚜껑/품질 확인",
+        "elapsed_s": 60,
+        "staff_active_s": 60
+      },
+      {
+        "name": "라벨/인수 준비",
+        "elapsed_s": 30,
+        "staff_active_s": 30
+      },
+      {
+        "name": "세척/다음 준비",
+        "elapsed_s": 60,
+        "staff_active_s": 60
+      }
+    ],
+    "total_elapsed_s": 300,
+    "staff_active_s": 280,
+    "machine_extraction_occupancy_s": 30,
+    "serial_slot_occupancy_s": 300,
+    "training_elapsed_s": 246.0,
+    "theoretical_machine_only_shots_per_10h": 1200,
+    "six_simultaneous_orders_one_staff_ready_minutes": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "six_simultaneous_orders_one_staff_average_queue_minutes": 12.5,
+    "rule": "초기에는 한 직원/슬롯이 한 잔을 300초 동안 전담. 추출 대기 중 다른 잔 시작 금지. 병렬은 별도 모형."
+  },
+  "resourcePolicy": {
+    "staffCount": 1,
+    "independentWorkSlots": 1,
+    "machineGroups": 1,
+    "staffAndWorkSlotReservedForEntireCupSeconds": 300,
+    "machineGroupReservedExtractionSeconds": 30,
+    "startAnotherCupDuringExtraction": false,
+    "sharedMachineQueueValidation": "Pending",
+    "reserveIngredientsAt": "OrderAccepted",
+    "consumeIngredientsOnceAt": "ProductionStart",
+    "perStageViewsConsumeAgain": false,
+    "readyAfterAllStages": true
+  },
+  "recipeTrialIntervals": {
+    "doseG": [
+      17.5,
+      18.5
+    ],
+    "espressoOutputG": [
+      33,
+      39
+    ],
+    "extractionSeconds": [
+      25,
+      35
+    ],
+    "milkInDrinkMl": [
+      160,
+      180
+    ],
+    "iceG": [
+      135,
+      165
+    ],
+    "meaning": "Recipe alignment feedback; not absolute taste or food-safety standard"
+  },
+  "pricing": {
+    "saleKrwPerCup": 4500,
+    "domestic_roasted_krw_per_kg": 18000,
+    "milk_krw_per_litre": 2400,
+    "packaging_krw_per_cup": 240,
+    "water_ice_incremental_power_krw_per_cup": 20,
+    "transaction_rate_game": 0.03
+  },
+  "variableCostKrwPerCup": {
+    "bean": 342.0,
+    "milk": 420.0,
+    "packaging": 240,
+    "water_ice_power": 20,
+    "transaction": 135.0
+  },
+  "totalVariableCostKrwPerCup": 1157.0,
+  "contributionKrwPerCup": 3343.0,
+  "packagingSet": {
+    "countPerCup": 1,
+    "components": [
+      "컵",
+      "뚜껑",
+      "빨대",
+      "라벨",
+      "봉투"
+    ],
+    "componentCostBreakdown": "Not separately modelled; total240KRW trial allocation"
+  },
+  "fixedCostKrwPerForecastBusinessDay": {
+    "staff_10h": 110000,
+    "facility_and_equipment_and_base_management": 90000,
+    "combined_domestic_delivery": 5000,
+    "baseline_total": 205000,
+    "second_slot_increment": 5000,
+    "extra_staff_and_slot_total": 320000,
+    "machine_only_total": 215000
+  },
+  "trainingTrial": {
+    "oneOffCostKrw": 750000,
+    "activationDelayForecastDays": 7,
+    "nonExtractionElapsedMultiplier": 0.8,
+    "extractionSecondsFixed": 30,
+    "trainedElapsedSeconds": 246
+  },
+  "volumeComparisons": [
+    {
+      "key": "baseline",
+      "name": "직원1/작업슬롯1/머신1",
+      "capacity": 120,
+      "daily_fixed": 205000,
+      "scenarios": [
+        {
+          "demand": 80,
+          "served": 80,
+          "unserved": 0,
+          "revenue": 360000,
+          "variable_cost": 92560.0,
+          "model_operating_remainder": 62440.0,
+          "milk_litres": 14.0,
+          "roasted_kg": 1.52,
+          "ice_kg": 12.0
+        },
+        {
+          "demand": 120,
+          "served": 120,
+          "unserved": 0,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 196160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        },
+        {
+          "demand": 160,
+          "served": 120,
+          "unserved": 40,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 196160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        }
+      ]
+    },
+    {
+      "key": "machine_only",
+      "name": "머신만 추가",
+      "capacity": 120,
+      "daily_fixed": 215000,
+      "scenarios": [
+        {
+          "demand": 80,
+          "served": 80,
+          "unserved": 0,
+          "revenue": 360000,
+          "variable_cost": 92560.0,
+          "model_operating_remainder": 52440.0,
+          "milk_litres": 14.0,
+          "roasted_kg": 1.52,
+          "ice_kg": 12.0
+        },
+        {
+          "demand": 120,
+          "served": 120,
+          "unserved": 0,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 186160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        },
+        {
+          "demand": 160,
+          "served": 120,
+          "unserved": 40,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 186160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        }
+      ]
+    },
+    {
+      "key": "training_final",
+      "name": "직원1 교육 후",
+      "capacity": 146,
+      "daily_fixed": 205000,
+      "one_off_training": 750000,
+      "forecast_activation_delay_days": 7,
+      "scenarios": [
+        {
+          "demand": 80,
+          "served": 80,
+          "unserved": 0,
+          "revenue": 360000,
+          "variable_cost": 92560.0,
+          "model_operating_remainder": 62440.0,
+          "milk_litres": 14.0,
+          "roasted_kg": 1.52,
+          "ice_kg": 12.0
+        },
+        {
+          "demand": 120,
+          "served": 120,
+          "unserved": 0,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 196160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        },
+        {
+          "demand": 160,
+          "served": 146,
+          "unserved": 14,
+          "revenue": 657000,
+          "variable_cost": 168922.0,
+          "model_operating_remainder": 283078.0,
+          "milk_litres": 25.55,
+          "roasted_kg": 2.774,
+          "ice_kg": 21.9
+        }
+      ]
+    },
+    {
+      "key": "staff_and_slot",
+      "name": "직원2/작업슬롯2/머신1",
+      "capacity": 240,
+      "daily_fixed": 320000,
+      "scenarios": [
+        {
+          "demand": 80,
+          "served": 80,
+          "unserved": 0,
+          "revenue": 360000,
+          "variable_cost": 92560.0,
+          "model_operating_remainder": -52560.0,
+          "milk_litres": 14.0,
+          "roasted_kg": 1.52,
+          "ice_kg": 12.0
+        },
+        {
+          "demand": 120,
+          "served": 120,
+          "unserved": 0,
+          "revenue": 540000,
+          "variable_cost": 138840.0,
+          "model_operating_remainder": 81160.0,
+          "milk_litres": 21.0,
+          "roasted_kg": 2.28,
+          "ice_kg": 18.0
+        },
+        {
+          "demand": 160,
+          "served": 160,
+          "unserved": 0,
+          "revenue": 720000,
+          "variable_cost": 185120.0,
+          "model_operating_remainder": 214880.0,
+          "milk_litres": 28.0,
+          "roasted_kg": 3.04,
+          "ice_kg": 24.0
+        }
+      ]
+    }
+  ],
+  "trainingPaybackAfterActivationForecastDays": [
+    {
+      "demand": 80,
+      "increment_after_effect": 0.0,
+      "payback_final_active_forecast_days": null
+    },
+    {
+      "demand": 120,
+      "increment_after_effect": 0.0,
+      "payback_final_active_forecast_days": null
+    },
+    {
+      "demand": 160,
+      "increment_after_effect": 86918.0,
+      "payback_final_active_forecast_days": 8.628823
+    }
+  ],
+  "procurement": {
+    "domestic_min_order_roasted_kg": 1,
+    "domestic_forecast_lead_days": 2,
+    "domestic_safety_forecast_days": 1,
+    "import_min_order_green_kg": 10,
+    "import_forecast_lead_days": 35,
+    "import_safety_forecast_days": 7,
+    "import_amount_break_even_vs_18000_per_roasted_kg": 19.230769,
+    "import_orders": [
+      {
+        "green_order_kg": 10,
+        "green_unit_cost": 9000,
+        "international_freight_per_green_kg": 1200,
+        "roast_service_per_green_kg": 1500,
+        "domestic_leg_per_green_kg": 300,
+        "fixed_documents_handling_per_batch": 60000,
+        "roasted_yield": 0.84,
+        "roasted_kg": 8.4,
+        "invoice_krw": 180000,
+        "landed_roasted_cost_krw_per_kg": 21428.571429,
+        "bean_draw_cost_per_cup": 407.142857,
+        "saving_vs_domestic_bean_per_cup": -65.142857,
+        "full_cups": 442,
+        "remaining_roasted_g": 2.0,
+        "coverage_at_120_cups_forecast_days": 3.683333
+      },
+      {
+        "green_order_kg": 20,
+        "green_unit_cost": 9000,
+        "international_freight_per_green_kg": 1200,
+        "roast_service_per_green_kg": 1500,
+        "domestic_leg_per_green_kg": 300,
+        "fixed_documents_handling_per_batch": 60000,
+        "roasted_yield": 0.84,
+        "roasted_kg": 16.8,
+        "invoice_krw": 300000,
+        "landed_roasted_cost_krw_per_kg": 17857.142857,
+        "bean_draw_cost_per_cup": 339.285714,
+        "saving_vs_domestic_bean_per_cup": 2.714286,
+        "full_cups": 884,
+        "remaining_roasted_g": 4.0,
+        "coverage_at_120_cups_forecast_days": 7.366667
+      },
+      {
+        "green_order_kg": 40,
+        "green_unit_cost": 9000,
+        "international_freight_per_green_kg": 1200,
+        "roast_service_per_green_kg": 1500,
+        "domestic_leg_per_green_kg": 300,
+        "fixed_documents_handling_per_batch": 60000,
+        "roasted_yield": 0.84,
+        "roasted_kg": 33.6,
+        "invoice_krw": 540000,
+        "landed_roasted_cost_krw_per_kg": 16071.428571,
+        "bean_draw_cost_per_cup": 305.357143,
+        "saving_vs_domestic_bean_per_cup": 36.642857,
+        "full_cups": 1768,
+        "remaining_roasted_g": 8.0,
+        "coverage_at_120_cups_forecast_days": 14.733333
+      },
+      {
+        "green_order_kg": 80,
+        "green_unit_cost": 9000,
+        "international_freight_per_green_kg": 1200,
+        "roast_service_per_green_kg": 1500,
+        "domestic_leg_per_green_kg": 300,
+        "fixed_documents_handling_per_batch": 60000,
+        "roasted_yield": 0.84,
+        "roasted_kg": 67.2,
+        "invoice_krw": 1020000,
+        "landed_roasted_cost_krw_per_kg": 15178.571429,
+        "bean_draw_cost_per_cup": 288.392857,
+        "saving_vs_domestic_bean_per_cup": 53.607143,
+        "full_cups": 3536,
+        "remaining_roasted_g": 16.0,
+        "coverage_at_120_cups_forecast_days": 29.466667
+      }
+    ]
+  },
+  "importCostBasis": {
+    "greenCostKrwPerGreenKg": 9000,
+    "internationalFreightKrwPerGreenKg": 1200,
+    "roastServiceKrwPerGreenKg": 1500,
+    "domesticInboundKrwPerGreenKg": 300,
+    "fixedDocumentsHandlingKrwPerBatch": 60000,
+    "roastedYield": 0.84,
+    "formula": "(12000 * greenKg + 60000) / (0.84 * greenKg)",
+    "fixedFeeIsActualStatutoryFee": false,
+    "regionalLastMileDaily5000Included": false,
+    "totalAcquisitionForecastIsSingleInvoice": false
+  },
+  "yieldExample": {
+    "green_g": 10000,
+    "roasted_g": 8400,
+    "full_cups": 442,
+    "dose_g": 7956,
+    "process_loss_g": 442,
+    "remaining_g": 2
+  },
+  "inventoryExamples": [
+    {
+      "full_service_demand": 80,
+      "roasted_daily_kg": 1.52,
+      "milk_daily_l": 14.0,
+      "ice_daily_kg": 12.0,
+      "domestic_bean_reorder_inventory_position_kg": 4.56,
+      "milk_reorder_inventory_position_l": 42.0,
+      "milk_on_arrival_with_15_l_order_and_1_day_buffer_l": 29.0,
+      "milk_cold_capacity_candidate_l": 40,
+      "domestic_new_1kg_bags_if_zero_bean_stock": 2,
+      "bean_carry_after_those_bags_kg": 0.48,
+      "import_green_daily_kg": 1.809524,
+      "import_reorder_inventory_position_green_equivalent_kg": 76.0,
+      "import_40kg_inflight_lots_for_35_day_lead_ceiling": 2,
+      "fully_prepaid_inflight_ceiling_krw": 1080000
+    },
+    {
+      "full_service_demand": 120,
+      "roasted_daily_kg": 2.28,
+      "milk_daily_l": 21.0,
+      "ice_daily_kg": 18.0,
+      "domestic_bean_reorder_inventory_position_kg": 6.84,
+      "milk_reorder_inventory_position_l": 63.0,
+      "milk_on_arrival_with_15_l_order_and_1_day_buffer_l": 36.0,
+      "milk_cold_capacity_candidate_l": 40,
+      "domestic_new_1kg_bags_if_zero_bean_stock": 3,
+      "bean_carry_after_those_bags_kg": 0.72,
+      "import_green_daily_kg": 2.714286,
+      "import_reorder_inventory_position_green_equivalent_kg": 114.0,
+      "import_40kg_inflight_lots_for_35_day_lead_ceiling": 3,
+      "fully_prepaid_inflight_ceiling_krw": 1620000
+    },
+    {
+      "full_service_demand": 160,
+      "roasted_daily_kg": 3.04,
+      "milk_daily_l": 28.0,
+      "ice_daily_kg": 24.0,
+      "domestic_bean_reorder_inventory_position_kg": 9.12,
+      "milk_reorder_inventory_position_l": 84.0,
+      "milk_on_arrival_with_15_l_order_and_1_day_buffer_l": 43.0,
+      "milk_cold_capacity_candidate_l": 40,
+      "domestic_new_1kg_bags_if_zero_bean_stock": 4,
+      "bean_carry_after_those_bags_kg": 0.96,
+      "import_green_daily_kg": 3.619048,
+      "import_reorder_inventory_position_green_equivalent_kg": 152.0,
+      "import_40kg_inflight_lots_for_35_day_lead_ceiling": 4,
+      "fully_prepaid_inflight_ceiling_krw": 2160000
+    }
+  ],
+  "inventoryPositionDefinition": {
+    "A": "physically usable stock including reserved stock",
+    "R": "reserved subset of A",
+    "P": "confirmed inbound planned quantity",
+    "U": "confirmed unreserved commitments not already in R",
+    "formula": "A-R+P-U",
+    "quarantinedAndConsumedWipIncludedInA": false,
+    "confirmedOrdersDoubleCountedInForecast": false,
+    "dueDateProjectionRequired": true,
+    "plannedInboundIsUsableStock": false,
+    "fieldMappingToCurrentKernel": "Pending"
+  },
+  "availabilitySensitivity": [
+    {
+      "staff_availability": 1.0,
+      "baseline_capacity": 120,
+      "trained_capacity": 146
+    },
+    {
+      "staff_availability": 0.85,
+      "baseline_capacity": 102,
+      "trained_capacity": 124
+    }
+  ],
+  "supplyDelayStress": {
+    "import_forecast_lead_from_days": 35,
+    "import_forecast_lead_to_days": 50,
+    "store_demand": 120,
+    "roasted_bridge_kg": 34.2,
+    "domestic_bridge_purchase_cost_before_bag_rounding": 615600.0,
+    "note": "추가15전망일을 실제 자동입고·부재중매출로 연결하지 않음. 국내 대체공급 비교량일 뿐이다."
+  },
+  "multiStoreComparison": {
+    "store_count": 5,
+    "cups_per_store": 120,
+    "total_cups": 600,
+    "total_roasted_draw_kg": 11.4,
+    "import_40kg_batch_full_cup_coverage_forecast_days": 2.946667,
+    "import_40kg_saving_for_600_cups": 21985.714286
+  },
+  "import40kgSensitivity": {
+    "domestic_bulk_16000": "40kg 수입 원가16071.428571이 국내16000을 넘으므로 유불리가 역전된다.",
+    "green_price_plus_20_percent": 18214.285714,
+    "yield_78_percent": 17307.692308,
+    "yield_75_percent": 18000,
+    "freight_double": 17500.0
+  },
+  "excludedOrUnresolvedCosts": [
+    "세금/관세/부가세와 환율",
+    "실제 운송/검사 지연",
+    "보험/금융/감가상각",
+    "로열티/배달 수수료",
+    "초기 장비/시설 구입비",
+    "실제 폐기/부적합/환불·할인",
+    "피크 주문 이탈·휴게/고장과 공유자원 대기"
+  ],
+  "semantics": [
+    "게임값이며 실제 시세/표준/기관 처리기한 아님",
+    "모형 영업잔여는 전체 순이익/수금/가용현금이 아님",
+    "등록·검사·통관·입고·가용화의 실제 조건은 밸런스로 변경하지 않음",
+    "확정 발주/시작 작업/과거 결산의 판본을 소급 변경하지 않음",
+    "선택한 공급망에만 실제 인수/사용 이후 영향",
+    "현재 우유팩/즉시제조·Core/예약과 분리된 기획 자료"
+  ],
+  "calculationEvidence": {
+    "path": "artifacts/local/coffee-chain-balance-r214-20261114/agent-balance/balance-results.json",
+    "sha256": "b1a7c830bb6c946bb22e3c326f6f62e5647be46ba9953863807c80d806135bb4",
+    "method": "Exact rational arithmetic; volume ceilings, not runtime scheduling"
+  }
+}
