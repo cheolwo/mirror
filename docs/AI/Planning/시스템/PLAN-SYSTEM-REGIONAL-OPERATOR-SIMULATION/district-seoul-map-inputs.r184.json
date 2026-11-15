@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "district-seoul-map-inputs.v1",
+  "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+  "revision": "r184",
+  "reviewedAtUtc": "2026-11-14T00:32:12.013191+00:00",
+  "planningBaselineSha256": "59a97c5683fbb490aa28ce1222cbc27b0eb48b0480bc4f8c473160bf60d173af",
+  "planningBaseline": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md",
+  "repositories": {
+    "Hongdal": {
+      "path": "C:\\Users\\user\\source\\repos\\Hongdal",
+      "branch": "dev/mirror-integration",
+      "head": "7c83c18cf9607b3854120c15f85d5dd8f9ab14d8"
+    },
+    "Unity": {
+      "path": "C:\\Users\\user\\ssalddel",
+      "branch": "unity/workstream-transition",
+      "head": "605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77",
+      "scopedStatus": [
+        "?? Assets/Ssalddel/WindowsGame/"
+      ]
+    }
+  },
+  "files": [
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 29771,
+      "sha256": "e4455c76f6b643be560ae79dd7a68a8b2dbde36d86c47cfa7143d14ddbecd3f7"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchGu.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 57027,
+      "sha256": "9644afba372e533cd2e21568dc3db9caaec4d608590feca4b2ffe11ebc8b37bf"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLevelPrompt.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 13573,
+      "sha256": "92eb156ab4ce7471848c7d7f1b5756015a1efb8eca9913c9766248c09903d8a9"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 59060,
+      "sha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchCycle.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 17686,
+      "sha256": "504c7463238ab19ce7ed76a6248ea2dc55bd57e4d80d0083d318a5545de94ce1"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchEngine.cs",
+      "role": "read_only_implementation_baseline",
+      "bytes": 14097,
+      "sha256": "6330af086b88d38e29160c4b554ce65a9d36aea9a4f1e92cf55588bd6b5943e4"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/결정순회Policy.cs",
+      "role": "read_only_circuit_baseline",
+      "bytes": 17857,
+      "sha256": "286483b78ab0c086a15963eccec4e0cc80d9f17224d561d579c99d089ed3c9f0"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Runtime/결정순회Checks.cs",
+      "role": "read_only_circuit_baseline",
+      "bytes": 7491,
+      "sha256": "dd41ab3e516697d78ba378242589ce84fc9e2961c400996df3d71bf5217da1a1"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Resources/hongdal-gu-space.json",
+      "role": "current_partial_map_resource",
+      "bytes": 43278,
+      "sha256": "db42e2773a1fec661c652248988f6ae24fd87b424c7cd1d162e7403902269463"
+    },
+    {
+      "root": "Unity",
+      "path": "Assets/Ssalddel/WindowsGame/Resources/SagajeongDispatch/seoul.json",
+      "role": "current_partial_map_resource",
+      "bytes": 4759,
+      "sha256": "aaaa327b240211212046963815c1513b653ee7537798425346f5f6de7cc141f8"
+    },
+    {
+      "root": "Hongdal",
+      "path": "artifacts/local/public-data/seoul-intermediate-boundaries-20260923-r1/OA-22161.zip",
+      "role": "historical_seoul_25_gu_candidate",
+      "bytes": 488551,
+      "sha256": "abd34d82897f0c2191fe4095df55a4aacfe8fce815fa4dacf730cc34c6dd962c"
+    },
+    {
+      "root": "Hongdal",
+      "path": "artifacts/local/public-data/seoul-intermediate-boundaries-20260923-r1/seoul-globe-preview.json",
+      "role": "historical_seoul_25_gu_candidate",
+      "bytes": 2564753,
+      "sha256": "d286faaa8899801c7f3af3141ee665e0e706fde2e69518028ac31e5301d907b0"
+    },
+    {
+      "root": "Hongdal",
+      "path": "eng/neighborhood/build-seoul-intermediate-preview.py",
+      "role": "existing_derivation_tool_read_only",
+      "bytes": 4463,
+      "sha256": "4a86b926808a49cd889b4407b72d44f5131ec7754a5899cb8ff146eeac2da72f"
+    }
+  ],
+  "seoulCandidate": {
+    "schemaVersion": "seoul-intermediate-preview.v3",
+    "revision": "historical-seoul-globe-preview.r3",
+    "sourceDate": "2023-10-31",
+    "areaCount": 89,
+    "districtsVerifiedInReadOnlyAudit": 25,
+    "uniqueDistrictCodesVerified": 25,
+    "distributionApproved": false,
+    "observationPresentationOnly": true,
+    "traversalReady": false,
+    "originLatitude": 37.5806971,
+    "originLongitude": 127.0884106,
+    "metersPerUnit": 1000,
+    "zipSourceCrs": "EPSG:5181",
+    "geometryValidityFullyVerified": false,
+    "currentUnityBindingVerified": false
+  },
+  "ownership": "Claude current WindowsGame work; recapture differences and agree write ownership before editing",
+  "noUnityFilesModified": true,
+  "runtimeExecuted": false,
+  "evidencePromotion": false,
+  "sharedAcrossAccountsByLocalPath": false
+}
