@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "purpose": "한국 환율·상품수출 연간 지표 두 개의 원문 전용 주기 수집. 운영 DB·게임·기존 네 예약과 분리한다.",
+  "outputRoot": "../../artifacts/local/data-collection-runs",
+  "limits": {
+    "maxRequests": 2,
+    "maxTotalBytes": 524288,
+    "timeoutSeconds": 30
+  },
+  "security": {
+    "allowedUrls": [
+      "https://api.worldbank.org/v2/country/KOR/indicator/PA.NUS.FCRF?format=json&mrv=12&per_page=100",
+      "https://api.worldbank.org/v2/country/KOR/indicator/TX.VAL.MRCH.CD.WT?format=json&mrv=12&per_page=100"
+    ]
+  },
+  "jobs": [
+    {
+      "id": "research-trade",
+      "title": "데이터 수집 · 연구용 한국 환율·상품수출",
+      "cadenceKst": "예약 실행 시 출처별 최소 720시간(30일) 간격 검사; 원 지표는 연간이며 예약 생성은 별도",
+      "sources": [
+        {
+          "id": "worldbank-kor-exchange-rate",
+          "sourceId": "world-bank-indicators",
+          "datasetId": "wdi-pa-nus-fcrf",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://api.worldbank.org/v2/country/KOR/indicator/PA.NUS.FCRF?format=json&mrv=12&per_page=100",
+          "validator": "worldbank",
+          "indicatorId": "PA.NUS.FCRF",
+          "maxBytes": 262144,
+          "maxRecords": 12,
+          "intervalHours": 720,
+          "unit": "KRW_per_USD",
+          "validationPolicyVersion": "worldbank-kor-trade-annual-v1",
+          "redistributionApproved": false
+        },
+        {
+          "id": "worldbank-kor-merchandise-exports",
+          "sourceId": "world-bank-indicators",
+          "datasetId": "wdi-tx-val-mrch-cd-wt",
+          "kind": "dataset",
+          "status": "ready",
+          "method": "GET",
+          "url": "https://api.worldbank.org/v2/country/KOR/indicator/TX.VAL.MRCH.CD.WT?format=json&mrv=12&per_page=100",
+          "validator": "worldbank",
+          "indicatorId": "TX.VAL.MRCH.CD.WT",
+          "maxBytes": 262144,
+          "maxRecords": 12,
+          "intervalHours": 720,
+          "unit": "USD_current",
+          "validationPolicyVersion": "worldbank-kor-trade-annual-v1",
+          "redistributionApproved": false
+        }
+      ]
+    }
+  ]
+}

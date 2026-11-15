@@ -1,0 +1,1085 @@
+{
+  "schemaVersion": "cafe-opening-intake-evidence-snapshot.v1",
+  "collectedAtUtc": "2026-11-14T02:47:44.026602+00:00",
+  "summary": {
+    "newRawFiles": 14,
+    "newRawBytes": 2466867,
+    "reusedUniqueSourceReferences": 12,
+    "uniqueStoredSources": 26,
+    "newCoffeeImportObservations": 9,
+    "reusedCoffeeLicenseObservations": 1743,
+    "reusedWarehouseRegistryRows": 6011,
+    "reusedManufacturerReferenceFacts": 16,
+    "newBuildingFieldDefinitions": 12,
+    "newIndividualFactoryOrWarehouseObservations": 0,
+    "proposalProcessNodes": 13,
+    "proposalDependencies": 16,
+    "actualObservedSupplierOrTransportEdges": 0,
+    "unacquiredSourceAttempts": 3
+  },
+  "sources": [
+    {
+      "sourceKey": "1f6ff511c4c2be8eba8d8755ab3710cf3aeed764544aef3c1020f896cc4df449",
+      "sourceId": "molit-nlic-registered-warehouses",
+      "datasetId": "nlic-warehouse-registry-20261113",
+      "title": "국가물류통합정보센터 등록창고 원본",
+      "kind": "dataset",
+      "officialUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "rawPath": "artifacts/local/logistics-center-research-20261113/nlic-registered-warehouses-20261113.xls",
+      "rawSha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb",
+      "bytes": 2731008,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "logistics"
+      ],
+      "collectedAtUtc": "2026-11-13T03:39:10.772135+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": [
+        "registry records",
+        "m²"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": 6011,
+      "limitations": [
+        "등록기록이며 고유 물류센터 수/현재 가동 보장 아님",
+        "커피 전용 거점/공급 계약 미확인",
+        "좌표 미확보",
+        "공표 원본의 기준일 미확인"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "9de20fd54e920680f83fe09f154812cd4739107cad57a1c541f1428717c2b890",
+      "sourceId": "seoul-open-data-local-licensing",
+      "datasetId": "OA-23059",
+      "title": "서울 휴게음식점 인허가 cafe-jungnang",
+      "kind": "dataset",
+      "officialUrl": "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do",
+      "rawPath": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-jungnang.csv",
+      "rawSha256": "23540415cab3bec8e0c589c445cb4a907d98fdf9756ee3a15fd979217f09d013",
+      "bytes": 1585451,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-11-13T12:07:13.508485+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": [
+        "license source rows"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": 3473,
+      "limitations": [
+        "원본에는 폐업/비커피 업태 포함",
+        "인허가 상태와 현재 현장 영업은 다름",
+        "고유 물리 점포 수 아님",
+        "행정동 후보/좌표계 미확정"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "c9016081e57f6b0ce0a5fabdc614f040e9c0b56ee3af1c6cc89a7b6fe3a00875",
+      "sourceId": "seoul-open-data-local-licensing",
+      "datasetId": "OA-23059",
+      "title": "서울 휴게음식점 인허가 cafe-gwangjin",
+      "kind": "dataset",
+      "officialUrl": "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do",
+      "rawPath": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-gwangjin.csv",
+      "rawSha256": "8a413a070d1e59d4d0b13e1ae4ec528750b3fe408bf4076d75498d26f67def5b",
+      "bytes": 2271862,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-11-13T12:07:15.326725+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": [
+        "license source rows"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": 4932,
+      "limitations": [
+        "원본에는 폐업/비커피 업태 포함",
+        "인허가 상태와 현재 현장 영업은 다름",
+        "고유 물리 점포 수 아님",
+        "행정동 후보/좌표계 미확정"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "181e68be5492b4b3b236114f9d00639d85c0da18fcf9175c1218f073f8aa4a4a",
+      "sourceId": "seoul-open-data-local-licensing",
+      "datasetId": "OA-23059",
+      "title": "서울 휴게음식점 인허가 cafe-dongdaemun",
+      "kind": "dataset",
+      "officialUrl": "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do",
+      "rawPath": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-dongdaemun.csv",
+      "rawSha256": "7dd1b7066a3aaa58d254733bad3b11b992a0009b0b8a31c5c2469d886860465f",
+      "bytes": 2228958,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-11-13T12:07:17.086014+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": [
+        "license source rows"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": 4833,
+      "limitations": [
+        "원본에는 폐업/비커피 업태 포함",
+        "인허가 상태와 현재 현장 영업은 다름",
+        "고유 물리 점포 수 아님",
+        "행정동 후보/좌표계 미확정"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "b302d8b760cb23abab3891304c34f155279817fa59cf3d662cd0be41369f7080",
+      "sourceId": "seoul-open-data-local-licensing",
+      "datasetId": "OA-23059",
+      "title": "서울 휴게음식점 인허가 cafe-nowon",
+      "kind": "dataset",
+      "officialUrl": "https://data.seoul.go.kr/dataList/OA-23059/S/1/datasetView.do",
+      "rawPath": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-nowon.csv",
+      "rawSha256": "538e90e2b284adf4426b68d0c302f51add6a641d8c0b8a989709b55b551dab5e",
+      "bytes": 2280973,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-11-13T12:07:18.885318+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": [
+        "license source rows"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": 4876,
+      "limitations": [
+        "원본에는 폐업/비커피 업태 포함",
+        "인허가 상태와 현재 현장 영업은 다름",
+        "고유 물리 점포 수 아님",
+        "행정동 후보/좌표계 미확정"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "da87268881af04785917428817eb785f23cb8b2a1ab633f9871dd2f7faf0f10d",
+      "sourceId": "lamarzocco-linea-pb-abr-qsg",
+      "datasetId": "linea-pb-abr-qsg-202507-url",
+      "title": "La Marzocco Linea PB Auto Brew Ratio Quick Start Guide",
+      "kind": "reference",
+      "officialUrl": "https://lamarzoccousa.com/wp-content/uploads/2025/07/Linea-PB-ABR-QSG.pdf",
+      "rawPath": "artifacts/local/management-research-data-20261114/cafe/raw/linea-pb-abr-qsg.pdf",
+      "rawSha256": "bbf98b1448a6c1ca753b898aeddf62f8462acad29c86c5bf53cddf4401205bdd",
+      "bytes": 63853,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-13T23:45:29.888127+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "판본/발행일 미확인; URL 2025/07은 발행일 확정 근거 아님",
+      "units": [
+        "g input dose",
+        "g beverage mass",
+        "brew ratio",
+        "g calibration mass"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": null,
+      "limitations": [
+        "모든 커피/상업 매장의 보편 레시피가 아님",
+        "제조사 예시는 게임 레시피·판정기준으로 미승인",
+        "추출액 g와 원두 g·물/우유 mL를 혼용하지 않음",
+        "국내 납품모델/안전설치 조건은 별도 확인"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "3f70a229f3fdcf10fd74e71015beb4b68998416e3b58ee59aef3652d91096921",
+      "sourceId": "scotsman-cu50-specification",
+      "datasetId": "ff3d2cc0-3aa8-483a-9939-db9d7a101005",
+      "title": "Scotsman CU50 Specification Sheet",
+      "kind": "reference",
+      "officialUrl": "https://www.scotsman-ice.com/documents/GetPortalDocument/ff3d2cc0-3aa8-483a-9939-db9d7a101005",
+      "rawPath": "artifacts/local/management-research-data-20261114/cafe/raw/scotsman-cu50-specification.pdf",
+      "rawSha256": "19c9842cea6f3fd06f135de509e33dc81b924ffefd477d345d8320a8abd93e8e",
+      "bytes": 803307,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-13T23:45:31.871827+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "PDF 판본·시험조건을 본문에서 확인; 취득일과 발행일 별도",
+      "units": [
+        "lb/24h",
+        "lb storage",
+        "inch",
+        "Volts/Hz/Phase",
+        "kWh/100 lb",
+        "gallons/100 lb"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": null,
+      "limitations": [
+        "한국 220V 납품모델과 동일하다고 가정하지 않음",
+        "온도·급수 조건별 생산량이며 일정 잔수/분 처리량으로 자동 환산하지 않음",
+        "페이지와 첨부의 모델/사양 판본 불일치를 덮어쓰지 않음",
+        "PDF 표의 kg는 제조사 반올림값을 그대로 보존하며 lb에서 새 정밀환산한 값이 아님"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "efda4c5c43816770400f75d830e7e9e41d2a6d047f710d167e64cc95199bb810",
+      "sourceId": "scotsman-cu50-specification",
+      "datasetId": "cu50-product-page",
+      "title": "Scotsman CU50 official product page",
+      "kind": "metadata",
+      "officialUrl": "https://www.scotsman-ice.com/products/Cube/Undercounter/CU50",
+      "rawPath": "artifacts/local/management-research-data-20261114/cafe/raw/scotsman-cu50-product-page.html",
+      "rawSha256": "05153731df439857d4cfb19cdb79e96e9b023a223434241af49091a065f7dff9",
+      "bytes": 56586,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-13T23:45:33.245412+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "웹페이지 판본/발행일 미확인",
+      "units": [
+        "lb/24h",
+        "lb",
+        "inch",
+        "V/Hz/phase"
+      ],
+      "spatialPrecision": null,
+      "sourceRows": null,
+      "limitations": [
+        "첨부 PDF와 판본 차이를 구분",
+        "국내 현장 성능/가격 아님"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "2089a591c9c736845ba3b027fec05e07576e70d05681b227bcedfe55728d6cdf",
+      "sourceId": "un-comtrade-public-preview",
+      "datasetId": "C-A-HS-KOR410-M-0901-partners-2025",
+      "title": "uncomtrade-kor-coffee-partners-2025",
+      "kind": "dataset",
+      "officialUrl": "https://comtradeapi.un.org/public/v1/preview/C/A/HS?period=2025&reporterCode=410&cmdCode=0901&flowCode=M&partnerCode=0%2C76%2C704%2C170%2C231&partner2Code=0&customsCode=C00&motCode=0&maxRecords=500",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-kor-coffee-partners-2025.json",
+      "rawSha256": "6418e515187248ba72e4cdc12612214f47c3e0c403e45953ae0bc4c9102577fc",
+      "bytes": 4651,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:33:02.704527+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "2025",
+      "units": "primaryValue USD; netWgt kg; retain other original quantity units",
+      "spatialPrecision": "reporter-country to selected partner-country; NOT port/company/route",
+      "sourceRows": 5,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "938508a53e20793a02be7165da02ebac9d5afe35b8d5bc2cff878c7e79f129e9",
+      "sourceId": "un-comtrade-public-preview",
+      "datasetId": "C-A-HS-KOR410-M-HS6coffee-world-2025",
+      "title": "uncomtrade-kor-coffee-forms-2025",
+      "kind": "dataset",
+      "officialUrl": "https://comtradeapi.un.org/public/v1/preview/C/A/HS?period=2025&reporterCode=410&cmdCode=090111%2C090112%2C090121%2C090122&flowCode=M&partnerCode=0&partner2Code=0&customsCode=C00&motCode=0&maxRecords=500",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-kor-coffee-forms-2025.json",
+      "rawSha256": "58c0e15d4e024e1021f9b5836ebb77b734ad2f288d9157e2342c6b239f3e25ee",
+      "bytes": 3728,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:33:02.704527+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "2025",
+      "units": "primaryValue USD; netWgt kg; retain other original quantity units",
+      "spatialPrecision": "Korea national aggregate by HS6; NOT origin-to-port/company/route",
+      "sourceRows": 4,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "7cb346f60b9f98ba299abf402f3b4088c1342efd01b75bbc8f7c46c122c0e59f",
+      "sourceId": "korea-customs-service",
+      "datasetId": "cntnts817-import-clearance",
+      "title": "kcs-import-clearance-guide",
+      "kind": "guide",
+      "officialUrl": "https://customs.go.kr/kcs/cm/cntnts/cntntsView.do?cntntsId=817&mi=2819",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/kcs-import-clearance-guide.html",
+      "rawSha256": "cf9afb0d203eed1b375b12326fe7d33389811687577b9401aca849cb8f71ee4e",
+      "bytes": 88293,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "procedures"
+      ],
+      "collectedAtUtc": "2026-11-14T02:33:04.627383+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "procedure text; not clearance duration or individual shipment",
+      "spatialPrecision": "Korea regulatory scope",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "f8eda5208823dc1f6ab3033e1e72ccef553fb83415bdaf0e324bf4902a9969d8",
+      "sourceId": "mfds-foodsafetykorea",
+      "datasetId": "bbs300-1058518-business-registration",
+      "title": "식약처 해외제조업소 등록 안내(국내 점포 영업신고와 구별)",
+      "kind": "guide",
+      "officialUrl": "https://www.foodsafetykorea.go.kr/portal/board/boardDetail.do?bbs_no=bbs300&menu_grp=MENU_NEW01&menu_no=4458&ntctxt_no=1058518",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/mfds-import-business-registration.html",
+      "rawSha256": "7e10d72c8d7433e4300d6e4bef24dd72274ecaf47dac73531cb3fde291c0e215",
+      "bytes": 81211,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "procedures"
+      ],
+      "collectedAtUtc": "2026-11-14T02:33:04.844692+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "procedure text; not actual operator registration record",
+      "spatialPrecision": "Korea regulatory scope",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "c1780ab63a858a5baab0037e9ba0acab82e2f3ec1dddc5418986393440dc9306",
+      "sourceId": "un-comtrade",
+      "datasetId": "public-api-docs",
+      "title": "uncomtrade-public-api-docs",
+      "kind": "metadata",
+      "officialUrl": "https://comtradeplus.un.org/en/api-docs",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-public-api-docs.html",
+      "rawSha256": "11ecd6ac9b3d9227de4e2c5e5f42388fb5ac6d3102c86a8531be0d3f5da683c8",
+      "bytes": 103461,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:33:05.958463+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "API documentation; not trade observation",
+      "spatialPrecision": "not spatial",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "9d51360b8dbfedc96ab109a318e2060e846912872989ddcdbd1d0dc8f4554d0e",
+      "sourceId": "un-comtrade",
+      "datasetId": "partnerAreas.json",
+      "title": "uncomtrade-partner-reference",
+      "kind": "metadata",
+      "officialUrl": "https://comtradeapi.un.org/files/v1/app/reference/partnerAreas.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-partner-reference.json",
+      "rawSha256": "624c1b17fffb8bc74608c4caee4e80f5635bafb479bacf2b17bd7ad94d347a22",
+      "bytes": 96277,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:34:35.105092+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "classification/reference metadata; not trade observation",
+      "spatialPrecision": "country/code reference only",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "28ba4fc3fe6bb91a96c5bcd533d2168ba15c98876439e378d6bae49e8ca30498",
+      "sourceId": "un-comtrade",
+      "datasetId": "H6.json",
+      "title": "uncomtrade-hs2022-reference",
+      "kind": "metadata",
+      "officialUrl": "https://comtradeapi.un.org/files/v1/app/reference/H6.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-hs2022-reference.json",
+      "rawSha256": "e266823e1299d1307c5d7986eb738b83aa5e5bd9af675bf19bf372220660be15",
+      "bytes": 1750838,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:34:37.768831+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": "HS2022",
+      "units": "classification/reference metadata; not trade observation",
+      "spatialPrecision": "country/code reference only",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "3feecd63f56e712767ef652dabb6d19acd54f010bf1615caa1cb0dfb5f0b3a68",
+      "sourceId": "un-comtrade",
+      "datasetId": "reference-tables?table=qtyunit",
+      "title": "uncomtrade-quantity-units",
+      "kind": "metadata",
+      "officialUrl": "https://comtradeplus.un.org/en/reference-tables?table=qtyunit",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-quantity-units.html",
+      "rawSha256": "475434effada72ca95c291d7ae4044b1c1db80c67e40c705f62c98ffa508010a",
+      "bytes": 51257,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "ingredients"
+      ],
+      "collectedAtUtc": "2026-11-14T02:34:40.897299+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "classification/reference metadata; not trade observation",
+      "spatialPrecision": "country/code reference only",
+      "sourceRows": null,
+      "limitations": [],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "8b425d3eb5959f81a9b7c7691d6625e9347d236eea6ac5a3a25ce1e1dca65bb4",
+      "sourceId": "kicox-registered-factories-catalog",
+      "datasetId": "kicox-registered-factories-catalog",
+      "title": "한국산업단지공단 전국등록공장현황",
+      "kind": "metadata",
+      "officialUrl": "https://www.data.go.kr/catalog/15105482/fileData.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/kicox-registered-factories-catalog.json",
+      "rawSha256": "d448ee5120e4427af3c0e9bd883c287c420e336bb43cb7031ed8377919e7e46c",
+      "bytes": 2116,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:00.162946+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "공장 등록 기준정보; 개별 공장 자료 미취득",
+      "spatialPrecision": "catalog only; expected factory address data not downloaded",
+      "sourceRows": 0,
+      "limitations": [
+        "공장 등록은 커피기계 제조 또는 해당 가맹점 납품의 증거가 아님",
+        "시설 API/전수 자료는 기존 geography 정책 blocked; 우회 취득하지 않음"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "abc9ef80c960d6c7851e2218e3b85e86ac0887c20b05ce6fe6ee840ccd67e5f3",
+      "sourceId": "kicox-factory-industry-statistics-catalog",
+      "datasetId": "kicox-factory-industry-statistics-catalog",
+      "title": "한국산업단지공단 공장등록현황통계 시도별 업종별 현황",
+      "kind": "metadata",
+      "officialUrl": "https://www.data.go.kr/catalog/15085508/fileData.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/kicox-factory-industry-statistics-catalog.json",
+      "rawSha256": "44857ef3906ed7c2e826da35d5f5c23e5e81dd2dccba9571df629e2f44fc8200",
+      "bytes": 3326,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:00.271661+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "시도/업종별 등록공장수; 수치 본문 미취득",
+      "spatialPrecision": "시도별 업종 통계 안내; 개별 공장 위치 아님",
+      "sourceRows": 0,
+      "limitations": [
+        "catalog metadata only; CSV 관측행 미취득",
+        "식료품/음료/기계 업종 총계로 특정 커피기업/설비 생산량을 추정하지 않음"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "a9ba0697980b56f93d7d50597388b2e3daac4ca4e9ffea84f017a4768ed5026e",
+      "sourceId": "ftc-franchisee-opening-fees-catalog",
+      "datasetId": "ftc-franchisee-opening-fees-catalog",
+      "title": "공정거래위원회 브랜드 가맹점 사업자 부담금정보",
+      "kind": "metadata",
+      "officialUrl": "https://www.data.go.kr/catalog/15125475/openapi.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/ftc-franchisee-opening-fees-catalog.json",
+      "rawSha256": "83e7f9ec89a6f9d2940776c789a006059065761dd8d5c406b69041a6d44f96a7",
+      "bytes": 1565,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "procedures"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:00.329785+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "기준년도/브랜드별 금액 및 화폐단위; 실제 API 값 미취득",
+      "spatialPrecision": "브랜드/기준년도 정보; 점포 좌표 미제공 여부는 실제응답 전 미확인",
+      "sourceRows": 0,
+      "limitations": [
+        "인증/범위 검토 전 서비스 API 호출 안 함",
+        "등록자료/기준년도 금액이 현재 견적/납품재고/실제 지급액을 의미하지 않음"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "7aa5a895dcfbdcd1e30c28b3c9f021dd79535fcbc1a729a48aefe2ed8533bce8",
+      "sourceId": "pps-item-list-catalog",
+      "datasetId": "pps-item-list-catalog",
+      "title": "조달청 물품목록정보서비스",
+      "kind": "metadata",
+      "officialUrl": "https://www.data.go.kr/catalog/15129417/openapi.json",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/pps-item-list-catalog.json",
+      "rawSha256": "010e73f2e6bfa1d5866fd077bf780dfc61c4d48d3b082b1ec75b764f2c859a87",
+      "bytes": 2350,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:00.428794+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "물품분류번호/물품식별번호/모델 등 목록정보",
+      "spatialPrecision": "물품/생산자/소재지 후보; 실제 데이터 미취득",
+      "sourceRows": 0,
+      "limitations": [
+        "특정 커피머신 SKU 등록/가격/재고/납품가능 여부 미확인",
+        "공공조달 목록은 민간 가맹점 구매계약/실제 공급망의 증거가 아님"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "bae7a7fe9db102ab9f1b1fc328c350ebee8a033053a31a6f340e4dad8a390738",
+      "sourceId": "building-hub-register-field-guide",
+      "datasetId": "building-hub-register-field-guide",
+      "title": "건축HUB 건축물대장 총괄표제부 안내",
+      "kind": "guide",
+      "officialUrl": "https://www.hub.go.kr/portal/opn/tyb/idx-bdrg-totldr.do",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/building-hub-register-field-guide.html",
+      "rawSha256": "73de2fd6844c96c71beec256d0b1ff4e79a0f6ec292fedff63ac0cfce78d1131",
+      "bytes": 55685,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:00.787747+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "용도/대장종류/주소코드 등 용어 정의",
+      "spatialPrecision": "필드 정의; 개별 건물 좌표/실내평면 아님",
+      "sourceRows": 0,
+      "limitations": [
+        "월별 현황 안내와 실제 대상 건물 속성/사용 가능성은 별개",
+        "카페 적격/임대계약/전기급배수/실내 평면/공사비는 이 안내로 확정하지 않음"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "21b425854fd9b67733603d960653068daae340689473b3c830a7a80db81155a8",
+      "sourceId": "gov24-franchise-disclosure-registration-guide",
+      "datasetId": "gov24-franchise-disclosure-registration-guide",
+      "title": "정부24 가맹사업 정보공개서 신규등록 안내",
+      "kind": "guide",
+      "officialUrl": "https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=11300000028&HighCtgCD=A09006",
+      "rawPath": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/gov24-franchise-disclosure-registration-guide.html",
+      "rawSha256": "072a95c9564ad10bc965c8b4342cd55e6a38a3b5eff2e24e65ea0fe879d409bb",
+      "bytes": 222109,
+      "storage": "new_raw",
+      "fieldKeys": [
+        "procedures"
+      ],
+      "collectedAtUtc": "2026-11-14T02:35:01.039600+00:00",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "신청/처리기관/구비서류 안내",
+      "spatialPrecision": "행정절차 안내; 지도 위치 없음",
+      "sourceRows": 0,
+      "limitations": [
+        "가맹본부 정보공개서 등록 사무 안내이며 개별 가맹점 개업 전체 절차가 아님",
+        "안내의 총 처리기간을 모든 점포 개업 소요일로 사용하지 않음"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "50a6db81b3e5671521b7022a6c610d05cc5d139e223e6ce3c7fd4d23d438d2aa",
+      "sourceId": "molit-building-register-existing-focused-sample",
+      "datasetId": "building-register-official-catalog-metadata.json",
+      "title": "molit-building-register-existing-focused-sample",
+      "kind": "metadata",
+      "officialUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+      "rawPath": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-official-catalog-metadata.json",
+      "rawSha256": "2735d44a22a47959bece13522f564e6d00d25d8af00885f2fce9bfa6777e3fe6",
+      "bytes": 1397,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-10-02",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "건축물 속성; 높이m/면적m2/층수",
+      "spatialPrecision": "주소/필지; 좌표 geometry 없음",
+      "sourceRows": 0,
+      "limitations": [
+        "기존 2026-10-02 catalog 사본; 현재 자동수집/인증 권한 아님"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "23a320dae19652bdcceab30097ddd8a63a1431d9ab76bd23fe2016d9d8dd7ee4",
+      "sourceId": "molit-building-register-existing-focused-sample",
+      "datasetId": "building-register-focused-title-response.bin",
+      "title": "molit-building-register-existing-focused-sample",
+      "kind": "dataset",
+      "officialUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+      "rawPath": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-focused-title-response.bin",
+      "rawSha256": "f7433f4201cc5b7c8ae5816fada4b2083b1004443a8e87bcd27d01b18d85a17b",
+      "bytes": 12752,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-10-02",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "건축물 속성; 높이m/면적m2/층수",
+      "spatialPrecision": "주소/필지; 좌표 geometry 없음",
+      "sourceRows": 8,
+      "limitations": [
+        "면목동77 학교부지의 8개 별동 속성 소표본",
+        "카페 입점후보가 아님; 대상 동일성/임대가능/적격 미확정"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "e1e463d3dbc52473bc489cd5538a5eb953de95d2479a83bff1250b0dcb635d81",
+      "sourceId": "molit-building-register-existing-focused-sample",
+      "datasetId": "building-register-focused-title-public-fields.json",
+      "title": "molit-building-register-existing-focused-sample",
+      "kind": "derived-public-fields",
+      "officialUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+      "rawPath": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-focused-title-public-fields.json",
+      "rawSha256": "6ccb12a951d0912155e7170571f42f1f6ba0850fbd91020b2e64c1e6235e4c28",
+      "bytes": 6011,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "premises"
+      ],
+      "collectedAtUtc": "2026-10-02",
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "건축물 속성; 높이m/면적m2/층수",
+      "spatialPrecision": "주소/필지; 좌표 geometry 없음",
+      "sourceRows": 8,
+      "limitations": [
+        "위 동일 응답의 공개필드 파생물; 원본과 합산 금지"
+      ],
+      "distributionApproved": false
+    },
+    {
+      "sourceKey": "e31fdbef5fd2f5b050db3334907bbae9aa1fd680c3d7ff70ec11f0fd5b3e9fae",
+      "sourceId": "cafe-manufacturer-derived-reference-facts",
+      "datasetId": "cafe-16-reference-facts",
+      "title": "cafe-manufacturer-derived-reference-facts",
+      "kind": "derived-reference",
+      "officialUrl": null,
+      "rawPath": "artifacts/local/management-research-data-20261114/cafe/derived/research-facts.json",
+      "rawSha256": "846a504f910e172d0d5d4c017529bcdf73348339acc706f41dd1f16e87429b25",
+      "bytes": 7598,
+      "storage": "reused_reference",
+      "fieldKeys": [
+        "equipment"
+      ],
+      "collectedAtUtc": null,
+      "evidenceAsOfUtc": null,
+      "evidencePeriod": null,
+      "units": "각 사실의 원단위 보존",
+      "spatialPrecision": "장비 사양/제조사 참고; 시설 좌표 없음",
+      "sourceRows": 16,
+      "limitations": [
+        "이 사실은 공공 관측 통계가 아닌 제조사 참고/시나리오 후보",
+        "국내 납품모델·현재 가격/재고·제조지·전력공사 조건은 미확인"
+      ],
+      "distributionApproved": false
+    }
+  ],
+  "files": [
+    {
+      "path": "artifacts/local/logistics-center-research-20261113/nlic-registered-warehouses-20261113.xls",
+      "sha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb",
+      "bytes": 2731008,
+      "fieldKey": "logistics",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-jungnang.csv",
+      "sha256": "23540415cab3bec8e0c589c445cb4a907d98fdf9756ee3a15fd979217f09d013",
+      "bytes": 1585451,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-gwangjin.csv",
+      "sha256": "8a413a070d1e59d4d0b13e1ae4ec528750b3fe408bf4076d75498d26f67def5b",
+      "bytes": 2271862,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-dongdaemun.csv",
+      "sha256": "7dd1b7066a3aaa58d254733bad3b11b992a0009b0b8a31c5c2469d886860465f",
+      "bytes": 2228958,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/restaurant-public-data-intake-20261113/licenses/raw/cafe-nowon.csv",
+      "sha256": "538e90e2b284adf4426b68d0c302f51add6a641d8c0b8a989709b55b551dab5e",
+      "bytes": 2280973,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/cafe/raw/linea-pb-abr-qsg.pdf",
+      "sha256": "bbf98b1448a6c1ca753b898aeddf62f8462acad29c86c5bf53cddf4401205bdd",
+      "bytes": 63853,
+      "fieldKey": "equipment",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/cafe/raw/scotsman-cu50-specification.pdf",
+      "sha256": "19c9842cea6f3fd06f135de509e33dc81b924ffefd477d345d8320a8abd93e8e",
+      "bytes": 803307,
+      "fieldKey": "equipment",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/cafe/raw/scotsman-cu50-product-page.html",
+      "sha256": "05153731df439857d4cfb19cdb79e96e9b023a223434241af49091a065f7dff9",
+      "bytes": 56586,
+      "fieldKey": "equipment",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-kor-coffee-partners-2025.json",
+      "sha256": "6418e515187248ba72e4cdc12612214f47c3e0c403e45953ae0bc4c9102577fc",
+      "bytes": 4651,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-kor-coffee-forms-2025.json",
+      "sha256": "58c0e15d4e024e1021f9b5836ebb77b734ad2f288d9157e2342c6b239f3e25ee",
+      "bytes": 3728,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/kcs-import-clearance-guide.html",
+      "sha256": "cf9afb0d203eed1b375b12326fe7d33389811687577b9401aca849cb8f71ee4e",
+      "bytes": 88293,
+      "fieldKey": "procedures",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/mfds-import-business-registration.html",
+      "sha256": "7e10d72c8d7433e4300d6e4bef24dd72274ecaf47dac73531cb3fde291c0e215",
+      "bytes": 81211,
+      "fieldKey": "procedures",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-public-api-docs.html",
+      "sha256": "11ecd6ac9b3d9227de4e2c5e5f42388fb5ac6d3102c86a8531be0d3f5da683c8",
+      "bytes": 103461,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-partner-reference.json",
+      "sha256": "624c1b17fffb8bc74608c4caee4e80f5635bafb479bacf2b17bd7ad94d347a22",
+      "bytes": 96277,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-hs2022-reference.json",
+      "sha256": "e266823e1299d1307c5d7986eb738b83aa5e5bd9af675bf19bf372220660be15",
+      "bytes": 1750838,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/raw/uncomtrade-quantity-units.html",
+      "sha256": "475434effada72ca95c291d7ae4044b1c1db80c67e40c705f62c98ffa508010a",
+      "bytes": 51257,
+      "fieldKey": "ingredients",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/kicox-registered-factories-catalog.json",
+      "sha256": "d448ee5120e4427af3c0e9bd883c287c420e336bb43cb7031ed8377919e7e46c",
+      "bytes": 2116,
+      "fieldKey": "equipment",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/kicox-factory-industry-statistics-catalog.json",
+      "sha256": "44857ef3906ed7c2e826da35d5f5c23e5e81dd2dccba9571df629e2f44fc8200",
+      "bytes": 3326,
+      "fieldKey": "equipment",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/ftc-franchisee-opening-fees-catalog.json",
+      "sha256": "83e7f9ec89a6f9d2940776c789a006059065761dd8d5c406b69041a6d44f96a7",
+      "bytes": 1565,
+      "fieldKey": "procedures",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/pps-item-list-catalog.json",
+      "sha256": "010e73f2e6bfa1d5866fd077bf780dfc61c4d48d3b082b1ec75b764f2c859a87",
+      "bytes": 2350,
+      "fieldKey": "equipment",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/building-hub-register-field-guide.html",
+      "sha256": "73de2fd6844c96c71beec256d0b1ff4e79a0f6ec292fedff63ac0cfce78d1131",
+      "bytes": 55685,
+      "fieldKey": "premises",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/raw/gov24-franchise-disclosure-registration-guide.html",
+      "sha256": "072a95c9564ad10bc965c8b4342cd55e6a38a3b5eff2e24e65ea0fe879d409bb",
+      "bytes": 222109,
+      "fieldKey": "procedures",
+      "storage": "new_raw"
+    },
+    {
+      "path": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-official-catalog-metadata.json",
+      "sha256": "2735d44a22a47959bece13522f564e6d00d25d8af00885f2fce9bfa6777e3fe6",
+      "bytes": 1397,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-focused-title-response.bin",
+      "sha256": "f7433f4201cc5b7c8ae5816fada4b2083b1004443a8e87bcd27d01b18d85a17b",
+      "bytes": 12752,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/neighborhood-data-collection/20261002-r1/buildings/20261002T112815Z/building-register-focused-title-public-fields.json",
+      "sha256": "6ccb12a951d0912155e7170571f42f1f6ba0850fbd91020b2e64c1e6235e4c28",
+      "bytes": 6011,
+      "fieldKey": "premises",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/cafe/derived/research-facts.json",
+      "sha256": "846a504f910e172d0d5d4c017529bcdf73348339acc706f41dd1f16e87429b25",
+      "bytes": 7598,
+      "fieldKey": "equipment",
+      "storage": "reused_reference"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/normalized/coffee-shop-license-observations.csv",
+      "sha256": "37d3d3be48096b632b91eccfc9b5a7fb82572a8b9500acd252f00cf9cdeda9f8",
+      "bytes": 994178,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/process-index.json",
+      "sha256": "221714765e58e277d096499177e2c527587764fe7e88d86868a8b7173327117a",
+      "bytes": 22982,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/gaps.json",
+      "sha256": "71e619ab37578f24803081efb365588da295fbadb6f264886017eb85a357fd72",
+      "bytes": 1959,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/coffee-import-observations.csv",
+      "sha256": "4aeb771eaf521a9a42d37dc77f2ed37532758d8cb0952aa397506b6aaac91e02",
+      "bytes": 2560,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/coffee-import-observations.indexed.csv",
+      "sha256": "b584e3ec925df6897367f758580e749f219a8c04241276580c87b5279e8e246c",
+      "bytes": 4227,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/imports/coffee-hs-reference-subset.json",
+      "sha256": "6b3d7e43fa2f46eaf300d85060156f58bce00a7876b0a4a2098989d5f2fff9fe",
+      "bytes": 1606,
+      "fieldKey": null,
+      "storage": "new_derived"
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/facilities/building-register-field-definitions.json",
+      "sha256": "71c54ea5fc7213790300bbc4d4677392dd9a40387a6f4698eabdcc25ec3b93e1",
+      "bytes": 2607,
+      "fieldKey": null,
+      "storage": "new_derived"
+    }
+  ],
+  "sourceEvidenceIndexes": [
+    "artifacts/local/cafe-opening-intake-20261114/imports/index.json",
+    "artifacts/local/cafe-opening-intake-20261114/facilities/index.json",
+    "artifacts/local/cafe-opening-intake-20261114/reuse-index.json"
+  ],
+  "verification": {
+    "schemaVersion": "cafe-opening-intake-verification.v1",
+    "verifiedAtUtc": "2026-11-14T02:47:45.390603+00:00",
+    "status": "passed",
+    "sourceFilesHashVerified": 26,
+    "allIndexedFilesHashVerified": 33,
+    "newSavedRawFiles": 14,
+    "newRawBytes": 2466867,
+    "coffeeImportSourceRowsVerified": 9,
+    "coffeeLicenseRowsRecheckedAgainstOriginalNormalizedInput": 1743,
+    "sqliteReadOnlyReopen": true,
+    "sqliteIntegrityAndForeignKeys": "passed",
+    "sqliteCounts": {
+      "sources": 26,
+      "files": 33,
+      "process_nodes": 13,
+      "process_dependencies": 16,
+      "node_sources": 59,
+      "cafe_site_observations": 1743,
+      "import_observations": 9,
+      "gaps": 8
+    },
+    "proposalGraphAcyclic": true,
+    "observedSupplierOrRouteEdges": 0,
+    "allMapTargetsUnresolved": true,
+    "sharedOrOperationalDatabaseWritten": false,
+    "collectionPolicyOrSchedulesChanged": false,
+    "gameChanged": false,
+    "limitations": [
+      "NLIC row count uses existing audit plus same raw hash; not a new BIFF row extraction",
+      "no physical cafe/warehouse/factory visit, coordinates, contract or runtime validation"
+    ]
+  },
+  "gaps": [
+    {
+      "key": "supplier-network",
+      "fieldKey": "logistics",
+      "status": "unavailable",
+      "reason": "특정 커피/기계 공급사·창고·점포의 실제 거래/재고/운송·설치 연결 미확보"
+    },
+    {
+      "key": "spatial-binding",
+      "fieldKey": "premises",
+      "status": "unresolved",
+      "reason": "카페/창고 후보 좌표·건물 PK·층·행정동 단일 결속 미확정; 주소를 임의 좌표로 대체 안 함"
+    },
+    {
+      "key": "direct-import-rules",
+      "fieldKey": "procedures",
+      "status": "partially_verified",
+      "reason": "관세청/해외제조업소 안내 확보; 품목·원산국·가공도별 최신 검역/검사·관세/요금 세부 미확인"
+    },
+    {
+      "key": "machine-sku-stock",
+      "fieldKey": "equipment",
+      "status": "unavailable",
+      "reason": "국내 판매 모델/SKU·공장 매핑·현재 가격/가용재고·납기/설치조건 미확보; 조달/HS/게임 품목코드 동일시 안 함"
+    },
+    {
+      "key": "interior-bom",
+      "fieldKey": "interior",
+      "status": "unavailable",
+      "reason": "점포별 실측 도면·공종/BOM·시공 견적·공기/전기·급배수 현장 적합성 미확보"
+    },
+    {
+      "key": "staffing",
+      "fieldKey": "staff",
+      "status": "unavailable",
+      "reason": "특정 점포 인력·숙련/가용·교육/설치 작업 상태 미확보; 역할 이름은 기획 후보"
+    },
+    {
+      "key": "ingredients-local-cost",
+      "fieldKey": "ingredients",
+      "status": "unavailable",
+      "reason": "현재 원두/우유/컵 납품가격·MOQ·계약/배송 조건 미확보; 연간 USD 수입통계를 개별 구매단가로 쓰지 않음"
+    },
+    {
+      "key": "brand-contract",
+      "fieldKey": "procedures",
+      "status": "unavailable",
+      "reason": "특정 가상 모델의 개설 조건/인수·체크 기준 미정; FTC 카탈로그는 실제 브랜드 정보공개서 본문 취득 아님"
+    }
+  ],
+  "unsavedAttempts": [
+    {
+      "index": "artifacts/local/cafe-opening-intake-20261114/imports/index.json",
+      "id": "kcs-hsk-coffee-classification",
+      "status": "failed",
+      "url": "https://unipass.customs.go.kr/clip/hsinfosrch/openULS0201008Q.do",
+      "error": "response exceeds bounded limit"
+    },
+    {
+      "index": "artifacts/local/cafe-opening-intake-20261114/imports/index.json",
+      "id": "mfds-import-declaration-qa",
+      "status": "failed",
+      "url": "https://impfood.mfds.go.kr/CFBCC05F01?pageType=P",
+      "error": "response exceeds bounded limit"
+    },
+    {
+      "index": "artifacts/local/cafe-opening-intake-20261114/imports/index.json",
+      "id": "apqa-2026-documentary-quarantine",
+      "status": "failed",
+      "url": "https://ebook.qia.go.kr/src/viewer/main.php?category=1&host=main&page=429&site=20260107_101021",
+      "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+    }
+  ],
+  "proposalGraphIsNotObservedSupplyChain": true,
+  "gameMapHighlightTargetsUnresolved": true,
+  "operationalDatabaseWritten": false,
+  "schedulesChanged": false,
+  "gameChanged": false,
+  "indexFingerprints": [
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/catalog.json",
+      "sha256": "0442f4e7af64e40a8cf1dd926a0e1812325bfd11bc835dada12882ae8555e475",
+      "bytes": 98272
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/source-catalog.sqlite",
+      "sha256": "3451d47a9811f956a799e8f79051211eabd2e6aa46efc87822986bbbc531e7a4",
+      "bytes": 2789376
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/process-index.json",
+      "sha256": "221714765e58e277d096499177e2c527587764fe7e88d86868a8b7173327117a",
+      "bytes": 22982
+    },
+    {
+      "path": "artifacts/local/cafe-opening-intake-20261114/verification.json",
+      "sha256": "d85e99a3939fa59789b490f46e4ff336dbb3f9f293f8b4509c430a80f7c93ae1",
+      "bytes": 1129
+    }
+  ]
+}

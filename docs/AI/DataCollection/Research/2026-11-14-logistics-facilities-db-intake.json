@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "logistics-facilities-db-intake-evidence.v1",
+  "recordedAtUtc": "2026-11-14T06:32:17.805155+00:00",
+  "summary": {
+    "schemaVersion": "logistics-facility-intake.v1",
+    "createdAtUtc": "2026-11-14T06:30:46.034691+00:00",
+    "database": "artifacts/local/logistics-facilities-intake-20261114/logistics-facilities.sqlite",
+    "databaseSha256": "d2963721cb8d5276041c9e86e8d89089f3dd6bc6d80e68153db28fa29f1466d9",
+    "counts": {
+      "sources": 5,
+      "raw_snapshots": 5,
+      "facility_observations": 6100,
+      "facility_measures": 24487,
+      "facility_attributes": 55163
+    },
+    "byFacilityType": {
+      "RegisteredWarehouse": 6011,
+      "LogisticsComplex": 59,
+      "LogisticsTerminal": 30
+    },
+    "sourceAudits": [
+      {
+        "facilityType": "RegisteredWarehouse",
+        "rows": 6011,
+        "sheet": "물류창고정보_0",
+        "columns": 9,
+        "blankSourceRowsSkipped": [],
+        "header": [
+          "상호명",
+          "사업자번호",
+          "소재지",
+          "일반창고면적(m²)",
+          "냉동냉장창고면적(m²)",
+          "보관장소면적(m²)",
+          "타법률창고면적(m²)",
+          "관련법률",
+          "취급품목"
+        ],
+        "sourceRawSha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb"
+      },
+      {
+        "facilityType": "LogisticsComplex",
+        "rows": 59,
+        "sheet": "통계정보_0",
+        "columns": 16,
+        "blankSourceRowsSkipped": [
+          2
+        ],
+        "header": [
+          "물류시설명",
+          "시행자",
+          "주소",
+          "총면적(㎡)",
+          "총사업비(억)",
+          "단지시설면적(㎡)",
+          "지원시설면적(㎡)",
+          "공공시설면적 (㎡)",
+          "분양율 (%)",
+          "입주율 (%)",
+          "지정고시일",
+          "사업시작월",
+          "사업종료월",
+          "주요입점업체",
+          "구분",
+          "기타사항"
+        ],
+        "sourceRawSha256": "134aa630feaf4fb6fb60e27efa29396280e87cf96c790bdf6cf5b1a4c2cc7feb"
+      },
+      {
+        "facilityType": "LogisticsTerminal",
+        "rows": 30,
+        "sheet": "통계정보_0",
+        "columns": 4,
+        "blankSourceRowsSkipped": [
+          2
+        ],
+        "header": [
+          "물류터미널명",
+          "지역",
+          "규모",
+          "공사시행인가일"
+        ],
+        "sourceRawSha256": "91e520951cfab5b87b14a8f2ba05ababe7d0e4d3f42244bde758d937c4da31e7"
+      }
+    ],
+    "physicalFacilityCount": null,
+    "coordinatesVerified": 0,
+    "sourceDatesUnknown": 6100,
+    "newAnonymousNlicDatasetFiles": 2,
+    "reusedNlicDatasetFiles": 1,
+    "newCatalogFiles": 2,
+    "sourceWorkbookModified": false,
+    "sharedCollectorOrScheduleChanged": false,
+    "gameApplied": false,
+    "reexecutionStrictNoOp": false,
+    "mysqlReferenceManifest": "artifacts/local/logistics-facilities-intake-20261114/mysql-reference-manifest.json",
+    "mysqlReferenceManifestSha256": "f28b3bcb756b5054b765b7c00895ddbe211d4446baf18671cedfe734ae3b5636",
+    "mysqlObservationRowsEligible": 0,
+    "mysqlReferenceRationale": "Source observation dates unknown; do not weaken existing temporal observation contract. Row-level reference observations are queryable in SQLite."
+  },
+  "sqliteReexecution": {
+    "strictNoOp": true,
+    "hashUnchanged": true
+  },
+  "mysql": {
+    "databaseTarget": "hongdal-mysql-1 / 127.0.0.1:13306 / hongdal_dev",
+    "rawReferencesInserted": 5,
+    "normalizedObservationsInserted": 0,
+    "committed": true,
+    "independentReadbackVerified": true,
+    "repeatStrictNoOp": true,
+    "repeatDatabaseWriteAttempted": false,
+    "beforeCounts": {
+      "rawSnapshots": 383,
+      "ingestionRuns": 387,
+      "normalizedRecords": 116735,
+      "regionMappings": 3
+    },
+    "afterCounts": {
+      "rawSnapshots": 388,
+      "ingestionRuns": 392,
+      "normalizedRecords": 116735,
+      "regionMappings": 3
+    }
+  },
+  "independentRowAudit": "artifacts/local/logistics-facilities-intake-20261114/independent-row-verification-final.json",
+  "finalVerification": "artifacts/local/logistics-facilities-intake-20261114/final-verification.json",
+  "schedulesChanged": false,
+  "productCodeChanged": false,
+  "gameApplied": false,
+  "commitPushPerformed": false
+}

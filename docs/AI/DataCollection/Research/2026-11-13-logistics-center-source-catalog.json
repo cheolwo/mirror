@@ -1,0 +1,788 @@
+{
+  "schemaVersion": "logistics-center-research-catalog.v1",
+  "checkedAtUtc": "2026-11-13T03:48:50.615457+00:00",
+  "scope": "Republic of Korea public facility registry, selected operator examples, generic handling/identification principles; proposal research only",
+  "evidenceCeiling": "Historical/published official cases plus one acquired raw registry; current operation, company route graph, internal layout and production parameters not verified",
+  "researchSourceCount": 24,
+  "operatorFacilityCaseCount": 7,
+  "publicTableSampleCount": 8,
+  "downloadedDataFileCount": 1,
+  "rawRegistry": {
+    "path": "artifacts/local/logistics-center-research-20261113/nlic-registered-warehouses-20261113.xls",
+    "sizeBytes": 2731008,
+    "sha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb",
+    "sheet": "물류창고정보_0",
+    "dataRows": 6011,
+    "columns": 9,
+    "headers": [
+      "상호명",
+      "사업자번호",
+      "소재지",
+      "일반창고면적(m²)",
+      "냉동냉장창고면적(m²)",
+      "보관장소면적(m²)",
+      "타법률창고면적(m²)",
+      "관련법률",
+      "취급품목"
+    ],
+    "evidenceAsOfUtc": null,
+    "notUniqueLogisticsCenterCount": true,
+    "normalizationPerformed": false,
+    "dbIngested": false,
+    "sheetNameEvidence": {
+      "record": "BIFF_BOUNDSHEET_0x0085",
+      "rawFileByteOffset": 1300636,
+      "encoding": "UTF-16LE",
+      "characterCount": 8,
+      "rootByteVerification": true
+    }
+  },
+  "sources": [
+    {
+      "researchId": "molit-nlic-registered-warehouses",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "국토교통부/국가물류통합정보센터 물류창고업 현황",
+      "officialUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "catalogUrl": "https://www.data.go.kr/data/15083282/fileData.do",
+        "coverage": "대한민국 남한의 공표/등록 물류창고업 조회 범위. 물류시설법 및 타법률 의제창고 포함. 전국 모든 배송센터/택배영업소/자가창고/실가동시설 전수목록을 보장하지 않음.",
+        "actualData": true,
+        "acquisition": {
+          "requestedAtUtc": "2026-11-13T03:39:10.772135+00:00",
+          "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+          "method": "POST public DWLOAD form with source-declared control names",
+          "status": 200,
+          "contentType": "application/vnd.ms-excel;charset=UTF-8",
+          "sizeBytes": 2731008,
+          "manualHttpRequestsSoFar": 6,
+          "maxRequests": 6,
+          "maxFileBytes": 12582912,
+          "anonymous": true,
+          "priorAttemptStatus": "HTML response, not saved as data",
+          "statusCode": "acquired",
+          "rawPath": "artifacts/local/logistics-center-research-20261113/nlic-registered-warehouses-20261113.xls",
+          "rawSha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb",
+          "signature": "d0cf11e0a1b11ae1"
+        },
+        "evidenceAsOf": null,
+        "asOfLimitation": "현행 XLS의 별도 기준일은 미확인이다. 포털 수정일은 별도 메타데이터 관찰값으로 보존하며 취득시각이나 포털 수정일을 행의 기준일로 대입하지 않는다.",
+        "pageDisplayedCount": 6011,
+        "workbookStructuralDataRowCount": 6011,
+        "workbookColumnCount": 9,
+        "fileValidation": "OLE/Workbook BIFF구조, 헤더Unicode/원시UTF16LE바이트, 자료6011행 확인. 전체 정규화/좌표검증/실가동 검증 없음.",
+        "sourceTextQuality": {
+          "status": "header-unicode-byte-verified",
+          "replacementCharactersInHeaderCells": 0,
+          "headerByteEvidence": [
+            {
+              "header": "상호명",
+              "codePoints": [
+                "U+C0C1",
+                "U+D638",
+                "U+BA85"
+              ],
+              "utf16leBytesHex": "c1c038d685ba",
+              "firstRawFileByteOffset": 1300695,
+              "byteMatch": true
+            },
+            {
+              "header": "사업자번호",
+              "codePoints": [
+                "U+C0AC",
+                "U+C5C5",
+                "U+C790",
+                "U+BC88",
+                "U+D638"
+              ],
+              "utf16leBytesHex": "acc0c5c590c788bc38d6",
+              "firstRawFileByteOffset": 1300704,
+              "byteMatch": true
+            },
+            {
+              "header": "소재지",
+              "codePoints": [
+                "U+C18C",
+                "U+C7AC",
+                "U+C9C0"
+              ],
+              "utf16leBytesHex": "8cc1acc7c0c9",
+              "firstRawFileByteOffset": 1300717,
+              "byteMatch": true
+            }
+          ],
+          "correction": "앞선 도구 stdout에서의 한글깨짐은 Windows 출력인코딩 표시문제였다. artifact의 BIFF Unicode/원문UTF16LE가 정확하며 원문손상주장을 철회한다.",
+          "limitations": "SST 전체/CONTINUE 전수해석과 전행 사업장명·주소 검증은 미수행. 헤더9개와 행구조 검증 범위."
+        },
+        "declaredUpdateCycle": "수시(자동 갱신): 포털 카탈로그",
+        "license": {
+          "catalogDeclaration": "무료, 이용허락범위 제한 없음",
+          "catalogPolicyUrl": "https://www.data.go.kr/ugs/selectPortalPolicyView.do",
+          "currentRawReuseCheck": "동일 자료군 포털 선언을 연결했으나 NLIC 현행 원본별 추가 이용조건은 별도 확인 필요. 내부 조사 원본 보존만 수행."
+        },
+        "fieldsAvailableFromOfficialPage": [
+          "상호명",
+          "소재지",
+          "창고면적(m²)",
+          "관련법률",
+          "취급품목"
+        ],
+        "missingOperationalFacts": [
+          "택배허브/배송캠프/지역터미널 구분",
+          "권역기사 배달범위",
+          "현재 가동/폐업 확정",
+          "컨베이어/센서/슈트/도크 배치",
+          "시간당 처리량/차량 회차/배송 연결",
+          "검증된 좌표"
+        ],
+        "verifiedWorkbookHeaders": [
+          "상호명",
+          "사업자번호",
+          "소재지",
+          "일반창고면적(m²)",
+          "냉동냉장창고면적(m²)",
+          "보관장소면적(m²)",
+          "타법률창고면적(m²)",
+          "관련법률",
+          "취급품목"
+        ],
+        "catalogMetadataObservations": [
+          {
+            "reportedModificationDate": "2025-07-01",
+            "basis": "Earlier research page observation; retained as historical metadata observation"
+          },
+          {
+            "reportedModificationDate": "2026-11-12",
+            "basis": "2026-11-13 root official data.go.kr structured page read",
+            "url": "https://www.data.go.kr/data/15083282/fileData.do"
+          }
+        ]
+      }
+    },
+    {
+      "researchId": "molit-nlic-warehouse114-scope",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "국가물류통합정보센터 창고114 안내",
+      "officialUrl": "https://www.nlic.go.kr/nlic/marketWareIntro.action",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-service-scope",
+        "actualData": false,
+        "scope": "등록 및 미등록 자발공표 창고 정보의 목록·다운로드·전국분포 서비스 설명",
+        "evidenceAsOf": null,
+        "limitation": "서비스 소개를 전체등록목록의 취득완료나 모든배송센터 포함의 증거로 사용하지 않음."
+      }
+    },
+    {
+      "researchId": "molit-nlic-logistics-complex",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "국가물류통합정보센터 물류단지 현황",
+      "officialUrl": "https://www.nlic.go.kr/nlic/fmComplex0010.action",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-facility-complex-table",
+        "actualData": false,
+        "publicTableObserved": true,
+        "pageDisplayedCount": 59,
+        "evidenceAsOf": "2024-10",
+        "evidencePrecision": "month",
+        "updateCycle": "연간",
+        "fields": [
+          "물류단지명",
+          "운영여부",
+          "규모(㎡)",
+          "지역"
+        ],
+        "limitation": "단지 단위이다. 단지내 개별 창고/배송센터 수와 다르며 이번 엑셀 원본 미취득. 새실시간현황으로 보지 않음.",
+        "license": "페이지별 이용조건 추가확인 필요"
+      }
+    },
+    {
+      "researchId": "molit-nlic-logistics-terminal",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "국가물류통합정보센터 물류터미널 현황",
+      "officialUrl": "https://www.nlic.go.kr/nlic/fmTerminal0010.action",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-terminal-source-candidate",
+        "actualData": false,
+        "publicPageOpened": true,
+        "evidenceAsOf": null,
+        "limitation": "물류터미널 법적 분류는 parcel subterminal과 일대일관계가 아님. 이번 원본 파일/행수/이용조건 미검증."
+      }
+    },
+    {
+      "researchId": "molit-nlic-inland-logistics-base",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "국가물류통합정보센터 내륙물류기지 현황",
+      "officialUrl": "https://www.nlic.go.kr/nlic/marketFiveWare.action",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-inland-logistics-base-source-candidate",
+        "actualData": false,
+        "publicPageOpened": true,
+        "evidenceAsOf": null,
+        "limitation": "내륙 거점은 전국 배송센터의 다른 시설 계층. 이번 원본 미취득."
+      }
+    },
+    {
+      "researchId": "koreapost-mail-centers-history",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "우정사업조달센터 우편집중국 및 물류센터, 우체국 건설현황",
+      "officialUrl": "https://www.koreapost.go.kr/jodal/subIndex/510.do",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-network-description-and-names",
+        "actualData": false,
+        "evidenceAsOf": null,
+        "facilityTypeCertainty": "우편집중국/물류센터/우체국을 원문이 구분",
+        "addressPublicInObservedTable": false,
+        "limitation": "과거 건설 연혁·폐국 괄호·구성망 표가 혼재. 25집중국/6물류센터 서술을 현재 전국 가동수로 단정하지 않음. 주소/좌표 없음; 원문 파일 미취득.",
+        "license": "별도 이용조건 확인필요"
+      }
+    },
+    {
+      "researchId": "pola-logistics-center-location-disclosure",
+      "publisher": "국토교통부/국가물류통합정보센터 또는 해당 공식 공표기관",
+      "title": "우체국물류지원단 사전정보공표 물류센터 위치",
+      "officialUrl": "https://www.pola.or.kr/web/cop/bbs/selectBoardList.do?bbsId=BBSMSTR_000000000346",
+      "evidenceKind": "PublicRegistryOrFacilityDisclosure",
+      "details": {
+        "kind": "official-location-disclosure-candidate",
+        "actualData": false,
+        "evidenceAsOf": null,
+        "searchObservedMetadata": {
+          "title": "2026년도 상반기 물류센터 위치",
+          "publishedDate": "2026-07-08"
+        },
+        "accessResult": "공식 검색노출 확인; 본문 open redirect loop로 미검증. 첨부 원본 미취득.",
+        "limitation": "검색 메타데이터만으로 주소목록·시설전수·운영현황을 취득했다고 보고하지 않음."
+      }
+    },
+    {
+      "researchId": "coupang-daegu-automation",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "쿠팡, 대구 풀필먼트 센터 자동화 물류 현장 공개",
+      "officialUrl": "https://news.coupang.com/archives/26330/?print=print",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2023-02-07",
+      "evidenceLocator": "본문 8,17,20,25,29,38행",
+      "verifiedFacts": [
+        "대구FC의 진열·집품·포장·분류 작업과 운송장 바코드에 따른 배송지별 소팅을 설명한다.",
+        "CFS 대표가 대구FC의 AI 상품관리·자동화 기술을 설명한다."
+      ]
+    },
+    {
+      "researchId": "coupang-daegu-trial",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "쿠팡 대구FC 미디어 투어 참가신청 안내",
+      "officialUrl": "https://news.coupang.com/archives/25952/?print=print",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2023-01-25",
+      "evidenceLocator": "본문 10,23행",
+      "verifiedFacts": [
+        "2022년 3월 준공, 2023년 1월 안내 당시 시험 가동 중이라고 명시한다.",
+        "공개 지역은 대구광역시 달성군이다."
+      ]
+    },
+    {
+      "researchId": "coupang-namyangju2-cls",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "쿠팡로지스틱스서비스 배송기사 건강관리·현장 방문 보도자료",
+      "officialUrl": "https://news.coupang.com/archives/63537/?print=print",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2026-06-16",
+      "evidenceLocator": "사진설명·본문 5,10,15,19,22행",
+      "verifiedFacts": [
+        "CLS가 경기 남양주2캠프에서 2026-06-11 현장 행사를 진행했다고 설명한다.",
+        "시설명·경기도 위치·CLS 현장 관계를 확인하는 사례다. 물류 연결 노선은 이 자료에 없다."
+      ]
+    },
+    {
+      "researchId": "coupang-jeju3",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "전기차 물류 시대, 쿠팡이 앞서가는 이유",
+      "officialUrl": "https://news.coupang.com/archives/20132/",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2022-10-17",
+      "evidenceLocator": "본문 32~35행",
+      "verifiedFacts": [
+        "제주 와흘리에 제주도 로켓배송의 세 번째 배송센터인 제주3캠프가 문을 열었다고 소개한다.",
+        "2022년 10월 전기 배송차량 운영을 설명한다."
+      ]
+    },
+    {
+      "researchId": "coupang-camp-flow",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "쿠친의 업무를 돕는 쿠팡의 라스트마일 기술 혁신",
+      "officialUrl": "https://news.coupang.com/archives/15709/",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2022-03-31",
+      "evidenceLocator": "본문 26,32~39,50행",
+      "verifiedFacts": [
+        "배송캠프에서 지역별 분류와 롤테이너 준비 후 배송차에 적재하여 출발한다.",
+        "오토소터와 주소·인접 배송지 묶음은 배송지역 분류를 돕는다고 설명한다."
+      ]
+    },
+    {
+      "researchId": "coupang-camp-linehaul",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "우리의 고객은 쿠팡맨! RNS 팀",
+      "officialUrl": "https://news.coupang.com/archives/2408/",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2019-07-24",
+      "evidenceLocator": "본문 42~45행",
+      "verifiedFacts": [
+        "캠프 설계에 간선차량 상하차·소분·적재 방식과 출입구·동선이 영향을 준다고 설명한다.",
+        "개별 FC와 특정 캠프 사이 운송 연결표는 제공하지 않는다."
+      ]
+    },
+    {
+      "researchId": "coupang-cfs-service",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "쿠팡 로켓그로스 판매자 웹사이트 개설",
+      "officialUrl": "https://news.coupang.com/archives/44570/",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2024-07-09",
+      "evidenceLocator": "로켓그로스 서비스 설명 단락",
+      "verifiedFacts": [
+        "CFS와 함께 제공하는 서비스의 입고 이후 보관·포장·재고관리·배송·반품 역할을 설명한다.",
+        "서비스 전체 범위를 시설 하나나 법인 하나가 모든 단계를 직접 수행한다는 뜻으로 해석하지 않는다."
+      ]
+    },
+    {
+      "researchId": "cj-gonjiam-integrated",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "아시아 최대 택배 인프라 기반 창고혁명",
+      "officialUrl": "https://www.cjlogistics.com/ko/newsroom/news/NR_00000617",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2020-04-19",
+      "evidenceLocator": "본문 302~314행",
+      "verifiedFacts": [
+        "같은 건물의 풀필먼트에서 제품 선별·포장 후 허브터미널로 이동하고 자동분류하여 발송하는 구조다.",
+        "LG생활건강 상품 출고 시작은 기사 다음 날인 2020-04-20로 공지했다."
+      ]
+    },
+    {
+      "researchId": "cj-gonjiam-region",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "교통안전문화 확산에 앞장서는 CJ대한통운",
+      "officialUrl": "https://www.cjlogistics.com/ko/newsroom/latest/LT_00000132",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2020-09-22",
+      "evidenceLocator": "형광 반사띠 캠페인 첫 문단",
+      "verifiedFacts": [
+        "곤지암 메가허브 터미널 소재 지역을 경기도 광주시로 명시한다."
+      ]
+    },
+    {
+      "researchId": "cj-centers-2024",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "최적의 물류 솔루션을 만나다: 맞춤형 e-풀필먼트 센터",
+      "officialUrl": "https://www.cjlogistics.com/ko/newsroom/latest/LT_00000391",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2024-11-29",
+      "evidenceLocator": "본문 317~327,328~350,356~378행",
+      "verifiedFacts": [
+        "곤지암 B2C센터는 메가허브 내에 위치하여 출발 측 Sub와 Hub 사이 이동 단계를 생략하는 허브 연계형 FC로 설명된다.",
+        "용인 B2C·용인 B2C 스마트·용인 저온센터가 별도 항목이므로 지명만으로 같은 시설로 합치면 안 된다."
+      ]
+    },
+    {
+      "researchId": "cj-gunpo-opening",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "군포·용인 풀필먼트센터 오픈",
+      "officialUrl": "https://www.cjlogistics.com/ko/newsroom/news/NR_00000851",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2021-06-20",
+      "evidenceLocator": "본문 308~316행",
+      "verifiedFacts": [
+        "경기도 군포 상온 e-풀필먼트 가동을 발표했고 보관·재고관리·포장·출고를 수행한다.",
+        "층별 보관 후 분류·포장하여 1층 통합 출고, 곤지암 메가허브 직송 구조를 설명한다.",
+        "같은 기사 속 용인 콜드체인은 8월 개소 예정이므로 그 문헌만으로 가동 완료라 할 수 없다."
+      ]
+    },
+    {
+      "researchId": "cj-yongin-cold-operation",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "식품도 풀필먼트로: 영역·규모·기술 확대",
+      "officialUrl": "https://www.cjlogistics.com/ko/newsroom/news/NR_00000904",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": "2021-11-18",
+      "evidenceLocator": "본문 302,306~309행",
+      "verifiedFacts": [
+        "용인 냉장·냉동 콜드체인 풀필먼트의 본격 가동과 보관·재고관리·포장·출고·배송 통합 서비스를 발표한다.",
+        "포장 완료 상품이 곤지암·대전 등 대규모 허브로 이동하고 자동분류 후 전국 Sub터미널을 거쳐 가정에 배송된다고 설명한다."
+      ]
+    },
+    {
+      "researchId": "hanjin-parcel-and-warehouse",
+      "publisher": "쿠팡/CLS/CJ대한통운/한진 공식 자료",
+      "title": "한진 사업영역: 택배 소개·기업택배·Warehouse",
+      "officialUrl": "https://www.hanjin.com/kor/CMS/Contents/Contents.do?mCode=MN125",
+      "evidenceKind": "OperatorOfficialArticleOrBusinessPage",
+      "publishedAt": null,
+      "evidenceLocator": "본문 453~454,494~505,534~566행",
+      "verifiedFacts": [
+        "대전 Mega-Hub의 2024년 1월 정식 개장을 명시한다.",
+        "배송 프로세스에 권역별 분류·간선 상차, 하차·배송지별 분류, 배송지 터미널 이동과 기사별 분류를 구분한다.",
+        "Warehouse의 용인센터·이천센터와 입고검수→보관·주문할당→피킹·검수·출하대기→상차·TML인계→고객 인도를 설명한다."
+      ]
+    },
+    {
+      "researchId": "equipment-fives-parcel-distribution",
+      "publisher": "Fives",
+      "title": "Parcel Distribution",
+      "officialUrl": "https://www.fivesgroup.com/smart-automation-solutions/your-markets-our-solutions/parcel-postal/parcel-distribution",
+      "evidenceKind": "OfficialManufacturerOrStandardsBodyDocumentation",
+      "publishedAt": null,
+      "verifiedFacts": [
+        "입고 하역과 컨베이어 이송, 정렬/간격 확보, 읽기, 분류, 재작업, 재상차의 별도 구간을 설명한다.",
+        "출구는 슈트뿐 아니라 컨베이어·백·롤케이지 등일 수 있다.",
+        "라벨 부재·읽기 실패·목적 출구 미배정은 수동 재작업으로 보낸다."
+      ],
+      "limitations": [
+        "국내 특정 센터의 실제 설비·배치 또는 고장 처리 절차를 증명하지 않는다."
+      ]
+    },
+    {
+      "researchId": "equipment-datalogic-identification",
+      "publisher": "Datalogic",
+      "title": "Parcel Transport and Sortation Systems",
+      "officialUrl": "https://www.datalogic.com/eng/industries-applications/transportation-logistics/postal/parcel-transport-and-sortation-systems-ia-55.html",
+      "evidenceKind": "OfficialManufacturerOrStandardsBodyDocumentation",
+      "publishedAt": null,
+      "verifiedFacts": [
+        "컨베이어 물품 감지·바코드 읽기·식별과 목적지 분기를 구분해 설명한다."
+      ],
+      "limitations": [
+        "실제 국내 사업자가 이 특정 업체 설비를 사용한다는 근거는 아니다.",
+        "센서 감지는 업무 완료/인수 승인과 다르며 그 상태 구분은 제안 설계로 별도 검증한다."
+      ]
+    },
+    {
+      "researchId": "equipment-beumer-outbound",
+      "publisher": "BEUMER Group",
+      "title": "Outbound Logistics Solutions",
+      "officialUrl": "https://www.beumergroup.com/industry/courier-express-parcel/outbound-logistics/",
+      "evidenceKind": "OfficialManufacturerOrStandardsBodyDocumentation",
+      "publishedAt": null,
+      "verifiedFacts": [
+        "목적지별 슈트·버퍼/롤러 레인에서 수동 세분류·팔레트/케이지 적재를 지원한다.",
+        "연장형 벨트는 낱개 소포 상차에도 사용된다."
+      ],
+      "limitations": [
+        "처리능력·안전·성능은 이번 게임의 숫자나 국내 실제 배치로 승계하지 않는다."
+      ]
+    },
+    {
+      "researchId": "identity-gs1-logistic-unit",
+      "publisher": "GS1",
+      "title": "What is a Logistics unit and how is it identified?",
+      "officialUrl": "https://support.gs1.org/support/solutions/articles/43000734289-what-is-a-logistics-unit-and-how-is-it-identified-",
+      "evidenceKind": "OfficialManufacturerOrStandardsBodyDocumentation",
+      "publishedAt": "2024-08-22",
+      "verifiedFacts": [
+        "운송/보관을 위해 구성한 물류단위는 SSCC로 개별 식별할 수 있다.",
+        "물류단위 식별과 관련 거래정보 조회는 연결되지만 상품종류 코드 하나와 동일한 개체 의미는 아니다."
+      ],
+      "limitations": [
+        "모든 국내 택배 송장이 SSCC라는 뜻이 아니다.",
+        "시뮬레이션은 가상 포장물 ID부터 사용하며 실사업자 코드·송장·주소를 생성/수집하지 않는다."
+      ]
+    }
+  ],
+  "operatorFacilityCases": [
+    {
+      "caseId": "KR-COUPANG-DAEGU-FC-HISTORICAL",
+      "name": "쿠팡 대구FC",
+      "operator": "쿠팡 / 쿠팡풀필먼트서비스(CFS)",
+      "facilityType": "FulfillmentCenter",
+      "publicRegion": "대한민국 대구광역시 달성군",
+      "date": "2023-02-07",
+      "operationStatusAtEvidence": "자동화 공정 현장 공개. 앞선 2023-01-25 안내는 시험 가동 명시; 정식 가동일·현재 운영 상태 미검증",
+      "verifiedFacts": [
+        "재고 선반의 진열·집품, 포장, 포장 운송장에 따른 배송지별 분류가 공개됐다."
+      ],
+      "storage": "상품 보관·진열형 풀필먼트",
+      "flow": [
+        "보관/진열",
+        "주문별 집품",
+        "포장",
+        "배송지별 출고 분류"
+      ],
+      "uncertain": [
+        "이 시설에서 어느 캠프로 가는지, 간선 출발편·현재 배송권·현재 처리량은 미확인"
+      ],
+      "sourceIds": [
+        "coupang-daegu-automation",
+        "coupang-daegu-trial"
+      ]
+    },
+    {
+      "caseId": "KR-CLS-NAMYANGJU2-CAMP-HISTORICAL",
+      "name": "남양주2캠프",
+      "operator": "쿠팡로지스틱스서비스(CLS) 관련 공식 현장",
+      "facilityType": "DeliveryCamp",
+      "publicRegion": "대한민국 경기도 남양주",
+      "date": "2026-06-16",
+      "operationStatusAtEvidence": "2026-06-11 현장 활동의 공식 발표 사례; 현재 운영 보장 아님",
+      "verifiedFacts": [
+        "경기 남양주2캠프라는 이름과 CLS 현장 활동이 확인된다."
+      ],
+      "storage": "상업 재고 장기보관 역할은 이 자료에서 확인되지 않음",
+      "flow": [
+        "배송캠프 유형 사례"
+      ],
+      "uncertain": [
+        "캠프 일반 소분·적재 흐름을 이 캠프의 특정 설비/노선 사실로 전환하지 않음",
+        "현행 배송권 경계·원천 FC·특정 오토소터 설치 여부·소유/임차 관계 미확인"
+      ],
+      "sourceIds": [
+        "coupang-namyangju2-cls"
+      ],
+      "typeFlowSourceIds": [
+        "coupang-camp-flow",
+        "coupang-camp-linehaul"
+      ]
+    },
+    {
+      "caseId": "KR-COUPANG-JEJU3-CAMP-HISTORICAL",
+      "name": "제주3캠프",
+      "operator": "쿠팡(2022년 문헌; 해당 시설 법인/현재 담당은 미확인)",
+      "facilityType": "DeliveryCamp",
+      "publicRegion": "대한민국 제주특별자치도 제주시 와흘리(공식 기사 표기)",
+      "date": "2022-10-17",
+      "operationStatusAtEvidence": "개소·배송차량 운영 소개의 역사 표본",
+      "verifiedFacts": [
+        "제주 로켓배송의 세 번째 배송센터이며 전기 배송차량을 고려한 시설로 소개됐다."
+      ],
+      "storage": "장기 재고보관 기능 미확인; 배송 출발 거점",
+      "flow": [
+        "배송차 적재/차량 준비",
+        "라스트마일 배송"
+      ],
+      "uncertain": [
+        "대륙→제주 해상/항공 연결과 중간 허브는 이 문헌에서 미확인",
+        "CLS/CFS 현재 운영 주체를 소급 배정하지 않음"
+      ],
+      "sourceIds": [
+        "coupang-jeju3"
+      ],
+      "typeFlowSourceIds": [
+        "coupang-camp-flow"
+      ]
+    },
+    {
+      "caseId": "KR-CJ-GONJIAM-INTEGRATED-HISTORICAL",
+      "name": "곤지암 메가허브 / 곤지암 B2C 풀필먼트",
+      "operator": "CJ대한통운",
+      "facilityType": "CoLocatedFulfillmentAndParcelHub",
+      "publicRegion": "대한민국 경기도 광주시",
+      "date": "2024-11-29",
+      "operationStatusAtEvidence": "2020년 서비스 출고 개시 공지, 2024년 허브 연계형 FC로 소개된 역사 표본",
+      "verifiedFacts": [
+        "풀필먼트와 택배 허브가 같은 건물에 있는 복합 시설이다.",
+        "출발 측 택배 집하·Sub 이동을 생략하는 구조가 명시돼 있다."
+      ],
+      "storage": "FC 영역 재고보관; 택배 허브 영역은 분류·발송",
+      "flow": [
+        "FC 재고보관",
+        "선별/포장",
+        "동일 건물 허브 이송",
+        "자동분류",
+        "전국 발송"
+      ],
+      "uncertain": [
+        "FC와 허브 기능을 두 위치로 중복 생성하지 않음",
+        "출발 Sub 생략을 도착 Sub까지 없다는 뜻으로 해석하지 않음",
+        "시설 내부 실제 도면·좌표·현재 노선·현재 처리량 미확인"
+      ],
+      "sourceIds": [
+        "cj-gonjiam-integrated",
+        "cj-gonjiam-region",
+        "cj-centers-2024"
+      ]
+    },
+    {
+      "caseId": "KR-CJ-GUNPO-EFC-2021-HISTORICAL",
+      "name": "군포 e-풀필먼트센터",
+      "operator": "CJ대한통운",
+      "facilityType": "AmbientFulfillmentCenter",
+      "publicRegion": "대한민국 경기도 군포시",
+      "date": "2021-06-20",
+      "operationStatusAtEvidence": "해당 일자 상온 FC 가동 발표",
+      "verifiedFacts": [
+        "상온 상품을 보관·재고관리하고 분류·포장 후 통합 출고한다.",
+        "출고 완료 상품을 출발 측 Sub 없이 곤지암 메가허브로 직송하는 서비스 구조를 설명한다."
+      ],
+      "storage": "상온 재고보관",
+      "flow": [
+        "입고/재고보관",
+        "주문 분류/포장",
+        "통합 출고",
+        "곤지암 메가허브 직송"
+      ],
+      "uncertain": [
+        "같은 군포 지명의 택배 지점/Sub 또는 2024년 스마트센터와 물리적 동일성은 별도 확인 필요",
+        "자료의 1시간 거리·주문 마감시간을 현재 고정 이동시간/서비스 약속으로 사용하지 않음"
+      ],
+      "sourceIds": [
+        "cj-gunpo-opening"
+      ]
+    },
+    {
+      "caseId": "KR-CJ-YONGIN-COLD-2021-HISTORICAL",
+      "name": "용인 콜드체인 풀필먼트센터",
+      "operator": "CJ대한통운",
+      "facilityType": "ColdChainFulfillmentCenter",
+      "publicRegion": "대한민국 경기도 용인시",
+      "date": "2021-11-18",
+      "operationStatusAtEvidence": "해당 일자 본격 가동 발표; 2021-06-20에는 예정 단계였음을 구별",
+      "verifiedFacts": [
+        "냉장·냉동 상품의 보관·재고·포장·출고를 다룬다.",
+        "포장 이후 허브→Sub→가정 단계가 공식 설명된다."
+      ],
+      "storage": "온도 관리가 필요한 식품 재고보관",
+      "flow": [
+        "저온 입고/보관",
+        "주문 준비/포장",
+        "곤지암·대전 등 허브",
+        "허브 자동분류",
+        "전국 Sub터미널",
+        "가정 배송"
+      ],
+      "uncertain": [
+        "어떤 주문이 어느 허브를 거치는지·특정 Sub 연결은 미공개",
+        "상온/B2C/스마트 등 같은 용인 명칭의 다른 시설과 자동 병합하지 않음",
+        "현재 냉장 운송 구간별 조건·정확 좌표·가동일 미검증"
+      ],
+      "sourceIds": [
+        "cj-yongin-cold-operation",
+        "cj-gunpo-opening"
+      ]
+    },
+    {
+      "caseId": "KR-HANJIN-DAEJEON-MEGA-HUB-PUBLICPAGE",
+      "name": "대전 Mega-Hub",
+      "operator": "한진",
+      "facilityType": "ParcelMegaHub",
+      "publicRegion": "대한민국 대전광역시(시설 명칭 수준; 구·좌표 미확인)",
+      "date": "2024-01",
+      "datePrecision": "Month",
+      "operationStatusAtEvidence": "게시일 미표시 공식 사업 페이지에서 2024-01 정식 개장 명시; 2026-11-13 열람",
+      "verifiedFacts": [
+        "물류 자동화 설비를 갖춘 전국 택배 네트워크의 대형 허브로 소개된다."
+      ],
+      "storage": "재고 판매보관과 구별되는 택배 중계·분류 역할",
+      "flow": [
+        "허브 중계/분류"
+      ],
+      "uncertain": [
+        "같은 페이지의 B2C/B2B 혼합 표를 이 시설의 현재 시간표·모든 경로로 적용하지 않음",
+        "실시간 운행·가동·현재 처리량 미검증"
+      ],
+      "sourceIds": [
+        "hanjin-parcel-and-warehouse"
+      ],
+      "typeFlowSourceIds": [
+        "hanjin-parcel-and-warehouse"
+      ]
+    }
+  ],
+  "operatorTopologyPatterns": [
+    {
+      "operator": "쿠팡",
+      "patternId": "CoupangFulfillmentAndDeliveryCamp",
+      "facts": [
+        "CFS 서비스 설명은 보관·재고·포장 등 풀필먼트 범위를, 대구FC 자료는 포장 후 배송지별 분류를, 캠프 자료는 간선 상하차·지역별 소분·배송차 적재를 각각 뒷받침한다."
+      ],
+      "flow": [
+        "FC 보관/집품/포장/배송지 분류",
+        "시설 간 간선 운송(유형별 근거)",
+        "캠프 지역별 소분/배송차 적재",
+        "고객 배송"
+      ],
+      "sourceIds": [
+        "coupang-cfs-service",
+        "coupang-daegu-automation",
+        "coupang-camp-linehaul",
+        "coupang-camp-flow"
+      ],
+      "uncertain": [
+        "여러 문헌으로 정리한 업체 내 역할 조합이며, 대구FC→남양주2/제주3 실제 연결 또는 모든 물품의 필수 경로를 검증한 결과가 아니다.",
+        "별도 Sub-hub의 최신 연결·우회·재분류 단계는 이번 사례로 확정하지 않는다."
+      ]
+    },
+    {
+      "operator": "CJ대한통운",
+      "patternId": "CJCoLocatedAndRemoteFulfillmentVariants",
+      "facts": [
+        "곤지암은 FC와 허브의 동거형, 군포는 FC 출고 후 곤지암 허브 직송형이다.",
+        "용인 냉장·냉동 FC 문헌은 포장→대형 허브→Sub→가정 단계를 명시한다."
+      ],
+      "flow": [
+        "FC 포장/출고",
+        "동일 건물 허브 이송 또는 허브 직송",
+        "허브 배송권별 분류",
+        "도착 Sub 지역분류/배송",
+        "고객"
+      ],
+      "sourceIds": [
+        "cj-gonjiam-integrated",
+        "cj-gunpo-opening",
+        "cj-yongin-cold-operation"
+      ],
+      "uncertain": [
+        "일반 택배 집하형 경로의 출발 Sub와 풀필먼트 직결형의 생략을 구분한다.",
+        "공식 기사에 명시되지 않은 특정 간선차·상차편·개별 Sub를 추가하지 않는다."
+      ]
+    },
+    {
+      "operator": "한진",
+      "patternId": "HanjinWarehouseAndParcelHandoffs",
+      "facts": [
+        "Warehouse의 출하대기·상차검수·TML 인계와, 택배 흐름의 권역분류·간선 상차·하차·배송지 분류·기사별 분류가 구분된다."
+      ],
+      "flow": [
+        "3PL 입고/보관/주문별 피킹/검수/출하대기",
+        "상차/TML 인계",
+        "택배 권역분류/간선 상차",
+        "도착 측 하차/배송지 분류",
+        "배송지 터미널/기사별 분류",
+        "배송"
+      ],
+      "sourceIds": [
+        "hanjin-parcel-and-warehouse"
+      ],
+      "uncertain": [
+        "공식 서비스 유형들을 이어 읽은 역할 구조이며 용인센터의 모든 화물이 대전 Mega-Hub를 경유한다는 주장이 아니다.",
+        "사업 페이지의 B2C/B2B 표기 혼용과 게시일 미표시를 보존한다."
+      ]
+    }
+  ],
+  "publicFacilitySamples": [],
+  "equipmentSourcesAreNotKoreanFacilityVendorAssignments": true,
+  "privateDataCollected": false,
+  "officialFactoryLayoutsObtained": false,
+  "operatorDeliveryZonesObtained": false,
+  "inputArtifactSha256": {
+    "public-facility-sources.json": "e737bd850defda80a19f9f50b0798cb910e88c516a75929ab1ccc80b91171ebc",
+    "operator-facility-research.json": "31d0fe865dc68bfb9032843c2c910ff5a927f6fc92a47838770004aa95568577",
+    "equipment-process-research.json": "5c76ee073702d4bff7429fdecb52b4f157cf49a86732f50efd6c12f892c2a86e",
+    "reuse-and-skeleton-review.json": "c821e375ae7239dd7a2e401adba340042f748fb504f816de0a813002ffa78dbb",
+    "xls-structure-summary.json": "4596e8fb52cee3fc402d9cb62be76ded20c953df8a2232e7e7f1494603de05ad"
+  },
+  "productChanged": false,
+  "schedulesChanged": false,
+  "dbChanged": false,
+  "distributionApprovedByThisResearch": false,
+  "publicFacilitySampleEvidence": {
+    "observedRows": 8,
+    "sharedRows": 0,
+    "sourceUrls": [
+      "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action"
+    ],
+    "reason": "시설명·원문주소 8행과 원본은 내부 조사 자료에 보관한다. 이 대장에는 열람 수와 공식 출처를 남긴다."
+  }
+}

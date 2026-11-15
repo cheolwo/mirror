@@ -313,7 +313,23 @@ def evidence_date(value):
         return None
 
 
+def worldbank_contract(source):
+    """허용한 한국 연간 지표의 단위 계약만 선택한다. 경지면적의 기존 기본값을 유지한다."""
+    indicator = source.get("indicatorId", "AG.LND.ARBL.HA")
+    contracts = {"AG.LND.ARBL.HA": ("ha", "hectares"),
+                 "PA.NUS.FCRF": ("KRW_per_USD", "KRW_per_USD"),
+                 "TX.VAL.MRCH.CD.WT": ("USD_current", "USD_current")}
+    if not isinstance(indicator, str) or indicator not in contracts:
+        raise CollectionError("worldbank_indicator_not_allowed", blocked=True)
+    configured_unit, result_unit = contracts[indicator]
+    unit = source.get("unit", "ha" if indicator == "AG.LND.ARBL.HA" else None)
+    if unit != configured_unit:
+        raise CollectionError("worldbank_unit_contract_invalid", blocked=True)
+    return indicator, configured_unit, result_unit
+
+
 def validate_worldbank(body, source, max_records):
+    indicator, configured_unit, result_unit = worldbank_contract(source)
     data = as_json(body)
     if not (isinstance(data, list) and len(data) == 2 and isinstance(data[0], dict)
             and isinstance(data[1], list) and 0 < len(data[1]) <= max_records):
@@ -325,13 +341,19 @@ def validate_worldbank(body, source, max_records):
     for row in data[1]:
         if (not isinstance(row, dict) or row.get("countryiso3code") != "KOR"
                 or not isinstance(row.get("indicator"), dict)
-                or row["indicator"].get("id") != "AG.LND.ARBL.HA"
+                or row["indicator"].get("id") != indicator
                 or not isinstance(row.get("date"), str)
                 or not re.fullmatch(r"\d{4}", row["date"])):
             raise CollectionError("worldbank_identity_invalid")
+        # 세계은행의 이 세 지표는 unit=""를 반환한다. 빈 단위는 고정 지표 계약으로만 보완한다.
+        if row.get("unit", "") not in ("", configured_unit, result_unit):
+            raise CollectionError("worldbank_unit_invalid")
+        if row["date"] in years:
+            raise CollectionError("worldbank_year_duplicate")
         years.add(row["date"])
         if row.get("value") is not None:
-            if not isinstance(row["value"], (int, float)) or not numeric(row["value"]):
+            if (not isinstance(row["value"], (int, float)) or not numeric(row["value"])
+                    or row["value"] < 0):
                 raise CollectionError("worldbank_value_invalid")
             valid += 1
             numeric_years.add(row["date"])
@@ -340,7 +362,7 @@ def validate_worldbank(body, source, max_records):
     return {"recordCount": len(data[1]), "numericRecords": valid,
             "evidenceAsOf": max(numeric_years), "evidenceAsOfPrecision": "year",
             "sourceUpdatedAt": updated, "observationYears": sorted(years),
-            "numericObservationYears": sorted(numeric_years), "unit": "hectares"}
+            "numericObservationYears": sorted(numeric_years), "unit": result_unit}
 
 
 def validate_bls(body, source, max_records):
@@ -519,6 +541,8 @@ VALIDATORS = {"worldbank": validate_worldbank, "bls": validate_bls,
 
 def policy_fingerprint(source, now):
     """Include the effective request and validation contract, preserving old hashes."""
+    if source.get("validator") == "worldbank":
+        worldbank_contract(source)
     value = {"sourceId": source["sourceId"], "datasetId": source["datasetId"],
              "url": source["url"], "method": source.get("method", "GET"),
              "json": year_tokens(source.get("json"), now),
@@ -531,6 +555,8 @@ def policy_fingerprint(source, now):
         value["csvPolicy"] = {key: source.get(key) for key in (
             "requiredColumns", "periodColumn", "periodFormat", "expectedPeriod",
             "idColumns", "numericColumns", "spatialUnit")}
+    if source.get("validator") == "worldbank" and "indicatorId" in source:
+        value["worldbankPolicy"] = {"indicatorId": source["indicatorId"]}
     return hashlib.sha256(json.dumps(value, sort_keys=True,
         ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
 

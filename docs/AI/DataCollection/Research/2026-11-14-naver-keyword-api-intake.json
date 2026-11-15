@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "naver-keyword-api-intake-evidence.v1",
+  "dateKst": "2026-11-14",
+  "verifiedAtUtc": "2026-11-14T00:24:05.126408+00:00",
+  "status": "BlockedMissingDedicatedCredentials",
+  "newPublicReferenceFiles": 15,
+  "newReferenceBytes": 4288979,
+  "reusedPublicReferences": 1,
+  "uniqueSeedKeywords": 13,
+  "publicReferenceHttpRequests": 18,
+  "actualKeywordApiHttpRequests": 0,
+  "numericKeywordRows": 0,
+  "advertiserPerformanceRows": 0,
+  "testsPassed": 124,
+  "references": {
+    "catalog": {
+      "path": "artifacts/local/naver-keyword-intake-20261114/source-catalog.json",
+      "sha256": "c0f84ec31df1bfee5f7197de2b434d74b5846c5e4e3b35983ecb580fbb30c62f"
+    },
+    "queryPlan": {
+      "path": "artifacts/local/naver-keyword-intake-20261114/query-plan.json",
+      "sha256": "961c8ff224bf71871c42cb63eef4563d4f3ddd2d1ae810b83e15490aa170759e"
+    },
+    "validation": {
+      "path": "artifacts/local/naver-keyword-intake-20261114/validation.json",
+      "sha256": "09cb1c85dcc145ca54b78a7412bde480fca19bf4ee8a063039eab07d4bbab2f2"
+    },
+    "authenticationPresence": {
+      "path": "artifacts/local/naver-keyword-intake-20261114/auth-audit.json",
+      "sha256": "cc97eea5e3adacfa21494b7552fb4a62a933a58482f730f8c98d1611e596747e"
+    },
+    "apiHubUsageConditions": {
+      "path": "artifacts/local/naver-keyword-intake-20261114/apihub-reference/terms-and-pricing-findings.json",
+      "sha256": "4d9d182daeeec7d82ecc096516ed7e8f210182f164ec727907de17a17add7286"
+    }
+  },
+  "apiHubNewApplicationBase": "https://naverapihub.apigw.ntruss.com/search-trend/v1/search",
+  "searchAdKeywordToolBase": "https://api.searchad.naver.com/keywordstool",
+  "actualRunId": "20261114T002139Z-d1311488",
+  "apiHubStorageTerms": "UnconfirmedForCurrentApiHubSearchTrend",
+  "newNumericSchedulesCreated": false,
+  "operationalDbImported": false,
+  "gameImported": false,
+  "advertisingCampaignCreated": false,
+  "commitOrPushPerformed": false
+}

@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "logistics-facilities-refresh.v1",
+  "approvedDateKst": "2026-11-14",
+  "timezone": "Asia/Seoul",
+  "outputRoot": "artifacts/local/data-collection-runs/logistics-facilities",
+  "facilityDatabasePath": "artifacts/local/logistics-facilities-intake-20261114/logistics-facilities.sqlite",
+  "xlrdLibraryPath": "artifacts/local/logistics-facilities-intake-20261114/_deps",
+  "minimumIntervalHours": 48,
+  "maxSourceBytes": 12582912,
+  "maxRunBytes": 25165824,
+  "maxRequests": 3,
+  "timeoutSeconds": 30,
+  "automaticGameImport": false,
+  "automaticNewProviderActivation": false,
+  "automaticSqliteHistoryAppend": true,
+  "mysqlImportKind": "reference_only_after_explicit_verify",
+  "warehouseDiscoveryMaximumBytes": 2097152,
+  "maximumWarehouseRows": 100000,
+  "groups": {
+    "warehouses": {
+      "period": "calendar_month",
+      "scheduleKst": "매월1일10:30",
+      "automationId": "automation-15",
+      "status": "ACTIVE",
+      "nextExpectedRunAtKst": "2026-12-01T10:30:00+09:00"
+    },
+    "hubs": {
+      "period": "calendar_quarter",
+      "scheduleKst": "1·4·7·10월1일10:45",
+      "automationId": "automation-16",
+      "status": "ACTIVE",
+      "nextExpectedRunAtKst": "2027-01-01T10:45:00+09:00"
+    }
+  },
+  "sources": [
+    {
+      "id": "registered-warehouses",
+      "group": "warehouses",
+      "sourceId": "molit-nlic-registered-warehouses",
+      "datasetId": "nlic-warehouse-registry-20261113",
+      "url": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "form": {
+        "command": "DWLOAD",
+        "PAGE_CUR": "1",
+        "S_CHK_FLAG": "true",
+        "S_D_FROM": "",
+        "S_D_TO": "",
+        "S_CORP_NM": "",
+        "S_SIDO": "",
+        "S_GUGUN": "",
+        "S_ITEM_TEXT": "",
+        "S_SEL_SORT_AREA": "",
+        "S_CHK_VALUE_GEN_COL": "true",
+        "CHK_GEN_COL": "Y",
+        "S_CHK_VALUE_STORE": "true",
+        "CHK_STORE": "Y",
+        "S_CHK_VALUE_RANGE": "true",
+        "CHK_RANGE": "Y",
+        "S_CHK_VALUE_PORT": "true",
+        "CHK_PORT": "Y",
+        "S_CHK_VALUE_CUST": "true",
+        "CHK_CUST": "Y",
+        "S_CHK_VALUE_CHEM": "true",
+        "CHK_CHEM": "Y",
+        "S_CHK_VALUE_FOOD": "true",
+        "CHK_FOOD": "Y",
+        "S_CHK_VALUE_ANIM": "true",
+        "CHK_ANIM": "Y",
+        "S_CHK_VALUE_MARI": "true",
+        "CHK_MARI": "Y"
+      },
+      "facilityType": "RegisteredWarehouse",
+      "expectedHeaders": [
+        "상호명",
+        "사업자번호",
+        "소재지",
+        "일반창고면적(m²)",
+        "냉동냉장창고면적(m²)",
+        "보관장소면적(m²)",
+        "타법률창고면적(m²)",
+        "관련법률",
+        "취급품목"
+      ],
+      "discoverPageLength": true,
+      "baseline": {
+        "rawPath": "artifacts/local/logistics-center-research-20261113/nlic-registered-warehouses-20261113.xls",
+        "sha256": "7b8ba1bfcd29730c9fd594253f1a9c87dd33f40ceba8f0aff60ed94e492122eb",
+        "collectedAtUtc": "2026-11-13T03:39:10.772135+00:00",
+        "periodKey": "2026-11"
+      }
+    },
+    {
+      "id": "logistics-complexes",
+      "group": "hubs",
+      "sourceId": "molit-nlic-logistics-complexes",
+      "datasetId": "nlic-logistics-complexes-20261114",
+      "url": "https://www.nlic.go.kr/nlic/fmComplex0010.action",
+      "form": {
+        "command": "DWLOAD",
+        "PAGE_CUR": "1",
+        "S_GUBUN_NM": "",
+        "S_GUBUN": "",
+        "S_GUBUN_SIDO": ""
+      },
+      "facilityType": "LogisticsComplex",
+      "expectedHeaders": [
+        "물류시설명",
+        "시행자",
+        "주소",
+        "총면적(㎡)",
+        "총사업비(억)",
+        "단지시설면적(㎡)",
+        "지원시설면적(㎡)",
+        "공공시설면적 (㎡)",
+        "분양율 (%)",
+        "입주율 (%)",
+        "지정고시일",
+        "사업시작월",
+        "사업종료월",
+        "주요입점업체",
+        "구분",
+        "기타사항"
+      ],
+      "discoverPageLength": false,
+      "baseline": {
+        "rawPath": "artifacts/local/logistics-facilities-intake-20261114/raw/nlic-logistics-complexes.xls",
+        "sha256": "134aa630feaf4fb6fb60e27efa29396280e87cf96c790bdf6cf5b1a4c2cc7feb",
+        "collectedAtUtc": "2026-11-14T06:24:28.766886+00:00",
+        "periodKey": "2026-Q4"
+      }
+    },
+    {
+      "id": "logistics-terminals",
+      "group": "hubs",
+      "sourceId": "molit-nlic-logistics-terminals",
+      "datasetId": "nlic-logistics-terminals-20261114",
+      "url": "https://www.nlic.go.kr/nlic/fmTerminal0010.action",
+      "form": {
+        "command": "DWLOAD",
+        "PAGE_CUR": "1",
+        "S_GUBUN_NM": "",
+        "S_GUBUN_SIDO": ""
+      },
+      "facilityType": "LogisticsTerminal",
+      "expectedHeaders": [
+        "물류터미널명",
+        "지역",
+        "규모",
+        "공사시행인가일"
+      ],
+      "discoverPageLength": false,
+      "baseline": {
+        "rawPath": "artifacts/local/logistics-facilities-intake-20261114/raw/nlic-logistics-terminals.xls",
+        "sha256": "91e520951cfab5b87b14a8f2ba05ababe7d0e4d3f42244bde758d937c4da31e7",
+        "collectedAtUtc": "2026-11-14T06:24:58.327627+00:00",
+        "periodKey": "2026-Q4"
+      }
+    }
+  ]
+}

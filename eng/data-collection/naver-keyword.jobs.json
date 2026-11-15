@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "naver-keyword-intake.v1",
+  "purpose": "인증된 읽기 전용 키워드 참고자료 수집; 광고 집행·계정 실적·게임 자동 반입 없음",
+  "minimumSuccessIntervalHours": 168,
+  "authorizationRevision": 0,
+  "authorizationRevisionMeaning": "401/403/429 보류 뒤 자격·권한 개선을 확인한 담당자만 이 비밀이 아닌 정수를 올린다. 키 지문은 저장하지 않는다.",
+  "maximumRequests": 6,
+  "maximumResponseBytes": 262144,
+  "maximumRunBytes": 2097152,
+  "timeoutSeconds": 30,
+  "datalab": {
+    "endpoint": "https://naverapihub.apigw.ntruss.com/search-trend/v1/search",
+    "numericPersistenceEnabled": false,
+    "persistenceGateReason": "storage_terms_unconfirmed",
+    "startDate": "2025-11-01",
+    "endDate": "2026-10-31",
+    "timeUnit": "month",
+    "batches": [
+      ["커피", "아메리카노", "카페라떼", "디카페인커피", "커피배달"],
+      ["커피", "치킨배달", "도시락배달", "면목동맛집", "면목동카페"],
+      ["커피", "택배", "풀필먼트", "해외직구", "키워드광고"]
+    ],
+    "clientIdEnvironment": "NAVER_API_HUB_CLIENT_ID",
+    "clientSecretEnvironment": "NAVER_API_HUB_CLIENT_SECRET",
+    "meaning": "요청별 정규화 상대 검색추이; 검색건수·동별수요·서로 다른 배치의 직접 비교 아님"
+  },
+  "searchad": {
+    "endpoint": "https://api.searchad.naver.com/keywordstool",
+    "seedKeywords": ["커피", "아메리카노", "카페라떼", "디카페인커피", "커피배달", "치킨배달", "도시락배달", "면목동맛집", "면목동카페", "택배", "풀필먼트", "해외직구", "키워드광고"],
+    "maximumSeedsPerRequest": 5,
+    "showDetail": 1,
+    "apiKeyEnvironment": "NAVER_SEARCHAD_API_KEY",
+    "secretKeyEnvironment": "NAVER_SEARCHAD_SECRET_KEY",
+    "customerIdEnvironment": "NAVER_SEARCHAD_CUSTOMER_ID",
+    "meaning": "월간 검색수 최근30일; 클릭·CTR·광고수 최근4주; PC광고 경쟁도. 개별계정 실적·현재CPC·자연검색순위 아님"
+  },
+  "redistributionApproved": false,
+  "automaticGameImport": false
+}

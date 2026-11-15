@@ -1,0 +1,274 @@
+{
+  "schemaVersion": "daxue-mingde-research-intake.v1",
+  "savedAtUtc": "2026-11-14T08:43:32.542504+00:00",
+  "checkedOnKst": "2026-11-14",
+  "purposeKo": "고전/강의 자료와 사용자의 명덕·동 성장 게임 해석을 분리해 보존",
+  "classicalSources": [
+    {
+      "id": "liji-zhengyi",
+      "work": "禮記正義 卷60 大學第42",
+      "url": "https://db.cyberseodang.or.kr/front/alphaList/BookMain.do?bnCode=jti_1d0301&titleId=C38",
+      "use": "첫머리 親民·명명덕 옛 주석 교차 확인",
+      "fullPageSaved": false,
+      "checkedOnKst": "2026-11-14"
+    },
+    {
+      "id": "liji-daxue-wikisource",
+      "work": "禮記/大學 디지털 전사",
+      "url": "https://zh.wikisource.org/wiki/禮記/大學",
+      "use": "도입부 고전 한문 발췌의 전사 기준",
+      "excerptArtifact": "artifacts/local/daxue-mingde-intake-20261114/daxue-opening.zh.txt",
+      "variantsPreserved": [
+        "親民",
+        "静",
+        "脩"
+      ],
+      "editorialChanges": [
+        "줄바꿈",
+        "발췌 범위·출처 머리말"
+      ],
+      "fullPageSaved": false,
+      "checkedOnKst": "2026-11-14",
+      "excerptSha256": "7e2bc7408cf2339e488504cccffcf4cc587b5caa4bd97119258f03775d6c3ebf",
+      "rightsScope": "저작권 소멸 고전 한문 발췌. 웹 편집물 전체·현대 번역/해설 이용허락과 구별"
+    },
+    {
+      "id": "daxue-zhangju-db",
+      "work": "大學章句 經一章 經101",
+      "url": "https://db.cyberseodang.or.kr/front/alphaList/BookMain.do?bnCode=jti_1h0801&titleId=C14",
+      "use": "주희 주석의 명덕 정의·親當作新 대조",
+      "fullPageSaved": false,
+      "checkedOnKst": "2026-11-14"
+    },
+    {
+      "id": "daxue-zhangju-wikisource",
+      "work": "四書章句集註/大學章句 디지털 전사",
+      "url": "https://zh.wikisource.org/wiki/四書章句集註/大學章句",
+      "use": "고전 주석 발췌의 전사 기준",
+      "excerptArtifact": "artifacts/local/daxue-mingde-intake-20261114/daxue-zhuxi-mingde.zh.txt",
+      "editorialChanges": [
+        "줄바꿈",
+        "발췌 범위·출처 머리말"
+      ],
+      "fullPageSaved": false,
+      "checkedOnKst": "2026-11-14",
+      "excerptSha256": "5a25f5262dac17688f31d70011485a7562f8829ea3c5b10b3171373407459fc7",
+      "rightsScope": "저작권 소멸 고전 한문 발췌. 웹 편집물 전체·현대 번역/해설 이용허락과 구별"
+    },
+    {
+      "id": "hk-edb-daxue",
+      "work": "홍콩 교육국 大學 발췌",
+      "url": "https://www.edb.gov.hk/attachment/tc/curriculum-development/kla/chi-edu/recommended-passages/KS4_07.pdf",
+      "use": "교육기관 판독본 在親民 대조",
+      "fullPageSaved": false,
+      "checkedOnKst": "2026-11-14"
+    }
+  ],
+  "lectureSources": [
+    {
+      "channelName": "홍익학당",
+      "channelHandle": "@hongikHD",
+      "currentMetadataCheckedAtUtcApprox": "2026-11-14T08:38:00Z",
+      "currentMetadataMethods": [
+        "YouTube official oEmbed: title/channel",
+        "Public YouTube watch HTML: publishDate/lengthSeconds/captionTracks"
+      ],
+      "currentCaptionTrack": {
+        "languageCode": "ko",
+        "kind": "asr",
+        "vssId": "a.ko"
+      },
+      "originalStore": {
+        "kind": "PostgreSQL",
+        "container": "hongik-academy-video-search-db",
+        "field": "transcripts.RawText"
+      },
+      "queryMode": "BEGIN READ ONLY; SELECT relevant segments/metadata; ROLLBACK",
+      "transcriptSource": "ApifyYouTubeTranscript",
+      "transcriptLanguage": "ko",
+      "transcriptVersion": 1,
+      "audioCompared": false,
+      "fullVideoWatched": false,
+      "latestCaptionBodyFetched": false,
+      "fullTranscriptCopied": false,
+      "latestTranscriptMatchesStoredTranscript": "NotChecked",
+      "summaryAuthorship": "이번 조사 담당자가 저장 자동 자막을 읽고 직접 작성",
+      "youtubeId": "qVN9vHGQbn8",
+      "url": "https://www.youtube.com/watch?v=qVN9vHGQbn8",
+      "title": "[홍익학당] 유교 철학의 핵심 \"대학과 중용\" 12강",
+      "publishedOn": "2019-04-19",
+      "durationSeconds": 3725,
+      "videoRecordId": "0f93a030-f9db-40c6-abb5-e42155aa59d8",
+      "transcriptRecordId": "5e69856e-4d63-4622-9f74-fa8fcd02eed4",
+      "transcriptStoredAtUtc": "2026-08-11T00:20:22.659160Z",
+      "wholeRawTextUtf8Sha256": "dabe29f41a1af378cacf9323d19302448e27af8dbaa847a290a772547c7c7a5b",
+      "reviewStatus": "AsrBasedProvisionalSummaryNeedsAudioReview",
+      "summaryKo": "명덕을 인의예지와 연결하고 사물과 옳고 그름을 살피며 진실을 인정하는 판단으로 드러내는 과정으로 풀이한다. 이어 자기 수양과 제가·치국·평천하를 구별하며 밝은 덕을 실제 행위로 드러내는 데서 출발한다고 설명한다. 자동 자막 기반 잠정 요약이다.",
+      "segments": [
+        {
+          "startMs": 885260,
+          "endMs": 927400,
+          "sequenceRange": [
+            225,
+            232
+          ],
+          "representativeSegmentId": "0b006897-846b-4cc4-aa62-7302b898b071",
+          "representativeSequence": 227,
+          "url": "https://www.youtube.com/watch?v=qVN9vHGQbn8&t=885",
+          "topicKo": "격물치지·옳고 그름 판단과 명덕"
+        },
+        {
+          "startMs": 1080690,
+          "endMs": 1113600,
+          "sequenceRange": [
+            275,
+            281
+          ],
+          "representativeSegmentId": "ef66a62d-2f5f-4f28-b228-782a7f70b362",
+          "representativeSequence": 278,
+          "url": "https://www.youtube.com/watch?v=qVN9vHGQbn8&t=1080",
+          "topicKo": "수기/치인 구분과 밝은 덕의 실천"
+        }
+      ]
+    },
+    {
+      "channelName": "홍익학당",
+      "channelHandle": "@hongikHD",
+      "currentMetadataCheckedAtUtcApprox": "2026-11-14T08:38:00Z",
+      "currentMetadataMethods": [
+        "YouTube official oEmbed: title/channel",
+        "Public YouTube watch HTML: publishDate/lengthSeconds/captionTracks"
+      ],
+      "currentCaptionTrack": {
+        "languageCode": "ko",
+        "kind": "asr",
+        "vssId": "a.ko"
+      },
+      "originalStore": {
+        "kind": "PostgreSQL",
+        "container": "hongik-academy-video-search-db",
+        "field": "transcripts.RawText"
+      },
+      "queryMode": "BEGIN READ ONLY; SELECT relevant segments/metadata; ROLLBACK",
+      "transcriptSource": "ApifyYouTubeTranscript",
+      "transcriptLanguage": "ko",
+      "transcriptVersion": 1,
+      "audioCompared": false,
+      "fullVideoWatched": false,
+      "latestCaptionBodyFetched": false,
+      "fullTranscriptCopied": false,
+      "latestTranscriptMatchesStoredTranscript": "NotChecked",
+      "summaryAuthorship": "이번 조사 담당자가 저장 자동 자막을 읽고 직접 작성",
+      "youtubeId": "-OIcKB3TWHk",
+      "url": "https://www.youtube.com/watch?v=-OIcKB3TWHk",
+      "title": "[홍익학당] 유교 철학의 핵심 \"대학과 중용\" 13강",
+      "publishedOn": "2019-05-10",
+      "durationSeconds": 3011,
+      "videoRecordId": "888585e0-ef5b-4eb5-bf01-967e7952c487",
+      "transcriptRecordId": "555fd2a0-6fff-4dab-868a-2ba373656772",
+      "transcriptStoredAtUtc": "2026-08-11T00:22:40.631741Z",
+      "wholeRawTextUtf8Sha256": "c1fc2d539726e91b2c6c7b797ecae1ece060068a43f92138dc26542be923809c",
+      "reviewStatus": "HumanPlaybackReviewCandidateNotDesignEvidence",
+      "summaryKo": "명덕·효도·사랑·공경 관련 언급을 찾았다. 심한 자동 자막 오인식과 해석을 평가하는 맥락 때문에 강사가 해당 견해를 지지하는지 비판하는지 판정하지 않았다. 게임 규칙 근거로 채택하지 않는다.",
+      "segments": [
+        {
+          "startMs": 2647830,
+          "endMs": 2668200,
+          "sequenceRange": [
+            683,
+            685
+          ],
+          "representativeSegmentId": "7e64940a-b605-4cc9-86c0-d4e0ff8bd4f6",
+          "url": "https://www.youtube.com/watch?v=-OIcKB3TWHk&t=2647",
+          "topicKo": "명덕 언급·해석 평가 맥락 재생 확인 대기"
+        }
+      ]
+    },
+    {
+      "youtubeId": "UjNhKcxdkMg",
+      "url": "https://www.youtube.com/watch?v=UjNhKcxdkMg",
+      "title": "[인문학 고전콘서트] 7부 - 대학 인간의길을열다",
+      "channelName": "홍익학당",
+      "channelHandle": "@hongikHD",
+      "officialIndexUrl": "https://hihd.imweb.me/lecturelist",
+      "checkedOnKst": "2026-11-14",
+      "reviewStatus": "OfficialLinkAndMetadataOnly",
+      "transcriptReviewed": false,
+      "audioCompared": false,
+      "fullVideoWatched": false,
+      "publishedOn": null,
+      "durationSeconds": null,
+      "summaryKo": null,
+      "segments": []
+    }
+  ],
+  "existingLocalReferences": [
+    {
+      "path": "artifacts/local/data-collection-audit-20261111/learning-audit.json",
+      "exists": true,
+      "sha256": "23e37a4f5e12381e1db08be08dd77b84dd0da84b8031c8c457972de123110617",
+      "useKo": "당시 53영상/51자막 기록; 오늘 전수 재집계하지 않음"
+    },
+    {
+      "path": "C:/Users/user/Documents/학당영상/docs/collection-run-2026-08-11-hongik-classics.md",
+      "exists": true,
+      "sha256": "2225f2faa26a7dd1adc44eb11db9fccbf238ae048d9657eb7abe8f22c55b7c69",
+      "useKo": "기존 강의 수집 기록"
+    },
+    {
+      "path": "C:/Users/user/Documents/학당영상/docs/transcript-qa-2026-08-11.md",
+      "exists": true,
+      "sha256": "3681e5f0dd3197d6ec3e356a84392988e47c8420c26ab477be38e686b9c3018b",
+      "useKo": "기존 자막 품질 안내"
+    },
+    {
+      "path": "C:/Users/user/Documents/학당영상/data/unity-cards/hongik-academy-unity-learning-cards.v1.json",
+      "exists": true,
+      "sha256": "c97bfd21400c6aecdcf5c628b65e250fc643b79a688e91efec96c013a4fe92c5",
+      "useKo": "파생 카드 CandidateNeedsHumanReview; 명명덕 요약의 주 근거 아님"
+    }
+  ],
+  "statistics": {
+    "classicalSourceRecords": 5,
+    "classicalExcerptFiles": 2,
+    "officialLectureMetadataRecords": 3,
+    "existingTranscriptVideosReviewed": 2,
+    "relatedSegmentRanges": 3,
+    "provisionalSummaryVideos": 1,
+    "audioVerifiedVideos": 0,
+    "newTranscriptDownloads": 0,
+    "databaseWrites": 0,
+    "scheduleChanges": 0
+  },
+  "accessLimitations": [
+    {
+      "target": "Chinese Text Project",
+      "status": "HTTP 403",
+      "fallback": "동양고전종합DB·위키문헌·홍콩 교육국 대조"
+    },
+    {
+      "target": "YouTube via generic text browser",
+      "status": "일부 영상은 로그인/푸터만 반환",
+      "fallback": "공개 oEmbed/watch 메타데이터와 기존 PostgreSQL 자막 구간"
+    },
+    {
+      "target": "local video search HTTP :5188",
+      "status": "로그인 리다이렉트",
+      "fallback": "기존 DB READ ONLY SELECT"
+    }
+  ],
+  "rightsAndInterpretation": {
+    "classicalText": "고전 한문 발췌; 현대 번역/해설·사이트 전체 복제 아님",
+    "lectureText": "전체 전사/영상 복제 없이 메타데이터·구간 식별자·지문·작성자 요약",
+    "gameMechanic": "사용자 창작 제안; 원전/강사가 명덕 경험치나 행정동 임계값을 제시했다는 주장 아님"
+  },
+  "planningRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daxue-mingde-and-dong-growth.research.r204.md",
+  "gameImplementationChanged": false,
+  "databaseChanged": false,
+  "schedulesChanged": false,
+  "nextEvidenceNeededKo": [
+    "12강 핵심 구간 음성 대조",
+    "13강 해석의 평가 맥락 재생 확인",
+    "수치/귀속/기존 동 성장 통합의 별도 기획 결정"
+  ]
+}

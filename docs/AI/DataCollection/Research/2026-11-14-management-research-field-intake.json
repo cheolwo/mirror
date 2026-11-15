@@ -1,0 +1,416 @@
+{
+  "schemaVersion": "management-research-field-intake.v1",
+  "basisPlan": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION:r183",
+  "verifiedAtUtc": "2026-11-13T23:55:38.453620Z",
+  "newRawFiles": 18,
+  "newSavedRawBytes": 14490366,
+  "reusedRawFiles": 13,
+  "uniqueSources": 31,
+  "sourceReferences": 34,
+  "indexedFiles": 93,
+  "sourceFieldRelations": 35,
+  "gaps": [
+    {
+      "field": "delivery",
+      "id": "current-local-order-data",
+      "status": "not_acquired",
+      "reason": "현재 면목동 실제 주문·준비/픽업 대기·현재 단가와 개별 이동궤적은 확보하지 않음; 개인배달기록 미사용"
+    },
+    {
+      "field": "delivery",
+      "id": "survey-delivery-count-conflict",
+      "status": "blocked_for_game_calibration",
+      "reason": "2022보고서59쪽의37.4/42.3과143쪽표6-78의42.3/42.3 충돌; 수정하지 않고 양쪽 원문·이미지 보존"
+    },
+    {
+      "field": "cafe",
+      "id": "domestic-full-recipes",
+      "status": "not_acquired",
+      "reason": "국내브랜드 전체배합·우유스팀/전체음료 공정시간은 이번2제조사 원문으로 확보되지 않음"
+    },
+    {
+      "field": "cafe",
+      "id": "current-wholesale-input-prices",
+      "status": "not_acquired",
+      "reason": "원두·우유·포장재의 현재 납품가격·배송비·MOQ는 별도 계약/시점 검증 필요; 대표메뉴 판매가격으로 대체 안 함"
+    },
+    {
+      "field": "cafe",
+      "id": "domestic-appliance-identity",
+      "status": "not_verified",
+      "reason": "해외115V/60Hz모델과 국내 납품장비 동일성 미확인"
+    },
+    {
+      "field": "advertising",
+      "id": "advertising:0",
+      "reason": "광고주별 실제 집행액·노출·클릭·전환·귀속 매출",
+      "status": "not_acquired"
+    },
+    {
+      "field": "advertising",
+      "id": "advertising:1",
+      "reason": "키워드/지역/시간별 실제 CPC·전환율·입찰 경쟁",
+      "status": "not_acquired"
+    },
+    {
+      "field": "advertising",
+      "id": "advertising:2",
+      "reason": "네이버 자연 검색 순위의 가중치·IP/체류시간별 점수",
+      "status": "not_acquired"
+    },
+    {
+      "field": "advertising",
+      "id": "advertising:3",
+      "reason": "신뢰할 수 있는 무광고 대조군과 광고 증분 효과",
+      "status": "not_acquired"
+    },
+    {
+      "field": "ecommerce",
+      "id": "ecommerce:0",
+      "reason": "전체 상품군/해외직구 표는 완전히 구조화하지 않았으며 한국 전국값을 개별 매장 매출로 사용할 수 없음",
+      "status": "not_acquired"
+    },
+    {
+      "field": "ecommerce",
+      "id": "ecommerce:1",
+      "reason": "첨부물별 권리 유형 미확정",
+      "status": "not_acquired"
+    },
+    {
+      "field": "trade",
+      "id": "trade:0",
+      "reason": "월별 전 품목·상대국 무역/운송비·관세청 주간 환율·요건 표는 신규 취득하지 않음",
+      "status": "not_acquired"
+    },
+    {
+      "field": "trade",
+      "id": "trade:1",
+      "reason": "HS 전 품목 분류 파일의 현재 원본 경로/SHA는 이번 좁은 범위에서 재검증하지 않음",
+      "status": "not_acquired"
+    },
+    {
+      "field": "common",
+      "id": "population-marginal-total-differences",
+      "status": "interpretation_pending",
+      "reason": "시간대 합계와 총계의 차이 6,551행, 요일 합계와 총계의 차이 6,777행. 원인/공급자 정의 미확인으로 원본을 보존하고 강제 보정하지 않음."
+    },
+    {
+      "field": "common",
+      "id": "research-balance-parameters",
+      "status": "design_pending",
+      "reason": "연구비·연구기간·시작 자본·해금 임계값은 공개 통계에서 그대로 취득할 값이 아니라 기획/비교시험으로 정할 게임 규칙."
+    }
+  ],
+  "fieldSummaries": {
+    "delivery": {
+      "schemaVersion": "hongdal-management-research-validation.v1",
+      "field": "delivery",
+      "verifiedAtUtc": "2026-11-13T23:49:02.681853+00:00",
+      "status": "SavedAndIntegrityVerifiedWithLimitations",
+      "newRawFiles": 2,
+      "newContentDocuments": 2,
+      "newMetadataFiles": 0,
+      "newRawBytes": 4780972,
+      "reusedRawReferences": 6,
+      "extractedFactRows": 17,
+      "sourceObservationRows": null,
+      "sourceRowsNotSummedAcrossDatasets": true,
+      "heldFactRows": 2,
+      "checks": [
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "molit-delivery-industry-survey-2022",
+          "datasetId": "OTKCRK240367",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "mss-delivery-platform-coexistence-202411",
+          "datasetId": "1054586",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23056",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23056",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23056",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23056",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "mois-fair-price-20260930",
+          "datasetId": "3045247",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-22178",
+          "ok": true
+        },
+        {
+          "check": "PdfMagic",
+          "datasetId": "OTKCRK240367",
+          "ok": true
+        },
+        {
+          "check": "PdfMagic",
+          "datasetId": "1054586",
+          "ok": true
+        }
+      ],
+      "allIntegrityChecksPassed": true,
+      "pdfVisualReview": "선별 페이지만 PNG로 렌더 후 실제 이미지 확인. 전체PDF 도표 검증 아님",
+      "gaps": [
+        {
+          "id": "current-local-order-data",
+          "status": "not_acquired",
+          "reason": "현재 면목동 실제 주문·준비/픽업 대기·현재 단가와 개별 이동궤적은 확보하지 않음; 개인배달기록 미사용"
+        },
+        {
+          "id": "survey-delivery-count-conflict",
+          "status": "blocked_for_game_calibration",
+          "reason": "2022보고서59쪽의37.4/42.3과143쪽표6-78의42.3/42.3 충돌; 수정하지 않고 양쪽 원문·이미지 보존"
+        }
+      ],
+      "privateDeliveryRecordsUsed": false,
+      "operationalDatabaseAccessed": false,
+      "dbWritten": false,
+      "scheduledJobsChanged": false,
+      "unityFilesWritten": false,
+      "redistributionApproved": false
+    },
+    "cafe": {
+      "schemaVersion": "hongdal-management-research-validation.v1",
+      "field": "cafe",
+      "verifiedAtUtc": "2026-11-13T23:49:02.681853+00:00",
+      "status": "SavedAndIntegrityVerifiedWithLimitations",
+      "newRawFiles": 3,
+      "newContentDocuments": 2,
+      "newMetadataFiles": 1,
+      "newRawBytes": 923746,
+      "reusedRawReferences": 6,
+      "extractedFactRows": 16,
+      "sourceObservationRows": null,
+      "sourceRowsNotSummedAcrossDatasets": true,
+      "heldFactRows": 0,
+      "checks": [
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "lamarzocco-linea-pb-abr-qsg",
+          "datasetId": "linea-pb-abr-qsg-202507-url",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "scotsman-cu50-specification",
+          "datasetId": "ff3d2cc0-3aa8-483a-9939-db9d7a101005",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "scotsman-cu50-specification",
+          "datasetId": "cu50-product-page",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23059",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23059",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23059",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data-local-licensing",
+          "datasetId": "OA-23059",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "mois-fair-price-20260930",
+          "datasetId": "3045247",
+          "ok": true
+        },
+        {
+          "check": "SourceRawHashMatches",
+          "sourceId": "seoul-open-data",
+          "datasetId": "OA-22178",
+          "ok": true
+        },
+        {
+          "check": "PdfMagic",
+          "datasetId": "linea-pb-abr-qsg-202507-url",
+          "ok": true
+        },
+        {
+          "check": "PdfMagic",
+          "datasetId": "ff3d2cc0-3aa8-483a-9939-db9d7a101005",
+          "ok": true
+        }
+      ],
+      "allIntegrityChecksPassed": true,
+      "pdfVisualReview": "선별 페이지만 PNG로 렌더 후 실제 이미지 확인. 전체PDF 도표 검증 아님",
+      "gaps": [
+        {
+          "id": "domestic-full-recipes",
+          "status": "not_acquired",
+          "reason": "국내브랜드 전체배합·우유스팀/전체음료 공정시간은 이번2제조사 원문으로 확보되지 않음"
+        },
+        {
+          "id": "current-wholesale-input-prices",
+          "status": "not_acquired",
+          "reason": "원두·우유·포장재의 현재 납품가격·배송비·MOQ는 별도 계약/시점 검증 필요; 대표메뉴 판매가격으로 대체 안 함"
+        },
+        {
+          "id": "domestic-appliance-identity",
+          "status": "not_verified",
+          "reason": "해외115V/60Hz모델과 국내 납품장비 동일성 미확인"
+        }
+      ],
+      "privateDeliveryRecordsUsed": false,
+      "operationalDatabaseAccessed": false,
+      "dbWritten": false,
+      "scheduledJobsChanged": false,
+      "unityFilesWritten": false,
+      "redistributionApproved": false
+    },
+    "advertising": {
+      "sector": "advertising",
+      "sourceEntries": 5,
+      "newRawFiles": 5,
+      "verifiedReferences": 5,
+      "unverifiedBodies": 0,
+      "failed": 0,
+      "rawBytes": 265801,
+      "numericObservationRows": 0,
+      "apiRequestsToAdvertiserEndpoints": 0,
+      "schedulesChanged": false,
+      "databaseChanged": false,
+      "productChanged": false,
+      "schemaFieldRows": 10,
+      "extractedReferenceFacts": 7,
+      "configurationReferenceFacts": 2,
+      "existingDataRawReused": 0,
+      "sourceIndexSha256": "57786757938f86d1cc8f182622886d93d0f8331afb8badaa344439636a575e07"
+    },
+    "ecommerce": {
+      "schemaVersion": "management-research-validation.v1",
+      "field": "ecommerce",
+      "status": "verified",
+      "checkedAtUtc": "2026-11-13T23:50:41.548103+00:00",
+      "newRawFiles": 2,
+      "newDatasetRawFiles": 1,
+      "newMetadataRawFiles": 1,
+      "reusedRawFiles": 0,
+      "newDownloadedBytes": 8395532,
+      "newStructuredTableRows": 120,
+      "newNumericFacts": 1000,
+      "reusedNumericFacts": 0,
+      "missingNumericCells": 0,
+      "blockedRequests": 0,
+      "rawSha256Verified": true,
+      "allWithinPerFileBudget": true,
+      "combinedDownloadedBytes": 8519847,
+      "repeatedTotalFactsAcrossTables": 40,
+      "remainingGaps": [
+        "전체 상품군/해외직구 표는 완전히 구조화하지 않았으며 한국 전국값을 개별 매장 매출로 사용할 수 없음",
+        "첨부물별 권리 유형 미확정"
+      ],
+      "scope": {
+        "databaseWrite": false,
+        "scheduleWrite": false,
+        "productCodeWrite": false,
+        "installation": false
+      }
+    },
+    "trade": {
+      "schemaVersion": "management-research-validation.v1",
+      "field": "trade",
+      "status": "verified",
+      "checkedAtUtc": "2026-11-13T23:50:41.548103+00:00",
+      "newRawFiles": 6,
+      "newDatasetRawFiles": 2,
+      "newMetadataRawFiles": 4,
+      "reusedRawFiles": 3,
+      "newDownloadedBytes": 124315,
+      "newStructuredTableRows": 22,
+      "newNumericFacts": 22,
+      "reusedNumericFacts": 12,
+      "missingNumericCells": 0,
+      "blockedRequests": 0,
+      "rawSha256Verified": true,
+      "allWithinPerFileBudget": true,
+      "combinedDownloadedBytes": 8519847,
+      "repeatedTotalFactsAcrossTables": 0,
+      "remainingGaps": [
+        "월별 전 품목·상대국 무역/운송비·관세청 주간 환율·요건 표는 신규 취득하지 않음",
+        "HS 전 품목 분류 파일의 현재 원본 경로/SHA는 이번 좁은 범위에서 재검증하지 않음"
+      ],
+      "scope": {
+        "databaseWrite": false,
+        "scheduleWrite": false,
+        "productCodeWrite": false,
+        "installation": false
+      }
+    },
+    "common": {
+      "newRawFiles": 0,
+      "reusedRawFiles": 1,
+      "numericCellsChecked": 130900,
+      "numericIssues": 0,
+      "duplicateKeys": 0,
+      "latestProfileRows": 6,
+      "historicalProfileRows": 132
+    }
+  },
+  "evidenceFiles": [
+    {
+      "path": "artifacts/local/management-research-data-20261114/catalog.json",
+      "sha256": "7c5bde7448f11a5b6f9510b1700d2be5478da01ee9fb8764c6ae6d9cf876d20c",
+      "bytes": 126842
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/source-catalog.sqlite",
+      "sha256": "9057ac698935f31bd8de2f88c877a5e112d697e6fed1e2c2a7c4d93ac29494dd",
+      "bytes": 278528
+    },
+    {
+      "path": "artifacts/local/management-research-data-20261114/verification.json",
+      "sha256": "3114641001c19ad03ba463839e011a28992293000d991761ebb406cddc2eb1d0",
+      "bytes": 11197
+    }
+  ],
+  "numericRowsNotSummedAcrossSources": true,
+  "operationalDatabaseWritten": false,
+  "schedulesChanged": false,
+  "gameChanged": false
+}
