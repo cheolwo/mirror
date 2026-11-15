@@ -1,16 +1,16 @@
 # 사가정 샐러리아 음식 생활 관찰
 
+이 문서는 2026년 10월에 검증한 독립 디오라마의 이력이다. 현재 게임 화면과 실행 경로는 [홍달 경영 시뮬레이션 Windows 실행판](../AI/Handoffs/Unity-Windows-구현현황.md)에서 확인할 수 있다.
+
 사용자가 방문한 매장을 출발점으로 기존 가상 음식 배달 생활을 실제 사가정 참고 지도 안에 표시했다. 음식점 담당 1명·기사 3명·주민 2명이 기존 Simulation Core의 주문·조리·픽업·전달·수령·복귀 상태에 따라 움직인다. 전체 조망, 선택한 NPC 추적, 일시정지·저장, 과거 방문 설명을 제공하는 로컬 Unity 관찰 표본이다.
 
 - [승인 범위 r6](../AI/Planning/시스템/PLAN-SYSTEM-OBSERVER-WORLD/sagajeong-food-life.implementation.r6.md) · [Graph 검토 반환](../AI/Planning/시스템/PLAN-SYSTEM-OBSERVER-WORLD/graph-map-review.r6.md)
 - 기존 `SimulationWorldShell`과 1800Tick/30분 생애를 재사용한다. 처음에는 정지 상태이며 사용자가 재생해야 진행한다. 미접속 시간 따라잡기와 완료 전 무제한 재시작은 제공하지 않는다.
 - 저장 슬롯은 `sagajeong-food-life-r1-primary`다. 기존 합성 동네 프로필과 슬롯, 운영 API·DB·Core 규칙은 보존한다.
 
-## 시작과 관찰
+## 당시 검증한 조작
 
-Unity 프로젝트 `C:/Users/user/ssalddel`에서 메뉴 **Ssalddel → 관찰 → 사가정 샐러리아 음식 생활**을 선택한다. 기존 공식 Scene을 열고 새 프로필로 Play Mode에 진입한다. 다른 Scene에 미저장 변경이 있으면 시작을 보류한다. 메뉴 도구는 Scene을 저장하지 않고 Play 종료 시 이전 환경변수를 복원한다.
-
-오른쪽 휴대폰의 **동네 → 재생**으로 시작한다. **전체 조망**으로 주변을 보고, **NPC**에서 대상을 읽은 뒤 **이 NPC 따라가기**를 눌러 카메라를 전환한다. NPC 카드를 읽는 것만으로 추적하거나 세계 상태를 바꾸지 않는다. **방문 기록**에서 상호·주소·역사 메뉴를 확인하고 **일시정지/저장**으로 현재 상태를 보존한다. 새 모드의 정책·운영지도 메뉴와 숨겨진 정책 명령은 거부한다.
+당시에는 Unity Editor의 **Ssalddel → 관찰 → 사가정 샐러리아 음식 생활** 메뉴로 기존 Scene의 Play Mode에 진입했다. 휴대폰 화면의 **동네 → 재생**, **전체 조망**, **이 NPC 따라가기**, **방문 기록**, **일시정지/저장**을 검증했다. NPC 카드를 여는 것과 실제 추적 전환은 별개의 입력이었다.
 
 ## 실제 자료와 가상 생활의 관계
 
@@ -53,29 +53,29 @@ Unity 첫 집중 시험에서 Tick430 기사의 기존 휴식 복귀 위치가 �
 
 원시 로그와 시험 산출물은 각 저장소의 `artifacts/` 아래 로컬 보관이며 Git 대상이 아니다. 공유 검증 원본은 `Hongdal/artifacts/local/validation/20261002-175449/`, Unity 시험은 `ssalddel/artifacts/sagajeong-food-life-r1/editmode-focused-r2.xml`이다. 공간 담당의 독립 실행 대장은 같은 Unity 산출물 폴더의 `공간-실행-검증.md`와 `world-validation.json`이며, 최종13/13 시험·원장5회 동일성·화면 복원 불일치0·원문 hash·종료 환경을 재확인했다. 대표 PNG 원본 해시는 `capture-manifest.json`에 있다.
 
-## 실제 Game View
+## 당시 Game View 기록
 
-Unity 6000.5.6f1 canonical Scene의 Play Mode에서 `ScreenCapture.CaptureScreenshot`으로 uGUI를 포함해 캡처했다. 카메라 단독 렌더와 구분하며 원본과 문서 사본의 SHA-256이 일치한다. 아래 대표 화면은 최종 표시 보완 뒤 저장 재진입한303Tick/05:03 정지 상태다. 물리 마우스·키보드의 수동 검증으로 표현하지 않는다.
+Unity 6000.5.6f1 canonical Scene의 Play Mode에서 `ScreenCapture.CaptureScreenshot`으로 uGUI를 포함해 캡처했다. 카메라 단독 렌더와 구분하며 원본과 문서 사본의 SHA-256이 일치한다. 보관한 대표 화면은 최종 표시 보완 뒤 저장 재진입한303Tick/05:03 정지 상태다. 물리 마우스·키보드의 수동 검증으로 표현하지 않는다.
 
-![사가정 음식 생활 · 저장 재진입과 전체 조망](../assets/changes/2026-10-02-sagajeong-food-life-r1/12-reentry-overview.png)
+[당시 저장 재진입과 전체 조망](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/12-reentry-overview.png)
 
 | 실제 화면 | 원본 사본 |
 | --- | --- |
-| 초기 화면 격리 검증 · Tick0 정지 | [시작 화면](../assets/changes/2026-10-02-sagajeong-food-life-r1/01-start-game-view.png) |
-| 기사1 명시 추적 · 01:14 진행 중 | [NPC 추적](../assets/changes/2026-10-02-sagajeong-food-life-r1/02-courier-follow.png) |
-| 과거 상호·주소·메뉴 · 01:26 진행 중 | [방문 기록](../assets/changes/2026-10-02-sagajeong-food-life-r1/03-historical-menu.png) |
-| 주민A 반복 수령·식사 기록 · 04:52 진행 중 | [수령 반복](../assets/changes/2026-10-02-sagajeong-food-life-r1/08-resident-repeat-receipt.png) |
-| 최종 표시 보완·저장 재진입 · 05:03 정지 | [매장 위치와 라벨](../assets/changes/2026-10-02-sagajeong-food-life-r1/09-restaurant-cutaway.png) |
-| 최종 표시 보완·기사1의 마트 주문 이동 · 05:03 정지 | [가림 없는 NPC 추적](../assets/changes/2026-10-02-sagajeong-food-life-r1/10-courier-cutaway.png) |
-| 게임 외관 표식만 숨김 · 같은05:03 정지 | [외관 분리](../assets/changes/2026-10-02-sagajeong-food-life-r1/11-facade-neutral.png) |
-| 전체 조망·참고 건물38개 모두 복원 · 같은05:03 정지 | [재진입 전체 조망](../assets/changes/2026-10-02-sagajeong-food-life-r1/12-reentry-overview.png) |
+| 초기 화면 격리 검증 · Tick0 정지 | [시작 화면](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/01-start-game-view.png) |
+| 기사1 명시 추적 · 01:14 진행 중 | [NPC 추적](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/02-courier-follow.png) |
+| 과거 상호·주소·메뉴 · 01:26 진행 중 | [방문 기록](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/03-historical-menu.png) |
+| 주민A 반복 수령·식사 기록 · 04:52 진행 중 | [수령 반복](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/08-resident-repeat-receipt.png) |
+| 최종 표시 보완·저장 재진입 · 05:03 정지 | [매장 위치와 라벨](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/09-restaurant-cutaway.png) |
+| 최종 표시 보완·기사1의 마트 주문 이동 · 05:03 정지 | [가림 없는 NPC 추적](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/10-courier-cutaway.png) |
+| 게임 외관 표식만 숨김 · 같은05:03 정지 | [외관 분리](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/11-facade-neutral.png) |
+| 전체 조망·참고 건물38개 모두 복원 · 같은05:03 정지 | [재진입 전체 조망](https://github.com/cheolwo/mirror/blob/0dab3171c26b6db0f4d9d250b392d7db275a2812/docs/assets/changes/2026-10-02-sagajeong-food-life-r1/12-reentry-overview.png) |
 
 ## 코드 관계와 남은 범위
 
 - 공유 표현: `Ssalddel.Unity/Runtime/Observation/사가정음식생활관찰Profile.cs`와 `동네관찰Presenter.cs`가 역사 카드·6인·관찰 전용 표시 문맥을 만든다.
 - Unity 실행: `SimulationWorldLocalRuntimeScope`, `동네관찰RuntimeAdapter`, 기존 관찰 Controller/휴대폰 Binding/View가 명시 프로필·별도 저장·입력 경계를 연결한다.
 - Unity 공간: `사가정음식생활공간Binding.cs`, `SagajeongFoodLifeBinding.json`, `사가정음식생활View.cs`가 동결 지도와 게임 경로·위치·카메라·단순 인물을 연결한다.
-- Unity 진입: `Editor/사가정음식생활관찰진입.cs`가 기존 공식 Scene으로 명시 진입한다. Scene·Prefab·운영 DB를 새로 만들지 않았다.
+- Unity 진입: `Editor/사가정음식생활관찰진입.cs`가 당시 공식 Scene으로 진입하는 메뉴를 제공했다. Scene·Prefab·운영 DB를 새로 만들지 않았다.
 
 정교한 인물·조리 애니메이션, 실측 외관·출입구, 다른 매장/행정동 확장, 모바일 배포는 후속 범위다. 기존 Graph의 WI 판본/인계 hash와 형식 이행 문제로 공식 Graph 등록은 `Blocked`이며, 이번 승인된 로컬 제품 구현과 분리한다. 신규 WI·Goal·E 단계는 자동 등록/승격하지 않았다.
 

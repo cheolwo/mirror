@@ -1,5 +1,7 @@
 # 사가정역 생활 디오라마 · 정적 운영 관찰
 
+이 문서는 2026년 9월에 검증한 독립 디오라마의 이력이다. 현재 게임 화면과 실행 경로는 [홍달 경영 시뮬레이션 Windows 실행판](../AI/Handoffs/Unity-Windows-구현현황.md)에서 확인할 수 있다.
+
 날짜: 2026-09-12. 커밋 전. [승인 기획](../AI/Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/diorama.r3.md) · [구현·검증 기록](../AI/Planning/시스템/PLAN-SYSTEM-OBSERVABLE-OPERATIONS-DIORAMA-001/implementation.r3.md)
 
 ## 화면 변화
@@ -8,14 +10,14 @@
 
 음식 배달·화물 운송·창고·마트를 역할색과 이름표로 구별한다. 실제 업소·사람·현재 차량 위치가 아니며 움직임은 구현 범위에서 제외했다. 유효기간이 지난 업무는 제거하고 위치 연결이 없는 자료를 임의로 배치하지 않는다.
 
-## 실제 화면 증거
+## 당시 화면 증거
 
-- [최종 전체 UI](../assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-final.png)
-- [최종 업무 상세 UI](../assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-detail-final.png)
-- [최종 전체 귀환 UI](../assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-return-final.png)
-- [전체 지도](../assets/changes/2026-09-12-sagajeong-diorama/whole-final.png)
-- [첫 업무 근접 보기](../assets/changes/2026-09-12-sagajeong-diorama/detail-final.png)
-- [전체 귀환](../assets/changes/2026-09-12-sagajeong-diorama/return-final.png)
+- [최종 전체 UI](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-final.png)
+- [최종 업무 상세 UI](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-detail-final.png)
+- [최종 전체 귀환 UI](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/game-frame-layout-return-final.png)
+- [전체 지도](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/whole-final.png)
+- [첫 업무 근접 보기](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/detail-final.png)
+- [전체 귀환](https://github.com/cheolwo/mirror/blob/78badcf7d712b161e5132d4148506e96439390f1/docs/assets/changes/2026-09-12-sagajeong-diorama/return-final.png)
 
 최종 UI 세 PNG는 실제 Play Mode의 ScreenCapture로 OnGUI까지 포함한다. 좌하단 안내 카드와 기존 시점 버튼, 업무 라벨의 겹침 해소를 확인했다. 나머지 지도 세 PNG는 명시한 관찰 카메라의 렌더링이며 OnGUI를 포함하지 않는다. 전환은 검증 메뉴 호출로 수행했으므로 실제 클릭·휠·드래그 입력 검증과 혼동하지 않는다. 검증 종료 후 Editor는 정지·Scene clean 상태이며 캡처 중 Scene 저장과 소스 변경은 없었다.
 
