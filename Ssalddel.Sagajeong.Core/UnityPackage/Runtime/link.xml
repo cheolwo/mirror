@@ -1,0 +1,4 @@
+<linker>
+  <!-- JSON snapshots and constructor-backed shared records are reflected by Newtonsoft. -->
+  <assembly fullname="Ssalddel.Sagajeong.Core" preserve="all" />
+</linker>

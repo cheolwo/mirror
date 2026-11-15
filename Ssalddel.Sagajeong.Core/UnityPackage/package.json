@@ -1,0 +1,11 @@
+{
+  "name": "com.ssalddel.sagajeong.core",
+  "version": "0.1.0",
+  "displayName": "Hongdal Mobile Food Simulation Core",
+  "description": "Shared deterministic food dispatch, road routing and virtual settlement; runs in-process without an external executable.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.ssalddel.workflow-rules": "0.1.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  }
+}

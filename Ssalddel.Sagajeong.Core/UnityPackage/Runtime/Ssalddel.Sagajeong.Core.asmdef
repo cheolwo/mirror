@@ -1,0 +1,11 @@
+{
+  "name": "Ssalddel.Sagajeong.Core",
+  "rootNamespace": "Ssalddel.Sagajeong.Core",
+  "references": ["Ssalddel.WorkflowRules", "Ssalddel.WorkflowRules.Contracts", "Unity.Newtonsoft.Json"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": true,
+  "noEngineReferences": true
+}
