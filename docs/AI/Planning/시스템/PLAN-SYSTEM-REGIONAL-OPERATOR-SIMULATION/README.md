@@ -1,6 +1,216 @@
-# [기획·제작 · 개인용 설치형 게임 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r241]
+# [기획·제작 · 개인용 설치형 게임 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r315]
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r293"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r294"></a>
+
+## 현행 기준 — 층별 정본(2026-11-20 정리)
+
+[기획 목차](../../../PLANNING.md)와 같은 표다. 아래 절들은 판별 기록(날짜 역순)이다. 이 폴더 파일 이름의 r번호는 처음 판이고, 한 파일에 여러 판이 덧쓰인 곳이 있다(예: delivery-branch-growth-play-loop.design.r257.md 안의 r288~r294).
+
+| 층 | 정본(먼저 읽을 것) | 이어 읽기 | 단계 |
+| --- | --- | --- | --- |
+| L0 개념 · 정체성 | [r314 개념 구조](hongdal-place-core-concepts.design.r314.md) · [r311 제목 · 본편](hongdal-place-steam-seoul-discovery.proposal.r310.md) | [r261 오행판](five-element-root-management-board.design.r260.md) · [r262 동 · 구 · 전국](map-scale-five-element-management.design.r262.md) · [r263 아래에서 위로](need-driven-bottom-up-growth.design.r263.md) | **지금** |
+| L1 구 지도(출시판) | [r312 구 지도 경영](hongdal-place-district-board-release-map.design.r312.md) · [r315 현실 자료 우선](hongdal-place-map-observation-first.design.r315.md) | [r184 연속 축소 · 전국](district-seoul-continuous-zoom-and-nation-transition.design.r184.md) · [r152](district-map-readability-continuation.design.r152.md) · [r253 확대별 지형](nationwide-freight-management-map.proposal.r155.md) · [r286 레이어](data-packs-and-observation-layers.proposal.r160.md) · [출시판 · 정밀판 제안](../../../Handoffs/2026-11-19-Claude-제안-출시판과내부정밀판.md) · [지도자료층 시안](../../../Handoffs/2026-11-19-Claude-시안-지도자료층.md) | **지금** |
+| L1' 동 디오라마(내부 정밀판) | [ADMIN-DONG-DIORAMA](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [서울 427 공식판](../../../Handoffs/2026-11-18-Claude-서울427동-공식판굽기-반환.md) · [경기 601](../../../Handoffs/2026-11-19-Claude-경기정밀판굽기-반환.md) | [r274 주소 · 건물 · 출입구](jungnang-landmarks-and-address-map-quality.development-plan.r271.md) · [r236 M키](m-key-administrative-dong-diorama-selector.confirmed.r236.md) · [굽기 Codex 인계](../../../Handoffs/2026-11-19-Claude-인계-경기굽기-Codex.md) | **지금(내부)** |
+| L2 첫 플레이 | [r313 역에서 주문 한 건](hongdal-place-station-first-loop.design.r313.md) | [r294 경계를 넘는 첫 배달](delivery-branch-growth-play-loop.design.r257.md) · [r240 라떼 한 잔 → L9](first-latte-order-delivery-development-plan.r240.md) | **지금** |
+| L3 배달 플랫폼 · 지사 | [r293 본사 · 지사 · 세트(r288~r294 같은 파일)](delivery-branch-growth-play-loop.design.r257.md) | [r277 지사장 카드](people-development-and-scoped-delegation.design.r224.md) · [r174 하루 결산](live-calendar-daily-management.baseline.r174.md) | **다음** |
+| L4 길찾기 | [r287 · r279 · r275(같은 파일)](soft-road-following-delivery-lines.design.r212.md) | [길찾기 1차 반환](../../../Handoffs/2026-11-18-Claude-길찾기-1차-반환.md) | **지금(정밀판과 함께)** |
+| L5 화면 | [r259 탑다운 연결](top-down-screen-hierarchy.design.r259.md) · [r258 화면 번호](current-screen-numbering.catalog.r258.md) | [r309 진입 3단계](role-perspective-research-and-relaxed-observation.design.r242.md) · [패키지 구분표](../../../Handoffs/2026-11-18-Claude-패키지별-화면자료-구분표.md) | **다음** |
+| L6 세계관 · 가치 | [r269 함께 밝아지는 세계](warmth-perspective-taking-and-shared-light.direction.r269.md) · [r285 인의예지](multi-entry-management-research-tree.design.r183.md) | [명덕 r204](daxue-mingde-and-dong-growth.research.r204.md) | **배경(유지)** |
+| L7 홍보 · 플레이스 · 중개업자 | [r307 · r239(같은 파일)](traffic-broker-person-card-and-temporary-ranking.design.r239.md) | [r238 검색 · 순위](hongdal-place-population-keyword-search-and-ranking.proposal.r238.md) · [r268 플레이스 조사](naver-place-activity-evidence-and-search-design.research.r268.md) | **보류** |
+| L8 역할 관점 · 스토리 · 사람 | [r302 · r296(같은 파일)](role-perspective-research-and-relaxed-observation.design.r242.md) · [r270 이야기 성장](first-season-story-synthesis.r101.md) | — | **보류** |
+| L9 그 밖 사업 · 연출 | [가맹 운영](../PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md) · [라떼 한 잔 r240](first-latte-order-delivery-development-plan.r240.md) | [원두 r196](coffee-import-food-safety-and-learning-flow.research.r196.md) · [미니게임 r145](direct-riding-delivery-minigame.design.r145.md) · [음악 · 빛 r210](music-reactive-light-and-beat-sync.proposal.r210.md) · [모델 r191](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md) · [법적 준비 r255](map-legal-delegation-and-operating-orders.research.r254.md) | **보류** |
+
+[행정동을 넘는 첫 배달 검증 r294](delivery-branch-growth-play-loop.design.r257.md). 면목제3·8동 픽업과 면목본동 가상 전달의 경로를 재현했고 같은 주문의 지사 실적 검증 조건을 묶었다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r292"></a>
+
+[배달 세트와 플랫폼·지사 역할 r293](delivery-branch-growth-play-loop.design.r257.md#r293-보존--배달-세트와-플랫폼지사-역할). 플랫폼은 앱 제공과 세트 할당을, 지사는 건별 배차와 전달 진행을 맡는다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r291"></a>
+
+[배달 플랫폼 운영 지표와 개선 전략 r292](delivery-branch-growth-play-loop.design.r257.md#r292-보존--배달-플랫폼-운영-지표와-개선-전략). 상단 운영 지표에서 원인과 개선 전략을 보고, 기존 조치 화면이나 기술 트리로 이어진다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r290"></a>
+
+[배달 플랫폼의 성장 수치와 해금 r291](delivery-branch-growth-play-loop.design.r257.md#r291-보존--배달-플랫폼의-성장-수치와-해금). 시간대별 수요·기사 운행·제휴점 준비가 처리 가능량을 정한다. 연구·스킬·시설과 수치 변화를 연결한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r289"></a>
+
+[배달 플랫폼 운영자가 보는 지도 r290](delivery-branch-growth-play-loop.design.r257.md#r290-보존--배달-플랫폼-운영자가-보는-지도): 1호지사의 지도에서 주문을 고르고 후보 기사를 비교한 뒤, 같은 주문의 결과로 돌아오는 첫 장면 제안이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r288"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r287"></a>
+
+[지도에서 음식점을 잇는 배달 플랫폼 r289](delivery-branch-growth-play-loop.design.r257.md#r289-보존--지도에서-음식점을-잇는-배달-플랫폼): 진출한 동에서 가상 음식점을 한 곳씩 제휴하고, 새로 처리할 수 있는 주문과 운영 선택의 영향을 본다. r288의 주문·음식점·배차·지사·결산 흐름을 잇는다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r286"></a>
+
+[주소에서 주행거리와 예상시간까지 r287](soft-road-following-delivery-lines.design.r212.md): 보유 주소·도로 자료와 기존 거리·시간 계산을 대조하고, 면목4동 한 건에서 주소 입력부터 기본·정밀 지도 비교까지 이어 보는 안을 기록했다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r285"></a>
+
+[시뮬레이션 레이어와 선택형 디오라마 r286](data-packs-and-observation-layers.proposal.r160.md): 기본 지도에는 같은 업무의 상태를 두고, 상세 디오라마는 원하는 지역에만 선택해 불러온다. 배포 방식과 첫 검증은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r284"></a>
+
+[인의예지의 판정과 빛의 감광 r285](multi-entry-management-research-tree.design.r183.md): 악으로 판정된 행위는 기술 성과와 관계없이 빛이 어두워진다. 지속·회복·누적 차감은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r283"></a>
+
+[한 행위의 명덕 계산과 빛 r284](multi-entry-management-research-tree.design.r183.md): 두 면은 한 번의 수행에 합쳐지고 한 번 계산하므로 명덕과 빛에 중복 반영되지 않는다. 크기·세기는 누적값, 후광색은 오행 기여를 읽는 안이다. 음수 누적·표현·구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r282"></a>
+
+[한 행위의 철학과 과학 r283](multi-entry-management-research-tree.design.r183.md): 한 번의 배차에서 판단과 근거·결과를 함께 읽는다. r282의 명덕 계산은 결과 비교에 쓰고, 두 면을 별개의 행위나 보상으로 세지 않는다. 첫 표현과 구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r281"></a>
+
+[명덕의 부호와 크기 r282](multi-entry-management-research-tree.design.r183.md): 같은 결정에서 이로움과 부담을 따로 보고, 부호×크기를 합쳐 이번 명덕 변화를 읽는다. 기존 누적·빛에 반영하는 규칙은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r280"></a>
+
+[철학 연구와 경영 판단 r281](multi-entry-management-research-tree.design.r183.md): 철학은 ‘누구의 기다림과 부담을 살필지’라는 기준으로 여러 업무에 작용한다. 과학·기술은 해당 오행의 실행 수단을 개선한다. 첫 장면·명덕 반영 시점·구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r279"></a>
+
+[연구와 오행 명덕 r280](multi-entry-management-research-tree.design.r183.md): 철학은 전체에, 과학·기술은 직접 관련 업무의 오행에 기여한다. 기존 실천 명덕과 다른 출처로 읽는다. 합산·반영 시점·시안·구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r278"></a>
+
+[출입문 목적지와 도로 규칙 r279](soft-road-following-delivery-lines.design.r212.md): 출입문 후보와 이륜차/도보 접근을 구분하고, 일방통행·진입 방향별 회전 제한·확인된 우회를 적용하는 안이다. 보유 노드·링크와 회전표를 대조했다. 면목권의 픽업 한 건이 검토 제안이며 도로별 확인·구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r277"></a>
+
+[음식점 입점 상세 r278](district-business-catalog-and-placement.proposal.r168.md): 왼쪽 개설 상세와 3D 후보지에서 보증금·공사·설비·초도 물품·임대료·준비 턴을 비교한다. [공공 자료와 수령 기록](../../../DataCollection/Research/2026-11-18-restaurant-opening-cost-and-site-intake.md)은 실제 견적과 가상 게임 수치를 구별한다. 첫 장소·비용·개발은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r276"></a>
+
+[지사장 카드와 시간대 지원 r277](people-development-and-scoped-delegation.design.r224.md)은 지사장이 자율 모집을 이어 가고 협력 지사가 직접 참여만으로 채우기 힘든 시간대를 보충하는 안이다. 첫 시간대·지원 조건·비용·구현은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r275"></a>
+
+[현장형 지사장·인력 관리 r276](people-development-and-scoped-delegation.design.r224.md): 함께 배달하는 지사장과 지도 범위에 묶이지 않는 왼쪽 인력 창이다. 인물 카드에서 관찰·선임·외부 협력 의뢰를 구분하며 첫 지사장 후보 경로는 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r274"></a>
+
+[3D 배달 길찾기와 출입구 r275](soft-road-following-delivery-lines.design.r212.md)는 기존 경로선과 r274 자료를 이어, 1호지사에서 픽업 한 건의 주소·건물문·인계점과 통행 근거를 읽는 안이다. 기사·지사의 판단을 구분하며 첫 시험 범위는 제안이다.
 
 [Claude 제작실 첫 읽기](../../../Handoffs/홍달-제작실-기획-첫읽기.md) · [맥락별 첫 읽기](#맥락별-첫-읽기) · [전체 색인](context-index.md)
+
+[주소·건물·출입구 조사 현행 r274](jungnang-landmarks-and-address-map-quality.development-plan.r271.md): 면목4·7동 시험의 주소연결3,151/최종3,673·누락522개를 재검산했다. 받은 원문에서 중랑구 내비건물27,490·지번28,587·보조75·주소출입구25,412행을 키보존 추출하고 공식가이드7개를 수집했다. [조사 정본](../../../DataCollection/Research/2026-11-18-address-road-building-coverage-audit.md)·[자료 인계](../../../Handoffs/2026-11-18-Codex-주소도로출입구-자료대조인계.md)에 코드/입력 판본·키/기준월 차이·건물군/문/길연결 미확인을 정리했다. Claude 굽기는 건드리지 않았고 모델링 중단·예약 중지를 유지한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r273"></a>
+
+[관광 공공데이터 조사](../../../DataCollection/Research/2026-11-17-seoul-landmark-candidates-for-claude.md) · [Claude 자료 인계서](../../../Handoffs/2026-11-17-Codex-서울랜드마크-관광공공데이터-자료인계.md): 서울51후보·공공데이터9종,실수령공원155행/API표본20행에서중랑주변공원18행과시설조사후보8개를추렸다. 대표점·시설/건물범위·이미지권리의미확인과원문단위/판본차이를보존한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r272"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r271"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r270"></a>
+
+[이야기로 묶는 점진 성장 현행 r270](first-season-story-synthesis.r101.md): 이미 문 연1호지사에서2호까지를 여섯 장으로 제안하고, 카페·창고·전국 교류를 사람들의 필요로 이어간다. 기존r101 파일/초안·원작 메인/괘 기획과 관찰 선택성을 보존한다. 정확한 장면·조건·구현은 미정이며 첫 인물의 반복 등장을 질문한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r269"></a>
+
+[따뜻한 역지사지와 함께 밝아지는 세계 r269](warmth-perspective-taking-and-shared-light.direction.r269.md): 같은 일을 여러 사람의 하루로 이해하며, 면목동의 작은 빛이 대한민국·장기적으로 북한의 사람들과 교류하는 관계로 이어지는 방향이다. 명덕의 정서와 기존 활동/관찰/지역 귀속을 연결하고 장면·수치·지도/교류·해금 구현은 후속으로 남긴다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r268"></a>
+
+[플레이스 활동·검색 조사 r268](naver-place-activity-evidence-and-search-design.research.r268.md): 공식17출처에서 활동 기록·사업주 통계·검색 반영을 구분했다. r238의 시험값과 조회 불변은 유지하고 가상 고객 활동/이전반응 연결은 제안으로 남긴다. 실제 네이버 계정 활동/산식 취득·게임 구현은 없다. 기존 미답변과 수집 예약 중지를 보존한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r267"></a>
+
+[자율 모집·운영 연구 현행 r267](voluntary-rider-recruitment-and-operating-tech-tree.design.r264.md): 첫 연구는 **지사 스티커 홍보**, 기본 모집 목표는 **1호 기본 배달권 전체**, 첫 연구 완료는 **실제 운영 턴1회 마감**으로 확정했다. 유효 턴 기록·비용/효과·실제 제작/홍보/참여·다른 연구기간·시안/구현은 후속이다. 다음 질문은 첫 입문 연구만 무료로 두고 실제 제작/배포 비용을 별도로 선택할지다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r266"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r265"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r264"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r263"></a>
+
+[아래에서 위로 자라는 경영 r263](need-driven-bottom-up-growth.design.r263.md): 한 행정동의 일을 반복·개선하다 여러 동의 배분, 지역 밖 공급/운송을 생각할 필요가 생기며 구·전국의 책임을 소개한다. 역할별 필요·진행 준비를 제안하며 정확한 해금 조건/첫 장면/구현은 후속이다. 상위 기능이 열려도 현재 동의 운영을 계속할 수 있고 지도 관찰·기존 동간 배송을 경영 해금과 구분한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r262"></a>
+
+[동·구·전국 오행 경영 r262](map-scale-five-element-management.design.r262.md): 같은00을 동의 현장, 구의 여력 배분, 전국의 거점/운송망·장기 공급 관점으로 연결한다. 기본 업무 오행/지도 경로는 유지하고, 초점 지역이 바뀌어도 계획의 적용 지역은 보존하는 안을 제안한다. 집계 대상·정책/예측 산식·UI/구현은 후속이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r261"></a>
+
+[오행 총괄판 현행 r261](five-element-root-management-board.design.r260.md):00을 루트로 두고 **목=주문·화=음식점·토=배차·금=창고·수=배달/운송**을 첫 기본 업무 관점으로 확정했다. 업무 화면의 계획·현장·지역·기록을 연결하며 현재/예상/실제를 구별한다. 측정/예측 모형·시안/구현은 후속이고 다음 질문은 배달 한 건의 기사 배정 비교다. 아래01~20·실제 행위 분류·다른 사업 관점은 유지한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r260"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r259"></a>
+
+[화면의 탑다운 연결 r259](top-down-screen-hierarchy.design.r259.md): 전체 경영→사업·거점→사람·장소→업무→결과로 내려가며 읽는다. 전국/구/동은 대상이 있는 곳으로 이동하는 경로다. 아래 r258의 참조 번호를 그대로 사용하고, 현재 이동과 새 필터/귀환 제안을 구분한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r258"></a>
+
+[현재 화면 번호 목록 r258](current-screen-numbering.catalog.r258.md): 큰 화면01~20과 같은 창의 하위 보기 번호를 실제 캡처에 연결했다. 앞으로 「07번 지사 현황」·「09-4번 직원 탭」처럼 지목한다. 화면 정렬/번호는 검토용 문서의 참조이며 게임 배치 변경이 아니다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r257"></a>
+
+## 현재 우선 기획 — 작은 배달지사에서 시작하기
+
+[배달 플랫폼 운영 통합 r288](delivery-branch-growth-play-loop.design.r257.md#r288-보존--배달-플랫폼-운영-통합)에 1호지사부터 2호지사까지의 운영 흐름과 모듈별 책임을 모았다. 기존 확정과 성장 상세는 [r257 보존](delivery-branch-growth-play-loop.design.r257.md#r257-보존--배달지사-성장)에서 볼 수 있다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r256"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r255"></a>
+
+## 대형 차량에서 캠프·배송차로 이어지는 물류 관찰 구상
+
+[관찰 흐름 구상 r256](logistics-center-multifloor-cutaway.design.r164.md)에 센터 대형차 상차→캠프 이동/하차→컨베이어 분류→작업자 소분→배송차 상차를 보고 싶다는 아이디어를 기록했다. 기존 r163/164와 차량/물류 상태 표현을 재사용 후보로 연결하며 차급·실제 업체 공정·시안/구현은 미정이다. 현재는 추가 선택을 요구하지 않는다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r254"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r253"></a>
+
+## 업무 시작 전에 필요한 법적 준비를 알아보기
+
+[법령 참고 조사 현행 r255](map-legal-delegation-and-operating-orders.research.r254.md)은 사용자의 정정에 따라 정보조사에 한정한다. 운영체제/업무의 등록·허가·신고·시설기준 등을 알아보기 위한 자료이며, 법령의 게임 활용 방법은 아직 미정이다. r254의 지도 운영방침 배치 확정 해석·첫 카드 추천은 철회하고 [기존 조사 자료](../../../DataCollection/Research/2026-11-16-map-legal-orders.md)를 보존한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r252"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r251"></a>
+
+## 확대할수록 지형이 드러나는 전국 시설 지도
+
+[확대별 바탕 지도 현행 r253](nationwide-freight-management-map.proposal.r155.md)은 기존 시안 N1~N4와 같은 배경의 3배 확대를 대조하고 전국→권역→시설 주변→부지의 상세화를 제안한다. r252의 1,075개 시설점/수집 기준과 미답변 L1~L6은 유지한다. 실제 보유 DSM의 범위·해상도와 상세 자료 결손을 구분하며 같은 시설점을 중심으로 자료 비교를 준비했다. 도로·건물 시안과 게임 연결은 후속이다. 사용자 요청의 촬영 파일/영수증만 Unity 로컬 commit `a296a61`로 남겼고 다음 할 일 변경은 보존했다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r250"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r249"></a>
+
+## 기사 클릭·휴대폰과 현재 업무 상태
+
+[역할 관찰 현행 r249](role-centered-observation.design.r241.md)은 움직이는 기사님 클릭 때 휴대폰만 먼저 열어 현재 업무·픽업 전/후를 읽고, 카메라 따라가기는 별도로 선택하는 확정 방향이다. 기존 클릭/휴대폰/추적을 재사용하고 정확한 원 주문·관찰 선택 결속을 보완한다. 복수 업무·상태 문구/시안·실제 이동 클릭 검증은 후속이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r248"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r247"></a>
+
+## 턴 전 방향 결정·턴 후 현장 수행
+
+[현행 r251 기획](next-todo-fire-to-center-observation.design.r245.md)은 운영 방향/준비는 주로 턴 전, 실제 현장 수행/미니게임은 턴 후로 구분한다. 방침·모집/제휴·발주 계획과 검수·제조·개별 배차, 조회·미연결 기능을 현재 소스에 대조했다. 새 턴 계획 코드의 화=계획 판정과 검수/제조 담기는 조정 대상이다. 기존 수정·미루기·관찰/직접 수행 방향을 유지하며 라우팅·시안/실제 검증과 미니게임/보너스 구현은 후속이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r246"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r245"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r244"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r243"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r242"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r241"></a>
 
 <a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r240"></a>
 
@@ -116,9 +326,21 @@
 
 [Blender 첫 모델 반환](../../../Handoffs/2026-11-14-Codex-Blender-배달스쿠터-첫모델-반환.md) · [원본/FBX/검토 이미지](../../../../../artifacts/local/delivery-scooter-model-20261114/README.md). r191/r192 후속으로 사용자가 첫 모델 제작을 요청해 `.blend`1개·FBX4개·Blender 렌더4장을 실제 만들고 왕복 확인했다. 정적 탑승 모델이며 사용자 외형 검토·Unity 적용/게임용 최적화·업무 입력 검증은 대기다. 기존 기획의 승인 범위/코드를 바꾸거나 게임 구현을 자동 활성화하지 않는다.
 
+## 첫 역할 원고로 읽을 배달 한 건
+
+음식점이 기다리던 기사가 픽업한 뒤, 주문자가 같은 배달을 받는 과정을 세 사람의 입장에서 읽는다. 첫 연구의 소재와 순서가 정해졌다. [배달 한 건의 세 입장 r244](same-delivery-three-perspectives.confirmed.r244.md)
+
+## 데이터 시각 효과 모음과 사용자 관찰 레이어
+
+[표현 자료·사용자 입력 r243](data-driven-visual-effects-and-user-layers.proposal.r243.md)에서 현행 효과와 보유 입력 자료, 외부 공식 기술 문서를 모은다. [수집 대장](../../../DataCollection/Research/2026-11-15-visual-data-effect-catalog.md)에서 무엇이 실제로 연결됐는지 찾고, [합성 입력 예제](visual-layer-example.r243.json)로 값·0·결측의 표현 대응을 검토한다. 사용자 파일의 실제 반입은 후속이다.
+
+## 역할별 연구 서술과 편안한 자율 관찰
+
+[역할별 연구·자율 관찰 r242](role-perspective-research-and-relaxed-observation.design.r242.md)은 켜 둔 동안 사람들이 자기 일을 이어가고, 보고 이해하는 것만으로도 충분한 기본 경험을 정리한다. r241을 이어 같은 사건의 서로 다른 입장을 연구·서술한다. 중의 맡김 지속·화의 직접 업무 확인과 나중에 읽는 회차 결과는 야간 검토판에 들어갔으며 아래 구현 반환에서 검증 상한을 구분한다. 첫 연구 서술 순서는 r244를 따르고 완성 원고 화면과 정신 차림의 후속 조정은 별도다.
+
 ## 역할을 골라 사람과 인계를 관찰하는 지도
 
-[역할별 지도 관찰 r241](role-centered-observation.design.r241.md)은 역할을 골라 사람이나 사업장에 머물고, 같은 업무의 상대에게 시점을 넘겼다가 돌아오는 흐름을 다룬다. 공통 관찰 입구와 인계 전환은 구현 수용 전이다.
+[역할별 지도 관찰 현행 r249](role-centered-observation.design.r241.md)은 r241의 역할·동일 업무·상대 보기/복귀에 기사 클릭→휴대폰 먼저·선택적 카메라 따라가기를 결속한다. [11월 16일 구현 반환](../../../Handoffs/2026-11-16-Codex-역할관찰-중화모드-인계반환.md)의 Windows 확인과 이번 이동 기사 클릭 보완/검증 대기는 구분한다. 대량 자료와 실제 여러 날 연속 사용은 일반 사용 검토로 남긴다.
 
 ## 라떼 한 잔의 주문·제조·배달·일일 결산 개발 계획
 
@@ -288,14 +510,19 @@
 
 | 알고 싶은 것 | 먼저 읽을 기획 | 함께 확인할 상태/범위 |
 | --- | --- | --- |
+| 사람의 역할별 기획서는 어디서 찾는가 | [역할별 업무 UX 제목표 r302](role-perspective-research-and-relaxed-observation.design.r242.md) | 배달·플레이스·매장·물류 등 역할별 제목에서 기존 기획과 참고 원문을 연다. |
+| 업무를 시작하기 전에 어떤 법적 준비가 필요한가 | [법령 정보조사 r255](map-legal-delegation-and-operating-orders.research.r254.md), [수집 자료](../../../DataCollection/Research/2026-11-16-map-legal-orders.md) | 등록·허가·신고·시설기준 참고. 게임 활용/명령/카드는 미정 |
+| 전국의 물류센터·보세 관련 시설·항만·공항은 어디 있는가 | [확대별 지형/시설 빛 r253](nationwide-freight-management-map.proposal.r155.md), [수집/검증](../../../DataCollection/Research/2026-11-16-national-logistics-facility-locations.md) | 전국→권역→시설 주변→부지의 상세화 제안. 자료 준비·시안·실제 기능 구현과 촬영 commit을 구분 |
+| 움직이는 기사 클릭 뒤 휴대폰에서 무엇을 보는가 | [휴대폰 먼저·선택적 따라가기 r249](role-centered-observation.design.r241.md) | 같은 기사/원 주문과 픽업 전·후를 읽고 따라가기는 별도 선택. 지도 클릭/관찰 진입 결속·시안/실제 입력은 후속 |
+| 다음 할 일을 누르고 선택의 결과를 어디서 보는가 | [턴 전 방향·턴 후 수행 분류 r251](next-todo-fire-to-center-observation.design.r245.md), [편안한 자율 관찰 r242](role-perspective-research-and-relaxed-observation.design.r242.md) | 턴 전 계획→턴 넘김 확정→관찰/현장 수행. 화와 턴 구간을 분리하고 새 계획 코드의 검수/제조/배차 담기를 대조. 라우팅·시안/구현은 후속 |
 | 무엇을 만드는 게임인가 | [공통 통합 기준 r162](integrated-map-management-baseline.r162.md), [Unity Windows 방향 r140](unity-windows-development-direction.r140.md), [개인 설치형 r123](offline-personal-player-first.decision.r123.md) | 공통 진입 기준이며 전문 기획/소비판을 일괄 대체하지 않음 |
-| 처음 무엇을 하고 무엇을 반복하는가 | [운영 회차/첫 안내 r187](operating-round-first-play.prototype.r187.md), [집중·이완 r146](focus-relax-shared-management.design.r146.md), [역할별 지도 관찰 r241](role-centered-observation.design.r241.md), [다직무 r147](multi-role-minigames-and-realistic-recipes.design.r147.md), [다음 작업 r151](next-task-button-confirmed.design.r151.md) | r187은 기본 반복과 첫 검토용 구현 인계 준비. 실제 수용/실행은 별도 |
+| 처음 무엇을 하고 무엇을 반복하는가 | [배달 한 건의 세 입장 r244](same-delivery-three-perspectives.confirmed.r244.md), [편안한 자율 관찰·역할 연구 r242](role-perspective-research-and-relaxed-observation.design.r242.md), [운영 회차/첫 안내 r187](operating-round-first-play.prototype.r187.md), [집중·이완 r146](focus-relax-shared-management.design.r146.md), [역할별 지도 관찰 r241](role-centered-observation.design.r241.md), [다직무 r147](multi-role-minigames-and-realistic-recipes.design.r147.md), [다음 작업 r151](next-task-button-confirmed.design.r151.md) | r242는 기본 관찰 경험과 연구 틀. r187은 직접 경영 안내에 재사용. 실제 개발 수용/실행은 별도 |
 | 시간·돈·결산은 어떻게 읽는가 | [자원 아이콘/회차 증감 r188](round-resource-icons-and-deltas.design.r188.md), [현실 달력/일일 결산 r174](live-calendar-daily-management.baseline.r174.md), [운영 회계 r36](operator-integrated-accounting.r36.md) | r188의 기본 지표/배치는 제안. 보유량·확정 회차 증감·예상·일일 누적과 정산/지급을 구분 |
 | 어떤 분야에서 시작해 어떻게 성장하는가 | [초보 육성 기본/경력 옵션 r227](novice-first-cafe-franchise-growth.confirmed.r227.md), [가족 협력/외부 인재 수치 r226](family-cooperation-and-external-talent-growth.design.r226.md), [사람 육성/위임 r224](people-development-and-scoped-delegation.design.r224.md), [전사 조율/정신 차림 이야기 r223](company-wide-coordination-and-mindfulness-story.design.r223.md), [고용/점포 성장 r220](progressive-demand-staffing-and-store-expansion.design.r220.md), [픽업 전 과정/지역 누적 r208](pickup-preparation-and-local-mingde.design.r208.md), [전달지 명덕 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md), [활동/정신 차림 r206](awake-activities-and-mindfulness-skill.design.r206.md), [명덕/빛 크기 r205](mingde-contribution-light-growth.confirmed.r205.md), [명덕 자료/동 성장 r204](daxue-mingde-and-dong-growth.research.r204.md), [자유 출발/연구 r183](multi-entry-management-research-tree.design.r183.md), [엔진 성장 r153](engine-evolution-gameplay.proposal.r153.md), [투자/사람 환류 r175](dispatch-investment-satisfaction-and-awareness.proposal.r175.md) | 자유 출발 방향과 상세 연구 노드/수치·사람 성장의 미정을 구분 |
 | 각 사업에서 무슨 일을 하는가 | [현장 위임/플레이어 결정 r225](field-work-delegation-and-player-decisions.confirmed.r225.md), [동 사업 선택/플랫폼 경로 r222](dong-business-selection-and-platform-growth.design.r222.md), [매장 선택/왼쪽 창 r215](store-specific-left-management-panel.design.r215.md), [커피 정밀 과정/수치 r214](coffee-one-cup-chain-and-multiscale-balance.design.r214.md), [우선 기본안 r203](priority-defaults-and-first-validation.proposal.r203.md), [제조/조리 기본시간 r202](coffee-food-preparation-time-defaults.confirmed.r202.md), [센터 내부/위치표식 r199](warehouse-location-labels-and-interior-workflow.design.r199.md), [사업 창/고용·입점 r198](business-tabs-and-dong-scoped-expansion.design.r198.md), [원두 수입/절차 학습 r196](coffee-import-food-safety-and-learning-flow.research.r196.md), [카페 개업/지도 절차 r190](cafe-opening-supply-chains-and-map-linked-process.proposal.r190.md), [센터 조사 r163](logistics-centers-sortation-skeleton.research.r163.md), [센터 내부 r164](logistics-center-multifloor-cutaway.design.r164.md), [카페 작업 맵 r167](cafe-work-map-and-franchise-interiors.research.r167.md), [입점 r168](district-business-catalog-and-placement.proposal.r168.md), [건축 조사 r170](construction-and-reconstruction-legal-process.research.r170.md) | 조사·공간 제안·업무 규칙·시안/실제 구현은 다른 자료 |
 | 광고로 고객을 어떻게 만나는가 | [홍달 플레이스/자동 등록 r195](hongdal-place-registration-and-store-profile.design.r195.md), [소개 조건 확정 r194](broker-introduction-after-ad-result.confirmed.r194.md), [역 키워드/검색 페이지 r193](station-keywords-and-in-game-place-pages.proposal.r193.md), [검색/광고/유입 r176](place-search-advertising-and-demand.proposal.r176.md), [소개 순서 r178](traffic-broker-introduction.confirmed.r178.md), [광고 입문과 전국 광고망의 구분](multi-entry-management-research-tree.design.r183.md#6-광고-시작과-기존-전국-해금의-정합) | 실제 API 관측·비공개 검색 점수·가상 광고 규칙을 구분. 세부는 제안/미정 |
-| 지도에서 무엇을 보고 어디로 이동하는가 | [낮 미니어처 미술 r228](daylight-miniature-map-art-direction.proposal.r228.md), [사계절 경관/지형 r221](seasonal-scenery-trees-and-terrain.design.r221.md), [기본 키 확정 r219](screen-shortcut-baseline.confirmed.r219.md), [화면 단축키/입력 문맥 r218](keyboard-shortcuts-and-context-priority.proposal.r218.md), [작은 지도 기본/요약 전환 확정 r217](minimap-default-and-work-summary-toggle.confirmed.r217.md), [작은 지도/회차 버튼 r216](minimap-content-and-round-controls.proposal.r216.md), [부드러운 선/기사색 r212](soft-road-following-delivery-lines.design.r212.md), [외부 음악 분석 r211](external-music-auto-analysis-and-light.proposal.r211.md), [음악/빛 리듬 r210](music-reactive-light-and-beat-sync.proposal.r210.md), [밀집 빛 판독 r209](dense-light-readability-and-meaning.proposal.r209.md), [동간 배달/귀환 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md), [인구/주문 환경 r200](dong-population-map-and-order-demand.design.r200.md), [센터 내부 진입 r199](warehouse-location-labels-and-interior-workflow.design.r199.md), [3D 기사/스쿠터 준비 r191](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md), [기사/운송 판독 r189](transport-actors-routes-and-load-visibility.proposal.r189.md), [지도 경로 r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md), [지도별 관점 r144](scale-os-management-focus.design.r144.md), [전국 화물 r155](nationwide-freight-management-map.proposal.r155.md), [한 동 집중 r182](single-dong-crowd-focus.confirmed.r182.md) | 기사/경로/적재 표시는 제안. 구 지도 내 서울 전체보기/구↔전국과 지도/해금 구분은 유지 |
-| 어떤 자료를 내려받아 어떤 층으로 보는가 | [전반 자료 부족 조사 r201](gameplay-data-gaps-and-collection-priorities.research.r201.md), [행정동 인구 결속 r200](dong-population-map-and-order-demand.design.r200.md), [팩/레이어 r160](data-packs-and-observation-layers.proposal.r160.md), [DB 저장 r159](public-data-db-storage.work-order.r159.md), [판본 고정 r54](session-pinned-public-data-revision.r54.md), [실제 자료 수집 상태](../../../DataCollection/README.md) | 원본·DB·팩·배포·게임 적용을 각각 확인 |
+| 지도에서 무엇을 보고 어디로 이동하는가 | [낮 미니어처 미술 r228](daylight-miniature-map-art-direction.proposal.r228.md), [사계절 경관/지형 r221](seasonal-scenery-trees-and-terrain.design.r221.md), [기본 키 확정 r219](screen-shortcut-baseline.confirmed.r219.md), [화면 단축키/입력 문맥 r218](keyboard-shortcuts-and-context-priority.proposal.r218.md), [작은 지도 기본/요약 전환 확정 r217](minimap-default-and-work-summary-toggle.confirmed.r217.md), [작은 지도/회차 버튼 r216](minimap-content-and-round-controls.proposal.r216.md), [부드러운 선/기사색 r212](soft-road-following-delivery-lines.design.r212.md), [외부 음악 분석 r211](external-music-auto-analysis-and-light.proposal.r211.md), [음악/빛 리듬 r210](music-reactive-light-and-beat-sync.proposal.r210.md), [밀집 빛 판독 r209](dense-light-readability-and-meaning.proposal.r209.md), [동간 배달/귀환 r207](cross-dong-delivery-and-recipient-mingde.design.r207.md), [인구/주문 환경 r200](dong-population-map-and-order-demand.design.r200.md), [센터 내부 진입 r199](warehouse-location-labels-and-interior-workflow.design.r199.md), [3D 기사/스쿠터 준비 r191](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md), [기사/운송 판독 r189](transport-actors-routes-and-load-visibility.proposal.r189.md), [지도 경로 r184](district-seoul-continuous-zoom-and-nation-transition.design.r184.md), [지도별 관점 r144](scale-os-management-focus.design.r144.md), [전국 화물/시설 빛 r252](nationwide-freight-management-map.proposal.r155.md), [한 동 집중 r182](single-dong-crowd-focus.confirmed.r182.md) | 기사/경로/적재 표시는 제안. 구 지도 내 서울 전체보기/구↔전국과 지도/해금 구분은 유지 |
+| 어떤 자료를 내려받아 어떤 층으로 보는가 | [시각 효과·사용자 입력 r243](data-driven-visual-effects-and-user-layers.proposal.r243.md), [전반 자료 부족 조사 r201](gameplay-data-gaps-and-collection-priorities.research.r201.md), [행정동 인구 결속 r200](dong-population-map-and-order-demand.design.r200.md), [팩/레이어 r160](data-packs-and-observation-layers.proposal.r160.md), [DB 저장 r159](public-data-db-storage.work-order.r159.md), [판본 고정 r54](session-pinned-public-data-revision.r54.md), [실제 자료 수집 상태](../../../DataCollection/README.md) | 원본·DB·팩·배포·게임 적용을 각각 확인 |
 | Claude가 무엇을 구현하고 검증하는가 | [라떼 한 잔 개발 계획 r240](first-latte-order-delivery-development-plan.r240.md), [전반 갭/다음 검토 r213](gameplay-readiness-gaps-and-next-priorities.research.r213.md), [Blender 제작 과정 r192](blender-authoring-and-unity-roundtrip.workflow.r192.md), [현재 작업](../../../CURRENT_WORK.md), [Windows 구현 현황](../../../Handoffs/Unity-Windows-구현현황.md), [첫 운영 회차 인계](../../../Handoffs/2026-11-14-Codex-Claude-짧은운영회차-첫안내-r187.md) | 해당 주제의 승인 판본/hash·현재 쓰기 소유·반환/실행 범위를 확인 |
 
 **주제별로 나란히 읽을 핵심은 운영 회차 r187, 날짜/보고 r174, 자유 출발/연구 r183, 지도 경로 r184이며, 회차 자원 표시 제안 r188과 기사/운송 판독 제안 r189를 함께 읽는다.** r187 하나가 모든 전문 내용을 대체하지 않는다. ‘먼저 읽기’는 개발 승인이나 착수 우선순위가 아니다.
@@ -308,6 +535,7 @@
 
 | 이전 내용 | 이어 읽을 문서 | 바뀐 부분 |
 | --- | --- | --- |
+| 기존 가상 순회·실제 업무 요약과 새 턴 계획 코드 | [r251](next-todo-fire-to-center-observation.design.r245.md) | 계획 수정/확정·미루기를 유지하며 현재 구현의 방향 결정과 현장 수행을 분류했다. 새 다음 할 일 코드의 존재와 구간 분리·미니게임 검증 대기를 구별한다. 기존 참여/조회·키/지도 의미는 유지 |
 | r180 군중·r181/r182 한 동 시간대 비교 | [r200](dong-population-map-and-order-demand.design.r200.md) | 자료→지도 표현과 자료→가상 수요의 독립 경로를 구체화. 군중 표시/단위·한 동·자료 판본 경계 유지 |
 | r164/r166 센터 선택 즉시 내부 진입 | [r199](warehouse-location-labels-and-interior-workflow.design.r199.md) | 일반 클릭은 카드, 더블클릭/내부 보기는 준비된 모형. 위치/작업 상세를 확장하되 기존 층/귀환/첫 분류 범위 유지 |
 | r168 지역 카드의 입점 진입 · Claude 동 화면 안으로 사업 띠를 모으는 후속안 | [r198](business-tabs-and-dong-scoped-expansion.design.r198.md) | 하단 사업 버튼을 유지하고 선택 동의 고용/입점 창으로 진입. 슬롯/비용/개업 규칙·한 동 집중 유지 |
