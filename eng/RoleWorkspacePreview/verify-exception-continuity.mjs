@@ -32,11 +32,11 @@ try {
   await check('응답 유실을 완료로 확정하지 않음', () => count('data-preview-completed', false));
   await page.screenshot({ path: path.join(output, 'food-lost-response-390.png'), fullPage: true });
   await page.getByRole('button', { name: '결과 다시 확인', exact: true }).click();
-  await page.getByRole('button', { name: '같은 요청 다시 확인', exact: true }).waitFor();
+  await page.getByRole('button', { name: '같은 요청 재시도', exact: true }).waitFor();
   await check('GET만으로 같은 상태를 원 요청 성공으로 단정하지 않음', () => count('data-preview-writes', 1));
   await check('미확정 입력을 자동 재전송하지 않음', () => count('data-preview-completed', false));
   await page.screenshot({ path: path.join(output, 'food-explicit-recovery-390.png'), fullPage: true });
-  await page.getByRole('button', { name: '같은 요청 다시 확인', exact: true }).click();
+  await page.getByRole('button', { name: '같은 요청 재시도', exact: true }).click();
   await check('명시 재확인은 같은 번호와 본문 사용', () => count('data-preview-request-reused', true));
   await check('명령 응답과 정본 확인 후 완료', () => count('data-preview-completed', true));
   await page.goto(base + '/neighborhood-member-delivery-preview/assigned');

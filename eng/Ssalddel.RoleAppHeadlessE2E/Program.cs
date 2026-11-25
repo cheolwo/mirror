@@ -56,7 +56,7 @@ var driverSession = new MemoryFDriverSession(guard);
 var driverAuth = new FDriverAuthApiService(driverHttp, driverSession);
 Require(await driverAuth.LoginAsync("food-observer-driver-near", password) is null, "기사 앱 Client 로그인 실패");
 var driverApi = new FoodDeliveryDriverApiService(driverHttp, driverSession, driverAuth);
-var adminSession = new AdminAuthSession();
+var adminSession = new AdminAuthSession(guard);
 var adminAuth = new AdminAuthService(adminHttp, adminSession);
 Require((await adminAuth.LoginAsync("food-observer-admin", password)).Succeeded, "운영자 앱 Client 로그인 실패");
 var adminApi = new AdminAuthenticatedApiClient(adminHttp, adminSession, adminAuth);

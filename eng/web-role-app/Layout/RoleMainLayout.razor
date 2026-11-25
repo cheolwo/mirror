@@ -60,11 +60,26 @@
         <MudNavMenu Class="role-shell__navigation">
             @foreach (var item in Role.NavigationItems)
             {
-                <MudNavLink Href="@Role.ToRelativePath(item.Path)"
-                            Match="NavLinkMatch.Prefix"
-                            Icon="@Icons.Material.Filled.ChevronRight">
-                    @item.Label
-                </MudNavLink>
+                @if (WarehouseBatchMenuSelection.IsBatchMenu(item.Path))
+                {
+                    var selected = WarehouseBatchMenuSelection.IsActive(Navigation.BaseUri, Navigation.Uri, item.Path);
+                    <div class="mud-nav-item">
+                        <a href="@Role.ToRelativePath(item.Path)"
+                           class="@($"mud-nav-link mud-ripple{(selected ? " active" : string.Empty)}")"
+                           aria-current="@(selected ? "page" : null)">
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="mud-nav-link-icon mud-nav-link-icon-default" />
+                            <div class="mud-nav-link-text">@item.Label</div>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <MudNavLink Href="@Role.ToRelativePath(item.Path)"
+                                Match="NavLinkMatch.Prefix"
+                                Icon="@Icons.Material.Filled.ChevronRight">
+                        @item.Label
+                    </MudNavLink>
+                }
             }
         </MudNavMenu>
 
@@ -189,7 +204,9 @@
 
     private bool IsMobileNavigationActive(RoleWebAppMobileNavigationItem item)
     {
-        var itemPath = item.Path.TrimEnd('/');
+        var itemPath = (Role.Code == "05" && WarehouseBatchMenuSelection.IsBatchMenu(item.Path)
+            ? WarehouseBatchMenuSelection.PathWithoutQuery(item.Path)
+            : item.Path).TrimEnd('/');
         if (string.Equals(CurrentPath, itemPath, StringComparison.OrdinalIgnoreCase))
         {
             return true;

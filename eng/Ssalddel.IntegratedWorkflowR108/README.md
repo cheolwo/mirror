@@ -9,6 +9,8 @@
 - 사진은 명시적인 합성 PNG의 비공개 로컬 저장·HTTP 업로드 계약 검증이며 실물 촬영·기기 카메라 증거가 아니다. 주소/GPS/유가/경로/실사용자 동의도 합성 fixture이다.
 - 보수·재원·수령·지급 상태는 각각 조회하며 업무 완료를 실수납·실지급 완료로 바꾸지 않는다.
 
+검증용 Mongo 연결 풀은 30초 동안 사용하지 않은 연결을 퇴출한다. 기존 loopback HAProxy가 60초 idle 연결을 닫기 전에 새 연결을 선택하도록 맞춘 값이다. 제품 전체의 Mongo 설정이나 실제 운영 timeout을 바꾸지 않으며, 연결 오류를 빈 결과로 처리하거나 업무 명령을 재전송하지 않는다.
+
 ## 명시적 새 DB migration 시험과 준비 진단
 
 기본 `Prepare`/`Serve`는 종전의 `CurrentModel` 방식이다. 네 context의 실제 migration chain을 확인하려면 root가 `run.ps1 -Action Prepare -SchemaMode MigrationFirst`로 **새 GUID 실행**을 만든다. 준비 결과의 `outputRoot`만 사용해 같은 소스의 하네스를 격리 빌드한 뒤 `run.ps1 -Action Serve -OutputRoot <새 실행> -ConfirmFreshEmptySchema`로 최초 실행한다. 이미 만든 current-model 실행을 이 모드로 바꾸는 옵션은 없다.

@@ -21,6 +21,8 @@
         <button type="button" @onclick="Data.조회실패Async">조회 실패</button>
         <button type="button" @onclick="Data.조회복구Async">조회 복구</button>
         <label><input type="checkbox" @bind="Data.PrintFailure" /> 인쇄 요청 실패</label>
+        <label><input type="checkbox" @bind="Data.RecoverAcceptanceResponse" /> 서버 수락 복구 응답</label>
+        <span>합성 인쇄 요청 @Data.PrintRequests 회</span>
         <span role="status">@Data.ControlMessage</span>
     </div>
 </details>

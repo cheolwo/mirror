@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$SnapshotPath = 'eng/tests/fixtures/validate-changes-plan.r2.json',
-    [switch]$Capture
+    [switch]$Capture,
+    [string]$EvidenceDirectory
 )
 
 Set-StrictMode -Version Latest
@@ -38,6 +39,37 @@ try {
         $plans[$case.Name] = ($output -join "`n") | ConvertFrom-Json
     }
 
+    # Check new routing semantics without rewriting the original 12-case snapshot.
+    $skillPaths = '.agents/skills/probe/agents/openai.yaml,.claude/skills/probe/agents/openai.yaml'
+    $skillCases = @(
+        @{ Name='skills-fast'; Level='Fast'; Paths=$skillPaths; Expected='docs' },
+        @{ Name='skills-task'; Level='Task'; Paths=$skillPaths; Expected='docs' },
+        @{ Name='skills-and-product'; Level='Task'; Paths="$skillPaths,Ssalddel/UnknownR2.cs"; Expected='product-task' },
+        @{ Name='skills-and-simulation'; Level='Task'; Paths="$skillPaths,Ssalddel.Simulation.Domain/UnknownR2.cs"; ExpectedPaths='Ssalddel.Simulation.Domain/UnknownR2.cs' },
+        @{ Name='skills-and-unity'; Level='Task'; Paths="$skillPaths,Ssalddel.Unity/UnknownR2.cs"; Expected='unity' },
+        @{ Name='agents-settings-outside-skills'; Level='Task'; Paths='.agents/settings.yaml'; Expected='product-task' },
+        @{ Name='claude-settings-outside-skills'; Level='Task'; Paths='.claude/settings.yaml'; Expected='product-task' },
+        @{ Name='agents-similar-prefix'; Level='Task'; Paths='.agents/skills-extra/agents/openai.yaml'; Expected='product-task' },
+        @{ Name='claude-similar-prefix'; Level='Task'; Paths='.claude/skills-extra/agents/openai.yaml'; Expected='product-task' }
+    )
+    foreach ($case in $skillCases) {
+        $output = & $shell -NoProfile -NonInteractive -File $entry -PlanOnly -Level $case.Level -Paths $case.Paths
+        if ($LASTEXITCODE -ne 0) { throw "PlanOnly failed: $($case.Name)" }
+        $actualPlan = ($output -join "`n") | ConvertFrom-Json
+        $expectedPlan = if ($case.ContainsKey('ExpectedPaths')) {
+            $baselineOutput = & $shell -NoProfile -NonInteractive -File $entry -PlanOnly -Level $case.Level -Paths $case.ExpectedPaths
+            if ($LASTEXITCODE -ne 0) { throw "PlanOnly baseline failed: $($case.Name)" }
+            ($baselineOutput -join "`n") | ConvertFrom-Json
+        } else {
+            $plans[$case.Expected]
+        }
+        foreach ($key in @('GuidanceOnly','BuildTargets','TestPlans','CodeMapCheck','FoodDriverCodeMapCheck','EvidenceMapCheck')) {
+            $actualValue = ConvertTo-Json -InputObject $actualPlan.$key -Depth 8 -Compress
+            $expectedValue = ConvertTo-Json -InputObject $expectedPlan.$key -Depth 8 -Compress
+            if ($actualValue -cne $expectedValue) { throw "Skill routing differs: $($case.Name) / $key. actual=$actualValue expected=$expectedValue" }
+        }
+    }
+
     # Load only function definitions; never execute the validator's main block.
     $planHelper = Join-Path $repoRoot 'eng/validation/ChangedFileValidationPlan.ps1'
     $functionSources = if (Test-Path -LiteralPath $planHelper) { @($planHelper,$entry) } else { @($entry) }
@@ -63,7 +95,11 @@ try {
     $TestFilter = 'explicit-priority'
     if ((Get-RelatedTestFilter -Files @('Ssalddel.Tests/OtherTests.cs') -TestRoot 'Ssalddel.Tests') -ne $TestFilter) { throw 'Explicit filter priority changed.' }
 
-    $probeDirectory = Join-Path $repoRoot ('artifacts/local/validation-script-characterization/command-probes-' + $(if ($Capture) { 'before' } else { 'after' }))
+    $probeDirectory = if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) {
+        Join-Path $repoRoot ('artifacts/local/validation-script-characterization/command-probes-' + $(if ($Capture) { 'before' } else { 'after' }))
+    } else {
+        Join-Path ([IO.Path]::GetFullPath((Join-Path $repoRoot $EvidenceDirectory))) ('command-probes-' + [Guid]::NewGuid().ToString('N'))
+    }
     [void](New-Item -ItemType Directory -Path $probeDirectory -Force)
     $planningEvidence = [pscustomobject]@{ Probe = $true }
     $planningChecks = New-Object 'System.Collections.Generic.List[object]'
@@ -90,7 +126,7 @@ try {
         $actual=($json | ConvertFrom-Json | ConvertTo-Json -Depth 15 -Compress)
         if ($expected -cne $actual) { throw 'Validation plan/command characterization differs from baseline.' }
     }
-    Write-Host "Verified $($cases.Count) PlanOnly cases, selection caps and command success/failure evidence."
+    Write-Host "Verified $($cases.Count) baseline PlanOnly cases, $($skillCases.Count) skill-routing cases, selection caps and command success/failure evidence."
 } finally {
     Set-Location -LiteralPath $originalLocation
 }

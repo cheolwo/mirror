@@ -1,61 +1,31 @@
-using System.Net.Http.Json;
-using Ssalddel.Contracts.Common;
+using System.Collections.Concurrent;
 
 namespace SsalddelAdminApp.Services;
 
 /// <summary>
-/// 장치 보안 저장소만 대체하는 headless 인증 상태입니다.
-/// 관리자 업무 HTTP 호출은 실제 앱의 AdminAuthenticatedApiClient를 그대로 사용합니다.
+/// 실제 관리자 인증 소스가 사용하는 기존 일곱 키를 프로세스 메모리에만 보관합니다.
+/// 장치 SecureStorage와 앱 재시작 뒤 복구를 검증하는 구현은 아닙니다.
 /// </summary>
-public sealed class AdminAuthSession
+internal static class SecureStorage
 {
-    public string? AccessToken { get; private set; }
+    public static MemoryStorage Default { get; } = new();
 
-    public void Apply(토큰응답 response)
-        => AccessToken = response.AccessToken;
-}
-
-public sealed record AdminLoginResult(bool Succeeded, string? ErrorMessage)
-{
-    public static AdminLoginResult Success() => new(true, null);
-    public static AdminLoginResult Fail(string message) => new(false, message);
-}
-
-public sealed class AdminAuthService(HttpClient httpClient, AdminAuthSession session)
-{
-    public async Task<AdminLoginResult> LoginAsync(
-        string userNameOrEmail,
-        string password,
-        CancellationToken cancellationToken = default)
+    public sealed class MemoryStorage
     {
-        using var response = await httpClient.PostAsJsonAsync(
-            "api/v1/auth/login",
-            new 로그인요청 { UserNameOrEmail = userNameOrEmail, Password = password },
-            cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        private readonly ConcurrentDictionary<string, string> values = new(StringComparer.Ordinal);
+
+        public Task<string?> GetAsync(string key)
         {
-            return AdminLoginResult.Fail($"관리자 로그인 실패 ({(int)response.StatusCode})");
+            values.TryGetValue(key, out var value);
+            return Task.FromResult(value);
         }
 
-        var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
-        if (token is null
-            || string.IsNullOrWhiteSpace(token.AccessToken)
-            || !token.Roles.Contains("서버관리자", StringComparer.Ordinal))
+        public Task SetAsync(string key, string value)
         {
-            return AdminLoginResult.Fail("서버관리자 권한 토큰을 확인할 수 없습니다.");
+            values[key] = value;
+            return Task.CompletedTask;
         }
 
-        session.Apply(token);
-        return AdminLoginResult.Success();
-    }
-
-    public Task<string?> EnsureAccessTokenAsync(
-        bool forceRefresh = false,
-        CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult<string?>(string.IsNullOrWhiteSpace(session.AccessToken)
-            ? "관리자 로그인 세션이 없습니다."
-            : null);
+        public bool Remove(string key) => values.TryRemove(key, out _);
     }
 }

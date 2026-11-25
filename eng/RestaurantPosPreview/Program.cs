@@ -37,6 +37,8 @@ builder.Services.AddScoped<I음식주문ApiClient, Pos미리보기Api>();
 builder.Services.AddScoped<IRestaurantOrderNotificationPlatform, NoRestaurantOrderNotifications>();
 builder.Services.AddScoped<I주문알림Service, Pos미리보기무음>();
 builder.Services.AddScoped<IRestaurantReceiptPrinter, Pos미리보기프린터>();
+builder.Services.AddSingleton<I음식점전표출력설정Store, Pos미리보기빌지설정Store>();
+builder.Services.AddScoped<I음식점전표출력설정Service, 음식점전표출력설정Service>();
 builder.Services.AddScoped<RestaurantOrderNotificationCoordinator>();
 var app = builder.Build();
 app.Use(async (context, next) =>

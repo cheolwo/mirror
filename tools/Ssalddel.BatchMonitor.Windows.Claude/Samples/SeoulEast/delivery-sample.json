@@ -1,0 +1,110 @@
+{
+  "stores": [
+    {
+      "id": "jungnang-a",
+      "name": "중랑구 A",
+      "district": "중랑구",
+      "latitude": 37.5808495,
+      "longitude": 127.0884925,
+      "freightStop": {
+        "latitude": 37.5793068,
+        "longitude": 127.0895721
+      }
+    },
+    {
+      "id": "jungnang-b",
+      "name": "중랑구 B",
+      "district": "중랑구",
+      "latitude": 37.5823163,
+      "longitude": 127.0867325
+    },
+    {
+      "id": "dongdaemun-a",
+      "name": "동대문구 A",
+      "district": "동대문구",
+      "latitude": 37.5682657,
+      "longitude": 127.0673215,
+      "freightStop": {
+        "latitude": 37.5665789,
+        "longitude": 127.0680584
+      }
+    },
+    {
+      "id": "dongdaemun-b",
+      "name": "동대문구 B",
+      "district": "동대문구",
+      "latitude": 37.5693717,
+      "longitude": 127.0651629
+    },
+    {
+      "id": "gwangjin-a",
+      "name": "광진구 A",
+      "district": "광진구",
+      "latitude": 37.5641327,
+      "longitude": 127.0850017,
+      "freightStop": {
+        "latitude": 37.5640313,
+        "longitude": 127.0853153
+      }
+    },
+    {
+      "id": "gwangjin-b",
+      "name": "광진구 B",
+      "district": "광진구",
+      "latitude": 37.562648,
+      "longitude": 127.0833258
+    },
+    {
+      "id": "nowon-a",
+      "name": "노원구 A",
+      "district": "노원구",
+      "latitude": 37.6255708,
+      "longitude": 127.0729293,
+      "freightStop": {
+        "latitude": 37.6240335,
+        "longitude": 127.0739675
+      }
+    },
+    {
+      "id": "nowon-b",
+      "name": "노원구 B",
+      "district": "노원구",
+      "latitude": 37.62454,
+      "longitude": 127.07074
+    }
+  ],
+  "orders": [
+    {
+      "storeId": "jungnang-a",
+      "menu": "김치찌개"
+    },
+    {
+      "storeId": "dongdaemun-a",
+      "menu": "비빔밥"
+    },
+    {
+      "storeId": "gwangjin-a",
+      "menu": "쌀국수"
+    },
+    {
+      "storeId": "nowon-a",
+      "menu": "순두부찌개"
+    },
+    {
+      "storeId": "jungnang-b",
+      "menu": "제육덮밥"
+    },
+    {
+      "storeId": "dongdaemun-b",
+      "menu": "칼국수"
+    },
+    {
+      "storeId": "gwangjin-b",
+      "menu": "새우볶음밥"
+    },
+    {
+      "storeId": "nowon-b",
+      "menu": "돈가스"
+    }
+  ]
+}

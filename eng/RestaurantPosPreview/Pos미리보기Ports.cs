@@ -32,6 +32,9 @@ public sealed class Pos미리보기Desk(Pos미리보기자료 data) : I음식점
             order.상세주문!.음식점수락시각Utc = DateTime.UtcNow;
             order.상세주문.조리예상분 = order.선택조리예상분;
         });
+        if (data.RecoverAcceptanceResponse)
+            return new() { 성공 = result is not null, 수락복구됨 = true, 주문 = result, 상세주문 = result?.상세주문,
+                메시지 = "합성 서버 수락 복구 응답 · 실제 서버·인쇄 없음" };
         return Result(result);
     }
     public async Task<음식점주문DeskItem?> 주문거절Async(string 주문번호, string 사유, CancellationToken cancellationToken = default)
@@ -130,9 +133,18 @@ public sealed class Pos미리보기Api(Pos미리보기자료 data) : I음식주�
 public sealed class Pos미리보기무음 : I주문알림Service
 { public Task 신규주문알림재생Async(CancellationToken cancellationToken = default) => Task.CompletedTask; }
 
+// This host stores synthetic device preferences only in memory; it never uses MAUI Preferences or a printer.
+public sealed class Pos미리보기빌지설정Store : I음식점전표출력설정Store
+{
+    private int? copies;
+    public int? Read() => copies;
+    public void Write(int value) => copies = value;
+}
+
 public sealed class Pos미리보기프린터(Pos미리보기자료 data) : IRestaurantReceiptPrinter
 {
     public bool UsesNativeDialog => true;
+    public bool PrintsWithoutDialog => true;
     public Task RequestPrintDialogAsync(string title, string html, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

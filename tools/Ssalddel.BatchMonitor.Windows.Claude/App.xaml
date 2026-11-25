@@ -1,0 +1,14 @@
+<Application x:Class="Ssalddel.BatchMonitor.Windows.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="Ink" Color="#213742"/>
+        <SolidColorBrush x:Key="Subtle" Color="#58707A"/>
+        <SolidColorBrush x:Key="Edge" Color="#D6E0E3"/>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </Application.Resources>
+</Application>

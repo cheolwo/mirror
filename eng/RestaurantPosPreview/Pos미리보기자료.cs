@@ -14,6 +14,7 @@ public sealed class Pos미리보기자료(Pos미리보기Realtime realtime)
     public string ControlMessage { get; private set; } = "실제 배차·픽업·인쇄 아님";
     public bool ReadFailure { get; private set; }
     public bool PrintFailure { get; set; }
+    public bool RecoverAcceptanceResponse { get; set; }
     public int PrintRequests { get; set; }
 
     public IReadOnlyList<음식점주문DeskItem> 목록()

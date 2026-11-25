@@ -1,0 +1,43 @@
+==== checks ==== 
+통과  중랑구 A는 신사·유지 가능 6분으로 시작
+통과  중랑구 B는 문사·8분으로 시작
+통과  광진구 A는 학사·10분으로 시작
+통과  2분 24초 업무 뒤 경 3분 36초 남음
+통과  남은 경 시간 안의 업무는 무념 유지
+통과  무념 유지 업무의 보수 3,600원 전부 연결 · 경 시간당 90,000원
+통과  운행 중에는 지금까지 1분 사용으로 계산
+통과  경 1분 12초로 2분 24초 업무를 맡으면 무념 깨짐
+통과  깨진 시각은 출발 뒤 1분 12초
+통과  남은 경 0 · 유지 1분 12초
+통과  보수 3,600원 중 유지 구간 절반인 1,800원만 경 구간에 연결
+통과  준비 대기를 포함한 예상 업무 약 2분 26초
+통과  여유 1분을 더해 충분·부족 판정
+통과  회차 정산 뒤 근무 기록 반영
+통과  유효 근무 마감 → 다음 근무 7분
+통과  8분 미만 유지 근무는 승급 집계 없음
+통과  7분 경으로 8분 업무 → 기록상 무념 깨짐
+통과  깨진 근무는 성장 없이 휴식으로 무념 회복
+통과  8분 이상 유효 근무 두 번 → 문사 승급
+통과  주문2·준비2·배송2 → 균형
+통과  배송 여력 1명 → 배송 병목, 완료 상한 1
+통과  준비 2건 → 준비 병목
+통과  주문 1건 < 여력 → 수요 연결 여지
+통과  여러 지역 합계와 먼저 볼 지역
+통과  저장 파일을 다시 열어도 같은 기사 상태
+
+25/25 통과
+==== build ==== 
+  복원할 프로젝트를 확인하는 중...
+  C:\Users\user\source\repos\Hongdal\tools\Ssalddel.BatchMonitor.Windows.Claude\Ssalddel.BatchMonitor.Windows.Claude.csproj을(를) 1.01초 동안 복원했습니다.
+  복원할 4 프로젝트의 3이(가) 최신 상태입니다.
+  Ssalddel.WorkflowRules.Contracts -> C:\Users\user\source\repos\Hongdal\Ssalddel.WorkflowRules.Contracts\bin\Debug\netstandard2.1\Ssalddel.WorkflowRules.Contracts.dll
+  Ssalddel.WorkflowRules -> C:\Users\user\source\repos\Hongdal\Ssalddel.WorkflowRules\bin\Debug\netstandard2.1\Ssalddel.WorkflowRules.dll
+  Ssalddel.Sagajeong.Core -> C:\Users\user\source\repos\Hongdal\artifacts\local\mobile-game-core-build\Ssalddel.Sagajeong.Core\bin\Debug\netstandard2.1\Ssalddel.Sagajeong.Core.dll
+  Ssalddel.BatchMonitor.Windows.Claude -> C:\Users\user\source\repos\Hongdal\tools\Ssalddel.BatchMonitor.Windows.Claude\bin\Debug\net10.0-windows\Ssalddel.BatchMonitor.Windows.dll
+
+빌드했습니다.
+    경고 0개
+    오류 0개
+
+경과 시간: 00:00:06.64
+checks=0 build=0 

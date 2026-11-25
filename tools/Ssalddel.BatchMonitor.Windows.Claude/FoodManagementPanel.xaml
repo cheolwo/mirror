@@ -1,0 +1,207 @@
+<UserControl x:Class="Ssalddel.BatchMonitor.Windows.FoodManagementPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,6,0">
+            <StackPanel x:Name="StageSelection">
+                <TextBlock Text="음식 배달 스테이지" FontSize="17" FontWeight="Bold"/>
+                <TextBlock Text="모든 주문을 제시간에 배차하고 정산하면 다음 지역이 열립니다."
+                           Margin="0,6,0,9" Foreground="{StaticResource Subtle}" TextWrapping="Wrap"/>
+                <ListBox x:Name="StagePicker" MaxHeight="350" SelectionChanged="ChangeStage"
+                         AutomationProperties.Name="음식 배달 스테이지"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="IsEnabled" Value="{Binding Unlocked}"/>
+                            <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}"/>
+                            <Setter Property="Padding" Value="8,5"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="Bold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Detail}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{StaticResource Subtle}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Button x:Name="StartStageButton" Content="스테이지 시작" Click="StartStage" IsEnabled="False"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,8,0,0"/>
+                <TextBlock x:Name="StartFeedback" Margin="0,6,0,0" Foreground="{StaticResource Subtle}"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock Text="자유 연습" FontWeight="Bold" Margin="0,10,0,0"/>
+                <UniformGrid Columns="2" Margin="0,6,0,0">
+                    <Button Content="1건 자유 연습" Click="StartPracticeOne" Padding="8,6" Margin="0,0,4,0"/>
+                    <Button Content="2건 자유 연습" Click="StartPracticeTwo" Padding="8,6" Margin="4,0,0,0"/>
+                </UniformGrid>
+            </StackPanel>
+            <Border x:Name="FlowSection" Background="#F4F8F9" BorderBrush="{StaticResource Edge}" BorderThickness="1"
+                    CornerRadius="6" Padding="10,8" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock x:Name="FlowHeading" Text="생산·소비 흐름 · 이번 회차" FontWeight="Bold"/>
+                    <TextBlock x:Name="FlowFocus" FontSize="12" Margin="0,3,0,7" TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Polite"/>
+                    <ItemsControl x:Name="FlowBars">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="58"/><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" FontSize="12" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" Background="#E1E9EC" CornerRadius="3" Height="10" VerticalAlignment="Center">
+                                        <Border Background="{Binding Fill}" CornerRadius="3" HorizontalAlignment="Left"
+                                                Width="{Binding BarWidth}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="12" FontWeight="Bold"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid Margin="0,6,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="36"/><ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="36"/><ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="지역" FontSize="11" Foreground="{StaticResource Subtle}"/>
+                        <TextBlock Grid.Column="1" Text="주문" FontSize="11" Foreground="{StaticResource Subtle}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="준비" FontSize="11" Foreground="{StaticResource Subtle}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="배송" FontSize="11" Foreground="{StaticResource Subtle}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Text="완료" FontSize="11" Foreground="{StaticResource Subtle}" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ItemsControl x:Name="FlowRows">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1,0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="36"/><ColumnDefinition Width="36"/>
+                                        <ColumnDefinition Width="36"/><ColumnDefinition Width="36"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding District}" FontSize="12" Foreground="{Binding Ink}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Orders}" FontSize="12" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Prepare}" FontSize="12" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Deliver}" FontSize="12" HorizontalAlignment="Right"
+                                               Foreground="{Binding Ink}"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding Limit}" FontSize="12" FontWeight="Bold"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="준비 = 매장 수(회차당 1건씩) · 배송 = 경 시간이 충분하고 무념을 유지한 기사 수"
+                               FontSize="11" Foreground="{StaticResource Subtle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+            <StackPanel x:Name="RoundPanel" Visibility="Collapsed">
+                <TextBlock x:Name="RoundTitle" Text="사가정 · 음식 배차" FontSize="17" FontWeight="Bold" TextWrapping="Wrap"/>
+                <TextBlock x:Name="BatchStatus" Margin="0,6,0,0" Foreground="{StaticResource Subtle}" TextWrapping="Wrap"/>
+                <Button x:Name="BatchButton" Content="2건 배치 시작" Click="ChangeBatch"
+                        HorizontalContentAlignment="Left" Padding="9,5" Margin="0,6,0,0"/>
+                <ComboBox x:Name="OrderPicker" SelectionChanged="ChangeOrder" Visibility="Collapsed"
+                          AutomationProperties.Name="배치 주문" DisplayMemberPath="Title" Margin="0,7,0,0"/>
+                <TextBlock x:Name="OrderDetail" Margin="0,6,0,10" TextWrapping="Wrap"/>
+                <Button x:Name="OpenOrderButton" Content="주문 열기 · 추천 보기" Click="OpenOrder"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,0,0,10"/>
+                <StackPanel x:Name="CandidatePanel" Visibility="Collapsed">
+                    <TextBlock Text="담당 기사 선택" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <ListBox x:Name="Candidates" SelectionChanged="SelectCandidate"
+                             AutomationProperties.Name="배차 후보" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="7,5"/>
+                                <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+                                <Setter Property="IsEnabled" Value="{Binding Eligible}"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Detail}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button x:Name="AssignButton" Content="기사 지정" Click="AssignDriver" IsEnabled="False"
+                            HorizontalContentAlignment="Left" Padding="9,7" Margin="0,8,0,0"/>
+                </StackPanel>
+                <TextBlock x:Name="Feedback" Foreground="{StaticResource Subtle}" Margin="0,8,0,0"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock x:Name="RoundStatus" Background="#EDF6F2" Padding="9,7" Margin="0,9,0,0"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <StackPanel x:Name="ExpansionPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                    <TextBlock Text="다음 스테이지 · 확장 방향 선택" FontWeight="Bold" TextWrapping="Wrap"/>
+                    <TextBlock Text="지도를 축소하거나 아래 목록에서 확장할 지역을 고르세요."
+                               Foreground="{StaticResource Subtle}" Margin="0,4,0,3" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ExpansionOptions">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" Click="SelectExpansion" Padding="9,5" Margin="0,3,0,0"
+                                        HorizontalContentAlignment="Left"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <TextBlock x:Name="SettlementText" Margin="0,9,0,0" Visibility="Collapsed"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock x:Name="PreviousText" Foreground="{StaticResource Subtle}" Margin="0,8,0,0"
+                           Visibility="Collapsed" TextWrapping="Wrap"/>
+                <Button x:Name="SaveProgressButton" Content="스테이지 기록 다시 저장" Click="RetrySaveProgress"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,6,0,0" Visibility="Collapsed"/>
+                <Button x:Name="RestartButton" Content="같은 조건으로 다시 시작" Click="RestartRound"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,10,0,0" Visibility="Collapsed"/>
+                <Button x:Name="CampaignMenuButton" Content="스테이지 선택으로" Click="OpenStageSelection"
+                        HorizontalContentAlignment="Left" Padding="9,5" Margin="0,6,0,0" Visibility="Collapsed"/>
+                <Expander Header="회차 사건 전체" Margin="0,10,0,0">
+                    <TextBlock x:Name="AllEvents" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                </Expander>
+            </StackPanel>
+            <StackPanel x:Name="RiderSection" Margin="0,14,0,0">
+                <TextBlock Text="지사 기사 · 무념과 경 시간" FontSize="15" FontWeight="Bold"/>
+                <TextBlock x:Name="RiderHint" FontSize="11" Foreground="{StaticResource Subtle}" Margin="0,3,0,7"
+                           TextWrapping="Wrap"/>
+                <ItemsControl x:Name="RiderCards">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorder}"
+                                    BorderThickness="{Binding CardBorderThickness}" CornerRadius="6" Padding="9,8" Margin="0,0,0,7">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="13" Height="13" Fill="{Binding GradeColor}" Stroke="#7A8C93"
+                                                 StrokeThickness="1" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Background="{Binding StateBackground}" CornerRadius="9" Padding="7,1">
+                                            <TextBlock Text="{Binding StateText}" FontSize="11" FontWeight="Bold"
+                                                       Foreground="{Binding StateForeground}"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Text="{Binding MindText}" FontSize="12" Margin="0,5,0,3"/>
+                                    <ProgressBar Value="{Binding Percent}" Maximum="100" Height="6" Foreground="{Binding BarColor}"
+                                                 Background="#E1E9EC" BorderThickness="0"/>
+                                    <TextBlock Text="{Binding RecordText}" FontSize="11" Foreground="{StaticResource Subtle}" Margin="0,5,0,0"/>
+                                    <TextBlock Text="{Binding GradeText}" FontSize="11" Foreground="{StaticResource Subtle}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding TarotText}" FontSize="12" FontWeight="Bold" Foreground="{Binding TarotForeground}"
+                                               Margin="0,5,0,0"/>
+                                    <Button Content="휴식·점검 · 근무 마감" Click="RestRider" IsEnabled="{Binding CanRest}"
+                                            HorizontalAlignment="Left" Padding="8,4" Margin="0,7,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock x:Name="RiderFeedback" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"
+                           AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+            <TextBlock x:Name="ProgressWarning" Margin="0,8,0,0" Foreground="#633A16" TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

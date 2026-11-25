@@ -12,6 +12,7 @@
     <ProjectReference Include="../../Ssalddel.Ui.Common/Ssalddel.Ui.Common.csproj" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantPosPresentation.cs" Link="Services/RestaurantPosPresentation.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantAuthService.cs" Link="Services/RestaurantAuthService.cs" />
+    <Compile Include="../../RestaurantDeskApp/Services/음식점배송지원설정Session.cs" Link="Services/음식점배송지원설정Session.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantOrderReturnContext.cs" Link="Services/RestaurantOrderReturnContext.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantProgressPendingStore.cs" Link="Services/RestaurantProgressPendingStore.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/RestaurantOrderNotifications.cs" Link="Services/RestaurantOrderNotifications.cs" />
@@ -20,12 +21,18 @@
     <Compile Include="../../RestaurantDeskApp/Services/I음식점주문SignalRClientService.cs" Link="Services/I음식점주문SignalRClientService.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/I주문알림Service.cs" Link="Services/I주문알림Service.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/IRestaurantReceiptPrinter.cs" Link="Services/IRestaurantReceiptPrinter.cs" />
+    <Compile Include="../../RestaurantDeskApp/Services/I음식점전표출력설정Service.cs" Link="Services/I음식점전표출력설정Service.cs" />
+    <Compile Include="../../RestaurantDeskApp/Services/음식점전표출력설정Service.cs" Link="Services/음식점전표출력설정Service.cs" />
+    <Compile Include="../../RestaurantDeskApp/Services/음식점전표출력구성.cs" Link="Services/음식점전표출력구성.cs" />
     <Compile Include="../../RestaurantDeskApp/Services/음식점전표DraftFactory.cs" Link="Services/음식점전표DraftFactory.cs" />
     <Compile Include="../../RestaurantDeskApp/Models/Restaurant/음식점주문DeskModels.cs" Link="Models/Restaurant/음식점주문DeskModels.cs" />
     <Compile Include="../../RestaurantDeskApp/Options/RestaurantDeskOptions.cs" Link="Options/RestaurantDeskOptions.cs" />
     <Compile Include="../../RestaurantDeskApp/Components/Pages/OrderDetail.razor.cs" Link="Components/Pages/OrderDetail.razor.cs" />
     <Content Include="../../RestaurantDeskApp/Components/Pages/OrderInbox.razor" Link="Components/Pages/OrderInbox.razor" />
     <Content Include="../../RestaurantDeskApp/Components/Pages/OrderDetail.razor" Link="Components/Pages/OrderDetail.razor" />
+    <Content Include="../../RestaurantDeskApp/Components/Pages/ReceiptSettings.razor" Link="Components/Pages/ReceiptSettings.razor" />
+    <Content Include="../../RestaurantDeskApp/Components/Pages/Home.razor" Link="Components/Pages/Home.razor" />
+    <Content Include="../../RestaurantDeskApp/Components/Pages/FranchiseOperations.razor" Link="Components/Pages/FranchiseOperations.razor" />
     <Content Include="../../RestaurantDeskApp/Components/Pages/OrderInbox.razor.css" Link="Components/Pages/OrderInbox.razor.css" />
     <Content Include="../../RestaurantDeskApp/Components/Pages/OrderDetail.razor.css" Link="Components/Pages/OrderDetail.razor.css" />
     <Content Include="../../RestaurantDeskApp/Components/Layout/MainLayout.razor" Link="Components/Layout/MainLayout.razor" />

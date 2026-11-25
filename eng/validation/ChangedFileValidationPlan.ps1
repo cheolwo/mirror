@@ -111,7 +111,7 @@ function Test-IsGuidanceOnly {
 
     $workFiles = @(
         $Files | Where-Object {
-            $_ -notmatch "^(docs/|eng/|\.codex/)" -and
+            $_ -notmatch "^(docs/|eng/|\.codex/|\.agents/skills/|\.claude/skills/)" -and
             $_ -notmatch "(^|/)AGENTS\.md$" -and
             $_ -notmatch "\.(md|txt)$" -and
             $_ -notin @(".gitignore", ".gitattributes")
@@ -230,7 +230,7 @@ function Test-IsProductPath {
 
     if (Test-IsSimulationPath -File $File) { return $false }
     if (Test-IsUnityPath -File $File) { return $false }
-    if ($File -match "^(docs/|eng/|\.codex/)" -or $File -match "(^|/)AGENTS\.md$") {
+    if ($File -match "^(docs/|eng/|\.codex/|\.agents/skills/|\.claude/skills/)" -or $File -match "(^|/)AGENTS\.md$") {
         return $false
     }
 

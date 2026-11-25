@@ -120,7 +120,7 @@ public sealed record RoleWebAppDescriptor(
                 new("홈", "/warehouse", Icons.Material.Filled.Home),
                 new("입고", "/warehouse/inbounds/expected", Icons.Material.Filled.MoveToInbox),
                 new("작업", "/warehouse/work-board", Icons.Material.Filled.ViewKanban),
-                new("출고", "/warehouse/general/outbound-plan-review", Icons.Material.Filled.Outbox)
+                new("출고", "/warehouse/general/outbound-plan-review?stage=picking", Icons.Material.Filled.Outbox)
             ],
             _ => []
         };
@@ -201,6 +201,11 @@ public sealed record RoleWebAppDescriptor(
                     new("입고 검수", "/warehouse/work/inbound/inspection"),
                     new("재고", "/warehouse/inventory"),
                     new("피킹", "/warehouse/work/picking-batch"),
+                    // 기존 출고 공정의 1~4 순서이며 역할 전체에 공통된 단계 번호가 아닙니다.
+                    new("1 출고 검토 묶음", "/warehouse/general/outbound-plan-review?stage=review"),
+                    new("2 피킹 묶음", "/warehouse/general/outbound-plan-review?stage=picking"),
+                    new("3 포장 묶음", "/warehouse/general/outbound-plan-review?stage=packing"),
+                    new("4 운송 인계 묶음", "/warehouse/general/outbound-plan-review?stage=handoff"),
                     new("작업 보드", "/warehouse/work-board"),
                     new("예외 처리", "/warehouse/exceptions"),
                     new("작업 이력", "/warehouse/history"),

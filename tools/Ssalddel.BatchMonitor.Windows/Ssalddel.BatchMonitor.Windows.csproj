@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" VersionOverride="1.0.3179.45" />
+    <ProjectReference Include="../../Ssalddel.WorkflowRules/Ssalddel.WorkflowRules.csproj" />
+    <ProjectReference Include="../../Ssalddel.Sagajeong.Core/Ssalddel.Sagajeong.Core.csproj" />
+    <Content Include="NaverMap/index.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Samples/SeoulEast/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

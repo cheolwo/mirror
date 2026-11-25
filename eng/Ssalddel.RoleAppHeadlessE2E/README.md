@@ -5,8 +5,8 @@ Android 장치 UI 전에 주문자·음식점·기사·운영자 앱이 실제�
 - `OrdererApp`은 공용 `주문자음식주문Client`와 앱 인증 Client를 사용한다.
 - `RestaurantDeskApp`은 `Ssalddel음식주문Client`와 앱 인증 Client를 링크한다.
 - `FDriverApp`은 `FoodDeliveryDriverApiService`와 앱 인증 Client를 링크한다.
-- `SsalddelAdminApp`은 `AdminAuthenticatedApiClient`로 같은 주문의 현재 생명주기 단계·책임 주체·예외 여부를 매 단계 재조회한다.
-- 장치 보안 저장소는 headless 전용 메모리 구현으로 대체한다. 업무 HTTP Client와 계약은 앱 소스를 그대로 컴파일한다.
+- `SsalddelAdminApp`은 실제 `AdminAuthSession`·`AdminAuthService`·`AdminAuthenticatedApiClient`를 링크해 인증하고 같은 주문의 현재 생명주기 단계·책임 주체·예외 여부를 매 단계 재조회한다.
+- 장치 보안 저장소는 headless 전용 메모리 구현으로 대체한다. 관리자도 기존 일곱 키의 저장소만 대체하며 인증·업무 HTTP Client와 계약은 앱 소스를 그대로 컴파일한다. 장치 저장소·앱 재시작·기기 UI의 증거는 아니다.
 - 음식점 전용 API로 `역할 앱 E2E 합성 한상` 메뉴를 멱등 준비한다. 실제 상호·메뉴·영업 자료가 아니며 격리 DB 밖으로 게시하지 않는다.
 - 비밀번호는 명령행 인자로 받지 않고 `FOOD_OBSERVER_ACCOUNT_PASSWORD` 환경 변수에서만 읽으며 출력하지 않는다.
 - 실제 UI, 실제 영업, 결제, 외부 알림, Unity Editor·Play Mode·Game View를 검증하지 않는다.

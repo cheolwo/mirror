@@ -15,7 +15,8 @@ internal sealed class CargoJourneySettings
     internal const int HostPort = 5378;
     internal const int VerificationRecommendationTtlSeconds = 60;
     internal const string BaseUrl = "http://127.0.0.1:5378";
-    internal const string MongoConnection = "mongodb://127.0.0.1:27021";
+    // 검증용 HAProxy의 60초 idle 종료 전에 풀의 연결을 퇴출해 닫힌 소켓 재사용을 막습니다.
+    internal const string MongoConnection = "mongodb://127.0.0.1:27021/?maxIdleTimeMS=30000";
     internal required string RepositoryRoot { get; init; }
     internal required string ArtifactRoot { get; init; }
     internal required string AccountPassword { get; init; }

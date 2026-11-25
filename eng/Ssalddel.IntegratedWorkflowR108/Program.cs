@@ -28,6 +28,8 @@ try
             services.AddSingleton<ICurrentUserAccessor>(sp => sp.GetRequiredService<HarnessActor>());
             services.AddTransient<IStartupFilter, MemberFixtureControl>();
             services.AddTransient<IStartupFilter, RuntimeProofControl>();
+            services.AddR108ReadinessObservations();
+            services.AddTransient<IStartupFilter, FoodProjectionR31ControlStartupFilter>();
         }));
     factory.UseKestrel(options => options.Listen(IPAddress.Loopback, CargoJourneySettings.HostPort));
     factory.StartServer();

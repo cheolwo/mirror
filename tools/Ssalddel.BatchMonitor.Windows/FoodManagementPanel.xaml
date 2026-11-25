@@ -1,0 +1,110 @@
+<UserControl x:Class="Ssalddel.BatchMonitor.Windows.FoodManagementPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,6,0">
+            <StackPanel x:Name="StageSelection">
+                <TextBlock Text="음식 배달 스테이지" FontSize="17" FontWeight="Bold"/>
+                <TextBlock Text="모든 주문을 제시간에 배차하고 정산하면 다음 지역이 열립니다."
+                           Margin="0,6,0,9" Foreground="{StaticResource Subtle}" TextWrapping="Wrap"/>
+                <ListBox x:Name="StagePicker" MaxHeight="350" SelectionChanged="ChangeStage"
+                         AutomationProperties.Name="음식 배달 스테이지"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="IsEnabled" Value="{Binding Unlocked}"/>
+                            <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}"/>
+                            <Setter Property="Padding" Value="8,5"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="Bold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Detail}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{StaticResource Subtle}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Button x:Name="StartStageButton" Content="스테이지 시작" Click="StartStage" IsEnabled="False"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,8,0,0"/>
+                <TextBlock x:Name="StartFeedback" Margin="0,6,0,0" Foreground="{StaticResource Subtle}"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock Text="자유 연습" FontWeight="Bold" Margin="0,10,0,0"/>
+                <UniformGrid Columns="2" Margin="0,6,0,0">
+                    <Button Content="1건 자유 연습" Click="StartPracticeOne" Padding="8,6" Margin="0,0,4,0"/>
+                    <Button Content="2건 자유 연습" Click="StartPracticeTwo" Padding="8,6" Margin="4,0,0,0"/>
+                </UniformGrid>
+            </StackPanel>
+            <StackPanel x:Name="RoundPanel" Visibility="Collapsed">
+                <TextBlock x:Name="RoundTitle" Text="사가정 · 음식 배차" FontSize="17" FontWeight="Bold" TextWrapping="Wrap"/>
+                <TextBlock x:Name="BatchStatus" Margin="0,6,0,0" Foreground="{StaticResource Subtle}" TextWrapping="Wrap"/>
+                <Button x:Name="BatchButton" Content="2건 배치 시작" Click="ChangeBatch"
+                        HorizontalContentAlignment="Left" Padding="9,5" Margin="0,6,0,0"/>
+                <ComboBox x:Name="OrderPicker" SelectionChanged="ChangeOrder" Visibility="Collapsed"
+                          AutomationProperties.Name="배치 주문" DisplayMemberPath="Title" Margin="0,7,0,0"/>
+                <TextBlock x:Name="OrderDetail" Margin="0,6,0,10" TextWrapping="Wrap"/>
+                <Button x:Name="OpenOrderButton" Content="주문 열기 · 추천 보기" Click="OpenOrder"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,0,0,10"/>
+                <StackPanel x:Name="CandidatePanel" Visibility="Collapsed">
+                    <TextBlock Text="담당 기사 선택" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <ListBox x:Name="Candidates" SelectionChanged="SelectCandidate"
+                             AutomationProperties.Name="배차 후보" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="7,5"/>
+                                <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+                                <Setter Property="IsEnabled" Value="{Binding Eligible}"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Detail}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button x:Name="AssignButton" Content="기사 지정" Click="AssignDriver" IsEnabled="False"
+                            HorizontalContentAlignment="Left" Padding="9,7" Margin="0,8,0,0"/>
+                </StackPanel>
+                <TextBlock x:Name="Feedback" Foreground="{StaticResource Subtle}" Margin="0,8,0,0"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock x:Name="RoundStatus" Background="#EDF6F2" Padding="9,7" Margin="0,9,0,0"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <StackPanel x:Name="ExpansionPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                    <TextBlock Text="다음 스테이지 · 확장 방향 선택" FontWeight="Bold" TextWrapping="Wrap"/>
+                    <TextBlock Text="지도를 축소하거나 아래 목록에서 확장할 지역을 고르세요."
+                               Foreground="{StaticResource Subtle}" Margin="0,4,0,3" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ExpansionOptions">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" Click="SelectExpansion" Padding="9,5" Margin="0,3,0,0"
+                                        HorizontalContentAlignment="Left"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <TextBlock x:Name="SettlementText" Margin="0,9,0,0" Visibility="Collapsed"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock x:Name="PreviousText" Foreground="{StaticResource Subtle}" Margin="0,8,0,0"
+                           Visibility="Collapsed" TextWrapping="Wrap"/>
+                <Button x:Name="SaveProgressButton" Content="스테이지 기록 다시 저장" Click="RetrySaveProgress"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,6,0,0" Visibility="Collapsed"/>
+                <Button x:Name="RestartButton" Content="같은 조건으로 다시 시작" Click="RestartRound"
+                        HorizontalContentAlignment="Left" Padding="9,7" Margin="0,10,0,0" Visibility="Collapsed"/>
+                <Button x:Name="CampaignMenuButton" Content="스테이지 선택으로" Click="OpenStageSelection"
+                        HorizontalContentAlignment="Left" Padding="9,5" Margin="0,6,0,0" Visibility="Collapsed"/>
+                <Expander Header="회차 사건 전체" Margin="0,10,0,0">
+                    <TextBlock x:Name="AllEvents" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                </Expander>
+            </StackPanel>
+            <TextBlock x:Name="ProgressWarning" Margin="0,8,0,0" Foreground="#633A16" TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

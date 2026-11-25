@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>가상 배치 관찰 지도</title>
+    <style>
+        html, body, #map { width: 100%; height: 100%; margin: 0; }
+        body { background: #eef3f5; font: 13px "Malgun Gothic", sans-serif; }
+        #status {
+            position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1000;
+            margin: 0; padding: 10px 12px; border: 1px solid #d6e0e3; border-radius: 6px;
+            background: #fff; color: #213742; pointer-events: none;
+        }
+        .pin {
+            box-sizing: border-box; display: grid; place-items: center;
+            border: 2px solid #fff; box-shadow: 0 1px 4px #16382b66;
+            white-space: nowrap;
+        }
+        .order {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: #c9f0e3; color: #15584d; font-size: 12px; font-weight: 700;
+        }
+        .order.waiting { background: #fff; border-color: #177668; }
+        .order.completed { background: #e4f2ed; color: #245a4f; border-color: #73ab9c; }
+        .vehicle { width: 16px; height: 16px; border-radius: 50%; background: #6844ae; }
+        .restaurant {
+            height: 24px; padding: 0 6px; border: 1px solid #246682; border-radius: 4px;
+            background: #e4f3fa; color: #19536d; font-size: 11px; font-weight: 700;
+        }
+        .management-store-pin {
+            display: grid; justify-items: center; gap: 4px;
+            cursor: pointer;
+        }
+        .management-order-badge {
+            box-sizing: border-box; height: 22px; padding: 0 8px; border: 1px solid #fff;
+            border-radius: 11px; background: #a33122; color: #fff; box-shadow: 0 1px 4px #42231677;
+            font-size: 12px; font-weight: 700; line-height: 20px; white-space: nowrap;
+        }
+        .courier {
+            height: 24px; padding: 0 5px; border-radius: 12px;
+            color: #fff; font-size: 11px; font-weight: 700;
+        }
+        .courier.management-clickable { cursor: pointer; }
+        .courier.management-selected {
+            border-color: #ffe087; box-shadow: 0 0 0 2px #513817, 0 2px 6px #26352d99;
+        }
+        .management-expansion {
+            height: 30px; padding: 0 8px; border-radius: 15px; background: #17644f;
+            color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+        .freight-vehicle {
+            height: 30px; padding: 0 5px; border-radius: 4px;
+            background: #9a4607; color: #fff; font-size: 11px; font-weight: 700;
+        }
+        .freight-vehicle.received { background: #fff4dc; color: #743005; border-color: #9a4607; }
+        .freight-stop {
+            height: 22px; border: 1px solid #9a4607; border-radius: 4px;
+            background: #fff4dc; color: #743005; font-size: 11px; font-weight: 700;
+        }
+        .depot {
+            min-width: 46px; height: 24px; border: 1px solid #437d9a; border-radius: 4px;
+            background: #fff; color: #385864; font-size: 11px; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div id="map" aria-label="가상 음식 배달과 화물 운송 경로를 표시한 네이버 지도"></div>
+    <p id="status" role="status">네이버 지도를 불러오는 중입니다.</p>
+    <script>
+        const root = document.querySelector('#map');
+        const status = document.querySelector('#status');
+        const bridge = window.chrome?.webview;
+        const orderMarkers = new Map();
+        const batchLayers = new Map();
+        const restaurantMarkers = new Map();
+        const courierLayers = new Map();
+        const expansionMarkers = new Map();
+        const courierColors = ['#6844ae', '#1f6381', '#8c4c18', '#883b63', '#216553'];
+        const routeStyles = {
+            Grouped: { strokeColor: '#437d9a', strokeStyle: 'shortdash', strokeWeight: 4, zIndex: 20 },
+            InTransit: { strokeColor: '#6844ae', strokeStyle: 'solid', strokeWeight: 5, zIndex: 30 },
+            Completed: { strokeColor: '#248570', strokeStyle: 'solid', strokeWeight: 4, zIndex: 10 }
+        };
+        const phaseNames = {
+            Waiting: '접수 대기', Grouped: '묶음 준비', InTransit: '이동 중', Completed: '완료',
+            Idle: '배차 대기', ToPickup: '매장 이동', AtPickup: '픽업 대기', ToDropoff: '전달 이동', Delivered: '수령 대기'
+        };
+        const freightRoutePhases = new Set(['배차확정', '상차지도착', '상차완료', '운송중', '하차지도착']);
+        let map;
+        let depot;
+        let freightLayer;
+        let latestState;
+        let fittedScope;
+        let expansionOriginZoom;
+        let expansionOverviewShown = false;
+        let ready = false;
+        let failed = false;
+        const timeout = setTimeout(() => fail('네이버 지도 표시가 늦어져 지도 설정이나 인터넷 연결을 확인해야 합니다.'), 15000);
+
+        function fail(reason, code = null) {
+            if (failed) return;
+            failed = true;
+            clearTimeout(timeout);
+            status.textContent = reason;
+            status.hidden = false;
+            bridge?.postMessage({ type: 'error', reason, code });
+        }
+
+        function locationOf(point) {
+            return new naver.maps.LatLng(point.latitude, point.longitude);
+        }
+
+        function makeIcon(className, width, height, label = '', anchorY = height / 2) {
+            const content = document.createElement('div');
+            content.className = 'pin ' + className;
+            content.textContent = label;
+            content.style.width = width + 'px';
+            return {
+                content,
+                size: new naver.maps.Size(width, height),
+                anchor: new naver.maps.Point(width / 2, anchorY)
+            };
+        }
+
+        function updateOrder(order, marker) {
+            const position = locationOf(order);
+            const label = order.title || '가상 주문 ' + order.number;
+            const title = label + ' · ' + (phaseNames[order.phase] ?? order.phase);
+            const number = String(order.number);
+            const style = order.phase === 'Waiting' ? 'order waiting'
+                : order.phase === 'Completed' ? 'order completed' : 'order';
+            const icon = () => makeIcon(style, Math.max(30, number.length * 8 + 8), 30, number);
+            if (!marker) {
+                return new naver.maps.Marker({ map, position, title, icon: icon(), zIndex: 100, clickable: false });
+            }
+            if (!marker.getPosition().equals(position)) {
+                marker.setPosition(position);
+            }
+            if (marker.getTitle() !== title) {
+                marker.setTitle(title);
+                marker.setIcon(icon());
+            }
+            return marker;
+        }
+
+        function updateBatch(batch, layer) {
+            const style = routeStyles[batch.phase];
+            const pathKey = batch.points.map(point => point.latitude + ',' + point.longitude).join(';');
+            if (!layer) {
+                layer = {
+                    line: new naver.maps.Polyline({
+                        map, path: batch.points.map(locationOf), strokeOpacity: .92, ...style
+                    }),
+                    pathKey,
+                    phase: batch.phase
+                };
+            } else {
+                if (layer.phase !== batch.phase) {
+                    layer.line.setOptions(style);
+                    layer.phase = batch.phase;
+                }
+                if (layer.pathKey !== pathKey) {
+                    layer.line.setPath(batch.points.map(locationOf));
+                    layer.pathKey = pathKey;
+                }
+            }
+
+            if (batch.vehicle) {
+                const position = locationOf(batch.vehicle);
+                if (layer.vehicle) {
+                    layer.vehicle.setPosition(position);
+                } else {
+                    layer.vehicle = new naver.maps.Marker({
+                        map, position, title: '가상 배치 ' + batch.number + ' 이동 중',
+                        icon: makeIcon('vehicle', 16, 16), zIndex: 120, clickable: false
+                    });
+                }
+            } else if (layer.vehicle) {
+                layer.vehicle.setMap(null);
+                layer.vehicle = null;
+            }
+            return layer;
+        }
+
+        function pendingManagement(state) {
+            return state?.viewScope === 'food-management' && state.management?.assignmentPending === true
+                ? state.management : null;
+        }
+
+        function isPendingStore(state, id) {
+            return pendingManagement(state)?.pendingStoreIds?.includes(id) === true;
+        }
+
+        function isAvailableCourier(state, id) {
+            const management = pendingManagement(state);
+            return management !== null && (management.availableDriverIds?.includes(id) ?? true);
+        }
+
+        function visibleExpansions(state) {
+            return expansionOriginZoom !== undefined && map.getZoom() < expansionOriginZoom
+                ? state?.management?.expansionOptions ?? [] : [];
+        }
+
+        function updateExpansion(option, layer) {
+            if (layer) return layer;
+            const label = '＋ ' + option.label;
+            const icon = makeIcon('management-expansion', label.length * 12 + 14, 30, label);
+            const marker = new naver.maps.Marker({
+                map, position: locationOf(option), title: option.label + ' 확장 선택', icon, zIndex: 130, clickable: true
+            });
+            const clickListener = naver.maps.Event.addListener(marker, 'click', () => {
+                if (visibleExpansions(latestState).some(candidate => candidate.id === option.id)) {
+                    bridge?.postMessage({ type: 'managementExpansion', id: option.id });
+                }
+            });
+            return { marker, clickListener };
+        }
+
+        function syncExpansions(state) {
+            const options = state?.management?.expansionOptions ?? [];
+            if (options.length === 0) {
+                expansionOriginZoom = undefined;
+                expansionOverviewShown = false;
+            } else if (expansionOriginZoom === undefined) {
+                expansionOriginZoom = map.getZoom();
+            }
+            syncLayers(visibleExpansions(state), expansionMarkers, updateExpansion,
+                removeInteractiveMarker, option => option.id);
+        }
+
+        function handleZoomChange() {
+            if (!ready || failed) return;
+            const options = visibleExpansions(latestState);
+            if (!expansionOverviewShown && options.length > 0) {
+                expansionOverviewShown = true;
+                const points = [...latestState.coverage, ...options].map(locationOf);
+                map.fitBounds(points, { top: 35, right: 55, bottom: 35, left: 55, maxZoom: expansionOriginZoom - 1 });
+            }
+            syncExpansions(latestState);
+        }
+
+        function makeRestaurantIcon(label, pending) {
+            const pinWidth = Math.max(42, label.length * 12 + 14);
+            const pin = makeIcon('restaurant', pinWidth, 24, label, 30);
+            if (!pending) return pin;
+
+            const content = document.createElement('div');
+            const width = Math.max(84, pinWidth);
+            content.className = 'management-store-pin';
+            content.style.width = width + 'px';
+            const badge = document.createElement('span');
+            badge.className = 'management-order-badge';
+            badge.textContent = '새 주문 1건';
+            content.append(badge, pin.content);
+            return { content, size: new naver.maps.Size(width, 50), anchor: new naver.maps.Point(width / 2, 56) };
+        }
+
+        function removeInteractiveMarker(layer) {
+            if (layer.clickListener) naver.maps.Event.removeListener(layer.clickListener);
+            layer.marker.setMap(null);
+        }
+
+        function updateRestaurant(restaurant, layer, pending) {
+            const position = locationOf(restaurant);
+            const title = restaurant.name;
+            const brand = restaurant.district ? title : title.trim().split(/\s+/)[0];
+            const label = brand.length > 12 ? brand.slice(0, 11) + '…' : brand;
+            const icon = () => makeRestaurantIcon(label, pending);
+            if (!layer) {
+                const marker = new naver.maps.Marker({ map, position, title, icon: icon(), zIndex: pending ? 110 : 90, clickable: pending });
+                layer = { marker };
+                if (pending) {
+                    layer.clickListener = naver.maps.Event.addListener(marker, 'click', () => {
+                        if (isPendingStore(latestState, restaurant.id)) {
+                            bridge?.postMessage({ type: 'managementStore', id: restaurant.id });
+                        }
+                    });
+                }
+                return layer;
+            }
+            const { marker } = layer;
+            if (!marker.getPosition().equals(position)) {
+                marker.setPosition(position);
+            }
+            if (marker.getTitle() !== title) {
+                marker.setTitle(title);
+                marker.setIcon(icon());
+            }
+            return layer;
+        }
+
+        function updateCourier(courier, layer, pending, selected) {
+            const position = locationOf(courier);
+            const phase = phaseNames[courier.phase] ?? courier.phase;
+            const title = phase ? courier.label + ' · ' + phase : courier.label;
+            const icon = color => {
+                const label = courier.district && /^r\d+$/.test(courier.id)
+                    ? courier.id.replace(/^r/, '기사 ') : courier.label;
+                const classes = pending ? 'courier management-clickable' : 'courier';
+                const pin = makeIcon(selected ? classes + ' management-selected' : classes,
+                    Math.max(34, label.length * 12 + 12), 24, label, 6);
+                pin.content.style.backgroundColor = color;
+                return pin;
+            };
+            if (!layer) {
+                const index = Array.from(String(courier.id)).reduce((sum, character) => sum + character.codePointAt(0), 0);
+                const color = courierColors[index % courierColors.length];
+                layer = {
+                    marker: new naver.maps.Marker({ map, position, title, icon: icon(color), zIndex: 120, clickable: pending }),
+                    color,
+                    selected
+                };
+                if (pending) {
+                    layer.clickListener = naver.maps.Event.addListener(layer.marker, 'click', () => {
+                        if (isAvailableCourier(latestState, courier.id)) {
+                            bridge?.postMessage({ type: 'managementDriver', id: courier.id });
+                        }
+                    });
+                }
+            } else {
+                if (!layer.marker.getPosition().equals(position)) layer.marker.setPosition(position);
+                if (layer.marker.getTitle() !== title) layer.marker.setTitle(title);
+                if (layer.selected !== selected) {
+                    layer.marker.setIcon(icon(layer.color));
+                    layer.selected = selected;
+                }
+            }
+
+            const route = courier.route ?? [];
+            if (route.length > 1) {
+                const pathKey = route.map(point => point.latitude + ',' + point.longitude).join(';');
+                const strokeStyle = courier.phase === 'ToPickup' ? 'shortdash' : 'solid';
+                if (!layer.line) {
+                    layer.line = new naver.maps.Polyline({
+                        map, path: route.map(locationOf), strokeColor: layer.color,
+                        strokeStyle, strokeOpacity: .9, strokeWeight: 5, zIndex: 30
+                    });
+                } else {
+                    if (layer.pathKey !== pathKey) layer.line.setPath(route.map(locationOf));
+                    if (layer.strokeStyle !== strokeStyle) layer.line.setOptions({ strokeStyle });
+                }
+                layer.pathKey = pathKey;
+                layer.strokeStyle = strokeStyle;
+            } else if (layer.line) {
+                layer.line.setMap(null);
+                layer.line = null;
+            }
+            return layer;
+        }
+
+        function syncLayers(items, layers, update, remove, keyOf = item => item.number) {
+            const seen = new Set();
+            for (const item of items) {
+                const key = keyOf(item);
+                seen.add(key);
+                layers.set(key, update(item, layers.get(key)));
+            }
+            for (const [key, layer] of layers) {
+                if (!seen.has(key)) {
+                    remove(layer);
+                    layers.delete(key);
+                }
+            }
+        }
+
+        function syncFreight(freight) {
+            if (freightLayer && freightLayer.id !== freight?.id) {
+                freightLayer.vehicle.setMap(null);
+                freightLayer.pickup.setMap(null);
+                freightLayer.dropoff.setMap(null);
+                freightLayer.line?.setMap(null);
+                freightLayer = null;
+            }
+            if (!freight) return;
+
+            const position = locationOf(freight.position);
+            const title = freight.label + ' · ' + freight.phase;
+            const received = freight.phase === '인수완료';
+            const icon = () => makeIcon(received ? 'freight-vehicle received' : 'freight-vehicle',
+                Math.max(30, freight.id.length * 7 + 10), 30, freight.id);
+            if (!freightLayer) {
+                freightLayer = {
+                    id: freight.id,
+                    received,
+                    vehicle: new naver.maps.Marker({ map, position, title, icon: icon(), zIndex: 130, clickable: false }),
+                    pickup: new naver.maps.Marker({
+                        map, position: locationOf(freight.pickup), title: freight.pickupDistrict ? freight.pickupDistrict + ' · 가상 상차지' : '가상 화물 상차지',
+                        icon: makeIcon('freight-stop', 34, 22, '상차', 28), zIndex: 95, clickable: false
+                    }),
+                    dropoff: new naver.maps.Marker({
+                        map, position: locationOf(freight.dropoff), title: freight.dropoffDistrict ? freight.dropoffDistrict + ' · 가상 하차지' : '가상 화물 하차지',
+                        icon: makeIcon('freight-stop', 34, 22, '하차', 28), zIndex: 95, clickable: false
+                    })
+                };
+            } else {
+                const vehicle = freightLayer.vehicle;
+                if (!vehicle.getPosition().equals(position)) vehicle.setPosition(position);
+                if (vehicle.getTitle() !== title) vehicle.setTitle(title);
+                if (freightLayer.received !== received) {
+                    vehicle.setIcon(icon());
+                    freightLayer.received = received;
+                }
+            }
+
+            const route = freight.route ?? [];
+            if (route.length > 1 && freightRoutePhases.has(freight.phase)) {
+                const pathKey = route.map(point => point.latitude + ',' + point.longitude).join(';');
+                if (!freightLayer.line) {
+                    freightLayer.line = new naver.maps.Polyline({
+                        map, path: route.map(locationOf), strokeColor: '#bd5608', strokeStyle: 'shortdash',
+                        strokeOpacity: .9, strokeWeight: 5, zIndex: 35
+                    });
+                } else if (freightLayer.pathKey !== pathKey) {
+                    freightLayer.line.setPath(route.map(locationOf));
+                }
+                freightLayer.pathKey = pathKey;
+            } else if (freightLayer.line) {
+                freightLayer.line.setMap(null);
+                freightLayer.line = null;
+            }
+        }
+
+        function fitSample(state) {
+            const scope = state.mapFitKey ?? state.viewScope ?? 'observation';
+            const hasCoverage = state.restaurants || state.couriers || state.freight || (fittedScope && state.center);
+            if (fittedScope === scope || !hasCoverage) return;
+            expansionOriginZoom = undefined;
+            expansionOverviewShown = false;
+            const points = [
+                ...(state.coverage ?? []),
+                ...(state.restaurants ?? []),
+                ...(state.orders ?? []),
+                ...(state.couriers ?? []).flatMap(courier => [courier, ...(courier.route ?? [])])
+            ];
+            if (state.center) points.push(state.center);
+            if (state.freight) points.push(state.freight.pickup, state.freight.dropoff);
+            const locations = points.map(locationOf);
+            if (locations.length === 0) return;
+
+            const first = locations[0];
+            if (locations.some(location => !first.equals(location))) {
+                const bounds = new naver.maps.LatLngBounds(first, first);
+                for (const location of locations) bounds.extend(location);
+                map.fitBounds(bounds);
+            } else {
+                map.setCenter(first);
+            }
+            fittedScope = scope;
+        }
+
+        function visibleRestaurants(state) {
+            if (state.viewScope === 'food-management') return state.restaurants ?? [];
+            const pickupByDistrict = new Map((state.couriers ?? [])
+                .filter(courier => courier.district && courier.pickupStoreId)
+                .map(courier => [courier.district, courier.pickupStoreId]));
+            const shownDistricts = new Set();
+            return (state.restaurants ?? []).filter(restaurant => {
+                const district = restaurant.district;
+                if (!district) return true;
+                if (pickupByDistrict.has(district)) return pickupByDistrict.get(district) === restaurant.id;
+                if (shownDistricts.has(district)) return false;
+                shownDistricts.add(district);
+                return true;
+            });
+        }
+
+        function render(state) {
+            if (!map || failed || !state) return;
+            if (state.depot) {
+                const position = locationOf(state.depot);
+                if (!depot) {
+                    depot = new naver.maps.Marker({
+                        map, position, title: '가상 집결지',
+                        icon: makeIcon('depot', 46, 24, '집결지'), zIndex: 90, clickable: false
+                    });
+                } else if (!depot.getPosition().equals(position)) {
+                    depot.setPosition(position);
+                }
+            } else if (depot) {
+                depot.setMap(null);
+                depot = null;
+            }
+            syncLayers(state.orders ?? [], orderMarkers, updateOrder, marker => marker.setMap(null));
+            syncLayers(state.batches ?? [], batchLayers, updateBatch, layer => {
+                layer.line.setMap(null);
+                layer.vehicle?.setMap(null);
+            });
+            const management = pendingManagement(state);
+            const restaurantPending = item => isPendingStore(state, item.id);
+            const courierAvailable = item => isAvailableCourier(state, item.id);
+            syncLayers(visibleRestaurants(state), restaurantMarkers,
+                (item, layer) => updateRestaurant(item, layer, restaurantPending(item)), removeInteractiveMarker,
+                item => `${state.viewScope}:${restaurantPending(item)}:${item.id}`);
+            syncLayers(state.couriers ?? [], courierLayers,
+                (item, layer) => updateCourier(item, layer, courierAvailable(item), management?.selectedDriverId === item.id), layer => {
+                removeInteractiveMarker(layer);
+                layer.line?.setMap(null);
+            }, item => `${state.viewScope}:${courierAvailable(item)}:${item.id}`);
+            try {
+                syncFreight(state.freight);
+            } catch {
+                fail('가상 화물 경로를 지도에 표시하지 못했습니다.');
+                return;
+            }
+            fitSample(state);
+            syncExpansions(state);
+        }
+
+        bridge?.addEventListener('message', event => {
+            latestState = event.data;
+            if (ready) render(latestState);
+        });
+
+        window.addEventListener('offline', () => fail('지도 연결이 끊겼습니다. 가상 업무는 계속 진행됩니다.', 'offline'));
+        window.navermap_authFailure = () => fail('네이버 지도 인증에 실패했습니다. Web 서비스 URL 등록을 확인해 주세요.');
+
+        async function start() {
+            try {
+                const response = await fetch('/map-config', { cache: 'no-store' });
+                if (!response.ok) throw Error();
+                const config = await response.json();
+                if (!config.clientId) throw Error();
+                const url = new URL(config.scriptUrl || 'https://oapi.map.naver.com/openapi/v3/maps.js');
+                if (url.origin !== 'https://oapi.map.naver.com' || url.pathname !== '/openapi/v3/maps.js') throw Error();
+                url.search = '';
+                url.searchParams.set('ncpKeyId', config.clientId);
+                if (failed) return;
+
+                const script = document.createElement('script');
+                script.onload = initializeMap;
+                script.onerror = () => fail('네이버 지도에 연결하지 못했습니다.');
+                script.src = url.href;
+                document.head.append(script);
+            } catch {
+                fail('네이버 지도 설정을 읽지 못했습니다.');
+            }
+        }
+
+        function initializeMap() {
+            if (failed) return;
+            try {
+                map = new naver.maps.Map(root, {
+                    center: new naver.maps.LatLng(37.58094, 127.08911),
+                    zoom: 18,
+                    zoomControl: true,
+                    zoomControlOptions: { position: naver.maps.Position.RIGHT_CENTER }
+                });
+                naver.maps.Event.addListener(map, 'zoom_changed', handleZoomChange);
+                naver.maps.Event.addListener(map, 'tilesloaded', () => {
+                    if (ready || failed) return;
+                    const hasTile = [...root.querySelectorAll('img')].some(image =>
+                        image.complete && image.naturalWidth >= 128 && image.naturalHeight >= 128);
+                    if (!hasTile) return;
+                    ready = true;
+                    clearTimeout(timeout);
+                    status.hidden = true;
+                    if (latestState) render(latestState);
+                    if (!failed) bridge?.postMessage({ type: 'ready' });
+                });
+            } catch {
+                fail('네이버 지도 화면을 만들지 못했습니다.');
+            }
+        }
+
+        start();
+    </script>
+</body>
+</html>
