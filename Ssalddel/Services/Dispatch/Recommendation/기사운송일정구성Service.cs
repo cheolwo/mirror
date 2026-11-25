@@ -16,10 +16,12 @@ namespace 살뜰.Services.Dispatch.Recommendation
         private static readonly string[] 픽업완료상태목록 = ["상차완료", "하차지도착", "운송중", "인수완료"];
 
         private readonly SsalddelContext _db;
+        private readonly I기사실차적재근거조회Service _실차조회;
 
-        public 기사운송일정구성Service(SsalddelContext db)
+        public 기사운송일정구성Service(SsalddelContext db, I기사실차적재근거조회Service? 실차조회 = null)
         {
             _db = db;
+            _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
         }
 
         public async Task<기사운송일정계획> 구성Async(string 기사Id, 배차경로좌표? 시작좌표, CancellationToken cancellationToken = default)
@@ -87,7 +89,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
                     false) { 작업시간분 = request is null ? null : 화주운송의뢰매퍼.ReadHandlingTime(request).하차분 });
             }
 
-            return new 기사운송일정계획(
+            var plan = new 기사운송일정계획(
                 기사Id,
                 DateTime.UtcNow,
                 시작좌표,
@@ -95,6 +97,7 @@ namespace 살뜰.Services.Dispatch.Recommendation
             {
                 상하차작업시간 = requestMap.ToDictionary(x => x.Key, x => 화주운송의뢰매퍼.ReadHandlingTime(x.Value), StringComparer.Ordinal)
             };
+            return await 화물수락정차순서.반영Async(_db, plan, transports, cancellationToken, _실차조회);
         }
 
         private static bool 상차지포함필요(string 상태)

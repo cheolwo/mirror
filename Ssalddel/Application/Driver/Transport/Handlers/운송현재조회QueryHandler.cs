@@ -5,21 +5,25 @@ namespace Ssalddel.Application.Driver.Transport;
 
 using Ssalddel.Application.Driver.Recommendation;
 using Ssalddel.Services.Community;
+using 살뜰.Services.Dispatch.Recommendation;
 
 public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현재조회Query, 기사운송요약응답?>
 {
     private readonly SsalddelContext _db;
     private readonly I생활배송기사정보제공동의Service? _disclosure;
+    private readonly I기사운송일정구성Service _schedule;
 
-    public 운송현재조회QueryHandler(SsalddelContext db, I생활배송기사정보제공동의Service? disclosure = null)
+    public 운송현재조회QueryHandler(SsalddelContext db, I생활배송기사정보제공동의Service? disclosure = null,
+        I기사운송일정구성Service? schedule = null)
     {
         _db = db;
         _disclosure = disclosure;
+        _schedule = schedule ?? new 기사운송일정구성Service(db);
     }
 
     public async Task<기사운송요약응답?> Handle(운송현재조회Query request, CancellationToken cancellationToken)
     {
-        var entity = await _db.운송원장
+        var entities = await _db.운송원장
             .AsNoTracking()
             .Where(x => x.기사_운송자 == request.기사Id
                         && x.배차업무유형 == 상태값.배차업무유형.용달운송
@@ -31,7 +35,11 @@ public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현�
                 : 9)
             .ThenBy(x => x.출발_픽업 ?? x.도착 ?? DateTime.MaxValue)
             .ThenBy(x => x.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        var plan = await _schedule.구성Async(request.기사Id, null, cancellationToken);
+        var preferredId = 화물수락정차다음행동Policy.Select(plan,
+            entities.Select(x => (x.Id, (string?)(string.IsNullOrWhiteSpace(x.의뢰Id) ? x.운송번호 : x.의뢰Id), x.상태)), out var stopOrderHoldCode);
+        var entity = preferredId is { } id ? entities.First(x => x.Id == id) : entities.FirstOrDefault();
 
         if (entity is null)
         {
@@ -101,6 +109,8 @@ public sealed class 운송현재조회QueryHandler : IRequestHandler<운송현�
         기사운송보수Projector.투영(response, entity);
         기사운송업무상태Projector.투영(response, entity,
             await 기사운송업무상태Projector.사건조회Async(_db, [entity.Id], cancellationToken));
+        if (stopOrderHoldCode is not null)
+            response.다음행동안내 = "저장된 방문 순서를 다시 확인해 주세요. 운송 상태를 확인한 뒤 진행해 주세요.";
         if (!await 생활배송기사정보공개Policy.정보제공가능인가Async(shipperRequest?.클라이언트요청Id,
                 requestId, shipperRequest?.주문자UserId ?? string.Empty, request.기사Id, _disclosure, cancellationToken))
             생활배송기사정보공개Policy.운송정보가림(response);

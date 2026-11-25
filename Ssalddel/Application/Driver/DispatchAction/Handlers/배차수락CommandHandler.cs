@@ -46,6 +46,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
     private readonly I신규화물업무자격Guard? _신규업무자격;
     private readonly I화물배차상태SnapshotService? _상태근거;
     private readonly I국내화물추천재검증Service? _추천재검증;
+    private readonly I기사실차적재근거조회Service _실차조회;
 
     public 배차수락CommandHandler(
         SsalddelContext db,
@@ -66,7 +67,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         ICargoAcceptanceRecoveryService? acceptanceRecovery = null,
         I신규화물업무자격Guard? 신규업무자격 = null,
         I화물배차상태SnapshotService? 상태근거 = null,
-        I국내화물추천재검증Service? 추천재검증 = null)
+        I국내화물추천재검증Service? 추천재검증 = null,
+        I기사실차적재근거조회Service? 실차조회 = null)
     {
         _db = db;
         _publisher = publisher;
@@ -86,6 +88,7 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         _신규업무자격 = 신규업무자격;
         _상태근거 = 상태근거;
         _추천재검증 = 추천재검증;
+        _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
         _acceptanceRecovery = acceptanceRecovery ?? new CargoAcceptanceRecoveryService(db, 연속배차UseCase,
             Microsoft.Extensions.Options.Options.Create(new CargoAcceptanceRecoveryOptions()), TimeProvider.System,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<CargoAcceptanceRecoveryService>.Instance,
@@ -326,6 +329,36 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
             || !await 운영배차신규수신Guard.허용Async(_운영배차, request.기사Id, cancellationToken)
             || !(배차응답가능정책.추천수락가능(queue, request.기사Id, DateTime.UtcNow) || 배차응답가능정책.공개배차수락가능(queue)))
             return new(Conflict("FreightDispatchConditionsChanged", "수락 검증 중 수신 상태나 기존 업무가 변경되었거나 제안이 만료되었습니다. 최신 제안을 확인해 주세요."));
+        화물수락정차저장준비결과? acceptedStopOrder = null;
+        if (eligibility.수락정차검증 is { } stopEvidence)
+        {
+            acceptedStopOrder = await 화물수락정차순서.저장준비Async(_db, request.기사Id, queue, stopEvidence, now, cancellationToken, _실차조회);
+            if (acceptedStopOrder.오류Code is { } orderError)
+                return new(Conflict(orderError, "수락할 정차 순서의 화물·차량·업무 근거가 변경됐습니다. 최신 추천을 다시 확인해 주세요."));
+        }
+        else if (eligibility.기존분산순차계획호환)
+        {
+            if (eligibility.기존분산인계근거 is not { } distributedProof
+                || !await 화물분산순차인계Policy.현재근거확인Async(_db, distributedProof, DateTime.UtcNow, cancellationToken, _실차조회))
+                return new(Conflict("FreightDistributedHandoff.EvidenceMissingOrChanged", "기존 분산 계획의 현재 원요청·기사·정차 판본을 다시 확인해 주세요."));
+        }
+        else if (beforeActive.Length > 0)
+            return new(Conflict("FreightAcceptedStopOrder.EvidenceMissing", "추가 수락의 검증된 정차 순서가 없습니다. 최신 추천을 다시 확인해 주세요."));
+        if (acceptedStopOrder is not null || eligibility.기존분산순차계획호환)
+        {
+            // JSON 준비 또는 기존 분산 인계 조회 중 바뀐 수신·현재 업무·만료도 확정 직전에 다시 확인한다.
+            var afterPreparation = await 현재업무판본Async(request.기사Id, cancellationToken);
+            var afterQualification = await 신규화물업무자격검사.평가Async(_신규업무자격, request.기사Id, cancellationToken);
+            if (!Enumerable.SequenceEqual(beforeActive, afterPreparation)
+                || !afterQualification.CanReceiveNewWork || afterQualification.Revision != qualification.Revision
+                || (decisionEvidence is not null && !await _상태근거!.현재근거확인Async(decisionEvidence, cancellationToken))
+                || (activeBasis is not null && !await _후속픽업!.현재근거확인Async(request.기사Id, activeBasis, cancellationToken))
+                || !await 운영배차신규수신Guard.허용Async(_운영배차, request.기사Id, cancellationToken)
+                || !(배차응답가능정책.추천수락가능(queue, request.기사Id, DateTime.UtcNow) || 배차응답가능정책.공개배차수락가능(queue))
+                || (eligibility.기존분산인계근거 is { } finalDistributedProof
+                    && !await 화물분산순차인계Policy.현재근거확인Async(_db, finalDistributedProof, DateTime.UtcNow, cancellationToken, _실차조회)))
+                return new(Conflict("FreightDispatchConditionsChanged", "정차 순서를 준비하는 동안 수신·자격·기존 업무나 제안이 변경되었습니다. 최신 추천을 확인해 주세요."));
+        }
         queue.기사지급예정액 ??= driverFare.기사지급예정운임;
 
         if (queue.생활배송배차방식 is not null) queue.생활배송선택판본++;
@@ -355,6 +388,8 @@ public sealed class 배차수락CommandHandler : IRequestHandler<배차수락Com
         dispatchRequest.배차상태 = 상태값.배차상태.배차확정;
         dispatchRequest.UpdatedAt = now;
         queue.UpdatedAt = now;
+        if (acceptedStopOrder is not null)
+            foreach (var (row, json) in acceptedStopOrder.변경목록) row.추천판정근거Json = json;
 
         // 생활 배송 지도는 후처리 알림/Mongo 로그 대신 같은 SQL 저장의 현재 배정 근거를 사용합니다.
         var assignmentEvent = Ssalddel.Services.Community.NeighborhoodDeliveryLocationPolicy.CreateAssignmentEvent(dispatchRequest, queue, now);

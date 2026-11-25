@@ -88,6 +88,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IHR역할검토조회UseCase, HR역할검토조회UseCase>();
         services.AddScoped<IHR역할지원조회UseCase, HR역할지원조회UseCase>();
         services.AddScoped<IHR역할지원CommandUseCase, HR역할지원CommandUseCase>();
+        services.AddScoped<I근무가능요청UseCase, 근무가능요청UseCase>();
         services.AddScoped<I업무관계스냅샷조회UseCase, 업무관계스냅샷조회UseCase>();
         services.AddScoped<I기사운송상태변경CommandExecutor, 기사운송상태변경CommandExecutor>();
         services.AddScoped<ITransportRequestLedgerRealtimeService, TransportRequestLedgerRealtimeService>();

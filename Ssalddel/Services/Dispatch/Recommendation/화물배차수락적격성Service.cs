@@ -36,6 +36,9 @@ public sealed record 화물배차수락적격성결과(
     decimal? 최대시간위반분)
 {
     public IReadOnlyList<string> 검증한계 { get; init; } = [];
+    public 화물수락정차검증자료? 수락정차검증 { get; init; }
+    public bool 기존분산순차계획호환 { get; init; }
+    public 화물분산순차인계근거? 기존분산인계근거 { get; init; }
 }
 
 public interface I화물배차수락적격성Service
@@ -130,9 +133,15 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                 || !string.IsNullOrWhiteSpace(x.기사_운송자) && x.기사_운송자 != 기사Id)
             || activeTransports.Select(x => x.의뢰Id).Distinct(StringComparer.Ordinal).Count() != activeTransports.Count)
             return Block(화물배차수락오류코드.일정근거부족, "진행 중 업무의 의뢰·기사·수행 책임을 명확히 확인해야 합니다.");
+        var distributed = await 화물분산순차인계Policy.조회Async(_db, 기사Id, 후보의뢰.의뢰Id, DateTime.UtcNow, cancellationToken);
+        if (distributed.분산업무있음 && distributed.근거 is null)
+            return Block(distributed.오류Code!, "기존 분산 전문 계획의 기사·원요청·정차 근거를 다시 확인해야 합니다.");
+        var legacyDistributed = distributed.근거 is not null;
 
         var actualVehicle = await _실차조회.조회Async(기사Id, cancellationToken);
         var vehicle = actualVehicle.유효제원;
+        if (legacyDistributed && string.IsNullOrWhiteSpace(actualVehicle.근거지문))
+            return Block(화물배차수락오류코드.일정근거부족, "분산 순차 인계를 검토한 현재 실차 근거를 확인해야 합니다.");
         var candidateCargo = await _db.화물요구조건
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.의뢰Id == 후보의뢰.의뢰Id, cancellationToken);
@@ -194,6 +203,8 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                 기사Id,
                 new 배차경로좌표(currentLocation.Latitude, currentLocation.Longitude),
                 cancellationToken);
+            if (!string.IsNullOrWhiteSpace(plan.수락정차순서보류Code))
+                return Block(plan.수락정차순서보류Code, "수락한 정차 순서의 근거가 변경됐습니다. 현재 업무를 다시 확인해 주세요.");
             // 추천이 만들어진 과거 기준시각 대신 현재 수행 시작 시각으로 약속을 다시 확인한다.
             plan = plan with { 기준시각 = DateTime.UtcNow };
             IReadOnlyDictionary<string, 화물상하차작업시간>? handling = 명시작업시간;
@@ -227,8 +238,14 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                         ? x.단계유형 == "pickup" ? times.상차분 : times.하차분 : null }).ToArray()
                 };
             }
+            if (!legacyDistributed && activeTransports.Count > 0 && (handling is null
+                || !handling.TryGetValue(후보의뢰.의뢰Id, out var candidateTime) || !candidateTime.확인됨
+                || plan.항목목록.Any(x => x.작업시간분 is null)))
+                return Block(화물배차수락오류코드.일정근거부족, "추가 수락은 기존 업무와 새 업무의 상하차 작업시간이 모두 확인돼야 합니다.");
             var schedule = await _일정삽입평가Service.평가Async(plan, 후보의뢰, cancellationToken);
-            if (!schedule.삽입가능여부 || !schedule.전체완수가능여부 || !schedule.후보포함실제경로확인됨)
+            if (!schedule.시도목록.Any(x => x.전체완수가능여부 && x.전체실제경로확인됨
+                && (!legacyDistributed || x.시도유형 == "하차후이어가기")
+                && !string.IsNullOrWhiteSpace(x.경로옵션)))
             {
                 return Block(
                     화물배차수락오류코드.일정실패,
@@ -241,9 +258,11 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
             }
 
             var feasibleCapacityAttempt = schedule.시도목록
-                .Where(x => x.전체완수가능여부 && x.전체실제경로확인됨)
-                .OrderBy(x => x.총추가지연분 ?? decimal.MaxValue)
-                .ThenBy(x => x.총소요시간분 ?? decimal.MaxValue)
+                .Where(x => x.전체완수가능여부 && x.전체실제경로확인됨 && !string.IsNullOrWhiteSpace(x.경로옵션))
+                .Where(x => !legacyDistributed || x.시도유형 == "하차후이어가기")
+                .OrderBy(x => x.총소요시간분 ?? decimal.MaxValue)
+                .ThenBy(x => x.총거리Km ?? decimal.MaxValue)
+                .ThenBy(x => x.삽입인덱스)
                 .Select(x => new
                 {
                     Attempt = x,
@@ -251,7 +270,7 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                         vehicle!, activeTransports, activeRequests, activeCargo,
                         후보의뢰, candidateCargo, x.도착예상목록)
                 })
-                .FirstOrDefault(x => x.Capacity.적합여부);
+                .FirstOrDefault(x => x.Capacity.확인됨 && x.Capacity.적합여부);
             if (feasibleCapacityAttempt is null)
             {
                 return Block(
@@ -276,8 +295,22 @@ public sealed class 화물배차수락적격성Service : I화물배차수락적�
                     warningMessages);
             }
 
+            if (legacyDistributed)
+            {
+                // 분산 전문 경로는 여러 거점의 상차를 소유한다. 이 순차 인계를 일반 A/B 경로나 0분 작업의 ETA 인증으로 바꾸지 않는다.
+                return new(true, null, null, warningCodes, warningMessages, [], null, null)
+                {
+                    기존분산순차계획호환 = true,
+                    기존분산인계근거 = distributed.근거! with { 실차근거지문 = actualVehicle.근거지문 },
+                    검증한계 = ["현재 분산 전문 계획의 순차 수락 인계만 보존합니다. 일반 화물의 새 방문 순서·개별 미확인 작업시간·실제 도착시각을 인증하지 않습니다."]
+                };
+            }
             return new(true, null, null, warningCodes, warningMessages, acceptedAttempt.경로순서, acceptedAttempt.총소요시간분, acceptedAttempt.최대시간위반분)
             {
+                수락정차검증 = 화물수락정차순서.검증자료작성(acceptedAttempt,
+                    activeRequests.Values.Append(후보의뢰).ToDictionary(x => x.의뢰Id, StringComparer.Ordinal),
+                    activeCargo.Values.Concat(candidateCargo is null ? [] : new[] { candidateCargo })
+                        .ToDictionary(x => x.의뢰Id, StringComparer.Ordinal), handling, actualVehicle, feasibleCapacityAttempt.Capacity),
                 검증한계 = handling is null || !handling.TryGetValue(후보의뢰.의뢰Id, out var times) || !times.확인됨
                     || plan.항목목록.Any(x => x.작업시간분 is null)
                     ? ["상하차 작업시간이 일부 미확인입니다. 구형 일정의 0분 가정은 확인된 작업시간이 아닙니다."] : []

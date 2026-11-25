@@ -2,7 +2,9 @@ using System.Security.Claims;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common;
 using Ssalddel.Services.Auth;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Ssalddel.Security;
@@ -26,6 +28,93 @@ public class 인증Controller : ControllerBase
     public async Task<IActionResult> 로그인([FromBody] 로그인요청 request)
     {
         var result = await _인증UseCase.로그인Async(request, 요청Context생성());
+        return this.ToActionResult(result);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("social/providers")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> 소셜로그인제공자([FromServices] IAuthenticationSchemeProvider schemes)
+    {
+        var configured = (await schemes.GetAllSchemesAsync()).Select(scheme => scheme.Name).ToHashSet(StringComparer.Ordinal);
+        return Ok(소셜로그인ProviderIds.지원Provider목록
+            .Where(id => configured.Contains(소셜로그인OAuth.Scheme(id)))
+            .ToArray());
+    }
+
+    [AllowAnonymous]
+    [HttpGet("social/{provider}/start")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [EnableRateLimiting(RequestRateLimitPolicyNames.Authentication)]
+    public async Task<IActionResult> 소셜로그인시작(
+        string provider, [FromQuery] string? surface, [FromQuery] string? flowId,
+        [FromServices] IAuthenticationSchemeProvider schemes)
+    {
+        if (!소셜로그인ProviderIds.지원Provider목록.Contains(provider, StringComparer.Ordinal) ||
+            await schemes.GetSchemeAsync(소셜로그인OAuth.Scheme(provider)) is null)
+        {
+            return NotFound();
+        }
+        if (surface is not ("community" or "integrated") || !소셜로그인OAuth.IsValidFlowId(flowId))
+        {
+            return BadRequest();
+        }
+
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = $"{소셜로그인OAuth.LoginPath(surface)}?social=complete",
+            Items =
+            {
+                [소셜로그인OAuth.ProviderKey] = provider,
+                [소셜로그인OAuth.SurfaceKey] = surface,
+                [소셜로그인OAuth.FlowIdKey] = flowId
+            }
+        };
+        return Challenge(properties, 소셜로그인OAuth.Scheme(provider));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("social/complete")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [EnableRateLimiting(RequestRateLimitPolicyNames.Authentication)]
+    public async Task<IActionResult> 소셜로그인완료(
+        [FromBody] 소셜로그인완료입력 request, [FromServices] IAuthenticationSchemeProvider schemes)
+    {
+        if (!소셜로그인OAuth.IsValidFlowId(request.FlowId))
+        {
+            return BadRequest();
+        }
+
+        var ticket = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
+        var providerId = ticket.Properties?.GetString(소셜로그인OAuth.ProviderKey);
+        var subject = ticket.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!ticket.Succeeded || !소셜로그인ProviderIds.지원여부(providerId) || string.IsNullOrWhiteSpace(subject) ||
+            await schemes.GetSchemeAsync(소셜로그인OAuth.Scheme(providerId!)) is null ||
+            !string.Equals(ticket.Properties?.GetString(소셜로그인OAuth.FlowIdKey), request.FlowId, StringComparison.Ordinal))
+        {
+            return BadRequest();
+        }
+
+        로그인요청? credentials = null;
+        if (request.UserNameOrEmail is not null || request.Password is not null)
+        {
+            if (string.IsNullOrWhiteSpace(request.UserNameOrEmail) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return BadRequest();
+            }
+            credentials = new 로그인요청 { UserNameOrEmail = request.UserNameOrEmail, Password = request.Password };
+        }
+
+        var result = await _인증UseCase.소셜로그인Async(providerId!, subject, credentials, 요청Context생성());
+        if (result.HasError(error => error.Metadata.TryGetValue("Code", out var code) &&
+            Equals(code, 소셜로그인OAuth.LinkRequiredCode)))
+        {
+            return Conflict(new { code = 소셜로그인OAuth.LinkRequiredCode });
+        }
+        if (result.IsSuccess)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
         return this.ToActionResult(result);
     }
 
@@ -96,4 +185,6 @@ public class 인증Controller : ControllerBase
             HttpContext.TraceIdentifier,
             HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
             Request.Headers.UserAgent.ToString());
+
+    public sealed record 소셜로그인완료입력(string? FlowId, string? UserNameOrEmail, string? Password);
 }

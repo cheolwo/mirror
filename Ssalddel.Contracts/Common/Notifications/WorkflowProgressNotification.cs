@@ -63,7 +63,7 @@ public static class WorkflowProgressNotification
         Stage("warehouse.packed", "포장 완료", "출고 준비를 확인해 주세요."),
         Stage("warehouse.ready", "출고 준비 완료", "기사 인계를 기다리고 있습니다."),
         Stage("warehouse.handed-over", "기사 인계 완료", "배송 진행을 확인해 주세요."),
-        Stage("cargo.accepted", "기사 배정", "기사님이 운송을 수락했습니다."),
+        Stage("cargo.accepted", "기사 배정", "기사님이 운송을 수락했습니다. 운송 상세의 배차 설명·의견을 확인해 주세요."),
         Stage("cargo.approaching", "기사 접근", "픽업 준비를 확인해 주세요."),
         Stage("cargo.arrived-pickup", "상차지 도착", "기사님이 상차지에 도착했습니다."),
         Stage("cargo.picked-up", "상차 완료", "전달지로 이동합니다."),

@@ -14,6 +14,7 @@ public sealed partial class 국내화물배차조율적용Service
         국내화물배차제안 배차제안,
         국내화물검증수행계획? plan,
         string? batchInputHash,
+        string explanationMethodCode,
         int? timeoutSeconds,
         int 최대동시추천잠금건수,
         CancellationToken cancellationToken)
@@ -27,7 +28,7 @@ public sealed partial class 국내화물배차조율적용Service
         // 호출자의 transaction에는 SQL·Outbox만 참여한다. commit 여부를 모르는 상태에서
         // 별도 저장소의 기사 순위나 실행 공간을 먼저 바꾸지 않는다.
         if (_db.Database.CurrentTransaction is not null)
-            return await 추천잠금저장Async(배차제안, plan, batchInputHash, timeoutSeconds,
+            return await 추천잠금저장Async(배차제안, plan, batchInputHash, explanationMethodCode, timeoutSeconds,
                 최대동시추천잠금건수, null, null, cancellationToken);
 
         저장한추천? prepared = null;
@@ -36,7 +37,7 @@ public sealed partial class 국내화물배차조율적용Service
             var tracked = 추적상태보관();
             try
             {
-                return await 추천잠금저장Async(배차제안, plan, batchInputHash, timeoutSeconds,
+                return await 추천잠금저장Async(배차제안, plan, batchInputHash, explanationMethodCode, timeoutSeconds,
                     최대동시추천잠금건수, prepared, value => prepared = value with
                     {
                         호출자저장상태 = tracked.Where(x => x.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
@@ -59,7 +60,7 @@ public sealed partial class 국내화물배차조율적용Service
     }
 
     private async Task<국내화물배차추천잠금?> 추천잠금저장Async(
-        국내화물배차제안 배차제안, 국내화물검증수행계획 plan, string batchInputHash,
+        국내화물배차제안 배차제안, 국내화물검증수행계획 plan, string batchInputHash, string explanationMethodCode,
         int? timeoutSeconds, int 최대동시추천잠금건수,
         저장한추천? prepared, Action<저장한추천>? onPrepared, CancellationToken cancellationToken)
     {
@@ -150,6 +151,11 @@ public sealed partial class 국내화물배차조율적용Service
         배차대기.추천만료시각 = 기준시각Utc.AddSeconds(timeoutSeconds ?? _options.추천유지시간초);
         배차대기.UpdatedAt = 기준시각Utc;
 
+        if (_explanationRecorder is not null)
+            await _explanationRecorder.ReserveAsync(배차대기, 배차제안.기사Id, 기준시각Utc,
+                explanationMethodCode, 배차제안.판정근거, cancellationToken,
+                ExplanationFacts(plan, 배차제안.의뢰Id));
+
         await _db.SaveChangesAsync(cancellationToken);
 
         await _알림Service.추천알림요청생성Async(
@@ -168,5 +174,22 @@ public sealed partial class 국내화물배차조율적용Service
         onPrepared?.Invoke(new 저장한추천(applied, 배차대기.추천판정근거Json!, 배차대기.기사지급예정액));
         if (tx is not null) await tx.CommitAsync(cancellationToken);
         return applied;
+    }
+
+    private static 살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationDecisionFacts ExplanationFacts(
+        국내화물검증수행계획 plan, string requestId)
+    {
+        var ordered = plan.경로순서.OrderBy(x => x.순서).ToArray();
+        int? OwnOrder(string stage)
+        {
+            var matches = ordered.Select((row, index) => (row, index))
+                .Where(x => x.row.의뢰Id == requestId && x.row.단계유형 == stage).ToArray();
+            return matches.Length == 1 && ordered.Length <= 1000
+                && ordered.Select(x => x.순서).Distinct().Count() == ordered.Length
+                ? matches[0].index + 1 : null;
+        }
+        return new(plan.확인됨 && plan.가능여부,
+            plan.구간검증결과 is { 확인됨: true, 적합여부: true } ? true : null,
+            OwnOrder("pickup"), OwnOrder("dropoff"));
     }
 }

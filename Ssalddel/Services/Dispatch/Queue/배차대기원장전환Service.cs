@@ -38,6 +38,7 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I화물후속픽업기준Service? _화물후속픽업;
         private readonly I용달운송대상후보Service? _화물대상후보;
         private readonly I신규화물업무자격Guard? _신규업무자격;
+        private readonly 살뜰.Services.Dispatch.Explanation.ICargoDispatchExplanationRecorder? _explanationRecorder;
 
         public 배차대기원장전환Service(
             SsalddelContext db,
@@ -58,7 +59,8 @@ namespace 살뜰.Services.Dispatch.Queue
             I운영배차공통UseCase? 운영배차 = null,
             I화물후속픽업기준Service? 화물후속픽업 = null,
             I용달운송대상후보Service? 화물대상후보 = null,
-            I신규화물업무자격Guard? 신규업무자격 = null)
+            I신규화물업무자격Guard? 신규업무자격 = null,
+            살뜰.Services.Dispatch.Explanation.ICargoDispatchExplanationRecorder? explanationRecorder = null)
         {
             _db = db;
             _options = options.Value;
@@ -79,6 +81,7 @@ namespace 살뜰.Services.Dispatch.Queue
             _화물후속픽업 = 화물후속픽업;
             _화물대상후보 = 화물대상후보;
             _신규업무자격 = 신규업무자격;
+            _explanationRecorder = explanationRecorder;
         }
 
         public async Task<배차대기원장전환결과> 계획배차에서추천으로전환Async(string requestId, CancellationToken cancellationToken = default)

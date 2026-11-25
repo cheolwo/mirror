@@ -118,6 +118,9 @@ namespace 살뜰.Services.External.Naver
         {
             route = default!;
 
+            if (root.ValueKind != JsonValueKind.Object)
+                return false;
+
             if (root.TryGetProperty("code", out var code)
                 && (code.ValueKind != JsonValueKind.Number || !code.TryGetInt32(out var resultCode) || resultCode != 0))
                 return false;
@@ -181,7 +184,10 @@ namespace 살뜰.Services.External.Naver
 
         private static string? GetString(JsonElement element, string propertyName)
         {
-            return element.TryGetProperty(propertyName, out var valueElement) ? valueElement.GetString() : null;
+            return element.TryGetProperty(propertyName, out var valueElement)
+                && valueElement.ValueKind == JsonValueKind.String
+                ? valueElement.GetString()
+                : null;
         }
 
         private static IReadOnlyList<NaverCloudRoutePathPoint> GetPath(JsonElement candidate)
@@ -202,7 +208,9 @@ namespace 살뜰.Services.External.Naver
 
                 var longitudeElement = coordinate[0];
                 var latitudeElement = coordinate[1];
-                if (longitudeElement.TryGetDecimal(out var longitude)
+                if (longitudeElement.ValueKind == JsonValueKind.Number
+                    && latitudeElement.ValueKind == JsonValueKind.Number
+                    && longitudeElement.TryGetDecimal(out var longitude)
                     && latitudeElement.TryGetDecimal(out var latitude))
                 {
                     result.Add(new NaverCloudRoutePathPoint(latitude, longitude));

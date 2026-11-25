@@ -32,6 +32,7 @@ namespace 살뜰.Services.Dispatch.Queue
         private readonly I신규화물업무자격Guard? _신규업무자격;
         private readonly I기사실차적재근거조회Service _실차조회;
         private readonly ICargoDispatchCandidateAI? _candidateAI;
+        private readonly 화물운행중삽입평가Service _운행중삽입;
 
         public 용달운송배차업무정책(
             SsalddelContext db,
@@ -69,6 +70,7 @@ namespace 살뜰.Services.Dispatch.Queue
             _신규업무자격 = 신규업무자격;
             _실차조회 = 실차조회 ?? new 기사실차적재근거조회Service(db);
             _candidateAI = candidateAI;
+            _운행중삽입 = new(db, routeService, _일정평가);
         }
 
         public int 배차업무유형 => 살뜰.도메인.공통.상태값.배차업무유형.용달운송;
@@ -237,29 +239,23 @@ namespace 살뜰.Services.Dispatch.Queue
                 decimal? travelMinutes = null;
                 decimal? pickupSlack = null;
                 운송삽입평가결과? schedule = null;
+                var pickupBasisCode = basis?.사유Code ?? "LegacyCurrentLocation";
                 var distanceKm = _routeService.CalculateDistanceKm(origin, pickupPoint);
+                var vehicleSpec = (await _실차조회.조회Async(driver.기사Id, cancellationToken)).유효제원;
                 if (basis is { 활성업무있음: true })
                 {
-                    배차경로예상결과? route;
-                    try { route = await _routeService.EstimateRouteAsync(origin, pickupPoint, basis.RouteOption!, cancellationToken); }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-                    catch { Exclude(osState, "ActiveSchedulePickupRouteUnverified"); continue; }
-                    if (route is not { 실제경로여부: true, DistanceKm: >= 0m, Duration: not null }
-                        || route.Duration.Value < TimeSpan.Zero || route.RouteOption != basis.RouteOption
-                        || !basis.가용예상시각Utc.HasValue || basis.기존계획 is null)
-                    { Exclude(osState, "ActiveSchedulePickupRouteUnverified"); continue; }
-                    distanceKm = route.DistanceKm;
-                    pickupArrival = basis.가용예상시각Utc.Value.Add(route.Duration.Value);
-                    if (request.픽업_시간창_종료일시 == default || pickupArrival > request.픽업_시간창_종료일시)
-                    { Exclude(osState, "ActiveSchedulePickupLate", distanceKm); continue; }
-                    travelMinutes = (decimal)(pickupArrival.Value - now).TotalMinutes;
-                    pickupSlack = (decimal)(request.픽업_시간창_종료일시 - pickupArrival.Value).TotalMinutes;
-                    try { schedule = await _일정평가.평가Async(basis.기존계획, request, cancellationToken); }
+                    화물운행중삽입결과 insertion;
+                    try { insertion = await _운행중삽입.검토Async(driver.기사Id, basis, request, vehicleSpec, cancellationToken); }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                     catch { Exclude(osState, "ActiveScheduleCandidateUnverified"); continue; }
-                    if (!schedule.삽입가능여부 || !schedule.전체완수가능여부 || !schedule.후보포함실제경로확인됨
-                        || !schedule.시도목록.Any(x => x.시도유형 == "하차후이어가기" && x.전체완수가능여부 && x.전체실제경로확인됨))
-                    { Exclude(osState, "ActiveScheduleCandidateInfeasible"); continue; }
+                    if (!insertion.확인됨 || insertion.일정 is null || !insertion.픽업도착시각Utc.HasValue)
+                    { Exclude(osState, insertion.사유Code); continue; }
+                    schedule = insertion.일정;
+                    pickupBasisCode = insertion.사유Code;
+                    distanceKm = insertion.픽업접근거리Km;
+                    pickupArrival = insertion.픽업도착시각Utc;
+                    travelMinutes = (decimal)(pickupArrival.Value - now).TotalMinutes;
+                    pickupSlack = insertion.픽업여유분;
                 }
                 else
                 {
@@ -285,7 +281,6 @@ namespace 살뜰.Services.Dispatch.Queue
                     continue;
                 }
 
-                var vehicleSpec = (await _실차조회.조회Async(driver.기사Id, cancellationToken)).유효제원;
                 var fit = _적합성Service.판정(vehicleSpec, request, cargoRequirement);
                 if (!fit.적합여부)
                 {
@@ -315,7 +310,7 @@ namespace 살뜰.Services.Dispatch.Queue
                 reviewed.Add(new(driver.기사Id, "CandidateAllowed", distanceKm, 평가결과.추천점수,
                     agingScore, score, reason)
                 {
-                    픽업기준Code = basis?.사유Code ?? "LegacyCurrentLocation",
+                    픽업기준Code = pickupBasisCode,
                     기존수행완료예상시각Utc = basis is { 활성업무있음: true } ? basis.가용예상시각Utc : null,
                     픽업도착예상시각Utc = pickupArrival,
                     서버후보 = new 배차추천후보(driver.기사Id, score, reason) { 화물수행근거 = basis }

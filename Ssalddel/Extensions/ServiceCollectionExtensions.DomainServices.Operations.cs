@@ -185,6 +185,12 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<I배차AI판단사례LedgerStore>(sp => sp.GetRequiredService<File배차AI판단사례LedgerStore>());
         services.AddSingleton<I배차AI판단근거Source>(sp => sp.GetRequiredService<File배차AI판단사례LedgerStore>());
         services.AddScoped<I배차AI판단근거조회Service, 규칙기반배차AI판단근거조회Service>();
+        services.AddScoped<살뜰.Services.Dispatch.Explanation.ICargoDispatchExplanationRecorder,
+            살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationRecorder>();
+        services.AddScoped<살뜰.Services.Dispatch.Explanation.ICargoDispatchExplanationService,
+            살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationService>();
+        services.AddSingleton<살뜰.Services.Dispatch.Explanation.ICargoDispatchFeedbackStore,
+            살뜰.Services.Dispatch.Explanation.MongoCargoDispatchFeedbackStore>();
         services.AddScoped<I운송의뢰수익묶음AIService, 규칙기반운송의뢰수익묶음AIService>();
         services.AddScoped<I운송의뢰수익묶음Service, 운송의뢰수익묶음Service>();
         services.AddScoped<I국내화물기사배정AIService, 규칙기반국내화물기사배정AIService>();

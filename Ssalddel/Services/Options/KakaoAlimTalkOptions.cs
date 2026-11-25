@@ -20,5 +20,9 @@ public sealed class KakaoAlimTalkOptions
 
     public string SettlementDepositReminderTemplateCode { get; set; } = "settlement_deposit_reminder";
 
+    public string WorkforceAvailabilityTemplateCode { get; set; } = string.Empty;
+
+    public string WorkforceReplyBaseUrl { get; set; } = string.Empty;
+
     public int TimeoutSeconds { get; set; } = 10;
 }

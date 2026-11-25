@@ -74,6 +74,8 @@ namespace 살뜰.Services.Dispatch.Recommendation
         IReadOnlyList<기사운송일정항목> 항목목록)
     {
         public IReadOnlyDictionary<string, 화물상하차작업시간>? 상하차작업시간 { get; init; }
+        public bool 수락정차순서반영됨 { get; init; }
+        public string? 수락정차순서보류Code { get; init; }
     }
 
     public sealed record 운송기존일정평가결과(bool 확인됨, 배차경로좌표? 종료좌표, DateTime? 완료예상시각Utc,

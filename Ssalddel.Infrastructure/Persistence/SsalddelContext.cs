@@ -111,6 +111,9 @@ namespace 살뜰.Data
         public DbSet<살뜰참여자역할> 살뜰참여자역할 { get; set; } = null!;
         public DbSet<HrRoleAssignmentRecord> HrRoleAssignments { get; set; } = null!;
         public DbSet<HrRoleApplicationRecord> HrRoleApplications { get; set; } = null!;
+        public DbSet<근무연락동의Record> 근무연락동의 { get; set; } = null!;
+        public DbSet<근무가능요청Record> 근무가능요청 { get; set; } = null!;
+        public DbSet<근무가능대상Record> 근무가능대상 { get; set; } = null!;
         public DbSet<HrEmploymentContractRecord> HrEmploymentContracts { get; set; } = null!;
         public DbSet<HrPayrollScheduleRecord> HrPayrollSchedules { get; set; } = null!;
         public DbSet<WorkRelationshipSnapshotRecord> WorkRelationshipSnapshots { get; set; } = null!;
@@ -275,20 +278,18 @@ namespace 살뜰.Data
                 .Entries<운송이벤트>()
                 .FirstOrDefault(entry =>
                     entry.State is EntityState.Modified or EntityState.Deleted
-                    && (string.Equals(
-                            entry.Entity.이벤트타입,
-                            운송이벤트유형.배차엔진판단감사,
-                            StringComparison.Ordinal)
-                        || string.Equals(
-                            entry.Property(x => x.이벤트타입).OriginalValue,
-                            운송이벤트유형.배차엔진판단감사,
-                            StringComparison.Ordinal)));
+                    && (추가전용타입(entry.Entity.이벤트타입)
+                        || 추가전용타입(entry.Property(x => x.이벤트타입).OriginalValue)));
 
             if (changedAuditEntry is not null)
             {
                 throw new InvalidOperationException(
                     $"배차 엔진 판단 감사 이벤트는 추가 후 수정하거나 삭제할 수 없습니다. EventId={changedAuditEntry.Entity.Id}");
             }
+
+            static bool 추가전용타입(string? type)
+                => string.Equals(type, 운송이벤트유형.배차엔진판단감사, StringComparison.Ordinal)
+                    || string.Equals(type, 운송이벤트유형.화물배차설명기록, StringComparison.Ordinal);
         }
     }
 }

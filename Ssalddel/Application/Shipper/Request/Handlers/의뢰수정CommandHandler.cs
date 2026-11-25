@@ -33,6 +33,7 @@ public sealed class 의뢰수정CommandHandler : IRequestHandler<의뢰수정Com
 
     public async Task<Result<화주운송의뢰응답>> Handle(의뢰수정Command request, CancellationToken cancellationToken)
     {
+        request = 화주운송시간창UtcPolicy.정규화(request);
         var attempt = 0;
         var result = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {

@@ -10,6 +10,8 @@ public static partial class SsalddelPageCapabilityCatalog
         [
             Prefix("public-data", SsalddelPageAppCodes.IntegratedWeb, "/information/public-data", PageCapabilityStage.Live,
                 PageInteractionBoundary.ReadOnly, false, "0.0", "출처와 기준 시각을 함께 표시하는 공개 정보 조회 화면입니다."),
+            Exact("food-delivery-replay", SsalddelPageAppCodes.IntegratedWeb, "/information/food-delivery-replay", PageCapabilityStage.Experience,
+                PageInteractionBoundary.Simulation, false, SsalddelProductRoadmapCatalog.FoundationVersion, "가상 음식배달 검증 기록의 주문 등록부터 수령 확인까지 재생합니다."),
             Prefix("public-price-comparison", SsalddelPageAppCodes.IntegratedWeb, "/information/agricultural-fisheries-price-comparison", PageCapabilityStage.Live,
                 PageInteractionBoundary.ReadOnly, false, "0.0", "공개 가격 자료의 출처·단위·기준 시각을 비교합니다."),
             Exact("kamis-domestic-price-comparison", SsalddelPageAppCodes.IntegratedWeb, "/information/kamis-domestic-price-comparison", PageCapabilityStage.Live,

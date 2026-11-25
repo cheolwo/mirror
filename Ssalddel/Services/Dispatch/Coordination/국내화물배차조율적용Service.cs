@@ -7,6 +7,7 @@ using Ssalddel.Services.Dispatch.Compliance;
 using Ssalddel.Services.Dispatch.Participation;
 using 살뜰.Services.Dispatch.Common;
 using 살뜰.Services.Dispatch.Recommendation;
+using 살뜰.Services.Dispatch.Explanation;
 
 namespace 살뜰.Services.Dispatch.Coordination;
 
@@ -33,6 +34,7 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
     private readonly ISharedDriverWorkAdmissionService? _참여;
     private readonly I화물배차수락적격성Service? _적격성;
     private readonly TimeProvider _clock;
+    private readonly ICargoDispatchExplanationRecorder? _explanationRecorder;
 
     public 국내화물배차조율적용Service(
         SsalddelContext db,
@@ -46,7 +48,8 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
         I운영배차공통UseCase? 수신 = null,
         ISharedDriverWorkAdmissionService? 참여 = null,
         I화물배차수락적격성Service? 적격성 = null,
-        TimeProvider? clock = null)
+        TimeProvider? clock = null,
+        ICargoDispatchExplanationRecorder? explanationRecorder = null)
     {
         _db = db;
         _options = options.Value;
@@ -60,6 +63,7 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
         _참여 = 참여;
         _적격성 = 적격성;
         _clock = clock ?? TimeProvider.System;
+        _explanationRecorder = explanationRecorder;
     }
 
     public async Task<국내화물배차조율적용결과> 추천잠금적용Async(
@@ -82,6 +86,7 @@ public sealed partial class 국내화물배차조율적용Service : I국내화�
                     배차제안,
                     plans.Length == 1 ? plans[0] : null,
                     조율결과.판정근거?.입력지문,
+                    $"coordination/{조율결과.적용알고리즘}",
                     timeoutSeconds,
                     Math.Max(1, 기사동시추천잠금건수),
                     cancellationToken);

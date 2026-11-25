@@ -593,11 +593,14 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<입고상품목록응답> CompleteInboundAsync(long inboundId, 입고완료요청 request, CancellationToken cancellationToken)
+    public Task<입고상품목록응답> CompleteInboundAsync(long inboundId, 입고완료요청 request, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(_db, committed => CompleteInboundCoreAsync(inboundId, request, cancellationToken, committed));
+
+    private async Task<입고상품목록응답> CompleteInboundCoreAsync(long inboundId, 입고완료요청 request, CancellationToken cancellationToken, Action committed)
     {
         ValidateInboundCompletionRequest(request);
         var userId = RequireUserId();
-        await using var transaction = _db.Database.IsRelational()
+        await using var transaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
             ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
         var inbound = await 접근가능입고Query(userId)
@@ -624,6 +627,7 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
             if (transaction is not null)
             {
                 await transaction.CommitAsync(cancellationToken);
+                committed();
             }
 
             return ToInboundItemsResponse(existingItems, idempotentReplay: true);
@@ -722,6 +726,7 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken);
+            committed();
         }
 
         return ToInboundItemsResponse(createdItems);
@@ -925,13 +930,16 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
         };
     }
 
-    public async Task<창고작업결과응답> InspectInboundItemAsync(long inboundItemId, 입고검수요청 request, CancellationToken cancellationToken)
+    public Task<창고작업결과응답> InspectInboundItemAsync(long inboundItemId, 입고검수요청 request, CancellationToken cancellationToken)
+        => 창고업무진행알림.저장단위Async(_db, committed => InspectInboundItemCoreAsync(inboundItemId, request, cancellationToken, committed));
+
+    private async Task<창고작업결과응답> InspectInboundItemCoreAsync(long inboundItemId, 입고검수요청 request, CancellationToken cancellationToken, Action committed)
     {
         ArgumentNullException.ThrowIfNull(request);
         var inspectionMemo = 입고검수Policy.입력정규화(request);
 
         var userId = RequireUserId();
-        await using var transaction = _db.Database.IsRelational()
+        await using var transaction = _db.Database.IsRelational() && _db.Database.CurrentTransaction is null
             ? await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
         var item = await 입고검수접근가능재고Query(userId)
@@ -962,6 +970,7 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
                 if (transaction is not null)
                 {
                     await transaction.CommitAsync(cancellationToken);
+                    committed();
                 }
 
                 return ToWarehouseWorkResult(
@@ -1019,6 +1028,7 @@ public sealed partial class WarehouseOperationService : IWarehouseOperationServi
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken);
+            committed();
         }
 
         return ToWarehouseWorkResult(item, "입고검수", userId, now, inspectionMemo);

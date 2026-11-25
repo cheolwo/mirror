@@ -3,6 +3,8 @@ using 살뜰.도메인.배차;
 using 살뜰.Services.Dispatch.Common;
 using Microsoft.EntityFrameworkCore;
 using Ssalddel.Services.Dispatch.Compliance;
+using 살뜰.Services.Dispatch.Explanation;
+using 살뜰.도메인.운송;
 
 namespace 살뜰.Services.Dispatch.Queue
 {
@@ -167,6 +169,16 @@ namespace 살뜰.Services.Dispatch.Queue
                         qualification.CanReceiveNewWork ? "화물 종류·포장 포함 중량·규격·출도착지를 확인해 주세요." : qualification.Message, driverId);
                 }
             }
+            // 설명 캡처/저장 실패가 같은 scope의 나중 저장에 실패한 추천을 남기지 않게 한다.
+            var explanationCapture = queue.배차업무유형 == 상태값.배차업무유형.용달운송 && _explanationRecorder is not null;
+            var queueEntry = _db.Entry(queue);
+            var beforeExplanation = explanationCapture ? queueEntry.CurrentValues.Clone() : null;
+            var modifiedBeforeExplanation = explanationCapture
+                ? queueEntry.Properties.Where(x => x.IsModified).Select(x => x.Metadata.Name).ToHashSet(StringComparer.Ordinal) : null;
+            var priorEvents = explanationCapture
+                ? _db.ChangeTracker.Entries().Where(x => x.Entity is 운송이벤트 or 운영배차활동사건)
+                    .Select(x => x.Entity).ToHashSet(ReferenceEqualityComparer.Instance) : null;
+
             queue.배차큐단계 = 상태값.배차큐단계.배차추천;
             queue.배차노출상태 = 상태값.배차노출상태.추천중;
             queue.현재추천대상기사Id = driverId;
@@ -193,7 +205,30 @@ namespace 살뜰.Services.Dispatch.Queue
                 queue.추천라운드,
                 changedAtUtc));
 
-            await _db.SaveChangesAsync(cancellationToken);
+            try
+            {
+                if (explanationCapture)
+                    await _explanationRecorder!.ReserveAsync(queue, driverId, changedAtUtc,
+                        selection?.감사Context is { } audit
+                            ? $"engine/{audit.EngineFamilyId}/{audit.EngineImplementationId}"
+                            : "manual/recommendation",
+                        null, cancellationToken);
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                if (beforeExplanation is not null)
+                {
+                    foreach (var added in _db.ChangeTracker.Entries().Where(x => x.State == EntityState.Added
+                        && (x.Entity is 운송이벤트 or 운영배차활동사건) && !priorEvents!.Contains(x.Entity)).ToArray())
+                        added.State = EntityState.Detached;
+                    queueEntry.CurrentValues.SetValues(beforeExplanation);
+                    foreach (var property in queueEntry.Properties)
+                        property.IsModified = modifiedBeforeExplanation!.Contains(property.Metadata.Name);
+                }
+                throw;
+            }
 
             await _recommendationNotificationService.추천알림요청생성Async(
                 queue.Id,

@@ -72,6 +72,9 @@ public sealed class 기사화물운송작업공간응답
     public 기사운송요약응답? 다음행동운송 { get; set; }
     public string 다음행동 { get; set; } = "대기";
     public IReadOnlyList<기사화물경로정차응답> 권장경로정차목록 { get; set; } = [];
+    /// <summary>현재 원장과 대조한 수락 정차 순서입니다. 실시간 도로 재탐색이나 도착 보장을 뜻하지 않습니다.</summary>
+    public bool 수락정차순서반영됨 { get; set; }
+    public string? 수락정차순서보류Code { get; set; }
     public string 일정검증상태 { get; set; } = "수락시재검증";
     public string 적재검증상태 { get; set; } = "수락시재검증";
     public IReadOnlyList<string> WarningCodes { get; set; } = [];
@@ -83,10 +86,22 @@ public sealed class 기사화물운송작업공간응답
 
 public sealed class 기사화물경로정차응답
 {
+    /// <summary>현재 기사 목록의 유일한 운송 원장과 연결된 ID입니다. 표시용 운송번호로 복원하지 않습니다.</summary>
+    public long? 운송Id { get; set; }
     public string 의뢰Id { get; set; } = string.Empty;
     public string 단계 { get; set; } = string.Empty;
     public string 주소 { get; set; } = string.Empty;
     public int 순서 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 정차 순서 지도 확인",
+        ProtectionNote = "현재 기사 목록의 유일한 운송 ID와 정보제공 허용 상태를 확인한 유효 좌표쌍만 제공하며 0 누락값은 제외")]
+    public decimal? 위도 { get; set; }
+    [IsmsPProtectedData(PersonalDataFieldKey.LocationCoordinate,
+        "배정된 화물 운송의 정차 순서 지도 확인",
+        ProtectionNote = "현재 기사 목록의 유일한 운송 ID와 정보제공 허용 상태를 확인한 유효 좌표쌍만 제공하며 0 누락값은 제외")]
+    public decimal? 경도 { get; set; }
+    /// <summary>유효한 수락 순서에서 현재 원요청에 확인된 시간창 시작만 제공합니다. 원장 도착/출발 fallback이나 ETA가 아닙니다.</summary>
+    public DateTime? 시간창시작일시 { get; set; }
     public DateTime? 시간창종료일시 { get; set; }
     public bool 좌표근거있음 { get; set; }
     public bool 시간창근거있음 { get; set; }

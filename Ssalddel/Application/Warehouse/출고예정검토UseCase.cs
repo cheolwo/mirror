@@ -19,7 +19,7 @@ public interface I출고예정검토UseCase
 [SsalddelApiWorkflow(SsalddelWorkflow.WarehouseFulfillment)]
 [SsalddelUseCase("출고예정 운송 전 검토", Summary = "준비된 출고예정 원장의 포장·수량·출발지 근거와 운송의뢰 입력 필요 항목을 읽기 전용으로 확인합니다.")]
 [SsalddelUseCaseActor(SsalddelActor.WarehouseManager)]
-public sealed class 출고예정검토UseCase(
+public sealed partial class 출고예정검토UseCase(
     SsalddelContext db,
     ICurrentUserAccessor currentUserAccessor) : I출고예정검토UseCase
 {
@@ -30,6 +30,17 @@ public sealed class 출고예정검토UseCase(
         ArgumentNullException.ThrowIfNull(request);
         var userId = CurrentUserId();
         if (userId is null) return Unauthorized<출고예정검토목록페이지응답>();
+
+        if (PeriodRequestError(request) is { } periodError)
+            return Result.Fail<출고예정검토목록페이지응답>(periodError);
+        OutboundPeriodResponse? period = null;
+        if (request.PeriodStartUtc.HasValue)
+        {
+            var periodResult = await ReadPeriodAsync(request, userId, cancellationToken);
+            if (periodResult.IsFailed)
+                return Result.Fail<출고예정검토목록페이지응답>(periodResult.Errors);
+            period = periodResult.Value;
+        }
 
         var page = Math.Max(0, request.Page);
         var pageSize = Math.Clamp(request.PageSize, 1, 50);
@@ -87,6 +98,7 @@ public sealed class 출고예정검토UseCase(
 
         return Result.Ok(new 출고예정검토목록페이지응답
         {
+            Period = period,
             Items = items,
             TotalCount = totalCount,
             Page = page,

@@ -223,7 +223,8 @@ builder.Services
                 return Task.CompletedTask;
             }
         };
-    });
+    })
+    .AddSsalddelSocialLogin(builder.Configuration);
 
 builder.Services.AddAuthorization(options =>
 {

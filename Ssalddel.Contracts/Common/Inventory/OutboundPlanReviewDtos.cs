@@ -24,6 +24,14 @@ public sealed class 출고예정검토목록조회요청
     public string? Search { get; set; }
     public string Status { get; set; } = 출고예정검토조회상태코드.검토대기;
     public long? WarehouseId { get; set; }
+    public DateTime? PeriodStartUtc { get; set; }
+    public DateTime? PeriodEndUtc { get; set; }
+    public string? PeriodStage { get; set; }
+    public int BatchPage { get; set; }
+    public int BatchPageSize { get; set; } = 6;
+    public string? BatchKey { get; set; }
+    public int MemberPage { get; set; }
+    public int MemberPageSize { get; set; } = 12;
     public int Page { get; set; }
     public int PageSize { get; set; } = 12;
 }
@@ -46,6 +54,8 @@ public sealed class 출고예정검토목록항목응답
 
 public sealed class 출고예정검토목록페이지응답
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public OutboundPeriodResponse? Period { get; set; }
     public IReadOnlyList<출고예정검토목록항목응답> Items { get; set; } = [];
     public int TotalCount { get; set; }
     public int Page { get; set; }

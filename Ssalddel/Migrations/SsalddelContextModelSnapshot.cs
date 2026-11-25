@@ -18729,6 +18729,137 @@ namespace Ssalddel.Migrations
                 {
                     b.Navigation("입고요청");
                 });
+            modelBuilder.Entity("Ssalddel.Domain.HumanResources.근무연락동의Record", b =>
+            {
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasMaxLength(450)
+                    .HasColumnType("varchar(450)");
+                b.Property<bool>("AllowInApp")
+                    .HasColumnType("tinyint(1)");
+                b.Property<bool>("AllowKakao")
+                    .HasColumnType("tinyint(1)");
+                b.Property<Guid>("Revision")
+                    .IsConcurrencyToken()
+                    .HasColumnType("char(36)");
+                b.Property<DateTime>("UpdatedAtUtc")
+                    .HasColumnType("datetime(6)");
+                b.HasKey("UserId");
+
+                b.ToTable("hr_work_contact_preferences");
+            });
+
+            modelBuilder.Entity("Ssalddel.Domain.HumanResources.근무가능요청Record", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("char(36)");
+                b.Property<string>("ManagerUserId")
+                    .IsRequired()
+                    .HasMaxLength(450)
+                    .HasColumnType("varchar(450)");
+                b.Property<Guid>("ClientRequestId")
+                    .HasColumnType("char(36)");
+                b.Property<string>("PayloadHash")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("varchar(64)");
+                b.Property<string?>("ActiveKey")
+                    .HasMaxLength(64)
+                    .HasColumnType("varchar(64)");
+                b.Property<long>("WarehouseId")
+                    .HasColumnType("bigint");
+                b.Property<string>("WarehouseName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("varchar(200)");
+                b.Property<string>("Stage")
+                    .IsRequired()
+                    .HasMaxLength(32)
+                    .HasColumnType("varchar(32)");
+                b.Property<string>("GroupKey")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("varchar(200)");
+                b.Property<string>("GroupLabel")
+                    .IsRequired()
+                    .HasMaxLength(300)
+                    .HasColumnType("varchar(300)");
+                b.Property<int>("GroupPage")
+                    .HasColumnType("int");
+                b.Property<long>("RemainingQuantity")
+                    .HasColumnType("bigint");
+                b.Property<int>("NeededWorkers")
+                    .HasColumnType("int");
+                b.Property<int>("ConfirmedWorkers")
+                    .HasColumnType("int");
+                b.Property<DateTime>("WorkStartUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<DateTime>("WorkEndUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<DateTime>("ReplyByUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<DateTime>("SourceObservedAtUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<DateTime>("PeriodStartUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<DateTime>("PeriodEndUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<decimal?>("ProposedHourlyAmount")
+                    .HasPrecision(18, 2)
+                    .HasColumnType("decimal(18,2)");
+                b.Property<string>("Channel")
+                    .IsRequired()
+                    .HasMaxLength(32)
+                    .HasColumnType("varchar(32)");
+                b.Property<Guid>("Revision")
+                    .IsConcurrencyToken()
+                    .HasColumnType("char(36)");
+                b.Property<DateTime>("CreatedAtUtc")
+                    .HasColumnType("datetime(6)");
+                b.HasKey("Id");
+                b.HasIndex("ManagerUserId", "ClientRequestId").IsUnique();
+                b.HasIndex("ActiveKey").IsUnique();
+                b.HasIndex("WarehouseId", "CreatedAtUtc");
+                b.ToTable("hr_work_availability_requests");
+            });
+
+            modelBuilder.Entity("Ssalddel.Domain.HumanResources.근무가능대상Record", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("char(36)");
+                b.Property<Guid>("RequestId")
+                    .HasColumnType("char(36)");
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasMaxLength(450)
+                    .HasColumnType("varchar(450)");
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("varchar(200)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(32)
+                    .HasColumnType("varchar(32)");
+                b.Property<string>("DeliveryStatus")
+                    .IsRequired()
+                    .HasMaxLength(32)
+                    .HasColumnType("varchar(32)");
+                b.Property<DateTime?>("RespondedAtUtc")
+                    .HasColumnType("datetime(6)");
+                b.Property<Guid>("Revision")
+                    .IsConcurrencyToken()
+                    .HasColumnType("char(36)");
+                b.HasKey("Id");
+                b.HasIndex("RequestId", "UserId").IsUnique();
+                b.HasIndex("UserId", "Status");
+                b.ToTable("hr_work_availability_recipients");
+            });
+            modelBuilder.Entity("Ssalddel.Domain.HumanResources.근무가능대상Record", b =>
+            {
+                b.HasOne("Ssalddel.Domain.HumanResources.근무가능요청Record", null)
+                    .WithMany().HasForeignKey("RequestId").OnDelete(DeleteBehavior.Restrict).IsRequired().HasConstraintName("FK_hr_work_recipients_request");
+            });
 #pragma warning restore 612, 618
         }
     }

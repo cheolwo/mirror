@@ -166,6 +166,8 @@ public sealed record 국내화물추천저장근거
     public string? 조율입력지문 { get; init; }
     public string? 재검증상태Code { get; init; }
     public DateTime? 재검증시각Utc { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public 화물수락정차순서기록? 수락정차순서 { get; init; }
 }
 
 public sealed record 국내화물배차제외(

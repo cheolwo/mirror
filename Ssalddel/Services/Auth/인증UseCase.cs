@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using FluentResults;
 using Ssalddel.ApiMetadata;
 using Ssalddel.Contracts.Common;
@@ -9,6 +11,7 @@ using Ssalddel.Contracts.Common.ViewSettings;
 using Ssalddel.Security;
 using Ssalddel.Services.Orderer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using 살뜰.Data;
 using 살뜰.Services;
@@ -19,6 +22,7 @@ namespace Ssalddel.Services.Auth;
 public interface I인증UseCase
 {
     Task<Result<토큰응답>> 로그인Async(로그인요청? request, 인증요청Context context);
+    Task<Result<토큰응답>> 소셜로그인Async(string providerId, string subject, 로그인요청? credentials, 인증요청Context context);
     Task<Result<커뮤니티회원가입응답>> 커뮤니티회원가입Async(커뮤니티회원가입요청? request);
     Task<Result<기사회원가입응답>> 기사회원가입Async(기사회원가입요청? request);
     Task<Result<주문자회원가입응답>> 주문자회원가입Async(주문자회원가입요청? request);
@@ -70,11 +74,81 @@ public sealed class 인증UseCase : I인증UseCase
         if (string.IsNullOrWhiteSpace(request.Password)) return Result.Fail<토큰응답>("password is required");
 
         var userNameOrEmail = request.UserNameOrEmail.Trim();
+        var verified = await 비밀번호검증Async(userNameOrEmail, request.Password, context);
+        return verified.IsFailed
+            ? Result.Fail<토큰응답>(verified.Errors)
+            : await 로그인완료Async(verified.Value, userNameOrEmail, context);
+    }
+
+    public async Task<Result<토큰응답>> 소셜로그인Async(
+        string providerId, string subject, 로그인요청? credentials, 인증요청Context context)
+    {
+        const string linkFailedMessage = "소셜 계정을 연결하지 못했습니다. 다시 로그인해 주세요.";
+        // The database collation ignores case, but the provider's subject does not.
+        var providerKey = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(subject)));
+        var linkedUser = await _userManager.FindByLoginAsync(providerId, providerKey);
+        var user = linkedUser;
+        if (credentials is not null)
+        {
+            var verified = await 비밀번호검증Async(credentials.UserNameOrEmail.Trim(), credentials.Password, context);
+            if (verified.IsFailed)
+            {
+                return Result.Fail<토큰응답>(verified.Errors);
+            }
+            user = verified.Value;
+            if (linkedUser is not null && linkedUser.Id != user.Id)
+            {
+                return 상태실패<토큰응답>(linkFailedMessage, StatusCodes.Status409Conflict);
+            }
+        }
+        if (user is null)
+        {
+            return Result.Fail<토큰응답>(
+                new Error("기존 살뜰 계정에 소셜 계정을 연결해 주세요.")
+                    .WithMetadata("StatusCode", StatusCodes.Status409Conflict)
+                    .WithMetadata("Code", 소셜로그인OAuth.LinkRequiredCode));
+        }
+
+        if (_userManager.SupportsUserLockout && await _userManager.IsLockedOutAsync(user))
+        {
+            return 인증실패<토큰응답>("현재 계정으로 소셜 로그인할 수 없습니다.");
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        if (roles.Any(role => role is 역할명.서버관리자 or 역할명.관세사))
+        {
+            await 로그인로그기록Async(providerId, user, false, "SocialRoleNotAllowed", "이 역할은 소셜 로그인을 사용할 수 없습니다.", context);
+            return 상태실패<토큰응답>("이 역할은 소셜 로그인을 사용할 수 없습니다.", StatusCodes.Status403Forbidden);
+        }
+
+        if (linkedUser is null)
+        {
+            try
+            {
+                var linked = await _userManager.AddLoginAsync(user, new UserLoginInfo(providerId, providerKey, providerId));
+                if (!linked.Succeeded)
+                {
+                    return 상태실패<토큰응답>(linkFailedMessage, StatusCodes.Status409Conflict);
+                }
+            }
+            catch (DbUpdateException)
+            {
+                // The identity store enforces a unique provider/subject pair when callbacks race.
+                return 상태실패<토큰응답>(linkFailedMessage, StatusCodes.Status409Conflict);
+            }
+        }
+
+        return await 로그인완료Async(user, providerId, context, roles);
+    }
+
+    private async Task<Result<ApplicationUser>> 비밀번호검증Async(
+        string userNameOrEmail, string password, 인증요청Context context)
+    {
         var user = await 사용자조회Async(userNameOrEmail);
         if (user == null)
         {
             await 로그인로그기록Async(userNameOrEmail, null, false, "UserNotFound", "아이디 또는 비밀번호가 올바르지 않습니다.", context);
-            return 인증실패<토큰응답>("아이디 또는 비밀번호가 올바르지 않습니다.");
+            return 인증실패<ApplicationUser>("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
 
         if (_userManager.SupportsUserLockout)
@@ -91,7 +165,7 @@ public sealed class 인증UseCase : I인증UseCase
                         "LockoutStateUpdateFailed",
                         "로그인 보호 상태를 갱신하지 못했습니다.",
                         context);
-                    return 인증실패<토큰응답>("아이디 또는 비밀번호가 올바르지 않습니다.");
+                    return 인증실패<ApplicationUser>("아이디 또는 비밀번호가 올바르지 않습니다.");
                 }
             }
 
@@ -104,11 +178,11 @@ public sealed class 인증UseCase : I인증UseCase
                     "LockedOut",
                     "로그인 시도 제한 상태입니다.",
                     context);
-                return 인증실패<토큰응답>("아이디 또는 비밀번호가 올바르지 않습니다.");
+                return 인증실패<ApplicationUser>("아이디 또는 비밀번호가 올바르지 않습니다.");
             }
         }
 
-        var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+        var passwordValid = await _userManager.CheckPasswordAsync(user, password);
         if (!passwordValid)
         {
             var errorCode = "PasswordInvalid";
@@ -126,7 +200,7 @@ public sealed class 인증UseCase : I인증UseCase
             }
 
             await 로그인로그기록Async(userNameOrEmail, user, false, errorCode, "아이디 또는 비밀번호가 올바르지 않습니다.", context);
-            return 인증실패<토큰응답>("아이디 또는 비밀번호가 올바르지 않습니다.");
+            return 인증실패<ApplicationUser>("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
 
         if (_userManager.SupportsUserLockout)
@@ -141,12 +215,23 @@ public sealed class 인증UseCase : I인증UseCase
                     "AccessFailureResetFailed",
                     "로그인 보호 상태를 초기화하지 못했습니다.",
                     context);
-                return 인증실패<토큰응답>("아이디 또는 비밀번호가 올바르지 않습니다.");
+                return 인증실패<ApplicationUser>("아이디 또는 비밀번호가 올바르지 않습니다.");
             }
         }
 
-        var response = await 토큰발급Async(user);
-        await 로그인로그기록Async(userNameOrEmail, user, true, string.Empty, string.Empty, context);
+        return Result.Ok(user);
+    }
+
+    private async Task<Result<토큰응답>> 로그인완료Async(
+        ApplicationUser user, string identifier, 인증요청Context context, IList<string>? roles = null)
+    {
+        var response = await 토큰발급Async(user, roles);
+        if (response.IsFailed)
+        {
+            await 로그인로그기록Async(identifier, user, false, "ServerError", "인증 정보를 저장하지 못했습니다.", context);
+            return response;
+        }
+        await 로그인로그기록Async(identifier, user, true, string.Empty, string.Empty, context);
         return response;
     }
 
@@ -473,15 +558,21 @@ public sealed class 인증UseCase : I인증UseCase
         return await _userManager.FindByEmailAsync(userNameOrEmail);
     }
 
-    private async Task<Result<토큰응답>> 토큰발급Async(ApplicationUser user)
+    private async Task<Result<토큰응답>> 토큰발급Async(ApplicationUser user, IList<string>? roles = null)
     {
-        var roles = await _userManager.GetRolesAsync(user);
+        roles ??= await _userManager.GetRolesAsync(user);
         var claims = await _userManager.GetClaimsAsync(user);
         var accessToken = _authTokenService.CreateAccessToken(user, roles, out var accessTokenExpiresAtUtc, claims);
         var refreshToken = _authTokenService.GenerateRefreshToken();
         var refreshTokenExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenDays);
 
-        await 리프레시토큰저장Async(user, refreshToken, refreshTokenExpiresAtUtc);
+        var saved = await 리프레시토큰저장Async(user, refreshToken, refreshTokenExpiresAtUtc);
+        if (!saved.Succeeded)
+        {
+            return 상태실패<토큰응답>(
+                "인증 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+                StatusCodes.Status500InternalServerError);
+        }
 
         return new 토큰응답
         {
@@ -544,11 +635,16 @@ public sealed class 인증UseCase : I인증UseCase
         return await _userManager.AddClaimsAsync(user, claims);
     }
 
-    private async Task 리프레시토큰저장Async(ApplicationUser user, string refreshToken, DateTime refreshTokenExpiresAtUtc)
+    private async Task<IdentityResult> 리프레시토큰저장Async(ApplicationUser user, string refreshToken, DateTime refreshTokenExpiresAtUtc)
     {
+        // 두 Identity 저장은 별도입니다. 부분 저장을 되돌렸다고 간주하거나 자동 재시도하지 않습니다.
         var refreshTokenHash = _authTokenService.HashRefreshToken(refreshToken);
-        await _userManager.SetAuthenticationTokenAsync(user, TokenProvider, RefreshTokenHashName, refreshTokenHash);
-        await _userManager.SetAuthenticationTokenAsync(user, TokenProvider, RefreshTokenExpiresAtName, refreshTokenExpiresAtUtc.ToString("O"));
+        var hashResult = await _userManager.SetAuthenticationTokenAsync(user, TokenProvider, RefreshTokenHashName, refreshTokenHash);
+        if (!hashResult.Succeeded)
+        {
+            return hashResult;
+        }
+        return await _userManager.SetAuthenticationTokenAsync(user, TokenProvider, RefreshTokenExpiresAtName, refreshTokenExpiresAtUtc.ToString("O"));
     }
 
     private async Task 로그인로그기록Async(

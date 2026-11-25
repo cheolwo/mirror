@@ -5,6 +5,7 @@ namespace 살뜰.도메인.운송
     public static class 운송이벤트유형
     {
         public const string 배차엔진판단감사 = "DispatchEngineDecisionAudit";
+        public const string 화물배차설명기록 = "CargoDispatchExplanationRecordedV1";
         public const string 관리자취소환불상태기록 = "AdminRequestCancelRefundRecorded";
         public const string 음식배달위치감사 = "FoodDeliveryLocationAudit";
         public const string 기사운송상태변경 = "DriverTransportStateChanged";

@@ -67,6 +67,11 @@ public sealed class SsalddelDocumentPrintLayoutOptions
     public bool IncludeDocumentQrCode { get; init; } = true;
 
     public bool IncludeLineBarcodes { get; init; } = true;
+
+    // Logical slips in one print job; other document layouts keep the legacy single-copy default.
+    public int ReceiptCopies { get; init; } = 1;
+
+    public IReadOnlyList<string> ReceiptCopyLabels { get; init; } = [];
 }
 
 public sealed class SsalddelExpectedItemDocumentDraft

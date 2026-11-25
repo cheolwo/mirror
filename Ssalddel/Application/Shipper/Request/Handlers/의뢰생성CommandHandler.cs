@@ -40,6 +40,7 @@ public sealed class 의뢰생성CommandHandler : IRequestHandler<의뢰생성Com
 
     public async Task<Result<화주운송의뢰응답>> Handle(의뢰생성Command request, CancellationToken cancellationToken)
     {
+        request = 화주운송시간창UtcPolicy.정규화(request);
         var currentUserId = _currentUserAccessor.UserId;
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
