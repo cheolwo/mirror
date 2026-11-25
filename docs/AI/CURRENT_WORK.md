@@ -1,5 +1,9 @@
 # Mirror(거울) Current Work
 
+## 현재 자료 정리 — 홍달 가계·기업·정부 조회 (2026-11-25)
+
+[주체별 분류와 Claude 조회](DataCollection/Research/2026-11-25-hongdal-data-audiences.md). 기존 182개 자료와 가격·화물 30개 조회, 용마폭포공원 참조 묶음 1개에 가계·기업·정부 또는 공통을 지정했다. 주체별 전체 목록(`artifacts/local/public-data/hongdal-data-audiences-20261125/주체별-자료-찾기.md`)과 SQLite 색인(`artifacts/local/public-data/hongdal-data-audiences-20261125/data-audience-index.sqlite`)에서 기본·다른 관점·공통 항목에 접근한다. 원래 자료 분야, 출처, 이용 범위는 원본에 결속했다. Unity 화면 연결은 대기다.
+
 ## 현재 자료 검토 — 용마폭포공원 옛 채석장 (2026-11-25)
 
 [역사·도면·사진 자료](DataCollection/Research/2026-11-25-yongma-quarry.md). 서울시·중랑구 기록에서 1961~1988년 골재 채취, 1993년 용마돌산공원 개장, 1997년 5월 10일 폭포 전환을 대조했다. 중랑구 소식지 3쪽 과거·2022 사진과 2019 채석장지구 변경도, 2021 용마폭포지구 도면을 로컬에서 확인했다. 1991 사업소 감사 등 참조 3건을 기존 로컬 공공자료 DB에 등록하고 별도 재조회와 반복 입력 무쓰기를 확인했다. 옛 채석 범위, 절개면 실제 치수와 폭포 좌표는 미확보이며 기존 Claude 모델의 추정값은 그대로 표시한다.
