@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Ssalddel.Client.Infrastructure.Notifications;
+using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Common;
 using Ssalddel.Contracts.Common.Community;
 using Ssalddel.Ui.Common.Areas.App.Services;
@@ -10,6 +12,165 @@ namespace Ssalddel.Tests.Clients;
 
 public sealed class ShipperAuthApiRecoveryTests
 {
+    private const string Untrusted = "synthetic-private-refresh-detail";
+
+    [Fact]
+    public async Task 갱신commit뒤사용자취소도_보안저장을완료하고_부가Push는시작하지않는다()
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        await fixture.Auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var revision = fixture.Auth.SessionRevision;
+        using var cancellation = new CancellationTokenSource();
+        fixture.Auth.Changed += () => { if (fixture.Auth.AccessToken == "refreshed") cancellation.Cancel(); };
+        using var handler = new DelayedAuthHandler();
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        var push = new CountingPushTokenProvider();
+        var pending = CreateApi(client, fixture.Auth, push).EnsureAccessTokenAsync(forceRefresh: true,
+            cancellationToken: cancellation.Token);
+        await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        handler.Response.SetResult(Response(HttpStatusCode.OK));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal("refreshed", fixture.Auth.AccessToken);
+        Assert.Equal("refreshed", fixture.Store.Snapshot?.AccessToken);
+        Assert.Equal("refreshed-refresh", fixture.Store.Snapshot?.RefreshToken);
+        Assert.Equal(revision, fixture.Auth.SessionRevision);
+        Assert.Equal(0, push.Calls);
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Theory]
+    [InlineData("access")]
+    [InlineData("access-expired")]
+    [InlineData("access-near-expiry")]
+    [InlineData("refresh")]
+    [InlineData("refresh-expired")]
+    [InlineData("refresh-near-expiry")]
+    [InlineData("user")]
+    [InlineData("roles")]
+    public async Task 잘못된갱신200은_기존Token과보안저장과판본을보존한다(string invalid)
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        var original = ShipperRecoveryFixture.Snapshot();
+        await fixture.Auth.ApplyAsync(original);
+        var revision = fixture.Auth.SessionRevision;
+        var notifications = 0;
+        fixture.Auth.Changed += () => notifications++;
+        using var handler = new DelayedAuthHandler();
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        var pending = CreateApi(client, fixture.Auth).EnsureAccessTokenAsync(forceRefresh: true);
+        await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var token = Token();
+        switch (invalid)
+        {
+            case "access": token.AccessToken = ""; break;
+            case "access-expired": token.AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1); break;
+            case "access-near-expiry": token.AccessTokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(90); break;
+            case "refresh": token.RefreshToken = ""; break;
+            case "refresh-expired": token.RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1); break;
+            case "refresh-near-expiry": token.RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(90); break;
+            case "user": token.UserId = "other-owner"; break;
+            case "roles": token.Roles = null!; break;
+        }
+        handler.Response.SetResult(new(HttpStatusCode.OK) { Content = JsonContent.Create(token) });
+
+        Assert.Equal("서버 인증 응답을 읽을 수 없습니다.", await pending);
+        Assert.Equal(original.AccessToken, fixture.Auth.AccessToken);
+        Assert.Equal(original.RefreshToken, fixture.Auth.RefreshToken);
+        Assert.Equal(original.Roles, fixture.Auth.Roles);
+        Assert.Same(original, fixture.Store.Snapshot);
+        Assert.Equal(revision, fixture.Auth.SessionRevision);
+        Assert.Equal(0, notifications);
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Theory]
+    [InlineData("transport", "연결")]
+    [InlineData("json", "인증 응답")]
+    [InlineData("empty", "인증 응답")]
+    [InlineData("body", "연결")]
+    [InlineData("timeout", "시간이 초과")]
+    public async Task 목록조회전갱신실패는_안전안내와원세션을유지하고_다음GET에서복귀한다(string failure, string expected)
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        var original = ShipperRecoveryFixture.Snapshot() with { AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1) };
+        await fixture.Auth.ApplyAsync(original);
+        var revision = fixture.Auth.SessionRevision;
+        using var handler = new RefreshRecoveryHandler(failure);
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        if (failure == "timeout") client.Timeout = TimeSpan.FromMilliseconds(100);
+        var api = CreateApi(client, fixture.Auth);
+        var observer = new TransportRequestLedgerObserver();
+        await using var realtime = new TransportRequestLedgerRealtimeClient(client.BaseAddress,
+            _ => Task.FromResult<string?>(null), observer);
+        var service = new ServerBackedShipperOperationsService(client, fixture.Auth, api, observer, realtime);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetRequestsAsync());
+        Assert.Contains(expected, error.Message);
+        Assert.DoesNotContain(Untrusted, error.ToString());
+        Assert.DoesNotContain("test.invalid", error.ToString());
+        Assert.Equal(original.AccessToken, fixture.Auth.AccessToken);
+        Assert.Equal(original.RefreshToken, fixture.Auth.RefreshToken);
+        Assert.Same(original, fixture.Store.Snapshot);
+        Assert.Equal(revision, fixture.Auth.SessionRevision);
+        Assert.Equal(new[] { HttpMethod.Post }, handler.Methods);
+
+        Assert.Empty(await service.GetRequestsAsync());
+        Assert.Equal("refreshed", fixture.Auth.AccessToken);
+        Assert.Equal("refreshed-refresh", fixture.Store.Snapshot?.RefreshToken);
+        Assert.Equal(revision, fixture.Auth.SessionRevision);
+        Assert.Equal(new[] { HttpMethod.Post, HttpMethod.Post, HttpMethod.Get }, handler.Methods);
+    }
+
+    [Fact]
+    public async Task 취소비협조갱신200도_사용자취소후Token을저장하지않는다()
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        var original = ShipperRecoveryFixture.Snapshot();
+        await fixture.Auth.ApplyAsync(original);
+        var revision = fixture.Auth.SessionRevision;
+        using var handler = new DelayedAuthHandler();
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        using var cancellation = new CancellationTokenSource();
+        var pending = CreateApi(client, fixture.Auth).EnsureAccessTokenAsync(forceRefresh: true,
+            cancellationToken: cancellation.Token);
+        await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        cancellation.Cancel();
+        handler.Response.SetResult(Response(HttpStatusCode.OK));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(original.AccessToken, fixture.Auth.AccessToken);
+        Assert.Same(original, fixture.Store.Snapshot);
+        Assert.Equal(revision, fixture.Auth.SessionRevision);
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Theory]
+    [InlineData("http")]
+    [InlineData("json")]
+    [InlineData("io")]
+    public async Task 갱신주보안저장실패는_전송오류안내로숨기지않는다(string kind)
+    {
+        using var fixture = new ShipperRecoveryFixture();
+        var original = ShipperRecoveryFixture.Snapshot();
+        await fixture.Auth.ApplyAsync(original);
+        Exception failure = kind switch
+        {
+            "http" => new HttpRequestException(Untrusted),
+            "json" => new JsonException(Untrusted),
+            _ => new IOException(Untrusted)
+        };
+        fixture.Store.Save = _ => Task.FromException(failure);
+        using var handler = new DelayedAuthHandler();
+        using var client = new HttpClient(handler) { BaseAddress = new("https://test.invalid/") };
+        var pending = CreateApi(client, fixture.Auth).EnsureAccessTokenAsync(forceRefresh: true);
+        await handler.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        handler.Response.SetResult(Response(HttpStatusCode.OK));
+        Assert.Same(failure, await Record.ExceptionAsync(() => pending));
+        Assert.Equal("refreshed", fixture.Auth.AccessToken); // 기존 메모리 확정/저장 실패 의미를 보존.
+        Assert.Same(original, fixture.Store.Snapshot);
+        Assert.Equal(1, handler.Calls);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.OK)]
     [InlineData(HttpStatusCode.BadRequest)]
@@ -127,21 +288,71 @@ public sealed class ShipperAuthApiRecoveryTests
         Assert.Equal(1, handler.Calls);
     }
 
-    private static AuthApiService CreateApi(HttpClient client, IAuthSession auth)
+    private static AuthApiService CreateApi(HttpClient client, IAuthSession auth,
+        ISsalddelMobilePushTokenProvider? push = null)
         => new(client, auth,
             new 꾸미기보유권동기화Service(client, auth, new UnusedDecorationStore(), new PlatformCommunityDecorationStateService()),
-            new SsalddelMobilePushInstallationClient(client, new NullSsalddelMobilePushTokenProvider(), () => auth.AccessToken));
+            new SsalddelMobilePushInstallationClient(client, push ?? new NullSsalddelMobilePushTokenProvider(), () => auth.AccessToken));
 
     private static HttpResponseMessage Response(HttpStatusCode status)
         => new(status)
         {
-            Content = JsonContent.Create(new 토큰응답
-            {
-                UserId = "shipper-a", UserName = "shipper-a", AccessToken = "refreshed",
-                RefreshToken = "refreshed-refresh", AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(30),
-                RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddDays(1), Roles = ["화주"]
-            })
+            Content = JsonContent.Create(Token())
         };
+
+    private static 토큰응답 Token() => new()
+    {
+        UserId = "shipper-a", UserName = "shipper-a", AccessToken = "refreshed",
+        RefreshToken = "refreshed-refresh", AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(30),
+        RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddDays(1), Roles = ["화주"]
+    };
+
+    private sealed class RefreshRecoveryHandler(string failure) : HttpMessageHandler
+    {
+        public List<HttpMethod> Methods { get; } = [];
+        private int _refreshCalls;
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Methods.Add(request.Method);
+            if (request.RequestUri?.AbsolutePath == "/api/v1/shipper/requests")
+            {
+                Assert.Equal(HttpMethod.Get, request.Method);
+                return new(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<object>()) };
+            }
+            Assert.Equal("/api/v1/auth/refresh", request.RequestUri?.AbsolutePath);
+            Assert.Equal(HttpMethod.Post, request.Method);
+            if (++_refreshCalls > 1) return Response(HttpStatusCode.OK);
+            if (failure == "transport") throw new HttpRequestException(Untrusted);
+            if (failure == "body") return new(HttpStatusCode.OK) { Content = new FailingContent() };
+            if (failure == "timeout")
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                throw new InvalidOperationException("timeout handler must not complete normally");
+            }
+            return new(HttpStatusCode.OK)
+            {
+                Content = new StringContent(failure == "empty" ? "" : "{"+Untrusted,
+                    System.Text.Encoding.UTF8, "application/json")
+            };
+        }
+    }
+
+    private sealed class FailingContent : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+            => Task.FromException(new IOException(Untrusted));
+        protected override bool TryComputeLength(out long length) { length = 0; return false; }
+    }
+
+    private sealed class CountingPushTokenProvider : ISsalddelMobilePushTokenProvider
+    {
+        public int Calls { get; private set; }
+        public Task<SsalddelMobilePushTokenSnapshot?> GetCurrentAsync(CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            return Task.FromResult<SsalddelMobilePushTokenSnapshot?>(null);
+        }
+    }
 
     private sealed class DelayedAuthHandler : HttpMessageHandler
     {

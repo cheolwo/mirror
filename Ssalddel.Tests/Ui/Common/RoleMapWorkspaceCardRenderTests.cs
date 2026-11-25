@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,6 +92,107 @@ public sealed class RoleMapWorkspaceCardRenderTests
         }
     }
 
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task 픽업불허_대기안내는_요약에_한번만_보이고_다른_비활성사유와_버튼은_남는다(
+        bool recooking, bool ready, bool expanded)
+    {
+        var active = PickupWaiting(recooking, ready);
+        active.AvailableActions = [new()
+        {
+            ActionId = 음식배달가능행동Ids.기사배달중단,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(-1)
+        }];
+        var guide = FoodDriverStagePresentation.Guide(active, FoodDriverStage.PickupWaiting);
+        const string otherReason = "가능 행동의 확인 시각이 지났습니다. 최신 상태를 자동으로 확인합니다.";
+
+        var html = await RenderAsync(new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [active] }, expanded);
+
+        Assert.Matches("<h3[^>]*>픽업 확인</h3>", html);
+        Assert.Equal(1, Occurrences(html, guide));
+        Assert.Equal(1, Occurrences(html, otherReason));
+        Assert.Contains("픽업 완료", html);
+        Assert.True(Regex.IsMatch(PrimaryButtonTag(html), @"\bdisabled(?:=|\s|>)"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task 픽업허용_카드는_받은뒤_완료안내와_활성버튼을_보존한다(bool recooking)
+    {
+        var active = PickupWaiting(recooking, ready: true);
+        active.AvailableActions = [new() { ActionId = 음식배달가능행동Ids.기사픽업확인 }];
+
+        var html = await RenderAsync(new FoodDeliveryDriverCurrentWorkDto { ActiveDeliveries = [active] });
+
+        Assert.Equal(1, Occurrences(html, recooking
+            ? "재조리 음식을 받은 뒤 픽업 완료를 눌러 주세요."
+            : "음식을 받은 뒤 픽업 완료를 눌러 주세요."));
+        Assert.Contains("픽업 완료", html);
+        Assert.False(Regex.IsMatch(PrimaryButtonTag(html), @"\bdisabled(?:=|\s|>)"));
+    }
+
+    [Theory]
+    [InlineData("food-driver", false, false, 1)]
+    [InlineData("food-driver", true, false, 1)]
+    [InlineData("restaurant", true, true, 2)]
+    [InlineData("restaurant", false, false, 1)]
+    public async Task 요약요청이_없거나_다른역할이면_비활성안내를_보존한다(
+        string roleKey, bool hasSummary, bool hasRequest, int expectedOccurrences)
+    {
+        const string reason = "현재 작업을 다시 확인하고 있습니다.";
+        var item = new RoleWorkspaceItem("item-a", "가상 업무", "대기",
+            Actions: [new(음식배달가능행동Ids.기사픽업확인, "업무 확인", IsPrimary: true, Enabled: false, DisabledReason: reason)],
+            Summary: hasSummary ? new("작업 장소", "가상 작업 장소",
+                Request: hasRequest ? new("확인 안내", reason) : null) : null);
+
+        var html = await RenderAsync(new SnapshotAdapter(roleKey, item));
+
+        Assert.Equal(expectedOccurrences, Occurrences(html, reason));
+        Assert.True(Regex.IsMatch(PrimaryButtonTag(html), @"\bdisabled(?:=|\s|>)"));
+    }
+
+    [Fact]
+    public async Task 요약요청에_일부만_겹치는_비활성사유는_별도로_보존한다()
+    {
+        const string reason = "현재 작업을 다시 확인하고 있습니다.";
+        var item = new RoleWorkspaceItem("item-a", "가상 업무", "대기",
+            Actions: [new(음식배달가능행동Ids.기사픽업확인, "업무 확인", IsPrimary: true, Enabled: false, DisabledReason: reason)],
+            Summary: new("작업 장소", "가상 작업 장소", Request: new("확인 안내", reason + " 잠시 기다려 주세요.")));
+
+        var html = await RenderAsync(new SnapshotAdapter("food-driver", item));
+
+        Assert.Equal(2, Occurrences(html, reason));
+    }
+
+    private static FoodDeliveryDriverActiveDeliveryDto PickupWaiting(bool recooking, bool ready)
+    {
+        var active = ActiveDelivery();
+        active.WorkStatus = DriverWorkOfferStatus.MovingToPickup;
+        active.RestaurantArrivedAtUtc = new(2026, 10, 5, 3, 0, 0, DateTimeKind.Utc);
+        active.CurrentPreparationRound = recooking ? 2 : 1;
+        active.RecookingRequestedAtUtc = recooking ? new(2026, 10, 5, 2, 55, 0, DateTimeKind.Utc) : null;
+        active.CurrentPickupReadyAtUtc = ready ? new(2026, 10, 5, 3, 5, 0, DateTimeKind.Utc) : null;
+        active.AvailableActions = [];
+        return active;
+    }
+
+    private static int Occurrences(string html, string text) => html.Split(text, StringSplitOptions.None).Length - 1;
+
+    private static string PrimaryButtonTag(string html)
+    {
+        var button = Regex.Match(html, "<button\\b[^>]*class=\"is-primary\"[^>]*>");
+        Assert.True(button.Success, "현재 업무의 주 행동 버튼이 보여야 합니다.");
+        return button.Value;
+    }
+
     private static FoodDeliveryDriverActiveDeliveryDto ActiveDelivery() => new()
     {
         OfferId = "offer-a", RestaurantName = "음식점", DriverPayout = 4180, DeliveryAttemptId = "attempt-a",
@@ -108,9 +210,16 @@ public sealed class RoleMapWorkspaceCardRenderTests
         api.Reads["api/v1/driver/food-deliveries/work/status"] = new 기사운행상태응답 { Status = "운행중" };
         api.Reads["api/v1/driver/operational-dispatch/availability"] = new 운영배차수신상태Dto
         { 수신의사Code = 운영배차수신의사Code.On, 실효상태Code = 운영배차실효상태Code.배차가능 };
+        var html = await RenderAsync(new FoodDriverRoleWorkspaceAdapter(api, new NoLocation()), expanded);
+        Assert.Empty(api.Writes);
+        return html;
+    }
+
+    private static async Task<string> RenderAsync(IRoleWorkspaceAdapter adapter, bool expanded = false)
+    {
         var state = new RoleWorkspaceState();
-        state.Save("food-driver", new(null, expanded, null));
-        using var model = new RoleWorkspaceViewModel([new FoodDriverRoleWorkspaceAdapter(api, new NoLocation())], new Access(), state);
+        state.Save(adapter.RoleKey, new(null, expanded, null));
+        using var model = new RoleWorkspaceViewModel([adapter], new Access(), state);
         var services = new ServiceCollection();
         services.AddLogging(); services.AddMudServices();
         services.AddSingleton(model);
@@ -122,9 +231,19 @@ public sealed class RoleMapWorkspaceCardRenderTests
         return await renderer.Dispatcher.InvokeAsync(async () =>
         {
             var output = await renderer.RenderComponentAsync<RoleMapWorkspace>(ParameterView.FromDictionary(
-                new Dictionary<string, object?> { [nameof(RoleMapWorkspace.RoleKey)] = "food-driver" }));
+                new Dictionary<string, object?> { [nameof(RoleMapWorkspace.RoleKey)] = adapter.RoleKey }));
             return WebUtility.HtmlDecode(output.ToHtmlString());
         });
+    }
+
+    private sealed class SnapshotAdapter(string roleKey, RoleWorkspaceItem item) : IRoleWorkspaceAdapter
+    {
+        public string RoleKey => roleKey;
+        public Task<RoleWorkspaceSnapshot> LoadAsync(string? selectedId, CancellationToken cancellationToken)
+            => Task.FromResult(new RoleWorkspaceSnapshot(roleKey, [item], SelectedId: item.Id));
+        public Task PerformAsync(string itemId, string actionKey, Guid requestId, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("정적 카드 렌더에서 업무 명령을 실행하면 안 됩니다.");
+        public void Clear() { }
     }
 
     private sealed class NoLocation : IRoleWorkspaceLocationProvider

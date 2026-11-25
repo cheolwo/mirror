@@ -42,6 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\eng\web-role-app\Services\RoleWebAppDescriptor.cs" Link="WebApp\RoleWebAppDescriptor.cs" />
     <Compile Include="..\OrdererApp\Components\GroupPurchase\GroupPurchaseDemandSession.cs" Link="Clients\Orderer\GroupPurchaseDemandSession.cs" />
     <Compile Include="..\SellerApp\Services\주문자수요ReadSession.cs" Link="Clients\Seller\주문자수요ReadSession.cs" />
     <Compile Include="..\SellerApp\Services\주문자집단수요Projection.cs" Link="Clients\Seller\주문자집단수요Projection.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="..\DriverApp\Services\DriverCargoRecommendationAlertService.cs" Link="Clients\Cargo\DriverCargoRecommendationAlertService.cs" />
     <Compile Include="..\DriverApp\Services\DriverCargoAlertPublicationHistory.cs" Link="Clients\Cargo\DriverCargoAlertPublicationHistory.cs" />
     <Compile Include="..\DriverApp\Services\DriverForegroundRecommendationSignal.cs" Link="Clients\Cargo\DriverForegroundRecommendationSignal.cs" />
+    <Compile Include="..\DriverApp\Services\DriverForegroundPushRegistration.cs" Link="Clients\Cargo\DriverForegroundPushRegistration.cs" />
     <Compile Include="..\DriverApp\Services\DriverNotificationApiService.cs" Link="Clients\Cargo\DriverNotificationApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverWorkStartRecoveryCoordinator.cs" Link="Clients\Cargo\R75\DriverWorkStartRecoveryCoordinator.cs" />
     <Compile Include="..\DriverApp\Services\DriverLocationTransmissionSession.cs" Link="Clients\Cargo\DriverLocationTransmissionSession.cs" />
@@ -114,6 +116,7 @@
     <Compile Include="..\OrdererApp\Services\OrdererAccessTokenProvider.cs" Link="Clients\OrdererAccessTokenProvider.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\WebOrdererAuthenticationService.cs" Link="Clients\WebOrdererAuthenticationService.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\WebAuthSessionService.cs" Link="Clients\WebAuthSessionService.cs" />
+    <Compile Include="..\Ssalddel.WebApp\Services\WebCargoDispatchExplanationClient.cs" Link="Clients\WebCargoDispatchExplanationClient.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\BrowserWorkflowRecoveryStore.cs" Link="Clients\BrowserWorkflowRecoveryStore.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\화주운송의뢰등록Service.cs" Link="Clients\WebShipper\화주운송의뢰등록Service.cs" />
     <Compile Include="..\Ssalddel.WebApp\Services\운송의뢰자동저장Service.cs" Link="Clients\WebShipper\운송의뢰자동저장Service.cs" />
@@ -132,6 +135,7 @@
     <Compile Include="..\DriverApp\ViewModels\Driver\기사PageViewModelBase.cs" Link="Clients\Cargo\기사PageViewModelBase.cs" />
     <Compile Include="..\DriverApp\ViewModels\Driver\Transport\*.cs" Link="Clients\Cargo\Transport\%(Filename)%(Extension)" />
     <Compile Include="..\SsalddelApp\Services\IAuthSession.cs" Link="Clients\Shipper\IAuthSession.cs" />
+    <Compile Include="..\SsalddelApp\Services\ShipperCargoDispatchExplanationClient.cs" Link="Clients\Shipper\ShipperCargoDispatchExplanationClient.cs" />
     <Compile Include="..\SsalddelApp\Services\MauiWorkflowRecoveryStore.cs" Link="Clients\Shipper\MauiWorkflowRecoveryStore.cs" />
     <Compile Include="..\SsalddelApp\Services\AuthSession.cs" Link="Clients\Shipper\AuthSession.cs" />
     <Compile Include="..\SsalddelApp\Services\AuthApiService.cs" Link="Clients\Shipper\AuthApiService.cs" />
@@ -143,6 +147,7 @@
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperRequestDetailPageViewModel.Receipt.cs" Link="Clients\Shipper\ShipperRequestDetailPageViewModel.Receipt.cs" />
     <Compile Include="..\SsalddelApp\ViewModels\Shipper\ShipperQueryLifetime.cs" Link="Clients\Shipper\ShipperQueryLifetime.cs" />
     <Compile Include="..\DriverApp\Services\AuthSession.cs" Link="Clients\Cargo\AuthSession.cs" />
+    <Compile Include="..\DriverApp\Services\DriverCargoDispatchExplanationClient.cs" Link="Clients\Cargo\DriverCargoDispatchExplanationClient.cs" />
     <Compile Include="..\DriverApp\Services\AuthApiService.cs" Link="Clients\Cargo\AuthApiService.cs" />
     <Compile Include="..\DriverApp\Services\DriverApiClient.cs" Link="Clients\Cargo\DriverApiClient.cs" />
     <Compile Include="..\DriverApp\Services\DriverOperatingProfileService.cs" Link="Clients\Cargo\DriverOperatingProfileService.cs" />
@@ -221,6 +226,7 @@
     <Compile Include="..\FDriverApp\PageModels\FDriverDeliveryExceptionState.cs" Link="Clients\Driver\FDriverDeliveryExceptionState.cs" />
     <Compile Include="..\FDriverApp\PageModels\FDriverWorkspaceNavigationState.cs" Link="Clients\Driver\FDriverWorkspaceNavigationState.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantAuthService.cs" Link="Clients\Restaurant\RestaurantAuthService.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점배송지원설정Session.cs" Link="Clients\Restaurant\음식점배송지원설정Session.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantProgressPendingStore.cs" Link="Clients\Restaurant\RestaurantProgressPendingStore.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantOrderReturnContext.cs" Link="Clients\Restaurant\RestaurantOrderReturnContext.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantMenuDraftStore.cs" Link="Clients\Restaurant\RestaurantMenuDraftStore.cs" />
@@ -231,6 +237,9 @@
     <Compile Include="..\RestaurantDeskApp\Models\Restaurant\음식점주문DeskModels.cs" Link="Clients\Restaurant\음식점주문DeskModels.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I음식점주문DeskService.cs" Link="Clients\Restaurant\I음식점주문DeskService.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\IRestaurantReceiptPrinter.cs" Link="Clients\Restaurant\IRestaurantReceiptPrinter.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\I음식점전표출력설정Service.cs" Link="Clients\Restaurant\I음식점전표출력설정Service.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점전표출력설정Service.cs" Link="Clients\Restaurant\음식점전표출력설정Service.cs" />
+    <Compile Include="..\RestaurantDeskApp\Services\음식점전표출력구성.cs" Link="Clients\Restaurant\음식점전표출력구성.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\RestaurantOrderNotifications.cs" Link="Clients\Restaurant\RestaurantOrderNotifications.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\I주문알림Service.cs" Link="Clients\Restaurant\I주문알림Service.cs" />
     <Compile Include="..\RestaurantDeskApp\Services\음식점전표DraftFactory.cs" Link="Clients\Restaurant\음식점전표DraftFactory.cs" />

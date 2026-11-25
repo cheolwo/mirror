@@ -239,6 +239,52 @@ public sealed class DistributedFulfillmentRenderTests
         });
         Assert.Empty(t.PhotoPosts); Assert.Empty(t.Posts);
     }
+    [Fact]
+    public async Task 입고사진버튼_사진번호로_대상을_구별한다()
+    {
+        var transport = DistributedUiTransport.Round();
+        transport.Workspace.InboundPlans = [new("plan-a", "가상 입고", "Partial", 2,
+            [new("line-a", "site-a", "loc-a", "owner-a", "sku-a", "lot-a", 10, 4)], ["receive"])];
+        var work = new DistributedEvidenceWorkRequest
+        {
+            Kind = "Receive", AggregateId = "plan-a",
+            Receive = new() { ExpectedRevision = 2, LocationBarcode = "barcode-a",
+                Lines = [new() { LineKey = "line-a", Sku = "sku-a", Quantity = 2 }] }
+        };
+        var camera = new Test업무사진촬영Adapter();
+        var sample = camera.Photo!;
+        using var model = new 분산이행PageViewModel(new(transport, "warehouse"), "inbound", camera);
+        await model.LoadAsync("plan-a");
+        await using var provider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        using var renderer = new InteractionRenderer(provider, provider.GetRequiredService<ILoggerFactory>());
+
+        await renderer.Dispatcher.InvokeAsync(async () =>
+        {
+            await renderer.StartPhoto(model, work);
+            await renderer.Click("사진 촬영");
+            camera.Photo = sample with { FileName = "second.jpg" };
+            await renderer.Click("사진 추가 촬영");
+            camera.Photo = sample with { FileName = "third.jpg" };
+            await renderer.Click("사진 추가 촬영");
+            Assert.Equal(new[] { sample.FileName, "second.jpg", "third.jpg" }, model.Photo.Photos.Select(photo => photo.FileName));
+            Assert.Equal(new[]
+            {
+                "이 사진 다시 촬영 (사진 1)", "사진 제거 (사진 1)",
+                "이 사진 다시 촬영 (사진 2)", "사진 제거 (사진 2)",
+                "이 사진 다시 촬영 (사진 3)", "사진 제거 (사진 3)"
+            }, renderer.NamedButtons().Select(button => button.Name));
+
+            await renderer.ClickNamedButton("사진 제거 (사진 2)");
+            Assert.Equal(new[] { sample.FileName, "third.jpg" }, model.Photo.Photos.Select(photo => photo.FileName));
+            Assert.DoesNotContain(renderer.NamedButtons(), button => button.Name.EndsWith("(사진 3)", StringComparison.Ordinal));
+            camera.Photo = sample with { FileName = "retaken.jpg" };
+            await renderer.ClickNamedButton("이 사진 다시 촬영 (사진 2)");
+            Assert.Equal(new[] { sample.FileName, "retaken.jpg" }, model.Photo.Photos.Select(photo => photo.FileName));
+        });
+
+        Assert.Empty(transport.PhotoPosts);
+        Assert.Empty(transport.Posts);
+    }
     [Fact] public async Task 실제사진보내기버튼_업로드실패는_업무완료로_표시하지않는다()
     {
         var t = DistributedUiTransport.Round(); t.BeforePhotoPost = _ => throw new HttpRequestException("lost upload response");
@@ -352,9 +398,37 @@ internal sealed class InteractionRenderer(IServiceProvider services, ILoggerFact
     { var frames = GetCurrentRenderTreeFrames(componentId); return string.Concat(frames.Array.Take(frames.Count).Where(frame => frame.FrameType is RenderTreeFrameType.Text or RenderTreeFrameType.Markup).Select(frame => frame.FrameType == RenderTreeFrameType.Text ? frame.TextContent : frame.MarkupContent)); }
     public Task StartPhoto(분산이행PageViewModel model, DistributedEvidenceWorkRequest work)
     { photoModel = model; componentId = AssignRootComponentId(InstantiateComponent(typeof(분산사진업무Screen))); return RenderPhoto(work); }
-    public Task RenderPhoto(DistributedEvidenceWorkRequest work) => RenderRootComponentAsync(componentId, ParameterView.FromDictionary(new Dictionary<string, object?>
-    { [nameof(분산사진업무Screen.Model)] = photoModel, [nameof(분산사진업무Screen.Work)] = work, [nameof(분산사진업무Screen.Title)] = "피킹", [nameof(분산사진업무Screen.Action)] = "pick",
-        [nameof(분산사진업무Screen.Suffix)] = "waves/wave-a/pick-batches", [nameof(분산사진업무Screen.AllowedActions)] = new[] { "pick" }, [nameof(분산사진업무Screen.Quantity)] = work.Pick!.Lines.Sum(line => line.Quantity), [nameof(분산사진업무Screen.Confirmed)] = true }));
+    public Task RenderPhoto(DistributedEvidenceWorkRequest work)
+    {
+        var isReceive = work.Receive is not null;
+        var action = isReceive ? "receive" : "pick";
+        return RenderRootComponentAsync(componentId, ParameterView.FromDictionary(new Dictionary<string, object?>
+        {
+            [nameof(분산사진업무Screen.Model)] = photoModel,
+            [nameof(분산사진업무Screen.Work)] = work,
+            [nameof(분산사진업무Screen.Title)] = isReceive ? "입고·적재" : "피킹",
+            [nameof(분산사진업무Screen.Action)] = action,
+            [nameof(분산사진업무Screen.Suffix)] = isReceive ? $"inbound-plans/{work.AggregateId}/receipt-batches" : "waves/wave-a/pick-batches",
+            [nameof(분산사진업무Screen.AllowedActions)] = new[] { action },
+            [nameof(분산사진업무Screen.Quantity)] = work.Receive?.Lines.Sum(line => line.Quantity) ?? work.Pick!.Lines.Sum(line => line.Quantity),
+            [nameof(분산사진업무Screen.Confirmed)] = true
+        }));
+    }
+    public IEnumerable<(string Name, ulong Click)> NamedButtons()
+    {
+        var frames = GetCurrentRenderTreeFrames(componentId);
+        for (var index = 0; index < frames.Count; index++)
+        {
+            var frame = frames.Array[index];
+            if (frame.FrameType != RenderTreeFrameType.Element || frame.ElementName != "button") continue;
+            var name = frames.Array.Skip(index + 1).Take(frame.ElementSubtreeLength - 1)
+                .TakeWhile(attribute => attribute.FrameType == RenderTreeFrameType.Attribute)
+                .FirstOrDefault(attribute => attribute.AttributeName == "aria-label").AttributeValue as string;
+            if (name is not null) yield return (name, Event(frames.Array, index, "onclick"));
+        }
+    }
+    public Task ClickNamedButton(string name) =>
+        DispatchEventAsync(NamedButtons().Single(button => button.Name == name).Click, null, new MouseEventArgs());
     public Task Click(string button) => DispatchEventAsync(FindEvent("button", button, "onclick"), null, new MouseEventArgs());
     public Task ChangeLabel(string label, object value) => DispatchEventAsync(FindEvent("label", label, "onchange"), null, new ChangeEventArgs { Value = value });
     public Task ClickOrder(string reference, string button)

@@ -16,6 +16,34 @@ namespace Ssalddel.Tests.Clients;
 public sealed class CargoWorkspaceRecoveryR75Tests
 {
     [Theory]
+    [InlineData("FreightAcceptedStopOrder.SourceChanged")]
+    [InlineData("FreightAcceptedStopOrder.NextActionMismatch")]
+    public async Task StoredVisitOrderHold_PreservesCurrentWork_BlocksNewOffer_AndShowsNativeMapWarning(string code)
+    {
+        using var f = new Fixture();
+        await f.Service.RefreshAsync(force: true);
+        Assert.NotNull(f.Service.추천의뢰조회("request-r75"));
+        f.StopOrderBlockCode = code;
+        await f.Service.RefreshAsync(force: true);
+        Assert.Equal(75, f.Service.현재운송조회()!.Id);
+        Assert.NotNull(f.Service.화물작업공간);
+        Assert.True(f.Service.ReadState.CurrentTransport.IsCurrent);
+        Assert.False(f.Service.ReadState.Recommendations.IsCurrent);
+        Assert.Null(f.Service.추천의뢰조회("request-r75"));
+        var native = new DriverNativeHomeWorkspaceState(f.Service, f.Auth);
+        await native.ActivateAsync();
+        Assert.True(native.IsReady);
+        Assert.Equal(75, native.CurrentTransport!.Id);
+        Assert.False(native.CanRespondToRecommendation);
+        Assert.Contains(native.MapWarnings, message => message.Contains("방문 순서를 다시 확인", StringComparison.Ordinal));
+        native.Deactivate();
+        f.StopOrderBlockCode = null;
+        await f.Service.RefreshAsync(force: true);
+        Assert.True(f.Service.ReadState.Recommendations.IsCurrent);
+        Assert.NotNull(f.Service.추천의뢰조회("request-r75"));
+    }
+
+    [Theory]
     [InlineData("recommendations", "추천 운송")]
     [InlineData("settlements/current-month", "월 정산")]
     [InlineData("reservations", "예약")]
@@ -47,7 +75,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         };
         Assert.Equal(DriverWorkspaceReadStatus.Failed, state.StateCode);
         Assert.False(state.IsCurrent); Assert.Contains("조회 실패", state.Message);
-        if (path == "transports/workspace") { Assert.Null(f.Service.현재운송조회()); Assert.Empty(f.Service.운송목록); }
+        if (path == "transports/workspace") { Assert.Null(f.Service.현재운송조회()); Assert.Empty(f.Service.운송목록); Assert.Null(f.Service.화물작업공간); }
         else Assert.Equal(75, f.Service.현재운송조회()!.Id);
     }
 
@@ -60,6 +88,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         Assert.True(f.Service.ReadState.Recommendations.IsCurrent);
         Assert.True(f.Service.ReadState.Reservations.IsCurrent);
         Assert.Empty(f.Service.운송목록); Assert.Empty(f.Service.추천의뢰목록); Assert.Empty(f.Service.ReadState.Warnings);
+        Assert.Null(f.Service.화물작업공간);
     }
 
     [Fact]
@@ -79,9 +108,11 @@ public sealed class CargoWorkspaceRecoveryR75Tests
     {
         using var f = new Fixture();
         await f.Service.RefreshAsync(force: true); Assert.Equal(75, f.Service.현재운송조회()!.Id);
+        Assert.NotNull(f.Service.화물작업공간);
         f.FailingPath = "transports/workspace";
         await f.Service.RefreshAsync(force: true);
         Assert.Null(f.Service.현재운송조회()); Assert.Empty(f.Service.운송목록);
+        Assert.Null(f.Service.화물작업공간);
         Assert.Equal(DriverWorkspaceReadStatus.Failed, f.Service.ReadState.CurrentTransport.StateCode);
         Assert.NotEqual(DriverWorkspaceReadStatus.Sample, f.Service.ReadState.CurrentTransport.StateCode);
     }
@@ -98,6 +129,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         await f.Auth.Login("other-driver"); release.SetResult();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => load);
         Assert.Null(f.Service.현재운송조회()); Assert.Empty(f.Service.추천의뢰목록);
+        Assert.Null(f.Service.화물작업공간);
         Assert.Equal(DriverWorkspaceReadStatus.Unknown, f.Service.ReadState.CurrentTransport.StateCode);
     }
 
@@ -108,6 +140,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         Assert.NotNull(f.Service.현재운송조회());
         await f.Auth.Login("driver-r75");
         Assert.Null(f.Service.현재운송조회()); Assert.Empty(f.Service.추천의뢰목록);
+        Assert.Null(f.Service.화물작업공간);
         Assert.Equal(DriverWorkspaceReadStatus.Unknown, f.Service.ReadState.Settlement.StateCode);
     }
 
@@ -154,9 +187,11 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         var refresh = f.Service.RefreshAsync(force: true);
         await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.False(f.Service.ReadState.Recommendations.IsCurrent);
+        Assert.Null(f.Service.화물작업공간);
         Assert.Null(f.Service.추천의뢰조회("request-r75"));
         release.SetResult(); await refresh;
         Assert.NotNull(f.Service.추천의뢰조회("request-r75"));
+        Assert.NotNull(f.Service.화물작업공간);
     }
 
     [Fact]
@@ -166,6 +201,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         Assert.Equal(DriverWorkspaceReadStatus.Sample, samples.ReadState.Recommendations.StateCode);
         Assert.True(samples.ReadState.Recommendations.CanDisplayValues);
         Assert.False(samples.ReadState.Recommendations.IsCurrent);
+        Assert.Null(((IDriverSampleDataService)samples).화물작업공간);
     }
 
     private sealed class Fixture : IDisposable
@@ -176,6 +212,7 @@ public sealed class CargoWorkspaceRecoveryR75Tests
         public string? FailingPath;
         public HttpStatusCode FailureStatus = HttpStatusCode.ServiceUnavailable;
         public bool EmptyWorkspace, EmptyRecommendations, WrongDriver;
+        public string? StopOrderBlockCode;
         public Func<Task>? BeforeWorkspace;
         private string Owner => WrongDriver ? "other-driver" : "driver-r75";
         public Fixture()
@@ -197,7 +234,8 @@ public sealed class CargoWorkspaceRecoveryR75Tests
             object body = path switch
             {
                 "transports/workspace" => new 기사화물운송작업공간응답
-                { 활성운송목록 = EmptyWorkspace ? [] : [Summary()], 다음행동운송 = EmptyWorkspace ? null : Summary() },
+                { 활성운송목록 = EmptyWorkspace ? [] : [Summary()], 다음행동운송 = EmptyWorkspace ? null : Summary(),
+                    BlockCodes = StopOrderBlockCode is null ? [] : [StopOrderBlockCode] },
                 "transports/75" => new 기사운송상세응답
                 { Id = 75, 기사_운송자 = Owner, 운송번호 = "request-r75", 상태 = "상차지도착", 출발지 = "시험 상차지", 도착지 = "시험 하차지", 운임 = 6500m, 픽업위도 = 37.57m, 픽업경도 = 127.07m },
                 "work/status" => new 기사운행상태응답 { DriverId = Owner, ShiftId = 75, Status = "운행중" },

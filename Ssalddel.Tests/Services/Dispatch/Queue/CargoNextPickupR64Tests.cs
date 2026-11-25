@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
+using Ssalddel.Contracts.Admin.Management;
 using Ssalddel.Contracts.Common.Drivers;
+using Ssalddel.Contracts.Shipper.Request;
 using Ssalddel.Services.Dispatch.Participation;
 using Ssalddel.Tests.Services.Dispatch.Common;
 using 살뜰.Data;
@@ -17,19 +20,20 @@ using 살뜰.도메인.운송;
 
 namespace Ssalddel.Tests.Services.Dispatch.Queue;
 
-public sealed class CargoNextPickupR64Tests
+public sealed partial class CargoNextPickupR64Tests
 {
     [Fact]
     public async Task 수행중기사_Gps반경에없어도_전체두업무끝점으로후보탐색한다()
     {
         await using var f = await Fixture.CreateAsync();
         var review = await f.Policy().후보검토Async(f.Queue);
+        Assert.True(review.선정후보 is not null, await R20DiagnosticAsync(f, review));
         var selected = Assert.IsType<배차추천후보>(review.선정후보);
         Assert.Equal("driver", selected.DriverId);
         Assert.Equal(new 배차경로좌표(38.10m, 127m), selected.화물수행근거!.기준좌표);
         Assert.NotEqual(new 배차경로좌표(37.80m, 127m), selected.화물수행근거.기준좌표);
         Assert.Equal(2, selected.화물수행근거.기존계획!.항목목록.Count);
-        Assert.Equal("VerifiedActiveScheduleEnd", Assert.Single(review.후보목록).픽업기준Code);
+        Assert.Equal("VerifiedInsertedSchedule", Assert.Single(review.후보목록).픽업기준Code);
         Assert.True(f.States.ActiveReads > 0);
         Assert.Empty(f.States.Geo);
         Assert.Equal(0, f.Queue.추천라운드);
@@ -152,8 +156,19 @@ public sealed class CargoNextPickupR64Tests
         {
             var f = new Fixture(new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>()
                 .UseInMemoryDatabase($"cargo-r64-{Guid.NewGuid():N}").Options, new Encryption()));
-            f.Db.용달기사.Add(new() { 기사Id = "driver", 차량 = "fixture", 상태 = "활동중" });
             var now = DateTime.UtcNow;
+            f.Db.용달기사.Add(new() { 기사Id = "driver", 차량 = "fixture", 상태 = "활동중",
+                현재실차참조 = "synthetic-r20-vehicle", 실차적재판본 = 1,
+                실차적재제원Json = JsonSerializer.Serialize(new 기사실차적재제원 {
+                    ActualVehicleReference = "synthetic-r20-vehicle", VehicleProfileValue = "fixture",
+                    PrivateEvidenceReference = "synthetic-r20-loading-proof", ReviewerId = "synthetic-reviewer",
+                    ConfirmedAtUtc = now.AddHours(-1), ValidUntilUtc = now.AddDays(1),
+                    적재함길이Mm = 1000, 적재함폭Mm = 1000, 적재함높이Mm = 1000,
+                    최대적재중량Kg = 100, 최대부피Cbm = 1m, 팔레트적재개수 = 2, EntranceKind = "Enclosed"
+                }) });
+            f.Db.차량제원.Add(new() { 차량코드 = "fixture", 차량명 = "합성 시험 차량", 추천사용여부 = true,
+                적재함길이Mm = 1000, 적재함폭Mm = 1000, 적재함높이Mm = 1000,
+                최대적재중량Kg = 100, 권장최대CBM = 1m, 팔레트적재개수 = 2 });
             f.States.Active = [State("driver", active ? 37m : 38.09m, now)];
             f.Db.화주운송의뢰.Add(Request("next", 38.12m));
             f.Db.운송원장.Add(f.Queue);
@@ -175,7 +190,12 @@ public sealed class CargoNextPickupR64Tests
         private static 화주운송의뢰 Request(string id, decimal dropoff) => new()
         {
             의뢰Id = id, 픽업_위도 = 38.11m, 픽업_경도 = 127m, 하차_위도 = dropoff, 하차_경도 = 127m,
-            화물종류 = "상자", 픽업_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 픽업_시간창_종료일시 = DateTime.UtcNow.AddHours(2),
+            화물종류 = "합성 상자", 운송방식 = "혼적", 화물수량 = 1, 화물중량Kg = 10m,
+            화물길이Mm = 500, 화물폭Mm = 500, 화물높이Mm = 500, 화물입력부피Cbm = .125m,
+            화물부피Cbm = .125m, 화물부피근거Code = "UserProvided", 화물적재계산판본 = 화물적재입력Policy.CurrentRevision,
+            화물팔레트개수 = 0, 화물바닥회전가능여부 = true, 화물적층가능여부 = true, 화물온도조건 = "상온",
+            픽업_작업시간분 = 1m, 하차_작업시간분 = 1m,
+            픽업_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 픽업_시간창_종료일시 = DateTime.UtcNow.AddHours(2),
             하차_시간창_시작일시 = DateTime.UtcNow.AddHours(-1), 하차_시간창_종료일시 = DateTime.UtcNow.AddHours(3)
         };
         public 화물후속픽업기준Service Anchor() => new(Db, new 기사운송일정구성Service(Db), new 운송일정삽입평가Service(Routes));
@@ -222,10 +242,13 @@ public sealed class CargoNextPickupR64Tests
             var route = await EstimateRouteAsync(a, b);
             return route is null ? null : route with { RouteOption = ExplicitOptionMismatch ? "different-option" : option };
         }
-        public Task<배차경로좌표?> ResolveOriginLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? current, 배차추천검색조건? criteria) => throw new NotSupportedException();
-        public Task<배차경로좌표?> ResolveRouteAnchorLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? current) => throw new NotSupportedException();
+        public Task<배차경로좌표?> ResolveOriginLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? current, 배차추천검색조건? criteria)
+            => Task.FromResult(current is null ? null : new 배차경로좌표(current.Latitude, current.Longitude));
+        public Task<배차경로좌표?> ResolveRouteAnchorLocationAsync(string id, 용달기사? driver, DriverLocationSnapshot? current)
+            => ResolveOriginLocationAsync(id, driver, current, null);
         public Task<배차경로예상결과?> EstimateOrderedRouteAsync(배차경로좌표? origin, IReadOnlyList<배차경로좌표> stops, CancellationToken ct = default) => throw new NotSupportedException();
-        public Task<배차삽입경로예상결과?> EstimateInsertionDelayAsync(배차경로좌표? origin, 배차경로좌표? anchor, 배차경로좌표? pickup, 배차경로좌표? dropoff) => throw new NotSupportedException();
+        public Task<배차삽입경로예상결과?> EstimateInsertionDelayAsync(배차경로좌표? origin, 배차경로좌표? anchor, 배차경로좌표? pickup, 배차경로좌표? dropoff)
+            => Task.FromResult<배차삽입경로예상결과?>(null);
     }
     private sealed class Fit : I차량화물적합성Service
     {

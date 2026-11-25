@@ -32,7 +32,9 @@ public sealed class CargoConfirmedTransportNavigationTests
             "합성 추천", "합성 추천 하차지", "합성 추천 상차지");
         var service = new DriverHomeRoutePlanningService();
 
-        var overlay = Assert.Single(service.BuildLinkedRouteOverlays(currentLocation, transport, recommendation));
+        var overlay = Assert.Single(service.BuildCurrentRouteOverlays(currentLocation, transport));
+        Assert.Empty(service.BuildLinkedRouteOverlays(currentLocation, transport, recommendation));
+        Assert.Empty(service.BuildAcceptedRouteOverlays(currentLocation, transport, recommendation));
         var card = service.BuildLinkedRouteCardState(currentLocation, transport, recommendation);
 
         var nextPoint = overlay.Points[1];
@@ -42,6 +44,8 @@ public sealed class CargoConfirmedTransportNavigationTests
         Assert.Equal(beforePickup
             ? "현재 이동: 합성 현재 위치 → 상차지 합성 상차지"
             : "현재 이동: 합성 현재 위치 → 하차지 합성 하차지", card.CurrentRouteLabel);
-        Assert.StartsWith(beforePickup ? "현재 운송 상차지 이후" : "현재 운송 하차지 이후", card.Summary);
+        Assert.Equal("방문 순서 확인", card.Benefit);
+        Assert.Contains("기존 업무와 새 추천의 시간·적재 조건", card.Summary);
+        Assert.DoesNotContain("이후 추천", card.Summary);
     }
 }

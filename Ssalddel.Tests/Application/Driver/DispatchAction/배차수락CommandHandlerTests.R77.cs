@@ -168,7 +168,7 @@ public sealed partial class 음식배달정상수직생명주기Tests
         var handler = R77Handler(f, routes, refresh);
         var first = await handler.Handle(new("driver", R76StateFixture.Id, 1,
             [화물배차수락경고코드.차량주의사항]), default);
-        Assert.True(first.IsSuccess, string.Join(";", first.Errors.Select(x => x.Message)));
+        Assert.True(first.IsSuccess, string.Join(";", first.Errors.Select(x => $"{x.Metadata.GetValueOrDefault("ErrorCode")}: {x.Message}")));
         var remaining = await f.Db.운송원장.AsNoTracking().SingleAsync(x => x.의뢰Id == secondId);
         Assert.Equal(2, remaining.추천라운드);
         var plan = JsonSerializer.Deserialize<국내화물추천저장근거>(remaining.추천판정근거Json!)!.수행계획!;
@@ -179,7 +179,7 @@ public sealed partial class 음식배달정상수직생명주기Tests
         Assert.Equal(화물배차수락오류코드.추천판본불일치, Assert.Single(stale.Errors).Metadata["ErrorCode"]);
         var second = await handler.Handle(new("driver", secondId, remaining.추천라운드,
             [화물배차수락경고코드.차량주의사항]), default);
-        Assert.True(second.IsSuccess, string.Join(";", second.Errors.Select(x => x.Message)));
+        Assert.True(second.IsSuccess, string.Join(";", second.Errors.Select(x => $"{x.Metadata.GetValueOrDefault("ErrorCode")}: {x.Message}")));
         Assert.Equal(2, await f.Db.운송원장.CountAsync(x => x.배차큐단계 == 상태값.배차큐단계.확정));
         Assert.True((await handler.Handle(new("driver", R76StateFixture.Id, 1), default)).IsSuccess);
         Assert.Equal(2, await f.Db.Command알림Outbox.CountAsync());
@@ -188,13 +188,13 @@ public sealed partial class 음식배달정상수직생명주기Tests
 
     private static 국내화물추천재검증Service R77Refresh(R76StateFixture f, R77Routes routes)
         => new(f.Db, f.Snapshots, f.States,
-            new 국내화물배차계획검증Service(f.Db, new 기사운송일정구성Service(f.Db), new 운송일정삽입평가Service(routes),
+            new 국내화물배차계획검증Service(f.Db, new 기사운송일정구성Service(f.Db, f.Vehicle), new 운송일정삽입평가Service(routes),
                 f.Vehicle, new 화물구간적재검증Service(new 차량적재추천Engine()), f.Snapshots),
             new SharedDriverWorkAdmissionService(f.Db, Options.Create(f.ParticipationOptions)), new R76Clock(f.Now));
 
     private static 배차수락CommandHandler R77Handler(R76StateFixture f, R77Routes routes, I국내화물추천재검증Service refresh)
     {
-        var schedule = new 기사운송일정구성Service(f.Db); var insertion = new 운송일정삽입평가Service(routes);
+        var schedule = new 기사운송일정구성Service(f.Db, f.Vehicle); var insertion = new 운송일정삽입평가Service(routes);
         var location = new R77Location(f); var continuity = new R77Continuity();
         var eligibility = new 화물배차수락적격성Service(f.Db, location, new 차량화물적합성Service(new 차량적재추천Engine()),
             schedule, insertion, f.Vehicle);
@@ -202,7 +202,7 @@ public sealed partial class 음식배달정상수직생명주기Tests
             new WorkRelationshipSnapshotCollector(), eligibility, continuity, NullLogger<배차수락CommandHandler>.Instance,
             sharedAdmission: new SharedDriverWorkAdmissionService(f.Db, Options.Create(f.ParticipationOptions)),
             운영배차: f.Availability, 후속픽업: new 화물후속픽업기준Service(f.Db, schedule, insertion), 기사위치: location,
-            신규업무자격: f.Qualification, 상태근거: f.Snapshots, 추천재검증: refresh);
+            신규업무자격: f.Qualification, 상태근거: f.Snapshots, 추천재검증: refresh, 실차조회: f.Vehicle);
     }
 
     private static async Task R77Prepare(R76StateFixture f, string id)

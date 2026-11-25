@@ -6,6 +6,162 @@ namespace Ssalddel.Tests.Clients;
 public sealed class ShipperAuthSessionRecoveryTests
 {
     [Fact]
+    public async Task 갱신commit뒤취소는_신Token저장을마친뒤알리고_조회판본을유지한다()
+    {
+        var store = new ShipperRecoveryTokenStore();
+        var session = new AuthSession(store, new ClientSessionGuard());
+        var original = ShipperRecoveryFixture.Snapshot();
+        await session.ApplyAsync(original);
+        var revision = session.SessionRevision;
+        var fresh = ShipperRecoveryFixture.Snapshot(token: "committed-refresh");
+        using var cancellation = new CancellationTokenSource();
+        var notifications = 0;
+        session.Changed += () => { notifications++; cancellation.Cancel(); };
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => session.TryRefreshAsync(
+            fresh, revision, original.RefreshToken, cancellation.Token));
+        Assert.Equal(fresh.AccessToken, session.AccessToken);
+        Assert.Equal(fresh.RefreshToken, session.RefreshToken);
+        Assert.Same(fresh, store.Snapshot);
+        Assert.Equal(revision, session.SessionRevision);
+        Assert.Equal(1, notifications);
+    }
+
+    [Theory]
+    [InlineData("refresh")]
+    [InlineData("login")]
+    [InlineData("logout")]
+    public async Task 저장gate대기중취소된갱신은_마지막저장과새로그인로그아웃을되돌리지않는다(string next)
+    {
+        var store = new ShipperRecoveryTokenStore();
+        var session = new AuthSession(store, new ClientSessionGuard());
+        var original = ShipperRecoveryFixture.Snapshot();
+        await session.ApplyAsync(original);
+        var revision = session.SessionRevision;
+        var saveStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseSave = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var savedTokens = new List<string>();
+        store.Save = async snapshot =>
+        {
+            if (!saveStarted.Task.IsCompleted)
+            {
+                saveStarted.SetResult();
+                await releaseSave.Task;
+            }
+            savedTokens.Add(snapshot.AccessToken);
+        };
+        // 같은 세션의 이전 저장이 저장 gate를 점유하되 로그인 조회 판본은 바꾸지 않습니다.
+        var heldSave = session.ApplyAsync(original, startsNewSession: false);
+        await saveStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var fresh = ShipperRecoveryFixture.Snapshot(token: "queued-refresh");
+        var newLogin = ShipperRecoveryFixture.Snapshot(user: "shipper-b", token: "new-login");
+        using var cancellation = new CancellationTokenSource();
+        session.Changed += () => { if (session.AccessToken == fresh.AccessToken) cancellation.Cancel(); };
+        var refreshing = session.TryRefreshAsync(fresh, revision, original.RefreshToken, cancellation.Token);
+        Task latest = Task.CompletedTask;
+        try
+        {
+            Assert.True(cancellation.IsCancellationRequested);
+            Assert.Equal(fresh.AccessToken, session.AccessToken);
+            Assert.Same(original, store.Snapshot);
+            Assert.False(refreshing.IsCompleted);
+            if (next == "login")
+            {
+                latest = session.ApplyAsync(newLogin);
+                Assert.Equal(newLogin.UserId, session.UserId);
+                Assert.True(session.SessionRevision > revision);
+                Assert.False(latest.IsCompleted);
+            }
+            else if (next == "logout")
+            {
+                latest = session.ClearAsync();
+                Assert.False(session.IsLoggedIn);
+                Assert.True(session.SessionRevision > revision);
+                Assert.False(latest.IsCompleted);
+            }
+        }
+        finally { releaseSave.TrySetResult(); }
+
+        await heldSave.WaitAsync(TimeSpan.FromSeconds(5));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => refreshing.WaitAsync(TimeSpan.FromSeconds(5)));
+        await latest.WaitAsync(TimeSpan.FromSeconds(5));
+        if (next == "refresh")
+        {
+            Assert.Same(fresh, store.Snapshot);
+            Assert.Equal(fresh.AccessToken, session.AccessToken);
+            Assert.Equal(revision, session.SessionRevision);
+            Assert.Equal(new[] { original.AccessToken, fresh.AccessToken }, savedTokens);
+        }
+        else if (next == "login")
+        {
+            Assert.Same(newLogin, store.Snapshot);
+            Assert.Equal(newLogin.AccessToken, session.AccessToken);
+            Assert.Equal(new[] { original.AccessToken, newLogin.AccessToken }, savedTokens);
+        }
+        else
+        {
+            Assert.Null(store.Snapshot);
+            Assert.False(session.IsLoggedIn);
+            Assert.Equal(new[] { original.AccessToken }, savedTokens);
+        }
+    }
+
+    [Theory]
+    [InlineData("access")]
+    [InlineData("access-expired")]
+    [InlineData("access-near-expiry")]
+    [InlineData("refresh")]
+    [InlineData("refresh-expired")]
+    [InlineData("refresh-near-expiry")]
+    [InlineData("roles")]
+    public async Task 같은사용자의잘못된갱신Token도_메모리저장알림을바꾸지않는다(string invalid)
+    {
+        var saves = 0;
+        var store = new ShipperRecoveryTokenStore { Save = _ => { saves++; return Task.CompletedTask; } };
+        var session = new AuthSession(store, new ClientSessionGuard());
+        var original = ShipperRecoveryFixture.Snapshot();
+        await session.ApplyAsync(original);
+        var revision = session.SessionRevision;
+        var notifications = 0;
+        session.Changed += () => notifications++;
+        var candidate = ShipperRecoveryFixture.Snapshot(token: "bad-refresh-response");
+        candidate = invalid switch
+        {
+            "access" => candidate with { AccessToken = "" },
+            "access-expired" => candidate with { AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1) },
+            "access-near-expiry" => candidate with { AccessTokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(90) },
+            "refresh" => candidate with { RefreshToken = "" },
+            "refresh-expired" => candidate with { RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-1) },
+            "refresh-near-expiry" => candidate with { RefreshTokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(90) },
+            _ => candidate with { Roles = null! }
+        };
+
+        Assert.False(await session.TryRefreshAsync(candidate, revision, original.RefreshToken));
+        Assert.Equal(original.AccessToken, session.AccessToken);
+        Assert.Equal(original.RefreshToken, session.RefreshToken);
+        Assert.Same(original.Roles, session.Roles);
+        Assert.Same(original, store.Snapshot);
+        Assert.Equal(revision, session.SessionRevision);
+        Assert.Equal(1, saves);
+        Assert.Equal(0, notifications);
+    }
+
+    [Fact]
+    public async Task 잘못된갱신Token이어도_명시취소를정상거절로바꾸지않는다()
+    {
+        var store = new ShipperRecoveryTokenStore();
+        var session = new AuthSession(store, new ClientSessionGuard());
+        var original = ShipperRecoveryFixture.Snapshot();
+        await session.ApplyAsync(original);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => session.TryRefreshAsync(
+            original with { RefreshToken = "" }, session.SessionRevision, original.RefreshToken, cancellation.Token));
+        Assert.Same(original, store.Snapshot);
+        Assert.Equal(original.AccessToken, session.AccessToken);
+    }
+
+    [Fact]
     public async Task 로그아웃없는동일사용자재로그인도_새판본이며_이전조건부변경을거부한다()
     {
         var store = new ShipperRecoveryTokenStore();

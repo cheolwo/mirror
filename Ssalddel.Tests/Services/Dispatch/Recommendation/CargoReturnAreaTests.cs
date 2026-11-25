@@ -289,6 +289,15 @@ public sealed class CargoReturnAreaTests
             Assert.True(current.화물중량Kg + candidate.화물중량Kg > vehicle!.최대적재중량Kg);
         }
 
+        if (existingCargo && !coordination)
+        {
+            // r20의 추가 수행 추천은 같은 삽입 순서의 작업시간·구간 적재 근거가 먼저 필요하다.
+            // 이 fixture는 두 화물의 개별 적합성만 확인했으므로 가점 없는 추천으로 인증하지 않는다.
+            Assert.Empty(await fixture.Recommendations(realFit: true).GetDrivingRecommendationsAsync("driver-1"));
+            Assert.Empty(fixture.ReturnArea.Evaluations);
+            return;
+        }
+
         if (coordination)
         {
             // 제원 누락 시에도 잘못된 적합 응답을 별도로 주어 복귀 가점의 독립 방어를 유지한다.

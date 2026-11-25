@@ -76,8 +76,9 @@ public sealed class ShipperVehicleRecommendationR74Tests
             요청사항 = state.요청사항, 결제수단 = "카드", 차량종류 = state.차량종류
         };
         await using var f = await Fixture.CreateAsync();
-        var app = (화주운송의뢰생성요청)typeof(ServerBackedShipperOperationsService)
-            .GetMethod("ToCreateRequest", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(f.App, [item])!;
+        await f.App.AddRequestAsync(item);
+        var app = Assert.Single(f.Handler.CreatedRequests);
+        Assert.Equal("shipper-a", app.화주Id);
         var web = (화주운송의뢰생성요청)typeof(화주운송의뢰등록Service)
             .GetMethod("ToCreateRequest", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, [state, "shipper-a", null, ""])!;
         foreach (var payload in new[] { app, web })
@@ -151,10 +152,22 @@ public sealed class ShipperVehicleRecommendationR74Tests
     private sealed class Handler : HttpMessageHandler
     {
         public List<차량추천요청> Requests { get; } = [];
+        public List<화주운송의뢰생성요청> CreatedRequests { get; } = [];
         public TaskCompletionSource? Pending;
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage message, CancellationToken ct)
         {
+            if (message.RequestUri!.AbsolutePath == "/api/v1/shipper/requests")
+            {
+                Assert.Equal(HttpMethod.Post, message.Method);
+                Assert.Equal("access-a", message.Headers.Authorization?.Parameter);
+                var created = (await message.Content!.ReadFromJsonAsync<화주운송의뢰생성요청>(ct))!;
+                CreatedRequests.Add(created);
+                return new(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new 화주운송의뢰응답 { 의뢰Id = "synthetic-input-contract", 화물 = created.화물 })
+                };
+            }
             if (message.RequestUri!.AbsolutePath != "/api/v1/shipper/requests/recommend-vehicle")
                 return new(HttpStatusCode.ServiceUnavailable); // 실시간 연결은 별도이며 외부로 연결하지 않는다.
             Assert.Equal(HttpMethod.Post, message.Method);

@@ -177,8 +177,19 @@ namespace SsalddelAdminApp.Services
         public sealed class MemoryStorage
         {
             private readonly Dictionary<string, string> values = [];
-            public Task<string?> GetAsync(string key) => Task.FromResult(values.GetValueOrDefault(key));
-            public Task SetAsync(string key, string value) { values[key] = value; return Task.CompletedTask; }
+            public Func<string, string?, Task>? AfterGetAsync { get; set; }
+            public Func<string, string, Task>? BeforeSetAsync { get; set; }
+            public async Task<string?> GetAsync(string key)
+            {
+                var value = values.GetValueOrDefault(key);
+                if (AfterGetAsync is { } hook) await hook(key, value);
+                return value;
+            }
+            public async Task SetAsync(string key, string value)
+            {
+                if (BeforeSetAsync is { } hook) await hook(key, value);
+                values[key] = value;
+            }
             public bool Remove(string key) => values.Remove(key);
         }
     }

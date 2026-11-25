@@ -5,6 +5,7 @@ using Ssalddel.Contracts.Common.Privacy;
 using Microsoft.AspNetCore.Components;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Tests.UiCommon;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.Core;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
 using SsalddelApp.Models.Shipper;
@@ -15,6 +16,192 @@ namespace Ssalddel.Tests.Clients;
 
 public sealed class ShipperRequestSubmissionRecoveryTests
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task 보호저장소읽기실패는_원문을가리고_같은작성입력으로준비를재개한다(int failingRead)
+    {
+        const string internalMarker = "synthetic-private-path-and-token-marker";
+        var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
+        await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var fail = true;
+        var reads = 0;
+        var writes = 0;
+        var removes = 0;
+        var store = new MauiWorkflowRecoveryStore(auth,
+            _ => ++reads == failingRead && fail
+                ? Task.FromException<string?>(new IOException(internalMarker))
+                : Task.FromResult<string?>(null),
+            (_, _) => { writes++; return Task.CompletedTask; },
+            _ => { removes++; });
+        var (operations, stub) = Operations();
+        var navigation = new Navigation();
+        var state = ShipperRequestContactWindowTests.CompleteState();
+        var originalDraft = JsonSerializer.Serialize(state.ToDraft());
+        using var model = new ShipperRequestAuthoringPageViewModel(state, operations, navigation, auth, store);
+        model.CollectionConsent = true;
+        model.AgeConfirmed = true;
+
+        await model.InitializeAsync();
+
+        Assert.Equal(failingRead, reads);
+        Assert.False(model.RegistrationEnabled);
+        Assert.Contains("등록 준비를 확인하지 못했습니다", model.StatusMessage);
+        Assert.DoesNotContain(internalMarker, model.StatusMessage);
+        Assert.Equal(originalDraft, JsonSerializer.Serialize(state.ToDraft()));
+        Assert.True(model.CollectionConsent);
+        Assert.True(model.AgeConfirmed);
+        Assert.Null(model.PrivacyConsentEvidenceId);
+        Assert.False(model.HasValidPrivacyConsent);
+        Assert.False(model.HasPendingRequest);
+        Assert.False(model.IsBusy);
+        await model.SubmitAsync();
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, stub.ConsentCalls);
+        Assert.Equal(0, writes);
+        Assert.Equal(0, removes);
+        Assert.Null(navigation.LastPath);
+
+        fail = false;
+        await model.InitializeAsync();
+
+        Assert.True(model.RegistrationEnabled);
+        Assert.Equal(originalDraft, JsonSerializer.Serialize(state.ToDraft()));
+        Assert.True(model.CollectionConsent);
+        Assert.True(model.AgeConfirmed);
+        Assert.False(model.HasValidPrivacyConsent);
+        Assert.Null(model.PrivacyConsentEvidenceId);
+        Assert.False(model.HasPendingRequest);
+        Assert.False(model.IsBusy);
+        Assert.Empty(model.StatusMessage);
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, stub.ConsentCalls);
+        Assert.Equal(0, writes);
+        Assert.Equal(0, removes);
+        Assert.Null(navigation.LastPath);
+    }
+
+    [Fact]
+    public async Task 인증저장소복원실패도_원문을가리고_입력이나동의를확정하지않는다()
+    {
+        const string internalMarker = "synthetic-auth-storage-private-marker";
+        var tokenStore = new ShipperRecoveryTokenStore
+        {
+            Load = () => Task.FromException<ClientAuthTokenSnapshot?>(new IOException(internalMarker))
+        };
+        var auth = new AuthSession(tokenStore, new ClientSessionGuard());
+        var (operations, stub) = Operations();
+        var navigation = new Navigation();
+        var state = ShipperRequestContactWindowTests.CompleteState();
+        var originalDraft = JsonSerializer.Serialize(state.ToDraft());
+        using var model = new ShipperRequestAuthoringPageViewModel(state, operations, navigation, auth,
+            new VolatileWorkflowRecoveryStore());
+        model.CollectionConsent = true;
+        model.AgeConfirmed = true;
+
+        await model.InitializeAsync();
+
+        Assert.False(model.RegistrationEnabled);
+        Assert.Contains("등록 준비를 확인하지 못했습니다", model.StatusMessage);
+        Assert.DoesNotContain(internalMarker, model.StatusMessage);
+        Assert.Equal(originalDraft, JsonSerializer.Serialize(state.ToDraft()));
+        Assert.True(model.CollectionConsent);
+        Assert.True(model.AgeConfirmed);
+        Assert.False(model.HasValidPrivacyConsent);
+        Assert.Null(model.PrivacyConsentEvidenceId);
+        Assert.False(model.HasPendingRequest);
+        Assert.False(model.IsBusy);
+        Assert.False(auth.IsLoggedIn);
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, stub.ConsentCalls);
+        Assert.Equal(0, stub.VehicleCalls);
+        Assert.Null(navigation.LastPath);
+    }
+
+    [Fact]
+    public async Task 초안조회중서버가바뀌면_늦은빈응답은준비를완료하지않고_새서버에서다시확인한다()
+    {
+        var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
+        await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var endpoint = new Uri("https://one.invalid/api/");
+        var context = new WorkflowRecoveryContext(
+            () => new RoleWorkspaceIdentity(auth.UserId, auth.SessionRevision, auth.IsLoggedIn), () => endpoint);
+        var delayed = new DelayedDraftRead(auth);
+        var (operations, stub) = Operations();
+        var navigation = new Navigation();
+        var state = ShipperRequestContactWindowTests.CompleteState();
+        var originalDraft = JsonSerializer.Serialize(state.ToDraft());
+        using var model = new ShipperRequestAuthoringPageViewModel(state, operations, navigation, auth, delayed.Store, context);
+
+        var initializing = model.InitializeAsync();
+        await delayed.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Null(model.RegistrationEnabled);
+        endpoint = new("https://another.invalid/api/");
+        delayed.Result.SetResult(null);
+        await initializing;
+
+        Assert.Null(model.RegistrationEnabled);
+        Assert.Equal(originalDraft, JsonSerializer.Serialize(state.ToDraft()));
+        await model.SubmitAsync();
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, stub.ConsentCalls);
+        Assert.Null(navigation.LastPath);
+
+        await model.InitializeAsync();
+
+        Assert.True(model.RegistrationEnabled);
+        Assert.Equal(6, delayed.Reads);
+        Assert.Empty(state.상차도로명주소);
+        Assert.False(model.HasPendingRequest);
+        Assert.False(model.HasValidPrivacyConsent);
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, delayed.Writes);
+        Assert.Equal(0, delayed.Removes);
+    }
+
+    [Fact]
+    public async Task 초안조회중화면수명이끝나면_늦은빈응답은준비상태를성공으로바꾸지않는다()
+    {
+        var auth = new AuthSession(new ShipperRecoveryTokenStore(), new ClientSessionGuard());
+        await auth.ApplyAsync(ShipperRecoveryFixture.Snapshot());
+        var context = new WorkflowRecoveryContext(
+            () => new RoleWorkspaceIdentity(auth.UserId, auth.SessionRevision, auth.IsLoggedIn),
+            () => new Uri("https://one.invalid/api/"));
+        var delayed = new DelayedDraftRead(auth);
+        var (operations, stub) = Operations();
+        var navigation = new Navigation();
+        using var model = new ShipperRequestAuthoringPageViewModel(
+            ShipperRequestContactWindowTests.CompleteState(), operations, navigation, auth, delayed.Store, context);
+
+        var initializing = model.InitializeAsync();
+        await delayed.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var boundary = model.RegistrationBoundaryMessage;
+        var status = model.StatusMessage;
+        model.Dispose();
+        delayed.Result.SetResult(null);
+        await initializing;
+
+        Assert.Null(model.RegistrationEnabled);
+        Assert.Equal(boundary, model.RegistrationBoundaryMessage);
+        Assert.Equal(status, model.StatusMessage);
+        await model.InitializeAsync();
+        await model.SubmitAsync();
+        Assert.Equal(3, delayed.Reads);
+        Assert.False(model.HasPendingRequest);
+        Assert.False(model.HasValidPrivacyConsent);
+        Assert.Empty(stub.Posts);
+        Assert.Empty(stub.Gets);
+        Assert.Equal(0, stub.ConsentCalls);
+        Assert.Equal(0, delayed.Writes);
+        Assert.Equal(0, delayed.Removes);
+        Assert.Null(navigation.LastPath);
+    }
+
     [Fact]
     public async Task 서버저장후응답유실은_GET으로원등록만확인한다()
     {
@@ -188,11 +375,15 @@ public sealed class ShipperRequestSubmissionRecoveryTests
         public ShipperRequestItem? Existing;
         public bool FailVehicles, FailGet;
         public int VehicleCalls;
+        public int ConsentCalls;
         public Func<ShipperRequestItem, Task<ShipperRequestItem>> Add = _ => Task.FromResult(new ShipperRequestItem { 의뢰Id = "ledger-one" });
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
             if (method?.Name == nameof(IShipperOperationsService.RecordPrivacyConsentAsync))
+            {
+                ConsentCalls++;
                 return Task.FromResult<신청개인정보동의증적Response?>(ShipperConsentFixture.Response((신청개인정보동의기록Request)args![0]!));
+            }
             if (method?.Name == nameof(IShipperOperationsService.GetVehicleTypesAsync))
             { VehicleCalls++; return FailVehicles ? Task.FromException<IReadOnlyList<string>>(new IOException("vehicles unavailable")) : Task.FromResult<IReadOnlyList<string>>(["1톤 카고"]); }
             if (method?.Name == nameof(IShipperOperationsService.RecommendVehiclesAsync))
@@ -207,6 +398,29 @@ public sealed class ShipperRequestSubmissionRecoveryTests
             if (method?.Name == nameof(IShipperOperationsService.GetRequestByClientRequestIdAsync))
             { Gets.Add((string)args![0]!); return FailGet ? Task.FromException<ShipperRequestItem?>(new IOException("result unavailable")) : Task.FromResult(Existing); }
             throw new NotSupportedException();
+        }
+    }
+    private sealed class DelayedDraftRead
+    {
+        public TaskCompletionSource<bool> Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<string?> Result { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int Reads { get; private set; }
+        public int Writes { get; private set; }
+        public int Removes { get; private set; }
+        public MauiWorkflowRecoveryStore Store { get; }
+
+        public DelayedDraftRead(AuthSession auth)
+        {
+            Store = new(auth, _ =>
+            {
+                // 서버별 미확정 접수와 이전 비서버별 기록 다음, 실제 보호 저장소의 초안 읽기만 지연합니다.
+                if (++Reads == 3)
+                {
+                    Started.SetResult(true);
+                    return Result.Task;
+                }
+                return Task.FromResult<string?>(null);
+            }, (_, _) => { Writes++; return Task.CompletedTask; }, _ => { Removes++; });
         }
     }
     private sealed class FailingStore : IWorkflowRecoveryStore

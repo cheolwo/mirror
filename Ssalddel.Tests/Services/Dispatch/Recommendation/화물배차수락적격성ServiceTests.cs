@@ -129,13 +129,15 @@ public sealed class 화물배차수락적격성ServiceTests
     {
         await using var db = CreateContext(); await SeedReadyDriverAsync(db);
         var active = ReadyCandidate(); active.의뢰Id = "active"; active.하차_시간창_종료일시 = DateTime.UtcNow.AddMinutes(1);
+        active.픽업_작업시간분 = 0m; active.하차_작업시간분 = 0m;
         db.화주운송의뢰.Add(active);
         db.운송원장.Add(new() { 의뢰Id = active.의뢰Id, 운송번호 = active.의뢰Id, 확정기사Id = "driver-1",
             배차큐단계 = 상태값.배차큐단계.확정, 상태 = "상차완료" });
         await db.SaveChangesAsync();
         var plan = await new 기사운송일정구성Service(db).구성Async("driver-1", new(37m, 127m));
         Assert.Equal("active", Assert.Single(plan.항목목록).의뢰Id);
-        var result = await ReadyService(db).평가Async("driver-1", ReadyCandidate(), []);
+        var candidate = ReadyCandidate(); candidate.픽업_작업시간분 = 0m; candidate.하차_작업시간분 = 0m;
+        var result = await ReadyService(db).평가Async("driver-1", candidate, []);
         Assert.False(result.수락가능); Assert.Equal(화물배차수락오류코드.일정실패, result.오류코드);
     }
 
@@ -175,12 +177,14 @@ public sealed class 화물배차수락적격성ServiceTests
     {
         await using var db = CreateContext(); await SeedReadyDriverAsync(db);
         var active = ReadyCandidate(); active.의뢰Id = "active"; db.화주운송의뢰.Add(active);
+        active.픽업_작업시간분 = 0m; active.하차_작업시간분 = 0m;
         db.운송원장.Add(new() { 의뢰Id = active.의뢰Id, 운송번호 = "legacy-transport-number", 기사_운송자 = "driver-1", 확정기사Id = "driver-1",
             배차큐단계 = 상태값.배차큐단계.확정, 상태 = "상차완료" });
         await db.SaveChangesAsync();
         var plan = await new 기사운송일정구성Service(db).구성Async("driver-1", new(37m, 127m));
         var stop = Assert.Single(plan.항목목록); Assert.Equal(active.의뢰Id, stop.의뢰Id); Assert.NotNull(stop.좌표);
-        var result = await ReadyService(db).평가Async("driver-1", ReadyCandidate(), []);
+        var candidate = ReadyCandidate(); candidate.픽업_작업시간분 = 0m; candidate.하차_작업시간분 = 0m;
+        var result = await ReadyService(db).평가Async("driver-1", candidate, []);
         Assert.True(result.수락가능); Assert.Contains(result.권장경로순서, x => x.EndsWith(" active", StringComparison.Ordinal));
     }
 

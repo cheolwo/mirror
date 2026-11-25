@@ -128,7 +128,7 @@ public sealed class 주문자수요ReadSessionTests
     }
 
     [Fact]
-    public async Task 검색은_조회별현재시점에읽고_성공한재조회는이전오류와안내를지운다()
+    public async Task 검색은_조회시작시한번만읽고_성공한재조회는이전오류와안내를지운다()
     {
         await using var fixture = new Fixture();
         fixture.Fail("cluster", new SsalddelApiException("off", 404, "test", "", null), false);
@@ -142,6 +142,7 @@ public sealed class 주문자수요ReadSessionTests
         fixture.Export = _ => Task.FromResult(fixture.NewExport);
         fixture.Calls.Clear();
         fixture.Search = "first";
+        var reads = fixture.SearchReads;
         var loading = fixture.LoadAsync();
         Assert.Null(fixture.Session.ErrorMessage);
         Assert.Null(fixture.Session.ClusteredDemandUnavailableMessage);
@@ -149,12 +150,13 @@ public sealed class 주문자수요ReadSessionTests
         individual.SetResult(fixture.NewIndividual);
         await loading;
 
-        Assert.Equal(new[] { "individual:first", "group:first", "cluster", "export:after" }, fixture.Calls);
+        Assert.Equal(new[] { "individual:first", "group:first", "cluster", "export:first" }, fixture.Calls);
+        Assert.Equal(reads + 1, fixture.SearchReads);
         Assert.Null(fixture.Session.ExportUnavailableMessage);
     }
 
     [Fact]
-    public async Task 현재loading중에도_기존처럼두번째조회를시작하고_첫늦은응답을반영한다()
+    public async Task 두번째조회가먼저완료되면_첫늦은응답과후속조회는버린다()
     {
         await using var fixture = new Fixture();
         var pending = Pending<개별주문관점페이지응답>();
@@ -168,11 +170,88 @@ public sealed class 주문자수요ReadSessionTests
         Assert.False(fixture.Session.Loading);
         pending.SetResult(fixture.NewIndividual);
         await first;
-        Assert.Same(fixture.NewIndividual, fixture.Session.IndividualOrders);
+        Assert.Same(second, fixture.Session.IndividualOrders);
+        Assert.Equal(6, fixture.Calls.Count);
+        Assert.False(fixture.Session.Loading);
     }
 
     [Fact]
-    public async Task 폐기는_30초보완조회대기를끝내되_진행중원장조회를취소하지않는다()
+    public async Task 이전조회가먼저끝나도_현재조회가끝날때까지loading을유지한다()
+    {
+        await using var fixture = new Fixture();
+        var previous = Pending<개별주문관점페이지응답>();
+        var current = Pending<개별주문관점페이지응답>();
+        var calls = 0;
+        fixture.Individual = _ => ++calls == 1 ? previous.Task : current.Task;
+        var first = fixture.LoadAsync();
+        var second = fixture.LoadAsync();
+        previous.SetResult(fixture.NewIndividual);
+        await first;
+        Assert.True(fixture.Session.Loading);
+        Assert.Equal(0, fixture.Session.IndividualOrders.TotalCount);
+        current.SetResult(fixture.NewIndividual);
+        await second;
+        Assert.False(fixture.Session.Loading);
+        Assert.Same(fixture.NewIndividual, fixture.Session.IndividualOrders);
+    }
+
+    [Theory]
+    [InlineData("individual", 500)]
+    [InlineData("group", 500)]
+    [InlineData("cluster", 403)]
+    [InlineData("cluster", 404)]
+    [InlineData("cluster", 500)]
+    [InlineData("export", 403)]
+    [InlineData("export", 404)]
+    [InlineData("export", 500)]
+    public async Task 이전조회가늦게실패해도_현재응답과오류안내를바꾸지않는다(string stage, int status)
+    {
+        await using var fixture = new Fixture();
+        var release = Pending<bool>();
+        fixture.Delay(stage, release.Task, new SsalddelApiException("old failure", status, "test", "", null));
+        var previous = fixture.LoadAsync();
+        fixture.NewResponses();
+        fixture.UseImmediateResponses();
+        await fixture.LoadAsync();
+        release.SetResult(true);
+        await previous;
+
+        Assert.Same(fixture.NewIndividual, fixture.Session.IndividualOrders);
+        Assert.Same(fixture.NewGroup, fixture.Session.GroupOrders);
+        Assert.Same(fixture.NewClustered, fixture.Session.ClusteredDemands);
+        Assert.Same(fixture.NewExport, fixture.Session.ExportLedgers);
+        Assert.Null(fixture.Session.ErrorMessage);
+        Assert.Null(fixture.Session.ClusteredDemandUnavailableMessage);
+        Assert.Null(fixture.Session.ExportUnavailableMessage);
+        Assert.False(fixture.Session.Loading);
+    }
+
+    [Theory]
+    [InlineData("individual")]
+    [InlineData("group")]
+    [InlineData("cluster")]
+    [InlineData("export")]
+    public async Task 이전조회가각단계에서늦게완료돼도_현재결과를덮어쓰지않는다(string stage)
+    {
+        await using var fixture = new Fixture();
+        var release = Pending<bool>();
+        fixture.Delay(stage, release.Task);
+        var previous = fixture.LoadAsync();
+        fixture.NewResponses();
+        fixture.UseImmediateResponses();
+        await fixture.LoadAsync();
+        release.SetResult(true);
+        await previous;
+
+        Assert.Same(fixture.NewIndividual, fixture.Session.IndividualOrders);
+        Assert.Same(fixture.NewGroup, fixture.Session.GroupOrders);
+        Assert.Same(fixture.NewClustered, fixture.Session.ClusteredDemands);
+        Assert.Same(fixture.NewExport, fixture.Session.ExportLedgers);
+        Assert.False(fixture.Session.Loading);
+    }
+
+    [Fact]
+    public async Task 폐기는_30초보완조회대기와후속조회를끝내고_늦은응답을반영하지않는다()
     {
         var fixture = new Fixture();
         var pending = Pending<개별주문관점페이지응답>();
@@ -180,14 +259,56 @@ public sealed class 주문자수요ReadSessionTests
         var loading = fixture.LoadAsync();
         var dispatched = 0;
         var monitor = fixture.Session.MonitorAsync(action => { dispatched++; return action(); }, fixture.LoadAsync);
+        var oldIndividual = fixture.Session.IndividualOrders;
+        var oldExport = fixture.Session.ExportLedgers;
         await fixture.DisposeAsync();
         await monitor;
         Assert.Equal(0, dispatched);
         Assert.False(loading.IsCompleted);
         pending.SetResult(fixture.NewIndividual);
         await loading;
-        Assert.Same(fixture.NewIndividual, fixture.Session.IndividualOrders);
-        Assert.Same(fixture.NewExport, fixture.Session.ExportLedgers);
+        Assert.Same(oldIndividual, fixture.Session.IndividualOrders);
+        Assert.Same(oldExport, fixture.Session.ExportLedgers);
+        Assert.Equal(new[] { "individual:", "group:" }, fixture.Calls);
+        Assert.False(fixture.Session.Loading);
+        await fixture.DisposeAsync();
+        await fixture.LoadAsync();
+        await fixture.Session.MonitorAsync(action => { dispatched++; return action(); }, fixture.LoadAsync);
+        Assert.Equal(0, dispatched);
+        Assert.Equal(2, fixture.Calls.Count);
+    }
+
+    [Theory]
+    [InlineData("group", false)]
+    [InlineData("cluster", false)]
+    [InlineData("export", false)]
+    [InlineData("individual", true)]
+    [InlineData("cluster", true)]
+    [InlineData("export", true)]
+    public async Task 폐기이후에는_진행중단계의성공이나실패가상태를바꾸지않는다(string stage, bool failure)
+    {
+        var fixture = new Fixture();
+        var release = Pending<bool>();
+        fixture.Delay(stage, release.Task, failure ? new SsalddelApiException("late failure", 403, "test", "", null) : null);
+        var loading = fixture.LoadAsync();
+        await fixture.DisposeAsync();
+        var individual = fixture.Session.IndividualOrders;
+        var group = fixture.Session.GroupOrders;
+        var clustered = fixture.Session.ClusteredDemands;
+        var export = fixture.Session.ExportLedgers;
+        var calls = fixture.Calls.Count;
+        release.SetResult(true);
+        await loading;
+
+        Assert.Same(individual, fixture.Session.IndividualOrders);
+        Assert.Same(group, fixture.Session.GroupOrders);
+        Assert.Same(clustered, fixture.Session.ClusteredDemands);
+        Assert.Same(export, fixture.Session.ExportLedgers);
+        Assert.Equal(calls, fixture.Calls.Count);
+        Assert.Null(fixture.Session.ErrorMessage);
+        Assert.Null(fixture.Session.ClusteredDemandUnavailableMessage);
+        Assert.Null(fixture.Session.ExportUnavailableMessage);
+        Assert.False(fixture.Session.Loading);
     }
 
     private static TaskCompletionSource<T> Pending<T>() => new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -197,6 +318,7 @@ public sealed class 주문자수요ReadSessionTests
         public 주문자수요ReadSession Session { get; } = new();
         public List<string> Calls { get; } = [];
         public string Search { get; set; } = "";
+        public int SearchReads { get; private set; }
         public 개별주문관점페이지응답 NewIndividual { get; private set; } = new() { TotalCount = 1 };
         public 공동주문관점페이지응답 NewGroup { get; private set; } = new() { TotalCount = 2 };
         public IReadOnlyList<공동구매자동집단응답> NewClustered { get; private set; } = [new() { 자동집단Id = "cluster" }];
@@ -206,7 +328,10 @@ public sealed class 주문자수요ReadSessionTests
         public Func<Task<IReadOnlyList<공동구매자동집단응답>>> Clustered { get; set; }
         public Func<string, Task<판매자수출원장목록응답>> Export { get; set; }
 
-        public Fixture()
+        public Fixture() => UseImmediateResponses();
+
+        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(Individual), nameof(Group), nameof(Clustered), nameof(Export))]
+        public void UseImmediateResponses()
         {
             Individual = _ => Task.FromResult(NewIndividual);
             Group = _ => Task.FromResult(NewGroup);
@@ -214,12 +339,31 @@ public sealed class 주문자수요ReadSessionTests
             Export = _ => Task.FromResult(NewExport);
         }
 
+        public void Delay(string stage, Task release, Exception? error = null)
+        {
+            async Task<T> Delayed<T>(T response)
+            {
+                await release;
+                if (error is not null) throw error;
+                return response;
+            }
+
+            switch (stage)
+            {
+                case "individual": Individual = _ => Delayed(NewIndividual); break;
+                case "group": Group = _ => Delayed(NewGroup); break;
+                case "cluster": Clustered = () => Delayed(NewClustered); break;
+                case "export": Export = _ => Delayed(NewExport); break;
+                default: throw new ArgumentOutOfRangeException(nameof(stage));
+            }
+        }
+
         public Task LoadAsync() => Session.LoadAsync(
             search => { Calls.Add("individual:" + search); return Individual(search); },
             search => { Calls.Add("group:" + search); return Group(search); },
             () => { Calls.Add("cluster"); return Clustered(); },
             search => { Calls.Add("export:" + search); return Export(search); },
-            () => Search);
+            () => { SearchReads++; return Search; });
 
         public void Fail(string stage, Exception error, bool synchronous)
         {

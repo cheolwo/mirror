@@ -265,43 +265,208 @@ public sealed class GroupPurchaseDemandSessionTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task 명령대기중상품과범위가바뀌어도_후속조회는그때의값을읽고_늦은결과도기존대로적용한다(bool register)
+    [InlineData(true, false, "product")]
+    [InlineData(true, false, "scope")]
+    [InlineData(true, false, "clear")]
+    [InlineData(true, true, "product")]
+    [InlineData(true, true, "scope")]
+    [InlineData(true, true, "clear")]
+    [InlineData(false, false, "product")]
+    [InlineData(false, false, "scope")]
+    [InlineData(false, false, "clear")]
+    [InlineData(false, true, "product")]
+    [InlineData(false, true, "scope")]
+    [InlineData(false, true, "clear")]
+    public async Task 선택변경이나초기화뒤_명령대상의정본만조회하고_이전결과는표시하지않는다(bool register, bool afterCommand, string change)
     {
         var f = new Fixture();
         if (!register) await f.RegisterAsync();
+        f.Calls.Clear();
         var commandGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var queryGate = new TaskCompletionSource<IReadOnlyList<공동구매자동집단요약응답>?>(TaskCreationOptions.RunContinuationsAsynchronously);
         f.Register = async _ => { await commandGate.Task; return new() { 자동집단Id = "group" }; };
-        f.Withdraw = async (_, _) => { await commandGate.Task; return new() { 철회완료 = true, 자동집단Id = "group" }; };
+        f.Withdraw = async (_, _) => { await commandGate.Task; return new() { 철회완료 = true }; };
         var queried = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         f.List = (product, scope) =>
         {
-            Assert.Equal("product-2", product);
-            Assert.Equal("scope-2", scope);
+            Assert.Equal("product-1", product);
+            Assert.Equal("scope-1", scope);
             queried.SetResult(true);
             return queryGate.Task;
         };
         var pending = register ? f.RegisterAsync() : f.WithdrawAsync();
         Assert.True(f.Session.IsSubmitting);
-        f.Product = Product("product-2", "상품2");
-        f.Session.ChangeProduct(f.Product.상품카드Id);
-        f.Session.SelectDeliveryScope(Scope("scope-2"));
-        commandGate.SetResult(true);
-        await Task.WhenAny(queried.Task, pending);
-        if (pending.IsCompleted) await pending;
-        Assert.True(queried.Task.IsCompletedSuccessfully);
-        f.Product = Product("product-3", "상품3");
-        f.Session.ChangeProduct(f.Product.상품카드Id);
-        queryGate.SetResult(null);
+        if (afterCommand)
+        {
+            commandGate.SetResult(true);
+            await AwaitQueryStarted(queried.Task, pending);
+        }
+        f.ChangeSelection(change);
+        f.Session.StatusMessage = "새 선택 안내";
+        f.Session.StatusSeverity = Severity.Info;
+        if (!afterCommand) commandGate.SetResult(true);
+        await AwaitQueryStarted(queried.Task, pending);
+        queryGate.SetResult([f.Canonical]);
         await pending;
 
         Assert.False(f.Session.IsSubmitting);
         Assert.Equal(register ? "source" : "", f.Session.RegisteredDemandSourceKey);
-        Assert.Equal(register ? Severity.Warning : Severity.Success, f.Session.StatusSeverity);
-        if (register) Assert.StartsWith("상품3 수요는 등록되었지만", f.Session.StatusMessage);
-        else Assert.StartsWith("비구속 수요를 철회하고", f.Session.StatusMessage);
+        Assert.Null(f.Session.RegisteredGroup);
+        Assert.Equal(Severity.Info, f.Session.StatusSeverity);
+        Assert.Equal("새 선택 안내", f.Session.StatusMessage);
+        Assert.Equal(new[] { register ? "register" : "withdraw", "list" }, f.Calls);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 등록키를유지한채선택을바꿔도_철회대상과빈집단Id대체값은원래등록에묶는다(bool differentSelection)
+    {
+        var f = new Fixture();
+        await f.RegisterAsync();
+        f.Calls.Clear();
+        if (differentSelection)
+        {
+            f.ChangeSelection("product");
+            f.ChangeSelection("scope");
+        }
+        else f.Session.ClearResult();
+        f.Session.StatusMessage = "현재 선택 안내";
+        f.Withdraw = (_, _) => Task.FromResult<공동구매자동수요철회응답?>(new() { 철회완료 = true });
+        f.List = (product, scope) =>
+        {
+            Assert.Equal("product-1", product);
+            Assert.Equal("scope-1", scope);
+            return Task.FromResult<IReadOnlyList<공동구매자동집단요약응답>?>([f.Canonical]);
+        };
+
+        await f.WithdrawAsync();
+
+        Assert.Equal(["withdraw", "list"], f.Calls);
+        Assert.Empty(f.Session.RegisteredDemandSourceKey);
+        Assert.Same(differentSelection ? null : f.Canonical, f.Session.RegisteredGroup);
+        Assert.Equal(differentSelection ? "현재 선택 안내"
+            : "비구속 수요를 철회한 뒤 서버 원장을 다시 확인했습니다. 남은 수요 4건, 12kg입니다.", f.Session.StatusMessage);
+    }
+
+    [Theory]
+    [InlineData(true, false, 401)]
+    [InlineData(true, false, 503)]
+    [InlineData(true, false, 0)]
+    [InlineData(true, true, 401)]
+    [InlineData(true, true, 503)]
+    [InlineData(true, true, 0)]
+    [InlineData(false, false, 401)]
+    [InlineData(false, false, 503)]
+    [InlineData(false, false, 0)]
+    [InlineData(false, true, 401)]
+    [InlineData(false, true, 503)]
+    [InlineData(false, true, 0)]
+    public async Task 이전명령이나정본조회가실패해도_현재안내를보존하고_확인된키와401처리를구분한다(bool register, bool afterCommand, int status)
+    {
+        var f = new Fixture();
+        if (!register) await f.RegisterAsync();
+        f.Calls.Clear();
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        async Task<T> FailAsync<T>() { await release.Task; throw Failure(status); }
+        if (afterCommand) f.List = (_, _) => FailAsync<IReadOnlyList<공동구매자동집단요약응답>?>();
+        else if (register) f.Register = _ => FailAsync<공동구매자동집단사용자응답?>();
+        else f.Withdraw = (_, _) => FailAsync<공동구매자동수요철회응답?>();
+        var pending = register ? f.RegisterAsync() : f.WithdrawAsync();
+        f.ChangeSelection("scope");
+        f.Session.StatusMessage = "현재 안내";
+        f.Session.StatusSeverity = Severity.Info;
+        release.SetResult(true);
+        await pending;
+
+        Assert.Equal("현재 안내", f.Session.StatusMessage);
+        Assert.Equal(Severity.Info, f.Session.StatusSeverity);
+        Assert.Null(f.Session.RegisteredGroup);
+        Assert.Equal(register ? (afterCommand ? "source" : "") : (afterCommand ? "" : "source"), f.Session.RegisteredDemandSourceKey);
+        Assert.Equal(status == 401 && (register || !afterCommand) ? 1 : 0, f.AuthenticationRequests);
+        Assert.Equal(afterCommand ? 2 : 1, f.Calls.Count);
+        Assert.False(f.Session.IsSubmitting);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 초기화이후명령미완료응답도_기존출처키와현재안내를덮지않는다(bool register)
+    {
+        var f = new Fixture();
+        if (!register) await f.RegisterAsync();
+        f.Calls.Clear();
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.Register = async _ => { await release.Task; return null; };
+        f.Withdraw = async (_, _) => { await release.Task; return new() { 안내 = "이전 철회 미완료" }; };
+        var pending = register ? f.RegisterAsync() : f.WithdrawAsync();
+        f.Session.ClearResult();
+        f.Session.StatusMessage = "현재 안내";
+        release.SetResult(true);
+        await pending;
+
+        Assert.Equal("현재 안내", f.Session.StatusMessage);
+        Assert.Equal(register ? "" : "source", f.Session.RegisteredDemandSourceKey);
+        Assert.Null(f.Session.RegisteredGroup);
+        Assert.Single(f.Calls);
+        Assert.False(f.Session.IsSubmitting);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task 명령과정본조회대기중_등록과철회중복호출은실행하지않는다(bool register)
+    {
+        var f = new Fixture();
+        if (!register) await f.RegisterAsync();
+        f.Calls.Clear();
+        var command = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var query = new TaskCompletionSource<IReadOnlyList<공동구매자동집단요약응답>?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var queried = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        f.Register = async _ => { await command.Task; return new() { 자동집단Id = "group" }; };
+        f.Withdraw = async (_, _) => { await command.Task; return new() { 철회완료 = true }; };
+        f.List = (_, _) => { queried.SetResult(true); return query.Task; };
+        var pending = register ? f.RegisterAsync() : f.WithdrawAsync();
+        var duplicateRegister = f.RegisterAsync();
+        var duplicateWithdraw = f.WithdrawAsync();
+        Assert.True(duplicateRegister.IsCompletedSuccessfully);
+        Assert.True(duplicateWithdraw.IsCompletedSuccessfully);
+        await Task.WhenAll(duplicateRegister, duplicateWithdraw);
+        Assert.Single(f.Calls);
+        Assert.True(f.Session.IsSubmitting);
+
+        command.SetResult(true);
+        await AwaitQueryStarted(queried.Task, pending);
+        duplicateRegister = f.RegisterAsync();
+        duplicateWithdraw = f.WithdrawAsync();
+        Assert.True(duplicateRegister.IsCompletedSuccessfully);
+        Assert.True(duplicateWithdraw.IsCompletedSuccessfully);
+        await Task.WhenAll(duplicateRegister, duplicateWithdraw);
+        Assert.Equal(2, f.Calls.Count);
+        Assert.True(f.Session.IsSubmitting);
+        query.SetResult([f.Canonical]);
+        await pending;
+        Assert.False(f.Session.IsSubmitting);
+    }
+
+    [Fact]
+    public async Task 같은모집권재선택은현재안내를유지하고_다른모집권선택만안내를초기화한다()
+    {
+        var f = new Fixture();
+        await f.RegisterAsync();
+        var message = f.Session.StatusMessage;
+        f.Session.SelectDeliveryScope(Scope("scope-1"));
+        Assert.Equal(message, f.Session.StatusMessage);
+        f.Session.SelectDeliveryScope(Scope("scope-2"));
+        Assert.Null(f.Session.StatusMessage);
+        Assert.Equal("source", f.Session.RegisteredDemandSourceKey);
+    }
+
+    private static async Task AwaitQueryStarted(Task query, Task operation)
+    {
+        await Task.WhenAny(query, operation);
+        if (operation.IsCompleted) await operation;
+        Assert.True(query.IsCompletedSuccessfully);
     }
 
     private static Exception Failure(int status) => status == 0 ? new InvalidOperationException("synthetic")
@@ -346,6 +511,16 @@ public sealed class GroupPurchaseDemandSessionTests
             Calls.Add("withdraw");
             return Withdraw(key, reason);
         }, Read, () => Product, AuthenticationExpired);
+        internal void ChangeSelection(string change)
+        {
+            switch (change)
+            {
+                case "product": Product = GroupPurchaseDemandSessionTests.Product("product-2", "상품2"); Session.ChangeProduct(Product.상품카드Id); break;
+                case "scope": Session.SelectDeliveryScope(Scope("scope-2")); break;
+                case "clear": Session.ClearResult(); break;
+                default: throw new ArgumentOutOfRangeException(nameof(change));
+            }
+        }
         private Task<IReadOnlyList<공동구매자동집단요약응답>?> Read(string product, string scope)
         { Calls.Add("list"); return List(product, scope); }
         private Task AuthenticationExpired() { AuthenticationRequests++; return Task.CompletedTask; }

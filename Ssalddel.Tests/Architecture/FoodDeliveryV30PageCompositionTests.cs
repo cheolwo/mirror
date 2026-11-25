@@ -243,7 +243,7 @@ public sealed class FoodDeliveryV30PageCompositionTests
     }
 
     [Fact]
-    public void 음식점데스크는_모바일크기로시작하고_첫화면을메뉴로가리지않는다()
+    public void 음식점Windows데스크는_데스크탑크기로시작하고_첫화면을메뉴로가리지않는다()
     {
         var app = Read("RestaurantDeskApp", "App.xaml.cs");
         var mainPage = Read("RestaurantDeskApp", "MainPage.xaml");
@@ -253,8 +253,11 @@ public sealed class FoodDeliveryV30PageCompositionTests
         var styles = Read("RestaurantDeskApp", "wwwroot/app.css");
 
         Assert.Contains("Title = \"살뜰 식당\"", app);
-        Assert.Contains("window.Width = 430", app);
-        Assert.Contains("window.Height = 860", app);
+        Assert.Contains("#if WINDOWS", app);
+        Assert.Contains("window.Width = 1440", app);
+        Assert.Contains("window.Height = 900", app);
+        Assert.Contains("window.MinimumWidth = 1100", app);
+        Assert.Contains("window.MinimumHeight = 720", app);
         Assert.Contains("StartPath=\"/\"", mainPage);
         Assert.Contains("private bool _drawerOpen;", layout);
         Assert.DoesNotContain("private bool _drawerOpen = true;", layout);

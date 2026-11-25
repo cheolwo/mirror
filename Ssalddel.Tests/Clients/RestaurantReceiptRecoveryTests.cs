@@ -15,7 +15,7 @@ using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.Tests.Clients;
 
-public sealed class RestaurantReceiptRecoveryTests
+public sealed partial class RestaurantReceiptRecoveryTests
 {
     [Fact]
     public async Task FreshProcessRestoresAcceptedOrderAndReprintsWithoutReaccepting()
@@ -182,6 +182,8 @@ public sealed class RestaurantReceiptRecoveryTests
         public ClientAuthSession Session { get; } = new(new Store(), new ClientSessionGuard());
         public PageDesk Desk { get; } = new();
         public Printer Printer { get; } = new();
+        public CopiesStore CopyStore { get; } = new();
+        public Documents DocumentService { get; } = new();
         public TestNavigation Navigation { get; } = new();
         public OrderDetail Page { get; }
         private readonly TestRenderer renderer = new();
@@ -189,7 +191,8 @@ public sealed class RestaurantReceiptRecoveryTests
         private PageFixture() => Page = new()
         {
             OrderDeskService = Desk, ReceiptPrinter = Printer, NavigationManager = Navigation,
-            RestaurantRealtimeService = new Realtime(), DocumentOutputService = new Documents(),
+            ReceiptSettings = new 음식점전표출력설정Service(CopyStore),
+            RestaurantRealtimeService = new Realtime(), DocumentOutputService = DocumentService,
             AuthService = new RestaurantAuthService(new HttpClient(), Session)
         };
         public static async Task<PageFixture> CreateAsync()
@@ -223,6 +226,8 @@ public sealed class RestaurantReceiptRecoveryTests
     private sealed class Printer : IRestaurantReceiptPrinter
     {
         public bool UsesNativeDialog => true;
+        public bool Automatic;
+        public bool PrintsWithoutDialog => Automatic;
         public int Calls;
         public bool FailNext;
         public Task RequestPrintDialogAsync(string title, string html, CancellationToken cancellationToken)
@@ -230,9 +235,18 @@ public sealed class RestaurantReceiptRecoveryTests
     }
     private sealed class Documents : ISsalddelDocumentOutputService
     {
-        public SsalddelDocumentOutput CreateOutboundExpectedItems(SsalddelExpectedItemDocumentDraft draft) => new("test.html", draft.Title, "text/html", "<p>synthetic receipt</p>", "synthetic receipt");
+        public SsalddelExpectedItemDocumentDraft? LastDraft { get; private set; }
+        public SsalddelDocumentOutput CreateOutboundExpectedItems(SsalddelExpectedItemDocumentDraft draft)
+        { LastDraft = draft; return new("test.html", draft.Title, "text/html", "<p>synthetic receipt</p>", "synthetic receipt"); }
         public SsalddelDocumentOutput CreateInboundExpectedItems(SsalddelExpectedItemDocumentDraft draft) => throw new NotSupportedException();
         public SsalddelDocumentOutput CreateWaybill(SsalddelWaybillDocumentDraft draft) => throw new NotSupportedException();
+    }
+    private sealed class CopiesStore : I음식점전표출력설정Store
+    {
+        public int? Value;
+        public bool FailRead;
+        public int? Read() => FailRead ? throw new InvalidOperationException("controlled preferences read failure") : Value;
+        public void Write(int value) => Value = value;
     }
     private sealed class TestNavigation : NavigationManager
     {
@@ -253,15 +267,16 @@ public sealed class RestaurantReceiptRecoveryTests
     }
     private sealed class PageDesk : I음식점주문DeskService
     {
-        public int Prepares, Acceptances, Requests;
+        public int Prepares, Acceptances, Requests, Reads;
         public Func<CancellationToken, Task<음식점주문수락결과>>? Prepare;
-        public Task<음식점주문DeskItem?> 주문조회Async(string 주문번호, 음식점주문복구출처 복구출처 = 음식점주문복구출처.서버재조회, CancellationToken cancellationToken = default) => Task.FromResult<음식점주문DeskItem?>(Prepared(주문번호).주문);
+        public Func<CancellationToken, Task<음식점주문수락결과>>? Accept;
+        public Task<음식점주문DeskItem?> 주문조회Async(string 주문번호, 음식점주문복구출처 복구출처 = 음식점주문복구출처.서버재조회, CancellationToken cancellationToken = default) { Reads++; return Task.FromResult<음식점주문DeskItem?>(Prepared(주문번호).주문); }
         public Task<음식점주문수락결과> 전표준비Async(string 주문번호, CancellationToken cancellationToken = default) { Prepares++; return Prepare?.Invoke(cancellationToken) ?? Task.FromResult(Prepared(주문번호)); }
         public Task 전표출력완료Async(string 주문번호, CancellationToken cancellationToken = default) { Requests++; return Task.CompletedTask; }
         public Task<IReadOnlyList<음식점주문DeskItem>> 주문목록조회Async(음식점주문복구출처 복구출처 = 음식점주문복구출처.서버재조회, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<음식점주문DeskItem> 주문알림수신Async(음식점주문수신Payload payload, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<음식점주문수락결과> 주문수락후전표준비Async(string 주문번호, CancellationToken cancellationToken = default) { Acceptances++; throw new NotSupportedException(); }
-        public Task<음식점주문수락결과> 주문수락후전표준비Async(string 주문번호, int 조리예상분, CancellationToken cancellationToken = default) { Acceptances++; throw new NotSupportedException(); }
+        public Task<음식점주문수락결과> 주문수락후전표준비Async(string 주문번호, CancellationToken cancellationToken = default) { Acceptances++; return Accept?.Invoke(cancellationToken) ?? Task.FromResult(Prepared(주문번호)); }
+        public Task<음식점주문수락결과> 주문수락후전표준비Async(string 주문번호, int 조리예상분, CancellationToken cancellationToken = default) { Acceptances++; return Accept?.Invoke(cancellationToken) ?? Task.FromResult(Prepared(주문번호)); }
         public Task<음식점주문DeskItem?> 주문거절Async(string 주문번호, string 사유, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<음식점주문DeskItem?> 조리시간변경Async(string 주문번호, int 조리예상분, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<음식점주문DeskItem?> 픽업준비완료Async(string 주문번호, CancellationToken cancellationToken = default) => throw new NotSupportedException();

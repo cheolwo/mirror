@@ -49,6 +49,24 @@ public sealed class DriverCurrentWorkRenderTests
         Assert.Contains("기사 로그인", html); Assert.Contains("returnUrl=%2Fdriver%2Fcurrent-work", html);
         Assert.DoesNotContain("driver-current-work__count", html);
         Assert.DoesNotContain("현재 확인된 업무가 없습니다", html);
+        Assert.DoesNotContain("전체 업무 다시 확인", html);
+    }
+
+    [Fact]
+    public async Task 재조회는_첫업무오류에만_표시한다()
+    {
+        var client = new DriverCurrentWorkPageViewModelTests.ScriptedClient
+        {
+            Food = _ => throw new RoleWorkspaceAccessException(503, "food unavailable"),
+            Cargo = _ => throw new RoleWorkspaceAccessException(503, "cargo unavailable")
+        };
+        using var model = new DriverCurrentWorkPageViewModel(client);
+        await model.LoadAsync();
+        var html = await RenderAsync(model, client);
+        var sections = html.Split("<section", StringSplitOptions.None);
+        var retry = Assert.Single(sections, section => section.Contains(">전체 업무 다시 확인</button>", StringComparison.Ordinal));
+        Assert.Contains("data-work-kind=\"food\"", retry);
+        Assert.Contains("data-load-state=\"Error\"", retry);
     }
 
     private static async Task<string> RenderAsync(DriverCurrentWorkPageViewModel model, IDriverCurrentWorkClient client)

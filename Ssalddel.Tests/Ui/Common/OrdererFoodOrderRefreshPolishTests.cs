@@ -453,6 +453,41 @@ public sealed class OrdererFoodOrderRefreshPolishTests
             AvailableActions = [new() { ActionId = 음식배달가능행동Ids.주문취소,
                 RevisionKindCode = 업무Revision종류Codes.음식주문, ExpectedRevision = revision }]
         };
+    [Fact]
+    public async Task OrderDetailButtonsNameTheirVisibleOrderNumbers()
+    {
+        주문자음식주문요약응답[] orders =
+        [
+            new() { 주문번호 = "EX-1106-042", 음식점명 = "예시 음식점", 상품요약 = "저녁 세트",
+                상태 = 음식주문상태코드.픽업완료, 총수량 = 2, 총주문금액 = 28500 },
+            new() { 주문번호 = "EX-1106-041", 음식점명 = "예시 음식점", 상품요약 = "따뜻한 수프",
+                상태 = 음식주문상태코드.조리중, 총수량 = 1, 총주문금액 = 13900 },
+            new() { 주문번호 = "EX-1106-040", 상품요약 = "가상 한 끼 정식과 따뜻한 차",
+                상태 = 음식주문상태코드.수령확인, 총수량 = 3, 총주문금액 = 31000 },
+            new() { 주문번호 = "EX-1106-039", 음식점명 = "다온 국수", 상품요약 = "잔치국수",
+                상태 = 음식주문상태코드.주문대기, 총수량 = 1, 총주문금액 = 24600 }
+        ];
+        var service = new FoodService { Orders = orders };
+        using var page = await CreatePageAsync(service);
+
+        await RenderAsync(page, null, html =>
+        {
+            page.주문선택해제();
+            var markup = html();
+            Assert.DoesNotContain("food-order-layout--detail", markup);
+            var buttons = Regex.Matches(markup,
+                """<button\b[^>]*aria-label="(?<name>주문 상세 [^"]+)"[^>]*>(?<body>.*?)</button>""",
+                RegexOptions.Singleline);
+            Assert.Equal(orders.Select(order => $"주문 상세 {order.주문번호}"),
+                buttons.Select(button => button.Groups["name"].Value));
+            Assert.All(buttons, button =>
+                Assert.Equal("주문 상세", Regex.Replace(button.Groups["body"].Value, "<[^>]+>", "").Trim()));
+            Assert.Empty(service.Cancellations);
+            Assert.Empty(service.Receipts);
+            return Task.CompletedTask;
+        });
+    }
+
     private static 주문자음식주문상세응답 ReceiptReady()
     {
         var detail = CancelReady(state: 음식주문상태코드.전달완료);
@@ -496,6 +531,7 @@ public sealed class OrdererFoodOrderRefreshPolishTests
         I주문자음식주문취소Service, I주문자음식주문수령확인Service
     {
         public 주문자음식주문상세응답? Detail { get; set; } = CancelReady();
+        public IReadOnlyList<주문자음식주문요약응답>? Orders { get; init; }
         public Func<string, CancellationToken, Task<주문자음식주문상세응답?>>? OnRead { get; set; }
         public Func<string, 주문자음식주문취소요청, CancellationToken, Task<음식주문응답>>? OnCancel { get; set; }
         public int DetailCalls => DetailOrders.Count;
@@ -507,8 +543,8 @@ public sealed class OrdererFoodOrderRefreshPolishTests
             CancellationToken cancellationToken = default)
         {
             ListCalls++;
-            return Task.FromResult(new 주문자음식주문목록응답 { Items = Detail is null ? [] : [Detail.주문],
-                TotalCount = Detail is null ? 0 : 1 });
+            var orders = Orders ?? (Detail is null ? [] : [Detail.주문]);
+            return Task.FromResult(new 주문자음식주문목록응답 { Items = orders, TotalCount = orders.Count });
         }
         public Task<주문자음식주문상세응답?> 상세Async(string orderNo, CancellationToken cancellationToken = default)
         {

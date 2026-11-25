@@ -23,6 +23,86 @@ namespace Ssalddel.Tests.Services.Dispatch.Queue;
 
 public sealed class 배차엔진판단감사Tests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task R24_설명캡처나저장실패가_같은Context의후속저장에추천을남기지않는다(bool failCapture)
+    {
+        var protection = new R24SwitchProtection(new DataProtectionPersonalDataEncryptionService(
+            new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider()));
+        await using var db = new R24FailingContext(new DbContextOptionsBuilder<SsalddelContext>()
+            .UseInMemoryDatabase($"cargo-explanation-failure-{Guid.NewGuid():N}").Options, protection);
+        var queue = CreateQueue();
+        db.운송원장.Add(queue);
+        db.화주운송의뢰.Add(new 살뜰.도메인.화주.화주운송의뢰 { 의뢰Id = queue.의뢰Id, 화주Id = "shipper-fixture" });
+        await db.SaveChangesAsync();
+        var stage = queue.배차큐단계;
+        var exposure = queue.배차노출상태;
+        var round = queue.추천라운드;
+        var ownOtherEvent = new 운송이벤트 { 의뢰Id = queue.의뢰Id, 이벤트타입 = "unrelated-fixture", 이벤트시각 = DateTime.UtcNow };
+        db.운송이벤트.Add(ownOtherEvent);
+        var service = new 배차대기원장전환Service(db, Options.Create(new 배차큐정책Options()),
+            null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance,
+            explanationRecorder: new 살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationRecorder(db, protection));
+        protection.Fail = failCapture;
+        db.Fail = !failCapture;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.추천시작Async(queue.의뢰Id, "cargo-driver"));
+        protection.Fail = db.Fail = false;
+        Assert.Equal(stage, queue.배차큐단계);
+        Assert.Equal(exposure, queue.배차노출상태);
+        Assert.Equal(round, queue.추천라운드);
+        Assert.Null(queue.현재추천대상기사Id);
+        Assert.Equal(EntityState.Added, db.Entry(ownOtherEvent).State);
+        Assert.DoesNotContain(db.ChangeTracker.Entries<운송이벤트>(), x => x.Entity.이벤트타입 ==
+            살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationRecorder.EventType);
+        await db.SaveChangesAsync();
+        Assert.Equal("unrelated-fixture", (await db.운송이벤트.AsNoTracking().SingleAsync()).이벤트타입);
+        Assert.Empty(await db.운영배차활동사건.AsNoTracking().ToArrayAsync());
+        Assert.Equal(round, (await db.운송원장.AsNoTracking().SingleAsync()).추천라운드);
+    }
+
+    [Fact]
+    public async Task R24_화물추천저장에당시설명을함께남기고_나중의뢰변경으로고치지않는다()
+    {
+        var protection = new DataProtectionPersonalDataEncryptionService(
+            new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider());
+        await using var db = new SsalddelContext(new DbContextOptionsBuilder<SsalddelContext>()
+            .UseInMemoryDatabase($"cargo-explanation-hook-{Guid.NewGuid():N}").Options, protection);
+        var queue = CreateQueue();
+        var source = new 살뜰.도메인.화주.화주운송의뢰
+        {
+            의뢰Id = queue.의뢰Id, 화주Id = "shipper-fixture", 화물중량Kg = 125m,
+            운송방식 = "혼적", 화물온도조건 = "상온"
+        };
+        db.운송원장.Add(queue);
+        db.화주운송의뢰.Add(source);
+        await db.SaveChangesAsync();
+        var recorder = new 살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationRecorder(db, protection);
+        var service = new 배차대기원장전환Service(db, Options.Create(new 배차큐정책Options()),
+            null!, new NoOpRecommendationNotificationService(), new NoOpDriverStateService(), null!,
+            운영배차: Ssalddel.Tests.Services.Dispatch.Common.운영배차시험수신UseCase.허용,
+            화물대상후보: new Ssalddel.Tests.Services.Dispatch.Common.용달대상후보시험Service(),
+            신규업무자격: Ssalddel.Tests.Support.Simulation운송자격Guard.Instance,
+            explanationRecorder: recorder);
+
+        Assert.True((await service.추천시작Async(queue.의뢰Id, "cargo-driver")).전환여부);
+        var row = await db.운송이벤트.AsNoTracking().SingleAsync(x => x.이벤트타입 ==
+            살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationRecorder.EventType);
+        var payload = row.메타데이터;
+        var captured = 살뜰.Services.Dispatch.Explanation.CargoDispatchExplanationCodec.Read(row, protection);
+        Assert.Equal(125m, captured.CargoWeightKg);
+        Assert.Equal("manual/recommendation", captured.MethodCode);
+        Assert.Equal(queue.추천라운드, captured.RecommendationRound);
+        Assert.Equal("cargo-driver", captured.DriverId);
+        source.화물중량Kg = 999m;
+        queue.추천판정근거Json = "{\"later\":true}";
+        await db.SaveChangesAsync();
+        Assert.Equal(payload, (await db.운송이벤트.AsNoTracking().SingleAsync(x => x.Id == row.Id)).메타데이터);
+    }
+
     [Fact]
     public async Task 화물추천은_음식요금서비스를_호출하거나_화물금액을_덮어쓰지않는다()
     {
@@ -571,6 +651,21 @@ public sealed class 배차엔진판단감사Tests
             string driverId,
             CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
+    }
+
+    private sealed class R24FailingContext(DbContextOptions<SsalddelContext> options, IPersonalDataEncryptionService protection)
+        : SsalddelContext(options, protection)
+    {
+        public bool Fail { get; set; }
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+            => Fail ? throw new InvalidOperationException("fixture-save-failed") : base.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed class R24SwitchProtection(IPersonalDataEncryptionService inner) : IPersonalDataEncryptionService
+    {
+        public bool Fail { get; set; }
+        public string? Protect(string? value) => Fail ? throw new InvalidOperationException("fixture-protection-failed") : inner.Protect(value);
+        public string? Unprotect(string? value) => inner.Unprotect(value);
     }
 
     private sealed class DummyPersonalDataEncryptionService : IPersonalDataEncryptionService

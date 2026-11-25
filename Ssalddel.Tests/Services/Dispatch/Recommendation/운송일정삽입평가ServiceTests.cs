@@ -7,6 +7,42 @@ namespace Ssalddel.Tests.Services.Dispatch.Recommendation;
 
 public class 운송일정삽입평가ServiceTests
 {
+    [Theory]
+    [InlineData(15, true)]
+    [InlineData(12, false)]
+    public async Task 이미상차한A보다B를먼저완료할때도_작업시간을포함해두약속을모두검사한다(int aDeadlineMinutes, bool feasible)
+    {
+        var now = new DateTime(2026, 10, 27, 1, 0, 0, DateTimeKind.Utc);
+        var plan = new 기사운송일정계획("driver-1", now, new(0m, 0m),
+        [
+            new 기사운송일정항목("A", "dropoff", "합성 A 하차지", new(1m, 0m), null,
+                now.AddMinutes(aDeadlineMinutes), 0, 1, true, false) { 작업시간분 = 1m }
+        ])
+        {
+            상하차작업시간 = new Dictionary<string, 화물상하차작업시간>
+            { ["A"] = new(1m, 1m), ["B"] = new(1m, 1m) }
+        };
+        var candidate = new 화주운송의뢰
+        {
+            의뢰Id = "B", 픽업_도로명주소 = "합성 B 상차지", 픽업_위도 = .1m, 픽업_경도 = 0m,
+            하차_도로명주소 = "합성 B 하차지", 하차_위도 = .2m, 하차_경도 = 0m,
+            픽업_시간창_종료일시 = now.AddMinutes(3), 하차_시간창_종료일시 = now.AddMinutes(5)
+        };
+
+        var result = await new 운송일정삽입평가Service(new 직선시간경로Service()).평가Async(plan, candidate);
+
+        Assert.False(Assert.Single(result.시도목록.Where(x => x.시도유형 == "하차후이어가기")).전체완수가능여부);
+        Assert.Equal(feasible, result.삽입가능여부);
+        Assert.Equal(feasible, result.전체완수가능여부);
+        if (feasible)
+        {
+            Assert.Equal(["추천 상차 B", "추천 하차 B", "기존 하차 A"], result.권장경로순서);
+            Assert.Equal(now.AddMinutes(12), Assert.Single(result.도착예상목록.Where(x => x.의뢰Id == "A")).예상도착시각);
+            Assert.Equal(13m, result.총소요시간분); // 마지막 A 하차 작업 1분까지 포함한다.
+        }
+        else Assert.DoesNotContain(result.시도목록, x => x.전체완수가능여부);
+    }
+
     [Fact]
     public async Task 평가_분리삽입이_단순이어가기보다_빠르면_경로변경이점으로_선택한다()
     {

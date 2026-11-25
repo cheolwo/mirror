@@ -124,6 +124,26 @@ public sealed class FDriverMartDeliveryApiClientTests
         Assert.DoesNotContain("QR-raw-secret", string.Join(",", error.Data.Values.Cast<object>()));
     }
 
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("[{\"errorCode\":\"MartPickupCodeMismatch\",\"commandRejected\":true}]")]
+    [InlineData("\"server-detail-not-for-display\"")]
+    [InlineData("null")]
+    [InlineData("42")]
+    [InlineData("true")]
+    public async Task NonObjectProblemBodiesPreserveTypedFailureWithoutInferringCommandRejection(string body)
+    {
+        var handler = new FDriverTestHttpHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Conflict)
+        { Content = new StringContent(body) }));
+        var error = await Assert.ThrowsAsync<FDriverApiException>(() => Client(handler, new FDriverTestSession()).DeliverAsync("offer", new() { ClientRequestId = Guid.NewGuid() }));
+        Assert.Equal(HttpStatusCode.Conflict, error.StatusCode);
+        Assert.Null(error.Data["errorCode"]);
+        Assert.Null(error.Data["commandRejected"]);
+        Assert.False(살뜰마트배송ApiClient.IsConfirmedCommandRejection(error));
+        Assert.DoesNotContain("server-detail-not-for-display", error.Message);
+        Assert.Single(handler.Paths);
+    }
+
     [Fact]
     public async Task ReceiptReadIsGetWithStableGuid_And404RemainsUnknown()
     {

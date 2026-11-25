@@ -105,6 +105,33 @@ public sealed class OrdererFoodOrderStateFocusTests
     }
 
     [Theory]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.배달중, false, false, true)]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.기사배정, false, false, false)]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.배달중, true, false, false)]
+    [InlineData(음식주문상태코드.픽업완료, 음식주문배차상태코드.배달중, false, true, false)]
+    [InlineData(음식주문상태코드.취소, 음식주문배차상태코드.배달중, false, false, false)]
+    public async Task SummaryShowsDeliveryInProgressOnlyForFreshActiveDelivery(
+        string orderStatus, string dispatchStatus, bool stale, bool delivered, bool visible)
+    {
+        var service = new FoodService { Detail = new()
+        {
+            주문 = new() { 주문번호 = "FOOD-A", 상태 = orderStatus, 배차상태 = dispatchStatus, 총주문금액 = 28500 },
+            배달진행 = new() { 배차요청됨 = true, 기사전달완료 = delivered }
+        }};
+        var detail = new 주문자음식주문상세ViewModel(service, service);
+        Assert.True(await detail.조회Async("FOOD-A"));
+        if (stale) detail.조회상태무효화();
+
+        var html = await RenderDetailAsync(detail);
+        var summaryStart = html.IndexOf("class=\"food-order-detail-summary\"", StringComparison.Ordinal);
+        Assert.True(summaryStart >= 0);
+        var amountStart = html.IndexOf($"{28500:N0}원", summaryStart, StringComparison.Ordinal);
+        Assert.True(amountStart > summaryStart);
+        Assert.Equal(visible, html[summaryStart..amountStart].Contains("배달 중", StringComparison.Ordinal));
+        Assert.Empty(service.Requests);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task MissingOrFailedSelectedOrderStillOffersListReturn(bool failed)

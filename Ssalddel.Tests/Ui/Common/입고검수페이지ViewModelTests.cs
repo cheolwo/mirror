@@ -21,6 +21,37 @@ public sealed class 입고검수페이지ViewModelTests
     }
 
     [Fact]
+    public async Task 상세복귀용조건은_입력중이거나실패한조건대신_마지막조회성공을기억한다()
+    {
+        var service = CreateService();
+        var list = new 입고검수대상목록ViewModel(service)
+        {
+            검색어 = " 감자 ",
+            조회상태 = " 전체 "
+        };
+
+        Assert.True(await list.조회Async(1));
+
+        list.검색어 = "미제출 검색어";
+        list.조회상태 = 입고검수조회상태코드.대기;
+        Assert.Equal(("감자", 입고검수조회상태코드.전체), list.적용조회조건);
+        Assert.Equal(1, list.응답.Page);
+        Assert.Equal(1, service.ListRequestCount);
+
+        service.ListError = new InvalidOperationException("목록 서버 오류");
+        Assert.False(await list.조회Async(0));
+        Assert.Equal(("감자", 입고검수조회상태코드.전체), list.적용조회조건);
+        Assert.Equal(1, list.응답.Page);
+
+        service.ListError = null;
+        list.검색어 = " ";
+        Assert.True(await list.조회Async(0));
+        Assert.Null(list.적용조회조건.Search);
+        Assert.Equal(입고검수조회상태코드.대기, list.적용조회조건.InspectionStatus);
+        Assert.Equal(0, list.응답.Page);
+    }
+
+    [Fact]
     public async Task 상세조회는_주소의Id를_다른항목으로대체하지않는다()
     {
         var service = CreateService();

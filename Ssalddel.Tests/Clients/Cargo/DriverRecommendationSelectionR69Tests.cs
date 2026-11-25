@@ -209,18 +209,14 @@ public sealed class DriverRecommendationSelectionR69Tests
     }
 
     [Fact]
-    public void CurrentWorkEndsAtRecommendedPickup_KeepsBothIndependentLegsAndCurrentTask()
+    public void CurrentWorkEndsAtRecommendedPickup_DoesNotInventAThenBOrder_AndKeepsCurrentTask()
     {
         var current = new 기사운송샘플항목(1, "current-A", "상자", "현재 픽업", "현재 도착",
             37.580m, 127.080m, 37.588m, 127.085m, "하차 이동", Now, 1, 6000,
             false, false, "별도정산", "하차 확인");
         var routes = new DriverHomeRoutePlanningService().BuildRecommendationReviewRouteOverlays(
             new("현재 위치", 37.581m, 127.081m, Now), current, Marker());
-        Assert.Equal(2, routes.Count);
-        Assert.Equal("#f97316", routes[0].StrokeColor);
-        Assert.Equal("#2563eb", routes[1].StrokeColor);
-        Assert.Equal(routes[0].Points[^1].Latitude, routes[1].Points[0].Latitude);
-        Assert.Equal(37.590, routes[1].Points[^1].Latitude);
+        Assert.Empty(routes);
         Assert.Equal("current-A", current.의뢰Id);
         Assert.Equal("하차 이동", current.현재단계);
     }

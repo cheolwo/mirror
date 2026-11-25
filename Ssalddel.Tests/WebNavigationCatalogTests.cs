@@ -27,7 +27,7 @@ public sealed class WebNavigationCatalogTests
         Assert.Contains(items, item => item.Href == WebNavigationCatalog.DiagramRoute);
         Assert.Contains(items, item => item.Href.StartsWith(rolePrefix, StringComparison.Ordinal));
         Assert.DoesNotContain(items, item => item.Href == "/login");
-        Assert.InRange(items.Count, 2, 12);
+        Assert.InRange(items.Count, 2, themeCode == "warehouse" ? 16 : 12);
         if (themeCode == "warehouse")
         {
             Assert.Contains(items, item => item.Href == WarehouseManagerRoutes.OutboundPlanReview);

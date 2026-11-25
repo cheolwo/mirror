@@ -33,6 +33,39 @@ public sealed class NaverCloudDirectionsServiceTests
     public async Task FailedOrUnrequestedRouteCannotSupplyDistance(string payload)
         => Assert.Null(await Client(new Handler(payload)).GetDrivingRouteAsync(37.5m, 127m, 37.51m, 127.01m));
 
+    [Theory]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("42")]
+    [InlineData("\"unexpected\"")]
+    public async Task NonObjectResponseCannotSupplyRoute(string payload)
+        => Assert.Null(await Client(new Handler(payload)).GetDrivingRouteAsync(37.5m, 127m, 37.51m, 127.01m));
+
+    [Fact]
+    public async Task InvalidOptionalFieldsDoNotDiscardValidSummaryAndPathPoints()
+    {
+        var handler = new Handler("""
+            {"code":0,"route":{"trafast":[{
+              "summary":{"distance":2345,"duration":120000,"departureName":42,"goalName":{}},
+              "path":[null,{},[],[127],[null,37.5],[127,null],["127",37.5],
+                [127,"37.5"],[{},37.5],[127,[]],[127,37.5],[127.01,37.51]]
+            }]}}
+            """);
+
+        var route = await Client(handler).GetDrivingRouteAsync(37.5m, 127m, 37.51m, 127.01m);
+
+        Assert.NotNull(route);
+        Assert.Equal(2.345m, route.DistanceKm);
+        Assert.Equal(TimeSpan.FromMinutes(2), route.Duration);
+        Assert.Null(route.DepartureName);
+        Assert.Null(route.GoalName);
+        Assert.Equal(new[]
+        {
+            new NaverCloudRoutePathPoint(37.5m, 127m),
+            new NaverCloudRoutePathPoint(37.51m, 127.01m)
+        }, route.Path);
+    }
+
     [Fact]
     public async Task MissingKeysDoNotCallProvider()
     {
