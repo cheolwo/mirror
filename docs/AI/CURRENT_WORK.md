@@ -1,5 +1,9 @@
 # Mirror(거울) Current Work
 
+## 현재 자료 검토 — 용마폭포공원 옛 채석장 (2026-11-25)
+
+[역사·도면·사진 자료](DataCollection/Research/2026-11-25-yongma-quarry.md). 서울시·중랑구 기록에서 1961~1988년 골재 채취, 1993년 용마돌산공원 개장, 1997년 5월 10일 폭포 전환을 대조했다. 중랑구 소식지 3쪽 과거·2022 사진과 2019 채석장지구 변경도, 2021 용마폭포지구 도면을 로컬에서 확인했다. 1991 사업소 감사 등 참조 3건을 기존 로컬 공공자료 DB에 등록하고 별도 재조회와 반복 입력 무쓰기를 확인했다. 옛 채석 범위, 절개면 실제 치수와 폭포 좌표는 미확보이며 기존 Claude 모델의 추정값은 그대로 표시한다.
+
 ## 현재 자료 인계 — 농수산물 가격과 화물비 (2026-11-24)
 
 [Claude 자료 인계](Handoffs/2026-11-24-Codex-농수산물가격-화물비자료인계.md). 기존 전국 절기 장터와 12:50 관점별 자동 촬영을 대조하고 농수산 경락·소매·위판, 차주 운임, 원가·경유·통행료, 유통비·재배면적을 로컬 SQLite(`artifacts/local/public-data/hongdal-price-freight-20261124/hongdal-price-freight.sqlite`)에 출처 25묶음·관측 99,832행으로 연결했다. 가락시장 산지별 10kg 표본과 2025년 연간 차주 운임 등을 관점별 화면 카드(`artifacts/local/public-data/hongdal-price-freight-20261124/screen-examples.json`)로 내보냈다. 재생성·무결성 확인(`artifacts/local/public-data/hongdal-price-freight-20261124/verification.json`). 냉장차 단건 실거래·전국 위판장 좌표·실제 주행거리, Unity 적용과 공개 배포는 확인 대기다.
