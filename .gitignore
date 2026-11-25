@@ -113,3 +113,6 @@ Thumbs.db
 *.jks
 *.keystore
 **/google-services.json
+
+# Claude: files moved out for the user to delete by hand
+/_to_delete/
