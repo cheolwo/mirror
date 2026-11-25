@@ -1,0 +1,2859 @@
+{
+  "schemaVersion": "map-legal-order-reference-catalog.v1",
+  "recordedAtUtc": "2026-11-16T02:38:12.006517+00:00",
+  "asOfDate": "2026-11-16",
+  "jurisdiction": "RepublicOfKorea",
+  "counts": {
+    "businessLawFamilies": 11,
+    "distinctNormTitles": 35,
+    "normVersions": 35,
+    "byNormType": {
+      "대통령령": 10,
+      "법률": 14,
+      "부령": 9,
+      "총리령": 1,
+      "헌법": 1
+    },
+    "delegationCases": 19,
+    "taxonomyKinds": 8,
+    "hierarchyFindings": 10,
+    "sourceCaptureRecords": 84,
+    "sourceEvidenceLevels": {
+      "MetadataWrapper": 22,
+      "OfficialNormBodySaved": 22,
+      "SelectedArticleFragmentSaved_Paragraph1Item3": 1,
+      "BodySaved": 12,
+      "UiWrapperSaved_BodyNotInWrapper": 2,
+      "OfficialAnnexPdfSaved_WebParsedTextReviewed": 1,
+      "OfficialArticleTextRetrievedAndRead": 14,
+      "MetadataWrapperOnly": 5,
+      "Http200ButNotFound": 1,
+      "HistoricalArticleSnapshot": 1,
+      "OfficialHistoricalCommentary": 1,
+      "OfficialProcessGuidance": 1,
+      "RetrievedArticleOutOfChosenScope": 1
+    },
+    "logisticsFullNormBodies": 22,
+    "foodLandArticleOrAnnexCaptures": 14,
+    "hierarchySelectedArticleCaptures": 14
+  },
+  "individualGameCardsApproved": false,
+  "norms": [
+    {
+      "normKey": "공항시설법 시행령|2026-11-03",
+      "title": "공항시설법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-11-03",
+      "promulgationNumber": [
+        "대통령령 제36799호, 2026. 11. 3., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:airports:decree:bodyReceipt",
+        "logistics:airports:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "관세법 시행령|2026-02-27",
+      "title": "관세법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-02-27",
+      "promulgationNumber": [
+        "대통령령 제36140호, 2026. 2. 27., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:customs:decree:bodyReceipt",
+        "logistics:customs:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "국토의 계획 및 이용에 관한 법률 시행령|2026-09-18",
+      "title": "국토의 계획 및 이용에 관한 법률 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-09-18",
+      "promulgationNumber": "대통령령 제36587호",
+      "sourceKeys": [
+        "food-land:land-decree-71"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류시설의 개발 및 운영에 관한 법률 시행령|2026-09-15",
+      "title": "물류시설의 개발 및 운영에 관한 법률 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-09-15",
+      "promulgationNumber": [
+        "대통령령 제36689호, 2026. 9. 15., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-facilities:decree:bodyReceipt",
+        "logistics:logistics-facilities:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류정책기본법 시행령|2026-09-15",
+      "title": "물류정책기본법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-09-15",
+      "promulgationNumber": [
+        "대통령령 제36684호, 2026. 9. 15., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-policy:decree:bodyReceipt",
+        "logistics:logistics-policy:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "생활물류서비스산업발전법 시행령|2026-08-28",
+      "title": "생활물류서비스산업발전법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-08-28",
+      "promulgationNumber": [
+        "대통령령 제36627호, 2026. 8. 27., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:parcel:decree:bodyReceipt",
+        "logistics:parcel:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "식품위생법 시행령|2026-08-18",
+      "title": "식품위생법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-08-18",
+      "promulgationNumber": "대통령령 제36593호",
+      "sourceKeys": [
+        "food-land:food-decree-21",
+        "food-land:food-decree-25-article"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "항만법 시행령|2026-07-01",
+      "title": "항만법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-07-01",
+      "promulgationNumber": [
+        "대통령령 제36439호, 2026. 6. 23., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:ports:decree:bodyReceipt",
+        "logistics:ports:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "행정업무의 운영 및 혁신에 관한 규정|2026-10-02",
+      "title": "행정업무의 운영 및 혁신에 관한 규정",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-10-02",
+      "promulgationNumber": "대통령령 제36728호",
+      "sourceKeys": [
+        "hierarchy:administrative-innovation-art4"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "화물자동차 운수사업법 시행령|2026-06-03",
+      "title": "화물자동차 운수사업법 시행령",
+      "normType": "대통령령",
+      "effectiveFrom": "2026-06-03",
+      "promulgationNumber": [
+        "대통령령 제36353호, 2026. 5. 26., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:cargo:decree:bodyReceipt",
+        "logistics:cargo:decree:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "대통령령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "건축법|2026-11-12",
+      "title": "건축법",
+      "normType": "법률",
+      "effectiveFrom": "2026-11-12",
+      "promulgationNumber": "법률 제21880호",
+      "sourceKeys": [
+        "food-land:building-law-11"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "공항시설법|2026-02-27",
+      "title": "공항시설법",
+      "normType": "법률",
+      "effectiveFrom": "2026-02-27",
+      "promulgationNumber": [
+        "법률 제21037호, 2025. 8. 26., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:airports:act:bodyReceipt",
+        "logistics:airports:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "관세법|2026-10-02",
+      "title": "관세법",
+      "normType": "법률",
+      "effectiveFrom": "2026-10-02",
+      "promulgationNumber": [
+        "법률 제21490호, 2026. 3. 24., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:customs:act:bodyReceipt",
+        "logistics:customs:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "국토의 계획 및 이용에 관한 법률|2026-07-01",
+      "title": "국토의 계획 및 이용에 관한 법률",
+      "normType": "법률",
+      "effectiveFrom": "2026-07-01",
+      "promulgationNumber": "법률 제21447호",
+      "sourceKeys": [
+        "food-land:land-law-36",
+        "food-land:land-law-36-2",
+        "food-land:land-law-76"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류시설의 개발 및 운영에 관한 법률|2026-01-02",
+      "title": "물류시설의 개발 및 운영에 관한 법률",
+      "normType": "법률",
+      "effectiveFrom": "2026-01-02",
+      "promulgationNumber": [
+        "법률 제21065호, 2025. 10. 1., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-facilities:act:bodyReceipt",
+        "logistics:logistics-facilities:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류정책기본법|2025-10-01",
+      "title": "물류정책기본법",
+      "normType": "법률",
+      "effectiveFrom": "2025-10-01",
+      "promulgationNumber": [
+        "법률 제21065호, 2025. 10. 1., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-policy:act:bodyReceipt",
+        "logistics:logistics-policy:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "생활물류서비스산업발전법|2026-08-28",
+      "title": "생활물류서비스산업발전법",
+      "normType": "법률",
+      "effectiveFrom": "2026-08-28",
+      "promulgationNumber": [
+        "법률 제21410호, 2026. 2. 27., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:parcel:act:bodyReceipt",
+        "logistics:parcel:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "식품위생법|2026-10-08",
+      "title": "식품위생법",
+      "normType": "법률",
+      "effectiveFrom": "2026-10-08",
+      "promulgationNumber": "법률 제21525호",
+      "sourceKeys": [
+        "food-land:food-law-36",
+        "food-land:food-law-37"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "정부조직법|2026-10-02",
+      "title": "정부조직법",
+      "normType": "법률",
+      "effectiveFrom": "2026-10-02",
+      "promulgationNumber": "법률 제21491호",
+      "sourceKeys": [
+        "food-land:government-law-26",
+        "hierarchy:government-art18",
+        "hierarchy:government-art2",
+        "hierarchy:government-art26",
+        "hierarchy:government-art29",
+        "hierarchy:government-art7"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "지방자치법|2026-10-15",
+      "title": "지방자치법",
+      "normType": "법률",
+      "effectiveFrom": "2026-10-15",
+      "promulgationNumber": "법률 제21544호",
+      "sourceKeys": [
+        "food-land:local-law-effective-body"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "항만법|2026-11-13",
+      "title": "항만법",
+      "normType": "법률",
+      "effectiveFrom": "2026-11-13",
+      "promulgationNumber": [
+        "법률 제21640호, 2026. 5. 12., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:ports:act:bodyReceipt",
+        "logistics:ports:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "행정규제기본법|2026-11-13",
+      "title": "행정규제기본법",
+      "normType": "법률",
+      "effectiveFrom": "2026-11-13",
+      "promulgationNumber": "법률 제21643호",
+      "sourceKeys": [
+        "hierarchy:regulatory-basics-art2-current",
+        "hierarchy:regulatory-basics-art4-current"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "행정기본법|2025-03-18",
+      "title": "행정기본법",
+      "normType": "법률",
+      "effectiveFrom": "2025-03-18",
+      "promulgationNumber": "법률 제20824호",
+      "sourceKeys": [
+        "hierarchy:administrative-basics-art2",
+        "hierarchy:administrative-basics-art8"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "화물자동차 운수사업법|2026-07-01",
+      "title": "화물자동차 운수사업법",
+      "normType": "법률",
+      "effectiveFrom": "2026-07-01",
+      "promulgationNumber": [
+        "법률 제21711호, 2026. 5. 29., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:cargo:act:bodyReceipt",
+        "logistics:cargo:act:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "법률"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "건축법 시행규칙|2026-02-27",
+      "title": "건축법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-02-27",
+      "promulgationNumber": "국토교통부령 제1567호",
+      "sourceKeys": [
+        "food-land:building-rule-6"
+      ],
+      "sourceNormTypes": [
+        "국토교통부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "공항시설법 시행규칙|2026-09-15",
+      "title": "공항시설법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-09-15",
+      "promulgationNumber": [
+        "국토교통부령 제1621호, 2026. 9. 15., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:airports:rule:bodyReceipt",
+        "logistics:airports:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "관세법 시행규칙|2026-07-31",
+      "title": "관세법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-07-31",
+      "promulgationNumber": [
+        "재정경제부령 제42호, 2026. 7. 31., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:customs:rule:bodyReceipt",
+        "logistics:customs:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류시설의 개발 및 운영에 관한 법률 시행규칙|2026-04-07",
+      "title": "물류시설의 개발 및 운영에 관한 법률 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-04-07",
+      "promulgationNumber": [
+        "국토교통부령 제1577호, 2026. 4. 7., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-facilities:rule:bodyReceipt",
+        "logistics:logistics-facilities:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류정책기본법 시행규칙|2026-04-02",
+      "title": "물류정책기본법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-04-02",
+      "promulgationNumber": [
+        "국토교통부령 제1575호, 2026. 4. 2., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:logistics-policy:rule:bodyReceipt",
+        "logistics:logistics-policy:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "물류창고업 등록에 관한 규칙|2024-02-17",
+      "title": "물류창고업 등록에 관한 규칙",
+      "normType": "부령",
+      "effectiveFrom": "2024-02-17",
+      "promulgationNumber": [
+        "국토교통부령 제1310호, 2024. 2. 16., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:warehouse-register-rule:joint-rule:bodyReceipt",
+        "logistics:warehouse-register-rule:joint-rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "공동부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "생활물류서비스산업발전법 시행규칙|2026-09-15",
+      "title": "생활물류서비스산업발전법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-09-15",
+      "promulgationNumber": [
+        "국토교통부령 제1621호, 2026. 9. 15., 타법개정"
+      ],
+      "sourceKeys": [
+        "logistics:parcel:rule:bodyReceipt",
+        "logistics:parcel:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "항만법 시행규칙|2026-11-13",
+      "title": "항만법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-11-13",
+      "promulgationNumber": [
+        "해양수산부령 제834호, 2026. 11. 3., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:ports:rule:bodyReceipt",
+        "logistics:ports:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "화물자동차 운수사업법 시행규칙|2026-06-30",
+      "title": "화물자동차 운수사업법 시행규칙",
+      "normType": "부령",
+      "effectiveFrom": "2026-06-30",
+      "promulgationNumber": [
+        "국토교통부령 제1551호, 2025. 12. 29., 일부개정"
+      ],
+      "sourceKeys": [
+        "logistics:cargo:rule:bodyReceipt",
+        "logistics:cargo:rule:wrapperReceipt"
+      ],
+      "sourceNormTypes": [
+        "부령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "식품위생법 시행규칙|2026-09-01",
+      "title": "식품위생법 시행규칙",
+      "normType": "총리령",
+      "effectiveFrom": "2026-09-01",
+      "promulgationNumber": "총리령 제2150호",
+      "sourceKeys": [
+        "food-land:food-facility-annex14",
+        "food-land:food-rule-36"
+      ],
+      "sourceNormTypes": [
+        "총리령"
+      ],
+      "asOfDate": "2026-11-16"
+    },
+    {
+      "normKey": "대한민국헌법|1988-02-25",
+      "title": "대한민국헌법",
+      "normType": "헌법",
+      "effectiveFrom": "1988-02-25",
+      "promulgationNumber": "헌법 제10호",
+      "sourceKeys": [
+        "hierarchy:constitution-art117",
+        "hierarchy:constitution-art40",
+        "hierarchy:constitution-art75",
+        "hierarchy:constitution-art95"
+      ],
+      "sourceNormTypes": [
+        "헌법"
+      ],
+      "asOfDate": "2026-11-16"
+    }
+  ],
+  "sources": [
+    {
+      "sourceKey": "logistics:logistics-facilities:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-act-wrapper.html",
+      "sha256": "71c4704451d5076cd520848120daa5d394a5b9f18ca1be4d98ec112c005cab46",
+      "bytes": 145945,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.617064+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-facilities:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276991&efYd=20260102&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-act-body.html",
+      "sha256": "2aab75ec9d48c8db335bd39e74932d413573b50776cfb7518e70d12bfe655972",
+      "bytes": 576850,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.949459+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-facilities:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-decree-wrapper.html",
+      "sha256": "d9ed65e9fae575de81b1df1ca4e421fafb0c2cb6ced39e55139589fe1321e7c5",
+      "bytes": 146333,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.622069+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-facilities:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289663&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-decree-body.html",
+      "sha256": "936b1eb4c91b708d1cbcb83ed5e80430e3f99d010280e070168e19ceea1a7d9c",
+      "bytes": 438958,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.907361+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-facilities:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-rule-wrapper.html",
+      "sha256": "27a29c82f6e48cb8fd35f6910786cfe57bd352ecf2f808a32883e3cd7098ac3d",
+      "bytes": 146659,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.617064+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-facilities:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285431&efYd=20260407&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-facilities-rule-body.html",
+      "sha256": "cc35c933e5bffc9b4c3e78037ef429fb1667c19228d9802c4433a4e46d280c72",
+      "bytes": 267498,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:22.849244+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류정책기본법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-act-wrapper.html",
+      "sha256": "48c696ccdd6480f6e77de7e1d421e24039242098bba7864f4f0941803f4a4bb6",
+      "bytes": 145726,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.282013+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276993&efYd=20251001&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-act-body.html",
+      "sha256": "5c6693093995b15b0d8fc0d327bbff6c9a38f5b6bae296a11ba629648c97aa7f",
+      "bytes": 344300,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.528710+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류정책기본법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-decree-wrapper.html",
+      "sha256": "7bcdac9c9233883f176a3f83f730afb7713ee015c5aaa7db8aad529a013eb52f",
+      "bytes": 146111,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.342485+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289715&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-decree-body.html",
+      "sha256": "f2b4d36362728219bd80f46b759849a537eb4b4df21e2e6250001c547a3ccd12",
+      "bytes": 312108,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.587028+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류정책기본법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-rule-wrapper.html",
+      "sha256": "c3f2e2ab3d8ff070f055cb4249491e54cc5c88c0c914febf2d3dd1c9328f986b",
+      "bytes": 146437,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.398458+00:00"
+    },
+    {
+      "sourceKey": "logistics:logistics-policy:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285423&efYd=20260402&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/logistics-policy-rule-body.html",
+      "sha256": "e9b64a3fa1333a152e31bb060109124d924a834158cbf19636a598b85999ad89",
+      "bytes": 210192,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:23.605689+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-act-wrapper.html",
+      "sha256": "bc39818157d21ec8a05b89b29536ab6a3aada70b380a037fcb0b9f5a706f51eb",
+      "bytes": 145801,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:14.617513+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=286393&efYd=20260701&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-act-body.html",
+      "sha256": "46bd72b28afa760e0595e31d1d40f5cb6a6b252e23cf94545c1d1558cd38d6b9",
+      "bytes": 581804,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:14.934504+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-decree-wrapper.html",
+      "sha256": "d4c0ded29ba7deb913a4c181be3f67f06e218fb247181cca8660feb3303c9516",
+      "bytes": 146186,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:24.317427+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=286309&efYd=20260603&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-decree-body.html",
+      "sha256": "3dcbaa426997a6ae5da1a689e970f8cf4c1b40634406e9a8fde6e38d886db540",
+      "bytes": 353779,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:24.611521+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-rule-wrapper.html",
+      "sha256": "7f443fb1c21ec94fb09e83a89626d8d5d8cb8c551ec0285801977d5fbe67016b",
+      "bytes": 146524,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:15.647669+00:00"
+    },
+    {
+      "sourceKey": "logistics:cargo:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=282123&efYd=20260630&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/cargo-rule-body.html",
+      "sha256": "fadabb450566f9b4f979b27180a69aa850698d67809d7d68b595ad71558e730f",
+      "bytes": 662249,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:15.927769+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-act-wrapper.html",
+      "sha256": "4cd652ec7cd78142894cd053c2274fbfb927a11c82ad3960dbec3ee4f7e693f4",
+      "bytes": 145846,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:24.978704+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283715&efYd=20260828&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-act-body.html",
+      "sha256": "89d38506debfb791ffbd0b2a5a1ead2007f11f3decbdf0655be9b3b672f65da6",
+      "bytes": 197287,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.167002+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-decree-wrapper.html",
+      "sha256": "4a818e37be02bac5b8c3121024b26169007a68c147258b1ff22f631ee53eae37",
+      "bytes": 146231,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.096342+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289015&efYd=20260828&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-decree-body.html",
+      "sha256": "617498b780ed3d659292b815d50e83ef31eb678115d6e8436215ba645858f97d",
+      "bytes": 207854,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.506833+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-rule-wrapper.html",
+      "sha256": "87c5fe55011811c4be7f77018e8db99fa4a40d5e80803e688b9aa77804b10fc5",
+      "bytes": 146563,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.141005+00:00"
+    },
+    {
+      "sourceKey": "logistics:parcel:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289861&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/parcel-rule-body.html",
+      "sha256": "8043cfbb59fafa588460e7bf729715c795389b46415345b1c4e4ce9e20292959",
+      "bytes": 91272,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.283674+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/관세법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-act-wrapper.html",
+      "sha256": "a57ac2c1551c8c26a1d4f5ea1471f7af9801f0d70f81bec19765b6d114b9ee5e",
+      "bytes": 145919,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.479521+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290673&efYd=20261002&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-act-body.html",
+      "sha256": "4d6e82a945aec066876e7eb79059ed3b56455f15d728fa67e8bdb36198c3d4c1",
+      "bytes": 1673485,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.004079+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/관세법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-decree-wrapper.html",
+      "sha256": "b1223778c819efd05b1af6edbe156f6ee379c74586dbeacbe621ca952e6d3d8a",
+      "bytes": 146012,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.601269+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283621&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-decree-body.html",
+      "sha256": "9199c9bd8467dd33446c209bba4af54528d7664f78fb12a3ac66114281479efc",
+      "bytes": 1383572,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.148804+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/관세법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-rule-wrapper.html",
+      "sha256": "c5504313ec5f473933a9d57961fcfd3a8d7a8434a677d76414aa7c74b72dae59",
+      "bytes": 146341,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:25.839879+00:00"
+    },
+    {
+      "sourceKey": "logistics:customs:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=288525&efYd=20260731&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/customs-rule-body.html",
+      "sha256": "d23cfeeecb65e6a7b7482a37efd0c75ae68d54a171f1ac686b8bf5c2b39b56f1",
+      "bytes": 920895,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.328412+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/항만법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-act-wrapper.html",
+      "sha256": "79069914a0225bddfe23541d08f16c8ce2ead5205722e8df39dbff08de381218",
+      "bytes": 145633,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.677565+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285879&efYd=20261113&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-act-body.html",
+      "sha256": "bf8188213ab8bf0dfcb545e859343a3fc74517963b37d297dc38446303b9ddd4",
+      "bytes": 476693,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.962032+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/항만법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-decree-wrapper.html",
+      "sha256": "b626b31f00dede3c1d69a9f72ef7af3f0df31ab8407ce962e98cd9c898cd75af",
+      "bytes": 146012,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:26.793474+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=287353&efYd=20260701&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-decree-body.html",
+      "sha256": "e56d994903193019df332ad4ea2d63765a7af78d1e3cd275f753aa974461b215",
+      "bytes": 498674,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.151265+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/항만법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-rule-wrapper.html",
+      "sha256": "4e97b9596f29e20850aadee93eb770285481e443bcf90d0a551be2648ee7a0af",
+      "bytes": 146347,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.040573+00:00"
+    },
+    {
+      "sourceKey": "logistics:ports:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291617&efYd=20261113&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/ports-rule-body.html",
+      "sha256": "b00c680a9c230525508bf1e919b6388a3cdc2b9d0e1ac76d72f8c68f5a5ebec7",
+      "bytes": 196683,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.252656+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:act:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/공항시설법",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-act-wrapper.html",
+      "sha256": "da6e3fa655be79a2a372c009d6fa035fce66b3d68ab36ca342fde120ede40e90",
+      "bytes": 145678,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.242522+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:act:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=273399&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-act-body.html",
+      "sha256": "a3036d41235da0ed434a2162be1f6350da4b298ff08e27878a505ff381ec9f63",
+      "bytes": 383028,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.480862+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:decree:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/공항시설법시행령",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-decree-wrapper.html",
+      "sha256": "6dd894153caf2ad06fa7ddb3d224053f35feced2d8afcfd5039f840646be530e",
+      "bytes": 146063,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.422410+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:decree:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291539&efYd=20261103&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-decree-body.html",
+      "sha256": "c2c64bf4f20f4c5eeceeffeab349bb6054d1e069c11fd905d3305a7139f21f06",
+      "bytes": 333101,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.641407+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/공항시설법시행규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-rule-wrapper.html",
+      "sha256": "0c9553909723ae379d4165407d5502321c975a5eb52cce5d153a80231337cb7a",
+      "bytes": 146395,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.552175+00:00"
+    },
+    {
+      "sourceKey": "logistics:airports:rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289843&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/airports-rule-body.html",
+      "sha256": "d7a67a2d641a81fc63ea7f9ec7dd3d8db4935e57203c1a8d8256611f2e96b1b9",
+      "bytes": 371228,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:28:27.817733+00:00"
+    },
+    {
+      "sourceKey": "logistics:warehouse-register-rule:joint-rule:wrapperReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/법령/물류창고업등록에관한규칙",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/warehouse-register-rule-joint-rule-wrapper.html",
+      "sha256": "5eb58a377deefc4e6e135ca2ab332e58f69525403f527dac71acedd13b283671",
+      "bytes": 146479,
+      "evidenceLevel": "MetadataWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:54.681964+00:00"
+    },
+    {
+      "sourceKey": "logistics:warehouse-register-rule:joint-rule:bodyReceipt",
+      "group": "logistics",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=260639&efYd=20240217&chrClsCd=010202&ancYnChk=0",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-logistics/warehouse-register-rule-joint-rule-body.html",
+      "sha256": "6683dc7d4db54a8e33419bad89fd8a0c37e1dfc523cff0fce6671c44894174ab",
+      "bytes": 46212,
+      "evidenceLevel": "OfficialNormBodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:54.797367+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-law-36",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1024610087",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-law-36.html",
+      "sha256": "eda28b0bee51cd748bdac5767ecf50d08dfdc55628b6406f25b9744fc4d37108",
+      "bytes": 14042,
+      "evidenceLevel": "SelectedArticleFragmentSaved_Paragraph1Item3",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.842601+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-law-37",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1034279379",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-law-37.html",
+      "sha256": "df653ce005871556f04a2fdbbc80f886274df6c4ba6d04603fcd817e53c9f511",
+      "bytes": 24496,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.822410+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-rule-36",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/LSW/lsLinkCommonInfo.do?lspttninfSeq=115900",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-rule-36.html",
+      "sha256": "cc02ad14045dfc7ec7a08d97069ffd6c313a8f8ff7ff40dac5ced36b9311120a",
+      "bytes": 14183,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.850601+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-decree-21",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1021114083",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-decree-21.html",
+      "sha256": "65712fa4a8f8117223412e5d5d6d20942cae5197d5f708f60bcbc273d9248b33",
+      "bytes": 21541,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.813907+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-decree-25",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/LSW/LsiJoLinkP.do?docType=JO&joNo=002500000&languageType=KO&lsNm=%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-decree-25.html",
+      "sha256": "64b53d2351d4395e4417343a3e69296383c45e56a31b043c15a6f02f24b24f64",
+      "bytes": 145671,
+      "evidenceLevel": "UiWrapperSaved_BodyNotInWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.011709+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-facility-annex14",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/LSW/flDownload.do?flSeq=168924919",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-facility-annex14.pdf",
+      "sha256": "cafd00a3e731d42fb153cfd620d8b80698519fb9195ef59dc85e6154e0b3e95d",
+      "bytes": 182285,
+      "evidenceLevel": "OfficialAnnexPdfSaved_WebParsedTextReviewed",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.950210+00:00"
+    },
+    {
+      "sourceKey": "food-land:building-law-11",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026433911",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/building-law-11.html",
+      "sha256": "e21ad861ac983ab746837b7938ab014266674e36583b290602ea61cf4eac8633",
+      "bytes": 39626,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.975284+00:00"
+    },
+    {
+      "sourceKey": "food-land:building-rule-6",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032381607",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/building-rule-6.html",
+      "sha256": "bd1f0463e52e1cebc3beb8633a01bd630b16edf36db6f5c0a4eb07d3f0c524ad",
+      "bytes": 19222,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:45.962275+00:00"
+    },
+    {
+      "sourceKey": "food-land:land-law-36",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1033872835",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/land-law-36.html",
+      "sha256": "8ea9f165e1fff35541775843922702180156c14457b2c3bf4ef7fafce6fbbcc3",
+      "bytes": 24113,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.091480+00:00"
+    },
+    {
+      "sourceKey": "food-land:land-law-36-2",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?ancYnChk=&chrClsCd=&lsJoLnkSeq=1024962961",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/land-law-36-2.html",
+      "sha256": "85bfaaf66631a8682a0060c8b0ec291ca99d704b4776b1ca859a03759dbffe1a",
+      "bytes": 14370,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.078382+00:00"
+    },
+    {
+      "sourceKey": "food-land:land-law-76",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029574491",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/land-law-76.html",
+      "sha256": "79d28711fa72e06e6de53eef4f86c0375d1ca634e191f81699f2baf08b471de0",
+      "bytes": 42576,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.099609+00:00"
+    },
+    {
+      "sourceKey": "food-land:land-decree-71",
+      "group": "food-land",
+      "officialUrl": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1032698505",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/land-decree-71.html",
+      "sha256": "6fdaccaa031ed13948d9bb8e6ed0e8d21c7875188840bf327577a14d35d8f4cc",
+      "bytes": 42950,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.168184+00:00"
+    },
+    {
+      "sourceKey": "food-land:local-law-current",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsInfoP.do?efYd=20261015&lsiSeq=285291",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/local-law-current.html",
+      "sha256": "604613eb62d933abe78b0243e5bf43bbb5c2afed1a7e372e451aae07e8089f15",
+      "bytes": 145903,
+      "evidenceLevel": "UiWrapperSaved_BodyNotInWrapper",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.208366+00:00"
+    },
+    {
+      "sourceKey": "food-land:government-law-26",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000516781",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/government-law-26.html",
+      "sha256": "1c126a556cd30715621fb73da71dbfee1de5d2dd77662b1767342607548140d5",
+      "bytes": 4730,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:27:46.203366+00:00"
+    },
+    {
+      "sourceKey": "food-land:food-decree-25-article",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032281851",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/food-decree-25-article.html",
+      "sha256": "812ceae0978fa5c54731c7a20a2636b14509d907bada8b2e1cb91e62674db753",
+      "bytes": 23874,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.720478+00:00"
+    },
+    {
+      "sourceKey": "food-land:local-law-effective-body",
+      "group": "food-land",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285291&efYd=20261015&chrClsCd=010202",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-food-land/local-law-effective-body.html",
+      "sha256": "10f98dc80e93a1df6f7ee6d5e0fafc18a11ef17738ac5a1df56257181b41129e",
+      "bytes": 499062,
+      "evidenceLevel": "BodySaved",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:12.114084+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:constitution-art40",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=004000&lsClsCd=L&lsId=001444&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-art40.html",
+      "sha256": "8730a55befc4033960e68cbc79c2ffea4da13028fce2ffc8cc4637ea44b5c552",
+      "bytes": 4119,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:52.182127+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:constitution-art75",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=007500&lsClsCd=L&lsId=001444&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-art75.html",
+      "sha256": "035c9a7eb9dd912386db2939f05e95213a9f85d8858fade471b4870f9e561110",
+      "bytes": 4268,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.645807+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:constitution-art95",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=009500&lsClsCd=L&lsId=001444&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-art95.html",
+      "sha256": "a4f4cb68602ff249e361e8e58bd651c3673359b47e7c0d3551c770a635e5474f",
+      "bytes": 4256,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.637714+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:constitution-art117",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=011700&lsClsCd=L&lsId=001444&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-art117.html",
+      "sha256": "ea91a4a6615161b5605904c2619f3ab156d68075520698ad65d0716fe5e5523d",
+      "bytes": 4380,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.681116+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:administrative-basics-art2",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000200&lsClsCd=L&lsId=014041&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-basics-art2.html",
+      "sha256": "cc78328c2631afb4105713ef7f047cae64f700a72b76375bf4bfa8adf303a945",
+      "bytes": 6236,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.670943+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:administrative-basics-art8",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000800&lsClsCd=L&lsId=014041&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-basics-art8.html",
+      "sha256": "479e8d341b55e63de983bd472cf949a580c1359dfbb01c917db79cffb5f06385",
+      "bytes": 4338,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.700066+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:government-art2",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000200&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art2.html",
+      "sha256": "3597b6cdd0accdc7508043779b382e9c436ad20c9dd7f2d5b347ea34fe014e30",
+      "bytes": 10748,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.786079+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:government-art7",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000700&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art7.html",
+      "sha256": "ebcdda1a62d591d5f02b2b27b39656b6103dfddbd9f238ebfc5ec7623f86951b",
+      "bytes": 5729,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:09.894813+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:government-art18",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=001800&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art18.html",
+      "sha256": "4eeb3acded5ab5b4cdca5b3ce85f56cb3aaa177e87142fc28d08ebc52f0fe629",
+      "bytes": 4479,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:10.029319+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:government-art26",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=002600&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art26.html",
+      "sha256": "e7a8feab2ea61b5b53453e842ecad9b865fcaa6e880224b56eb131bf5aa7c366",
+      "bytes": 4723,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.783941+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:government-art29",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=002900&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art29.html",
+      "sha256": "e83e99fc867d0bf402f084308d7dc684f198646e9b2f6749b4f52c466619a51d",
+      "bytes": 6172,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:29:11.821297+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:regulatory-basics-art2-current",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000200&lsClsCd=L&lsId=001360&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-art2-current.html",
+      "sha256": "2bfef2d3a8bac92d04ef082bc561034500fcbca1c3a6e2234748912c3bad8e2e",
+      "bytes": 6035,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:51.922994+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:regulatory-basics-art4-current",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000400&lsClsCd=L&lsId=001360&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-art4-current.html",
+      "sha256": "fa3a94b867cb3d2b8cffd65bf7403d0dab8cd7b7ca0cd515ecdf8f630e3b19cf",
+      "bytes": 5089,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:52.058151+00:00"
+    },
+    {
+      "sourceKey": "hierarchy:administrative-innovation-art4",
+      "group": "hierarchy",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=000400&lsClsCd=L&lsId=003728&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-innovation-art4.html",
+      "sha256": "80457745df0569b73c088112094b16ea5ef689f3a4ab19f6f2f8587a124204de",
+      "bytes": 5339,
+      "evidenceLevel": "OfficialArticleTextRetrievedAndRead",
+      "httpStatus": 200,
+      "retrievedAtUtc": "2026-11-16T02:30:09.782553+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:constitution-main",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/lsInfoP.do?docType=JO&joNo=003700&lsiSeq=61603",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-main.html",
+      "sha256": "279cd8a9725b5989313f6615e7926c86bcab70c0b2b37b8edd2bbb65f97dc39b",
+      "bytes": 146103,
+      "evidenceLevel": "MetadataWrapperOnly",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:27:28.737198+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:government-current",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoP.do?efYd=20261002&lsiSeq=285135",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-current.html",
+      "sha256": "b986ba992292c24c2ec55f22ca70d0d181bab132e81291daffa23f38fd119d67",
+      "bytes": 145900,
+      "evidenceLevel": "MetadataWrapperOnly",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:27:28.980447+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:administrative-basics",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/lsInfoP.do?lsiSeq=269955",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-basics.html",
+      "sha256": "bd8d2334718ba36bf35a4e3dff687a91761db6c2ce38faab9b9ebb7332f42083",
+      "bytes": 145900,
+      "evidenceLevel": "MetadataWrapperOnly",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:27:29.056466+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:regulatory-basics-current",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=285947",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-current.html",
+      "sha256": "1142e4b7a91d644a6ab2989a892f60c1c9781b29135def13f08330130c6cd1b4",
+      "bytes": 145951,
+      "evidenceLevel": "MetadataWrapperOnly",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:30:09.656028+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:administrative-innovation-current",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/lsInfoP.do?ancYnChk=0&lsId=003728",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-innovation-current.html",
+      "sha256": "c3c121953910ba3823e8cf60037f6f6eab20120e58274bf065bbfae939fe7556",
+      "bytes": 146469,
+      "evidenceLevel": "MetadataWrapperOnly",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:29:11.930802+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:administrative-rule-management",
+      "group": "hierarchy-support",
+      "officialUrl": "https://law.go.kr/admRulLsInfoP.do?admRulId=2002794",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-rule-management.html",
+      "sha256": "02ccfc189dcdc5a714f6dd0382e4a8e4e69e8db00ebe0ad18e9e497ff27ed1a7",
+      "bytes": 7142,
+      "evidenceLevel": "Http200ButNotFound",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:29:12.879540+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:regulatory-basics-art2",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029989883",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-art2.html",
+      "sha256": "b395bae10e801c9edaba439091761ce74eda9069b5419d2d93b129ad7a3b724b",
+      "bytes": 15474,
+      "evidenceLevel": "HistoricalArticleSnapshot",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:27:29.216985+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:moleg-law-hierarchy",
+      "group": "hierarchy-support",
+      "officialUrl": "https://moleg.go.kr/mpbleg/mpblegInfo.mo?mid=a10402020000&mpb_leg_pst_seq=129281",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/moleg-law-hierarchy.html",
+      "sha256": "4d8991d053b4b7b81fd995d1eff8fa3f1ee9a6116fd4aadfc8063f79fc74920a",
+      "bytes": 141975,
+      "evidenceLevel": "OfficialHistoricalCommentary",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:29:11.889379+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:moleg-legislative-process",
+      "group": "hierarchy-support",
+      "officialUrl": "https://moleg.go.kr/menu.es?mid=a10105020000",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/moleg-legislative-process.html",
+      "sha256": "394faffc1762253030c27ffb8e21bcf627adb148084c8e4a5ebab7f6cceb80d2",
+      "bytes": 99572,
+      "evidenceLevel": "OfficialProcessGuidance",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:27:29.308998+00:00"
+    },
+    {
+      "sourceKey": "hierarchy-support:government-art19",
+      "group": "hierarchy-support",
+      "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=001900&lsClsCd=L&lsId=001720&mode=4",
+      "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art19.html",
+      "sha256": "6a2c004dc4cefb353031694d0e6b8a1a808b9d085dab794d1475d377826257d9",
+      "bytes": 5090,
+      "evidenceLevel": "RetrievedArticleOutOfChosenScope",
+      "httpStatus": null,
+      "retrievedAtUtc": "2026-11-16T02:29:11.778854+00:00"
+    }
+  ],
+  "delegationCases": [
+    {
+      "caseId": "LOG-WAREHOUSE-REGISTER",
+      "family": "logistics",
+      "title": "물류창고 등록·소재지 변경과 관할",
+      "basisArticles": [
+        "제21조의2",
+        "제64조",
+        "제12조의3",
+        "제47조",
+        "제3조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(변경등록 사항·권한위임)",
+        "공동부령(등록절차·등록기준)"
+      ],
+      "actualAuthority": "법에는 국토교통부장관·해양수산부장관·시도지사를 항만 구분 등에 따라 규정. 시행령47조는 창고 등록 등을 시도지사에게 위임. 등록규칙3조의 제출처는 시도지사·시장군수구청장 또는 지방해양수산청장. 개별 관할/재위임 확인 필요.",
+      "spatialScope": "특정 창고 사업자·시설과 그 소재지. 전국 공통 규범이나 항만 종류/관할에 따라 처리 주체가 달라짐.",
+      "verifiedLegalSummary": "법21조의2가 등록과 변경등록을 규정한다. 변경 대상 중 소재지 등은 시행령12조의3이 구체화하고, 등록기준·서류는 별도 공동부령인 물류창고업 등록에 관한 규칙3조가 정한다. 규범 제정자와 개별 등록 수리자는 다르다.",
+      "operatorProposal": "창고 카드에 등록/변경 검토·관할 확인 작업을 연결하고, 이전 계획은 해당 시설에 걸린 요구사항으로 읽는다.",
+      "references": [
+        {
+          "sourceKey": "logistics-facilities:act",
+          "article": "제21조의2",
+          "effectiveDate": "20260102",
+          "selectedHeader": [
+            "[시행 2026. 1. 2.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률/제21조의2",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276991&efYd=20260102&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "2aab75ec9d48c8db335bd39e74932d413573b50776cfb7518e70d12bfe655972",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-act-제21조의2.txt",
+          "articleTextSha256": "ec287bcc779e30fe845ef7c40ad13fe166b012fb1cf4930484703399326cd4b2"
+        },
+        {
+          "sourceKey": "logistics-facilities:act",
+          "article": "제64조",
+          "effectiveDate": "20260102",
+          "selectedHeader": [
+            "[시행 2026. 1. 2.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률/제64조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276991&efYd=20260102&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "2aab75ec9d48c8db335bd39e74932d413573b50776cfb7518e70d12bfe655972",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-act-제64조.txt",
+          "articleTextSha256": "6753c1d67a32f8e9d26e0b5593b1fad6f61c84e68b96290bc5c356ae586867c6"
+        },
+        {
+          "sourceKey": "logistics-facilities:decree",
+          "article": "제12조의3",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36689호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행령/제12조의3",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289663&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "936b1eb4c91b708d1cbcb83ed5e80430e3f99d010280e070168e19ceea1a7d9c",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-decree-제12조의3.txt",
+          "articleTextSha256": "5105b671f90be034214a83a4e284d87c9ffcf92e65311bc403687567dea92c04"
+        },
+        {
+          "sourceKey": "logistics-facilities:decree",
+          "article": "제47조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36689호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행령/제47조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289663&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "936b1eb4c91b708d1cbcb83ed5e80430e3f99d010280e070168e19ceea1a7d9c",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-decree-제47조.txt",
+          "articleTextSha256": "651647b136f55ad93e3e916fa3725535159218db72cdc42f91296bc806d70c89"
+        },
+        {
+          "sourceKey": "warehouse-register-rule:joint-rule",
+          "article": "제3조",
+          "effectiveDate": "20240217",
+          "selectedHeader": [
+            "[시행 2024. 2. 17.] [국토교통부령 제1310호, 2024. 2. 16., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류창고업등록에관한규칙/제3조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=260639&efYd=20240217&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "6683dc7d4db54a8e33419bad89fd8a0c37e1dfc523cff0fce6671c44894174ab",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\warehouse-register-rule-joint-rule-제3조.txt",
+          "articleTextSha256": "96ed715b67b28aab7e5e7647feb6b65989c088292933a69baf62454f738fa29c"
+        }
+      ],
+      "limits": [
+        "모든 창고 점의 등록 현황이 확인됐다는 뜻 아님",
+        "지역 재위임조례와 실제 수리관청 미조사",
+        "원문 면적수치·예외를 게임 수치로 고정하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "LOG-COMPLEX-DESIGNATION",
+      "family": "logistics",
+      "title": "일반물류단지 지정과 개발계획 변경",
+      "basisArticles": [
+        "제22조",
+        "제13조",
+        "제14조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(중요 변경사항·지정요청 서류)"
+      ],
+      "actualAuthority": "국가정책사업 또는 둘 이상 시도에 걸친 경우 국토교통부장관, 그 외 시도지사. 협의·위원회 심의 절차가 결합됨.",
+      "spatialScope": "개발계획이 지정한 물류단지 부지/구역과 기반시설. 행정동 전체에 임의로 적용하는 규칙 아님.",
+      "verifiedLegalSummary": "법22조는 지정권자와 개발계획 내용/절차를 정하고 시행령13조는 중요한 변경 범위, 14조는 위치도·시설배치도·입지 여건 등 지정요청 자료를 구체화한다.",
+      "operatorProposal": "지도에서 단지 후보 영역→입지/기반시설 검토→협의/심의→지정 상태를 읽는 계획 작업으로 연결한다.",
+      "references": [
+        {
+          "sourceKey": "logistics-facilities:act",
+          "article": "제22조",
+          "effectiveDate": "20260102",
+          "selectedHeader": [
+            "[시행 2026. 1. 2.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률/제22조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276991&efYd=20260102&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "2aab75ec9d48c8db335bd39e74932d413573b50776cfb7518e70d12bfe655972",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-act-제22조.txt",
+          "articleTextSha256": "bb0949817d9e63b131434046b1a25631bdec7bb30fceffd1027b0699516cac6a"
+        },
+        {
+          "sourceKey": "logistics-facilities:decree",
+          "article": "제13조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36689호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행령/제13조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289663&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "936b1eb4c91b708d1cbcb83ed5e80430e3f99d010280e070168e19ceea1a7d9c",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-decree-제13조.txt",
+          "articleTextSha256": "2525eebdf601b460dfbf421abe71655bfa7de32ed1e90a6aa3065ddf4e4ab16e"
+        },
+        {
+          "sourceKey": "logistics-facilities:decree",
+          "article": "제14조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36689호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류시설의개발및운영에관한법률시행령/제14조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289663&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "936b1eb4c91b708d1cbcb83ed5e80430e3f99d010280e070168e19ceea1a7d9c",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-facilities-decree-제14조.txt",
+          "articleTextSha256": "6221a972fc2777cb8301e96ed0b17d0ad5499ae0c8a62a05c76f43d0f2b4b165"
+        }
+      ],
+      "limits": [
+        "현재 실제 지정도면과 고시는 미수집",
+        "시설 위치점만으로 단지 경계를 만들지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "LOG-REGIONAL-POLICY",
+      "family": "logistics",
+      "title": "지역물류기본계획과 투자 우선순위",
+      "basisArticles": [
+        "제14조",
+        "제15조",
+        "제7조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(기본계획의 중요한 변경)",
+        "부처 공동 지침(법14조4항)"
+      ],
+      "actualAuthority": "특별시장·광역시장이 기본 수립 주체. 특별자치시장·도지사·특별자치도지사는 법14조2항의 조건에서 수립 가능. 인접 시도 협의·지역물류정책위원회 심의가 요구됨.",
+      "spatialScope": "관할 지역의 물류시설·장비 배치, 투자 우선순위, 운송수단별 정책 등 계획 범위.",
+      "verifiedLegalSummary": "법14조는 지역물류기본계획의 목표·시설배치·투자우선순위 등을 규정하고, 15조2항의 대통령령 위임에 따라 시행령7조는 중요한 변경 사항을 구체화한다.",
+      "operatorProposal": "광역 지도에서 물류투자/공동화 방침의 대상 시설·계획 기간을 선택하는 카드 후보. 실제 법령 자체를 새로 제정하는 행동과 분리.",
+      "references": [
+        {
+          "sourceKey": "logistics-policy:act",
+          "article": "제14조",
+          "effectiveDate": "20251001",
+          "selectedHeader": [
+            "[시행 2025. 10. 1.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류정책기본법/제14조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276993&efYd=20251001&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "5c6693093995b15b0d8fc0d327bbff6c9a38f5b6bae296a11ba629648c97aa7f",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-policy-act-제14조.txt",
+          "articleTextSha256": "43eb11d80ba3f3a9f30087ae356cc61952daf74f1e9b2092a83f35c26e56e207"
+        },
+        {
+          "sourceKey": "logistics-policy:act",
+          "article": "제15조",
+          "effectiveDate": "20251001",
+          "selectedHeader": [
+            "[시행 2025. 10. 1.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류정책기본법/제15조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276993&efYd=20251001&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "5c6693093995b15b0d8fc0d327bbff6c9a38f5b6bae296a11ba629648c97aa7f",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-policy-act-제15조.txt",
+          "articleTextSha256": "9d407e9bb25fb9be35aa2a5285bdc86ad5599783e99e9fa67e5f148d2d1f22fd"
+        },
+        {
+          "sourceKey": "logistics-policy:decree",
+          "article": "제7조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36684호, 2026. 9. 15., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류정책기본법시행령/제7조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289715&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "f2b4d36362728219bd80f46b759849a537eb4b4df21e2e6250001c547a3ccd12",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-policy-decree-제7조.txt",
+          "articleTextSha256": "c5c64288a74499b3be5d71a6167cefe3fca9eb7d80c48b81c4efab6115421f0c"
+        }
+      ],
+      "limits": [
+        "기본계획의 법정기간을 한 게임 턴과 동일시하지 않음",
+        "실제 지역별 현행 계획 원문/고시는 후속"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "LOG-ANNUAL-PLAN",
+      "family": "logistics",
+      "title": "지역물류 연도별 시행계획과 인접 지역 협의",
+      "basisArticles": [
+        "제16조",
+        "제8조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(연도별 시행계획 수립·시행 사항)"
+      ],
+      "actualAuthority": "기본계획 수립 지자체장. 시행령8조의 관계 중앙기관·인접 시도 협의와 위원회 심의/통보 관계를 함께 봄.",
+      "spatialScope": "기본계획을 수행하는 지자체 영역·연결된 인접 지역/시설 및 연도별 계획.",
+      "verifiedLegalSummary": "법16조3항이 시행계획의 수립 및 시행 사항을 대통령령에 위임하며 시행령8조는 협의·심의·통보를 정한다.",
+      "operatorProposal": "턴 전 방향 결정 화면에 대상/기간·협력 지역·계획 진행 단계를 붙이는 참고 후보.",
+      "references": [
+        {
+          "sourceKey": "logistics-policy:act",
+          "article": "제16조",
+          "effectiveDate": "20251001",
+          "selectedHeader": [
+            "[시행 2025. 10. 1.] [법률 제21065호, 2025. 10. 1., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류정책기본법/제16조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=276993&efYd=20251001&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "5c6693093995b15b0d8fc0d327bbff6c9a38f5b6bae296a11ba629648c97aa7f",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-policy-act-제16조.txt",
+          "articleTextSha256": "dfc6b3f296bfdaf1b9b5df9be12e0cd2d64a75e27b8faef0389b5c23a27a3ac2"
+        },
+        {
+          "sourceKey": "logistics-policy:decree",
+          "article": "제8조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [대통령령 제36684호, 2026. 9. 15., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/물류정책기본법시행령/제8조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289715&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "f2b4d36362728219bd80f46b759849a537eb4b4df21e2e6250001c547a3ccd12",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\logistics-policy-decree-제8조.txt",
+          "articleTextSha256": "eaea27efacef8a910986fe8577c9c6d07357756458ef0ac842cf7e9a907c2d95"
+        }
+      ],
+      "limits": [
+        "게임의 턴 진행이 법정 연도별 행정절차를 자동 충족하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "CARGO-PERMIT",
+      "family": "logistics",
+      "title": "화물운송사업 허가와 차고지·운송시설 기준",
+      "basisArticles": [
+        "제3조",
+        "제14조",
+        "제13조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(일부 사업 구분·권한위임)",
+        "국토교통부령(신청절차·운송시설 허가기준)"
+      ],
+      "actualAuthority": "법상 국토교통부장관. 시행령14조는 운송사업 허가·변경 등 권한을 시도지사에게 위임. 지역별 재위임은 별도 확인.",
+      "spatialScope": "운송사업자·차량/차고지 등 운송시설. 특정 행정구역 전체의 운송을 마음대로 허용하는 권한 아님.",
+      "verifiedLegalSummary": "법3조는 운송사업 허가와 신청·허가기준의 위임을 정한다. 시행규칙13조는 법3조7항2호의 허가기준을 별표1로 연결한다. 법적 허가와 게임 내 개별 배차 명령은 구별된다.",
+      "operatorProposal": "차고지/사업자 카드의 허가 준비 상태와 실제 배차 가능 조건을 따로 읽는 요구사항 층 후보.",
+      "references": [
+        {
+          "sourceKey": "cargo:act",
+          "article": "제3조",
+          "effectiveDate": "20260701",
+          "selectedHeader": [
+            "[시행 2026. 7. 1.] [법률 제21711호, 2026. 5. 29., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법/제3조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=286393&efYd=20260701&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "46bd72b28afa760e0595e31d1d40f5cb6a6b252e23cf94545c1d1558cd38d6b9",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\cargo-act-제3조.txt",
+          "articleTextSha256": "fd632cc8bbe6d56b0e58584f9361a1ba8d66aaab33e5e833cc43f3c533c44732"
+        },
+        {
+          "sourceKey": "cargo:decree",
+          "article": "제14조",
+          "effectiveDate": "20260603",
+          "selectedHeader": [
+            "[시행 2026. 6. 3.] [대통령령 제36353호, 2026. 5. 26., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법시행령/제14조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=286309&efYd=20260603&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "3dcbaa426997a6ae5da1a689e970f8cf4c1b40634406e9a8fde6e38d886db540",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\cargo-decree-제14조.txt",
+          "articleTextSha256": "df977b03f8c2ea035d32fbe8abdf3c8ff048a6c9d155c274a27c7deb6fdfa868"
+        },
+        {
+          "sourceKey": "cargo:rule",
+          "article": "제13조",
+          "effectiveDate": "20260630",
+          "selectedHeader": [
+            "[시행 2026. 6. 30.] [국토교통부령 제1551호, 2025. 12. 29., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/화물자동차운수사업법시행규칙/제13조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=282123&efYd=20260630&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "fadabb450566f9b4f979b27180a69aa850698d67809d7d68b595ad71558e730f",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\cargo-rule-제13조.txt",
+          "articleTextSha256": "f24d096a38dec9b2846c8b4a383824bfbcb71daf629aff949addbd4f9f8cb8fd"
+        }
+      ],
+      "limits": [
+        "별표1의 세부 수치/지역 조례는 이번 요약에서 추출하지 않음",
+        "허가 사실·서비스 제공 계약은 개별 사업자 근거 필요"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "PARCEL-REGISTER",
+      "family": "logistics",
+      "title": "택배사업 등록과 분류시설·영업점 네트워크",
+      "basisArticles": [
+        "제5조",
+        "제2조",
+        "제2조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(시설·장비·영업점 등록기준/신청서류)",
+        "국토교통부령(신청서·등록증·대장)"
+      ],
+      "actualAuthority": "국토교통부장관 등록. 원문은 운송사업 허가와 시설·장비/영업점 요건 등을 별도 요구.",
+      "spatialScope": "택배사업자와 직영점·분류시설·취급소·차량 배치 장소의 네트워크.",
+      "verifiedLegalSummary": "법5조는 등록요건을 세우고 시행령2조 및 별표1은 시설/장비·영업점 기준을 구체화한다. 시행령2조3항의 제출자료에는 시설 명칭·위치·규모와 차량 배치 장소가 포함되고 시행규칙2조는 서식/대장을 정한다.",
+      "operatorProposal": "거점 연결·분류시설 증설·배송 준비 작업을 실제 법적 근거와 연결하는 정보 카드 후보.",
+      "references": [
+        {
+          "sourceKey": "parcel:act",
+          "article": "제5조",
+          "effectiveDate": "20260828",
+          "selectedHeader": [
+            "[시행 2026. 8. 28.] [법률 제21410호, 2026. 2. 27., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법/제5조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283715&efYd=20260828&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "89d38506debfb791ffbd0b2a5a1ead2007f11f3decbdf0655be9b3b672f65da6",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\parcel-act-제5조.txt",
+          "articleTextSha256": "a9455247f4f2db30ffeb73c65cbc0da432a94f84e7a9d1b05fe7903e8b53cdf6"
+        },
+        {
+          "sourceKey": "parcel:decree",
+          "article": "제2조",
+          "effectiveDate": "20260828",
+          "selectedHeader": [
+            "[시행 2026. 8. 28.] [대통령령 제36627호, 2026. 8. 27., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법시행령/제2조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289015&efYd=20260828&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "617498b780ed3d659292b815d50e83ef31eb678115d6e8436215ba645858f97d",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\parcel-decree-제2조.txt",
+          "articleTextSha256": "3a256e16fe5d6c91cbc83dcf05d758ae14178113b99a4fc6da1486d920ad4968"
+        },
+        {
+          "sourceKey": "parcel:rule",
+          "article": "제2조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [국토교통부령 제1621호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/생활물류서비스산업발전법시행규칙/제2조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289861&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "8043cfbb59fafa588460e7bf729715c795389b46415345b1c4e4ce9e20292959",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\parcel-rule-제2조.txt",
+          "articleTextSha256": "40c628a733016f4c012eddc7b36d942211cce7ba240d473f31b93e275d88129d"
+        }
+      ],
+      "limits": [
+        "음식 배달 중개·소화물배송대행의 인증과 택배사업 등록을 혼동하지 않음",
+        "드론/로봇 요건은 따로 연구할 수 있으나 이번 지도 기능의 자동 승인 아님"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "CUSTOMS-BONDED-LICENCE",
+      "family": "logistics",
+      "title": "특허보세구역 설치·운영과 세관장 특허",
+      "basisArticles": [
+        "제154조",
+        "제174조",
+        "제189조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(보세구역 종류별 특허기준)",
+        "재정경제부령(수수료 절차)",
+        "관세청장이 정하는 세부요건(구체 고시 후속)"
+      ],
+      "actualAuthority": "특허보세구역 설치·운영은 세관장 특허. 법174조3항은 대통령령 기준에 따라 관세청장이 요건을 정하도록 함.",
+      "spatialScope": "지정된 보세구역의 시설·물품·운영자. 항만/행정구역 전체와 동일하지 않음.",
+      "verifiedLegalSummary": "법154조는 보세구역의 종류를 구분한다. 법174조는 특허보세구역 설치·운영에 세관장 특허를 요구하며 시행령189조는 세금체납/결격사유·위험물 관계허가·보관관리 시설 등의 기준을 정한다.",
+      "operatorProposal": "보세 관련 지도 층은 실제 특허/구역 근거를 조회하고 보관·반출입 제약을 읽는 후보. 단순 관세법 관련 창고 목록을 현재 특허 구역으로 승격하지 않음.",
+      "references": [
+        {
+          "sourceKey": "customs:act",
+          "article": "제154조",
+          "effectiveDate": "20261002",
+          "selectedHeader": [
+            "[시행 2026. 10. 2.] [법률 제21490호, 2026. 3. 24., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/관세법/제154조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290673&efYd=20261002&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "4d6e82a945aec066876e7eb79059ed3b56455f15d728fa67e8bdb36198c3d4c1",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\customs-act-제154조.txt",
+          "articleTextSha256": "40e6d0048fa08f6e84062943878566718df483b13c7088a52e6fe213e68d17ed"
+        },
+        {
+          "sourceKey": "customs:act",
+          "article": "제174조",
+          "effectiveDate": "20261002",
+          "selectedHeader": [
+            "[시행 2026. 10. 2.] [법률 제21490호, 2026. 3. 24., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/관세법/제174조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=290673&efYd=20261002&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "4d6e82a945aec066876e7eb79059ed3b56455f15d728fa67e8bdb36198c3d4c1",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\customs-act-제174조.txt",
+          "articleTextSha256": "8630479174da490a13191e3022f733f0c1db8d8d7a560db3ef124e0f8b91fc15"
+        },
+        {
+          "sourceKey": "customs:decree",
+          "article": "제189조",
+          "effectiveDate": "20260227",
+          "selectedHeader": [
+            "[시행 2026. 2. 27.] [대통령령 제36140호, 2026. 2. 27., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/관세법시행령/제189조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=283621&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "9199c9bd8467dd33446c209bba4af54528d7664f78fb12a3ac66114281479efc",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\customs-decree-제189조.txt",
+          "articleTextSha256": "196ca46ee1d4ebe8b48fb57a475c301bef2eea3ed9f69857521aa93708671be6"
+        }
+      ],
+      "limits": [
+        "관세청 세부 고시와 개별 특허 현황·구역도형은 미수집",
+        "보세창고 후보 764행을 모두 현재 허가 시설로 확정하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "PORT-BOUNDARIES",
+      "family": "logistics",
+      "title": "대통령령 별표가 정하는 항만 명칭·위치·구역",
+      "basisArticles": [
+        "제3조",
+        "제3조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(항만 구분·명칭·위치·구역 및 국가/지방관리 구분)"
+      ],
+      "actualAuthority": "규범은 대통령령으로 정하되 항만 운영/관리는 별도 관리청과 권한위임 규정을 봄.",
+      "spatialScope": "대통령령 별표1~3의 항만구역·분류. 법정 구역은 행정동/시설 대표점과 별도.",
+      "verifiedLegalSummary": "항만법3조1항은 명칭·위치·구역을 대통령령에 위임하고 시행령3조는 별표1, 국가/지방 관리 항만은 별표2·3에 연결한다.",
+      "operatorProposal": "전국 지도에서 항만구역/국가·지방관리 속성을 펼쳐 법적 적용 범위를 읽는 층 후보.",
+      "references": [
+        {
+          "sourceKey": "ports:act",
+          "article": "제3조",
+          "effectiveDate": "20261113",
+          "selectedHeader": [
+            "[시행 2026. 11. 13.] [법률 제21640호, 2026. 5. 12., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/항만법/제3조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285879&efYd=20261113&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "bf8188213ab8bf0dfcb545e859343a3fc74517963b37d297dc38446303b9ddd4",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\ports-act-제3조.txt",
+          "articleTextSha256": "6c017bc1ef9b1b702a6221b09eb9f9c2bae37f3d876faffb62ac2ef5ffc371f5"
+        },
+        {
+          "sourceKey": "ports:decree",
+          "article": "제3조",
+          "effectiveDate": "20260701",
+          "selectedHeader": [
+            "[시행 2026. 7. 1.] [대통령령 제36439호, 2026. 6. 23., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/항만법시행령/제3조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=287353&efYd=20260701&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "e56d994903193019df332ad4ea2d63765a7af78d1e3cd275f753aa974461b215",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\ports-decree-제3조.txt",
+          "articleTextSha256": "e1550616480536526a42955293e8aa11a228f28c762b28921c36b91a85aff23c"
+        }
+      ],
+      "limits": [
+        "별표 경계 좌표와 수집 KHOA 폴리곤의 동일 판본/변경 정합은 미검증",
+        "대표점만으로 법정 경계를 재구성하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "PORT-OPERATING-RULE",
+      "family": "logistics",
+      "title": "항만별 운영세칙과 운영계획도",
+      "basisArticles": [
+        "제20조",
+        "제20조"
+      ],
+      "delegatedNormTypes": [
+        "해양수산부령(세칙의 포함 사항)",
+        "항만 관리청이 정하는 항만별 운영세칙"
+      ],
+      "actualAuthority": "법20조의 관리청. 구체 항만의 관리청/권한위임과 현행 운영세칙은 별도 확인.",
+      "spatialScope": "항만별 시설·항로·정박지·계류시설·구역별 명칭 및 사용자의 준수사항.",
+      "verifiedLegalSummary": "법20조2항은 관리청이 해양수산부령에 따라 항만별 운영세칙을 정할 수 있도록 한다. 시행규칙20조는 시설명/위치, 항만구역 경계·항로·정박지·계류시설을 포함하는 운영계획도와 신고절차/사용자준수사항을 규정한다.",
+      "operatorProposal": "항만을 고르면 구역/시설별 이용·신고/안전 요구를 읽는 카드와 계획도 층을 연결하는 후보. 현실 세칙을 게임에서 즉석 발령하는 것과 분리.",
+      "references": [
+        {
+          "sourceKey": "ports:act",
+          "article": "제20조",
+          "effectiveDate": "20261113",
+          "selectedHeader": [
+            "[시행 2026. 11. 13.] [법률 제21640호, 2026. 5. 12., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/항만법/제20조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=285879&efYd=20261113&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "bf8188213ab8bf0dfcb545e859343a3fc74517963b37d297dc38446303b9ddd4",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\ports-act-제20조.txt",
+          "articleTextSha256": "906ef563d8268b6d62a7bff60e39fdf474953d7f9284e7c2f6cfe457a216d116"
+        },
+        {
+          "sourceKey": "ports:rule",
+          "article": "제20조",
+          "effectiveDate": "20261113",
+          "selectedHeader": [
+            "[시행 2026. 11. 13.] [해양수산부령 제834호, 2026. 11. 3., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/항만법시행규칙/제20조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291617&efYd=20261113&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "b00c680a9c230525508bf1e919b6388a3cdc2b9d0e1ac76d72f8c68f5a5ebec7",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\ports-rule-제20조.txt",
+          "articleTextSha256": "d6b86b8e384de5ec9c52ead78e9b5d5b5c7521d2d67befa1205b0af7f33db66f"
+        }
+      ],
+      "limits": [
+        "각 항만의 실제 운영세칙은 이번 수집 범위 밖",
+        "운영세칙의 구체 규범 효력은 내용과 위임에 따라 별도 검토"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "AIRPORT-FACILITIES",
+      "family": "logistics",
+      "title": "공항시설 범위와 화물처리/보관 시설",
+      "basisArticles": [
+        "제2조",
+        "제3조"
+      ],
+      "delegatedNormTypes": [
+        "대통령령(공항시설의 구분)"
+      ],
+      "actualAuthority": "법령의 공항시설 정의·범위이고 운영 주체·개별 개발 허가는 별도 규정.",
+      "spatialScope": "공항구역과 공항시설. 공항 기준점 하나가 모든 시설/보호구역 경계를 뜻하지 않음.",
+      "verifiedLegalSummary": "법2조7호의 대통령령 위임에 따라 시행령3조는 활주로·화물터미널 등 기본시설과 항공화물 보관 창고 등 지원시설을 구분한다.",
+      "operatorProposal": "공항 점을 확대하면 공항/화물터미널/보관창고를 각각 근거 있는 객체로 구분하는 설계 후보.",
+      "references": [
+        {
+          "sourceKey": "airports:act",
+          "article": "제2조",
+          "effectiveDate": "20260227",
+          "selectedHeader": [
+            "[시행 2026. 2. 27.] [법률 제21037호, 2025. 8. 26., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법/제2조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=273399&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "a3036d41235da0ed434a2162be1f6350da4b298ff08e27878a505ff381ec9f63",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-act-제2조.txt",
+          "articleTextSha256": "29292af17852d6ec26688b620641e00348cf4430fe6a9e2cd1f6406b77a9f8b5"
+        },
+        {
+          "sourceKey": "airports:decree",
+          "article": "제3조",
+          "effectiveDate": "20261103",
+          "selectedHeader": [
+            "[시행 2026. 11. 3.] [대통령령 제36799호, 2026. 11. 3., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법시행령/제3조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291539&efYd=20261103&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "c2c64bf4f20f4c5eeceeffeab349bb6054d1e069c11fd905d3305a7139f21f06",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-decree-제3조.txt",
+          "articleTextSha256": "65803aff1ad0e9ba1da7147f1b9bc9c2775b7921bb8905a26443de98ff28714d"
+        }
+      ],
+      "limits": [
+        "공항 위치 15점에서 터미널 위치/운영자/개별 허가를 자동 생성하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "AIRPORT-DEVELOPMENT-PERMIT",
+      "family": "logistics",
+      "title": "공항개발 시행허가와 시설배치 도면",
+      "basisArticles": [
+        "제6조",
+        "제55조",
+        "제9조"
+      ],
+      "delegatedNormTypes": [
+        "국토교통부령(시행허가 신청·도면)",
+        "대통령령(권한의 위임)"
+      ],
+      "actualAuthority": "법6조상 국토교통부장관, 시행령55조는 관련 시행허가 등 권한을 지방항공청장에게 위임(직접 시행 고시 사업 등 예외 존재). 시행규칙9조의 신청 제출처도 지방항공청장.",
+      "spatialScope": "구체 공항·비행장 개발사업 예정지역과 부지/시설 배치.",
+      "verifiedLegalSummary": "법6조는 국토교통부장관 외 자의 개발사업 시행허가를 규정하고 시행규칙9조는 위치·범위·시설배치계획도 등 신청자료를 정한다.",
+      "operatorProposal": "부지에서 시설 개발을 계획할 때 도면/자료 준비→관할 검토/허가 상태를 읽는 작업 후보.",
+      "references": [
+        {
+          "sourceKey": "airports:act",
+          "article": "제6조",
+          "effectiveDate": "20260227",
+          "selectedHeader": [
+            "[시행 2026. 2. 27.] [법률 제21037호, 2025. 8. 26., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법/제6조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=273399&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "a3036d41235da0ed434a2162be1f6350da4b298ff08e27878a505ff381ec9f63",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-act-제6조.txt",
+          "articleTextSha256": "954fdd805a996f4058d4f18d630e43b4eb2451324de4a32ebbc6300bc960bc40"
+        },
+        {
+          "sourceKey": "airports:decree",
+          "article": "제55조",
+          "effectiveDate": "20261103",
+          "selectedHeader": [
+            "[시행 2026. 11. 3.] [대통령령 제36799호, 2026. 11. 3., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법시행령/제55조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=291539&efYd=20261103&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "c2c64bf4f20f4c5eeceeffeab349bb6054d1e069c11fd905d3305a7139f21f06",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-decree-제55조.txt",
+          "articleTextSha256": "63609eeed27e7c1e60e61ae8db4af7b7fe4b5e28ceb99b6d944724ba1b8db011"
+        },
+        {
+          "sourceKey": "airports:rule",
+          "article": "제9조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [국토교통부령 제1621호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법시행규칙/제9조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289843&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "d7a67a2d641a81fc63ea7f9ec7dd3d8db4935e57203c1a8d8256611f2e96b1b9",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-rule-제9조.txt",
+          "articleTextSha256": "d0c2721f43ec9d4109d35092b09c1bc4b9b65fef209c9153b82da35cee3d1eff"
+        }
+      ],
+      "limits": [
+        "일상 유지보수 등 경미사업 예외 및 직접시행 예외를 보존",
+        "게임 건설 배치가 현실 개발허가를 의미하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "AIRPORT-OBSTACLE",
+      "family": "logistics",
+      "title": "공항 주변 장애물 제한과 개별 협의",
+      "basisArticles": [
+        "제34조",
+        "제22조"
+      ],
+      "delegatedNormTypes": [
+        "국토교통부령(협의 대상 장애물·절차 등)"
+      ],
+      "actualAuthority": "법34조의 국토교통부장관·사업시행자등 및 관계 행정기관. 개별 고시/항공학적 검토와 권한위임 확인 필요.",
+      "spatialScope": "기본계획 고시의 장애물 제한표면과 그 높이를 넘는 장애물. 원형 반경이나 지도 줌과 동의어 아님.",
+      "verifiedLegalSummary": "법34조는 기본계획 고시 후 장애물 제한표면 높이 이상의 장애물 설치 등을 원칙적으로 제한하면서 정해진 예외·협의/검토 경로를 둔다. 시행규칙22조는 협의 대상과 절차를 구체화한다.",
+      "operatorProposal": "주변 건축/설비 계획에 적용되는 공간 제약 층의 연구 후보. 확인된 표면·도면이 있을 때만 검토 가능.",
+      "references": [
+        {
+          "sourceKey": "airports:act",
+          "article": "제34조",
+          "effectiveDate": "20260227",
+          "selectedHeader": [
+            "[시행 2026. 2. 27.] [법률 제21037호, 2025. 8. 26., 일부개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법/제34조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=273399&efYd=20260227&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "a3036d41235da0ed434a2162be1f6350da4b298ff08e27878a505ff381ec9f63",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-act-제34조.txt",
+          "articleTextSha256": "88cfea15df6021d3e9f8c6fc73934c39f3e79600a7663027db26ab7e3bc46f21"
+        },
+        {
+          "sourceKey": "airports:rule",
+          "article": "제22조",
+          "effectiveDate": "20260915",
+          "selectedHeader": [
+            "[시행 2026. 9. 15.] [국토교통부령 제1621호, 2026. 9. 15., 타법개정]"
+          ],
+          "officialUrl": "https://www.law.go.kr/법령/공항시설법시행규칙/제22조",
+          "frozenBodyUrl": "https://www.law.go.kr/LSW/lsInfoR.do?lsiSeq=289843&efYd=20260915&chrClsCd=010202&ancYnChk=0",
+          "sourceBodySha256": "d7a67a2d641a81fc63ea7f9ec7dd3d8db4935e57203c1a8d8256611f2e96b1b9",
+          "articleTextPath": "artifacts\\local\\map-legal-orders-r254-20261116\\sources-logistics\\airports-rule-제22조.txt",
+          "articleTextSha256": "e363cefdd99fdebdf971760795138894b985748a19fc9de9f4711576a29a87c2"
+        }
+      ],
+      "limits": [
+        "현행 제한표면 도형·고시·실제 표고/수직기준 미확보",
+        "30m DSM과 공항 기준점만으로 건축 허용 높이를 판정하지 않음"
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "food-facility-standards",
+      "family": "식품위생",
+      "title": "식품위생법 제36조제1항의 위임/공간 적용",
+      "basisArticles": [
+        "식품위생법 제36조제1항"
+      ],
+      "delegatedNormTypes": [
+        "총리령"
+      ],
+      "actualAuthority": "식품의약품안전처가 소관기관으로 표시됨. 개별 영업소 허가/신고/등록 관할은 법37·시행령의 업종 구분에 따라 별도 확인.",
+      "spatialScope": [
+        "영업소",
+        "제조·가공 작업장",
+        "보관·운반시설",
+        "식품접객업소"
+      ],
+      "verifiedLegalSummary": "식품접객업 등을 하려는 영업자가 갖출 업종별 시설기준을 총리령에 위임한다. 시행규칙36이 별표14로 연결한다.",
+      "operatorProposal": "매장·작업장별 위생설비/시설 점검표, 개선할 일, 신청 준비를 운영계획으로 배치",
+      "references": [
+        "food-land:food-law-36",
+        "food-land:food-rule-36",
+        "food-land:food-facility-annex14"
+      ],
+      "limits": [
+        "총리령을 제정하거나 시설 적합/행정처분을 스스로 확정하지 않는다.",
+        "별표14의 업종별 세부항목을 개별 매장에 자동 적용하는 규칙은 아직 만들지 않음."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "food-notification-scope",
+      "family": "식품위생",
+      "title": "식품위생법 제37조제4항의 위임/공간 적용",
+      "basisArticles": [
+        "식품위생법 제37조제4항"
+      ],
+      "delegatedNormTypes": [
+        "대통령령"
+      ],
+      "actualAuthority": "특별자치시장·특별자치도지사 또는 시장·군수·구청장(시행령25의 해당 신고)",
+      "spatialScope": [
+        "매장",
+        "영업소 소재지",
+        "관할 시군구"
+      ],
+      "verifiedLegalSummary": "신고 대상 영업과 절차를 대통령령에 맡긴다. 시행령25는 휴게음식점·일반음식점·위탁급식·제과점 등 신고 대상과 관청을 규정한다.",
+      "operatorProposal": "게임 매장의 영업유형 확인→관할/서류/시설 준비→신청 대기 상태를 지도 카드와 할 일로 연결",
+      "references": [
+        "food-land:food-law-37",
+        "food-land:food-decree-25-article"
+      ],
+      "limits": [
+        "신고·허가·등록을 같은 명령으로 합치거나 지도를 클릭해 실제 신고 수리를 만들지 않는다.",
+        "구체 사업은 영업유형·공유주방·예외에 따라 달라짐; 카페라는 상호만으로 업종 확정하지 않음."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "building-permit-documents",
+      "family": "건축",
+      "title": "건축법 제11조제3항의 위임/공간 적용",
+      "basisArticles": [
+        "건축법 제11조제3항"
+      ],
+      "delegatedNormTypes": [
+        "국토교통부령"
+      ],
+      "actualAuthority": "특별자치시장·특별자치도지사 또는 시장·군수·구청장이 기본 허가권자; 법11제1항 단서의 규모/용도 등 예외 존재.",
+      "spatialScope": [
+        "건축물",
+        "대지",
+        "창고·매장 건물",
+        "관할 행정구역"
+      ],
+      "verifiedLegalSummary": "건축허가 신청에 첨부할 설계도서 등을 국토교통부령에 위임한다. 시행규칙6은 신청서·첨부서류의 제출 절차를 구체화한다.",
+      "operatorProposal": "신규/증축/대수선 후보 부지에서 권리·용도·설계도서 준비와 인허가 검토 대기를 배치",
+      "references": [
+        "food-land:building-law-11",
+        "food-land:building-rule-6"
+      ],
+      "limits": [
+        "공공 허가권이나 허가 완료를 플레이어에게 주지 않는다. 지도 건물이 있다는 사실이 허가/사용승인 사실이 아님.",
+        "개별 토지·건축물의 적법/허가 여부와 다른 법률의 의제·특례는 미판정."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "land-use-designation",
+      "family": "국토계획",
+      "title": "국토계획법 제36조제1항·제2항의 위임/공간 적용",
+      "basisArticles": [
+        "국토계획법 제36조제1항·제2항"
+      ],
+      "delegatedNormTypes": [
+        "대통령령"
+      ],
+      "actualAuthority": "국토교통부장관·시도지사 또는 대도시 시장(법36의 문언; 다른 조항의 권한 배분/위임은 별도)",
+      "spatialScope": [
+        "용도지역의 면형 경계",
+        "도시·군관리계획구역"
+      ],
+      "verifiedLegalSummary": "기본 용도지역 지정/변경은 권한 있는 기관의 도시·군관리계획 결정이고, 대통령령에 따른 세분이 가능하다. 법령의 형식과 개별 지정 결정을 구분해야 한다.",
+      "operatorProposal": "공식 구역을 보기 전용으로 겹쳐 입지 후보와 충돌/미확인 사항을 비교",
+      "references": [
+        "food-land:land-law-36",
+        "food-land:land-law-36-2"
+      ],
+      "limits": [
+        "현행 경영자 역할이 구역을 임의 지정/변경하는 행정명령을 내리지 않는다.",
+        "실제 지정 고시·GIS 경계와 시행령의 세분 조항은 후속 확인 필요."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "land-building-restrictions",
+      "family": "국토계획",
+      "title": "국토계획법 제76조제1항의 위임/공간 적용",
+      "basisArticles": [
+        "국토계획법 제76조제1항"
+      ],
+      "delegatedNormTypes": [
+        "대통령령"
+      ],
+      "actualAuthority": "관련 도시·군관리계획/허가 업무를 맡은 관할 행정기관; 개별 허가권자는 별도 관련법 확인",
+      "spatialScope": [
+        "용도지역",
+        "부지",
+        "계획 건축물의 용도"
+      ],
+      "verifiedLegalSummary": "용도지역별 건축물의 용도·종류·규모 제한을 대통령령으로 정하고 시행령71과 용도지역별 별표로 구체화한다.",
+      "operatorProposal": "창고·점포 입지 후보에서 시설 용도와 지정 구역의 관계를 검토할 일로 표시",
+      "references": [
+        "food-land:land-law-76",
+        "food-land:land-decree-71"
+      ],
+      "limits": [
+        "용도지역 이름만 보고 모든 창고/카페의 허용 여부를 자동 판정하거나 한 번의 클릭으로 금지를 해제하지 않는다.",
+        "별표별 허용/금지 목록·지방조례·다른 특별법·개별 경과규정까지 완결 조사하지 않음."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "land-local-ordinance",
+      "family": "국토계획",
+      "title": "국토계획법 제76조제2항의 위임/공간 적용",
+      "basisArticles": [
+        "국토계획법 제76조제2항"
+      ],
+      "delegatedNormTypes": [
+        "지방자치단체 조례(대통령령 기준에 따른 위임)"
+      ],
+      "actualAuthority": "해당 지방자치단체의 조례 제정/집행 주체; 지방의회 의결 절차와 행정 집행을 구분",
+      "spatialScope": [
+        "용도지구",
+        "해당 조례의 관할 지역",
+        "해당 부지"
+      ],
+      "verifiedLegalSummary": "용도지구의 건축물·시설 용도/종류/규모 제한은 특별규정이 없는 범위에서 대통령령 기준에 따라 해당 지방자치단체 조례로 정할 수 있다.",
+      "operatorProposal": "후보 부지가 속한 관할 조례/고시를 찾아 시설 검토 카드에 근거로 연결",
+      "references": [
+        "food-land:land-law-76",
+        "food-land:local-law-effective-body"
+      ],
+      "limits": [
+        "같은 시설 유형에 전국 어느 곳에서나 같은 규칙이 적용된다고 추정하거나 경영자가 조례를 새로 만드는 기능으로 확장하지 않는다.",
+        "어느 지역의 실제 조례도 이번에 선택/원문 수집하지 않음. 위임 가능성의 법적 연결을 확인한 범위."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    },
+    {
+      "caseId": "local-legislative-boundary",
+      "family": "지방자치",
+      "title": "지방자치법 제28조·제29조의 위임/공간 적용",
+      "basisArticles": [
+        "지방자치법 제28조·제29조"
+      ],
+      "delegatedNormTypes": [
+        "조례·지방자치단체 규칙"
+      ],
+      "actualAuthority": "지방자치단체 및 그 장(조례의 의결 등 절차와 규칙 제정 주체 구별)",
+      "spatialScope": [
+        "관할 지방자치단체",
+        "해당 규범이 정한 하위 공간/시설/업무"
+      ],
+      "verifiedLegalSummary": "지역에 적용될 자치규범을 정할 권한과 범위를 정한다. 권리 제한·의무·벌칙 조례에는 법률 위임이 필요하다.",
+      "operatorProposal": "운영방침의 지도 적용 범위를 회사 권한/대상 시설로 제한하고 실제 지역 규제와 충돌 여부를 별도로 확인",
+      "references": [
+        "food-land:local-law-effective-body"
+      ],
+      "limits": [
+        "지도 배율이 조례·총리령·부령의 상하 순서가 되지 않으며 경영자 운영방침을 자치법규라고 부르지 않는다.",
+        "2027-04-14 시행예정 제28조 개정문을 현재 적용으로 포함하지 않음."
+      ],
+      "proposalApproved": false,
+      "operatorProposalStatus": "HistoricalAssistantSuggestion_NotAdopted_NotCurrentScope"
+    }
+  ],
+  "taxonomy": [
+    {
+      "kind": "법률",
+      "issuer": "국회 입법권·법률 공포 절차",
+      "mapMeaning": "공통 준수조건과 위임의 출발점",
+      "sourceIds": [
+        "constitution-art40"
+      ]
+    },
+    {
+      "kind": "대통령령",
+      "issuer": "대통령",
+      "mapMeaning": "구체 위임/집행 사항. 지도 크기 등급이 아님",
+      "sourceIds": [
+        "constitution-art75"
+      ]
+    },
+    {
+      "kind": "총리령",
+      "issuer": "국무총리",
+      "mapMeaning": "소관사무별 구체 위임/집행 사항",
+      "sourceIds": [
+        "constitution-art95"
+      ]
+    },
+    {
+      "kind": "부령",
+      "issuer": "행정각부의 장",
+      "mapMeaning": "국토교통부령 등 실제 부처명·위임조문과 결속",
+      "sourceIds": [
+        "constitution-art95",
+        "government-art29"
+      ]
+    },
+    {
+      "kind": "자치법규(조례·규칙)",
+      "issuer": "권한 있는 지방자치단체 기관; 상세는 지방자치법/개별법 확인",
+      "mapMeaning": "관할 구역·대상 사무·위임 범위로 적용",
+      "sourceIds": [
+        "constitution-art117",
+        "administrative-basics-art2"
+      ]
+    },
+    {
+      "kind": "행정규칙·고시 등",
+      "issuer": "권한 있는 행정기관의 장 등",
+      "mapMeaning": "위임 근거/내용/내부 지시 또는 공고 성격을 별도로 판단",
+      "sourceIds": [
+        "administrative-basics-art2",
+        "administrative-innovation-art4",
+        "regulatory-basics-art4-current"
+      ]
+    },
+    {
+      "kind": "개별 행정처분",
+      "issuer": "법령상 권한을 가진 행정청",
+      "mapMeaning": "특정 시설/사업자/사실에 결속된 허가·거부·명령 등",
+      "sourceIds": [
+        "administrative-basics-art2"
+      ]
+    },
+    {
+      "kind": "기업 운영방침(게임 제안)",
+      "issuer": "현재 플레이어가 정당하게 관리하는 조직/시설의 경영자",
+      "mapMeaning": "현실 법령의 준수조건 안에서 자기 조직에 적용. 대통령령/부령으로 표시하지 않음",
+      "sourceIds": [],
+      "legalFact": false
+    }
+  ],
+  "hierarchyFindings": [
+    {
+      "id": "H-01",
+      "subject": "법률",
+      "finding": "헌법 제40조는 입법권을 국회에 둔다. 대통령령·총리령·부령의 제정 근거와 위임 범위는 개별 법률을 따라 확인한다.",
+      "sourceIds": [
+        "constitution-art40",
+        "constitution-art75",
+        "constitution-art95"
+      ],
+      "classification": "VerifiedLegalTextAndExplanation"
+    },
+    {
+      "id": "H-02",
+      "subject": "대통령령",
+      "finding": "대통령은 법률에서 구체적 범위를 정해 위임받은 사항과 법 집행에 필요한 사항에 관해 대통령령을 발할 수 있다. 대통령이 전국 지도에 임의로 모든 종류의 명령을 놓을 수 있다는 의미가 아니다.",
+      "sourceIds": [
+        "constitution-art75",
+        "administrative-basics-art8"
+      ],
+      "classification": "VerifiedLegalTextAndMapBoundaryInference"
+    },
+    {
+      "id": "H-03",
+      "subject": "총리령·부령",
+      "finding": "헌법 제95조의 주체는 국무총리 또는 행정각부의 장이며 소관사무에 관해 법률이나 대통령령의 위임 또는 직권으로 총리령·부령을 발한다. 사용자가 말한 장관령은 이 조사에서 정식 규범 종류인 부령으로 분류한다.",
+      "sourceIds": [
+        "constitution-art95",
+        "government-art29"
+      ],
+      "classification": "VerifiedLegalTextAndTerminologyNormalization"
+    },
+    {
+      "id": "H-04",
+      "subject": "총리령과 부령을 자동 서열로 쓰지 않음",
+      "finding": "헌법 제95조는 두 규범을 소관사무와 수권 근거로 정한다. 지도 면적·줌 단계·게임 레벨만으로 총리령을 모든 부령의 상위로 두지 않는다. 개별 규범 충돌의 법적 판단까지 확정한 것은 아니다.",
+      "sourceIds": [
+        "constitution-art95",
+        "regulatory-basics-art4-current"
+      ],
+      "classification": "MapDesignBoundaryInference"
+    },
+    {
+      "id": "H-05",
+      "subject": "식약처와 총리령의 관계",
+      "finding": "현재 정부조직법 제26조는 식품·의약품 안전을 관장하는 식품의약품안전처를 국무총리 소속으로 둔다. 식품 분야의 시행규칙이 총리령인 이유는 지방/전국 지도 크기와 별개인 조직·수권 구조로 읽어야 한다. 식품위생법의 구체 위임은 별도 분야 조사와 결합한다.",
+      "sourceIds": [
+        "government-art26",
+        "constitution-art95"
+      ],
+      "classification": "VerifiedOrganizationAndDomainLinkInference"
+    },
+    {
+      "id": "H-06",
+      "subject": "조례·규칙",
+      "finding": "헌법 제117조는 지방자치단체가 법령 범위 안에서 자치 규정을 제정할 수 있게 하고, 행정기본법은 지방자치단체의 조례·규칙을 자치법규로 구분한다. 동네로 확대했다고 동장에게 독자적 조례 제정권이 생기는 구조가 아니다.",
+      "sourceIds": [
+        "constitution-art117",
+        "administrative-basics-art2"
+      ],
+      "classification": "VerifiedLegalTextAndMapBoundaryInference"
+    },
+    {
+      "id": "H-07",
+      "subject": "훈령·예규·고시·지침",
+      "finding": "현행 행정업무 규정 제4조는 하급기관/소속공무원에 대한 훈령·지시·예규·일일명령을 지시문서, 고시·공고를 일반에게 알리는 공고문서로 분류한다. 다만 행정기본법 제2조와 행정규제기본법 제4조는 상위법령의 구체적 위임을 받은 행정규칙/고시를 인정하므로 명칭만으로 법적 효력 유무를 단정하지 않는다.",
+      "sourceIds": [
+        "administrative-innovation-art4",
+        "administrative-basics-art2",
+        "regulatory-basics-art4-current"
+      ],
+      "classification": "VerifiedLegalTextAndExplanation"
+    },
+    {
+      "id": "H-08",
+      "subject": "일반 규범과 개별 처분·업무명령",
+      "finding": "행정기본법 제2조는 구체적 사실에 관한 공권력 행사/거부 등을 처분으로 정의한다. 전국 공통 등록 기준, 특정 시설에 대한 허가/시정명령, 기업 내부의 작업 순서 방침은 동일한 객체로 합치지 않는다. 정부조직법 제7조의 행정기관 내부 지휘와 기업 경영자의 권한도 구분한다.",
+      "sourceIds": [
+        "administrative-basics-art2",
+        "government-art7"
+      ],
+      "classification": "VerifiedLegalTextAndMapBoundaryInference"
+    },
+    {
+      "id": "H-09",
+      "subject": "법률 근거와 구체 위임",
+      "finding": "행정기본법 제8조는 권리 제한/의무 부과 등 중요 영향 행정작용의 법률 근거를 요구한다. 행정규제기본법 제4조는 규제의 세부사항을 구체적 위임에 따라 대통령령·총리령·부령·조례·규칙 등으로 정하고 일부 전문·기술/경미 사항에 한해 고시 등 위임을 허용한다.",
+      "sourceIds": [
+        "administrative-basics-art8",
+        "regulatory-basics-art4-current"
+      ],
+      "classification": "VerifiedLegalTextAndExplanation"
+    },
+    {
+      "id": "H-10",
+      "subject": "시행령·시행규칙 명칭",
+      "finding": "시행령/시행규칙이라는 문서 제목과 대통령령/총리령/부령이라는 규범 종류를 별도 필드로 저장한다. 일반적인 이름 관행만으로 발령 주체나 적용 범위를 자동 확정하지 않고 실제 공포번호·위임 조문을 읽는다.",
+      "sourceIds": [
+        "constitution-art75",
+        "constitution-art95"
+      ],
+      "classification": "ResearchDataModelProposal"
+    }
+  ],
+  "futureOrExcluded": {
+    "logistics": [
+      {
+        "law": "물류시설의 개발 및 운영에 관한 법률",
+        "effectiveDate": "2026-12-03",
+        "number": "법률 제21175호",
+        "status": "AnnouncedNotCurrentAsOf20261116",
+        "evidenceLevel": "OfficialSearchMetadataOnly",
+        "officialUrl": "https://www.law.go.kr/LSW/lsSc.do?query=물류시설의+개발+및+운영에+관한+법률"
+      },
+      {
+        "law": "물류정책기본법",
+        "effectiveDate": "2027-03-23",
+        "number": "법률 제21966호",
+        "status": "AnnouncedNotCurrentAsOf20261116",
+        "evidenceLevel": "OfficialSearchMetadataOnly",
+        "officialUrl": "https://www.law.go.kr/lsSc.do?menuId=1&query=물류정책기본법"
+      },
+      {
+        "law": "화물자동차 운수사업법",
+        "effectiveDate": [
+          "2027-09-23",
+          "2028-01-01"
+        ],
+        "number": [
+          "법률 제21970호",
+          "법률 제21483호"
+        ],
+        "status": "AnnouncedNotCurrentAsOf20261116_PartialEffectiveDates",
+        "evidenceLevel": "OfficialSearchMetadataOnly",
+        "officialUrl": "https://www.law.go.kr/lsSc.do?menuId=1&query=화물자동차+운수사업법"
+      }
+    ],
+    "foodLand": [
+      {
+        "title": "지방자치법 제28조 개정",
+        "effectiveFrom": "2027-04-14",
+        "note": "lsInfoP 현행 페이지에도 함께 보이지만 efYd=20261015의 실제 본문과 분리. 현행 조건에 적용하지 않음."
+      },
+      {
+        "title": "식품위생법 2026-12-31 시행 판본",
+        "effectiveFrom": "2026-12-31",
+        "note": "검색에서 발견되었지만 이번 현행 사실의 근거로 사용하지 않음."
+      }
+    ],
+    "hierarchy": [
+      {
+        "sourceId": "constitution-main",
+        "evidenceLevel": "MetadataWrapperOnly",
+        "note": "법령 UI와 제목/시행일을 확인. 조문 본문 수집 근거 아님",
+        "officialUrl": "https://www.law.go.kr/lsInfoP.do?docType=JO&joNo=003700&lsiSeq=61603",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/constitution-main.html",
+        "sha256": "279cd8a9725b5989313f6615e7926c86bcab70c0b2b37b8edd2bbb65f97dc39b",
+        "retrievedAtUtc": "2026-11-16T02:27:28.737198+00:00"
+      },
+      {
+        "sourceId": "government-current",
+        "evidenceLevel": "MetadataWrapperOnly",
+        "note": "정부조직법의 고정 lsiSeq/시행일·lsId 확인. 전체 본문 미취득",
+        "officialUrl": "https://www.law.go.kr/LSW/lsInfoP.do?efYd=20261002&lsiSeq=285135",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-current.html",
+        "sha256": "b986ba992292c24c2ec55f22ca70d0d181bab132e81291daffa23f38fd119d67",
+        "retrievedAtUtc": "2026-11-16T02:27:28.980447+00:00"
+      },
+      {
+        "sourceId": "administrative-basics",
+        "evidenceLevel": "MetadataWrapperOnly",
+        "note": "행정기본법 metadata wrapper이며 본문은 별도 조문 취득",
+        "officialUrl": "https://www.law.go.kr/lsInfoP.do?lsiSeq=269955",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-basics.html",
+        "sha256": "bd8d2334718ba36bf35a4e3dff687a91761db6c2ce38faab9b9ebb7332f42083",
+        "retrievedAtUtc": "2026-11-16T02:27:29.056466+00:00"
+      },
+      {
+        "sourceId": "regulatory-basics-current",
+        "evidenceLevel": "MetadataWrapperOnly",
+        "note": "현행 시행일 2026-11-13을 대조. 전체본문 취득 아님",
+        "officialUrl": "https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=285947",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-current.html",
+        "sha256": "1142e4b7a91d644a6ab2989a892f60c1c9781b29135def13f08330130c6cd1b4",
+        "retrievedAtUtc": "2026-11-16T02:30:09.656028+00:00"
+      },
+      {
+        "sourceId": "administrative-innovation-current",
+        "evidenceLevel": "MetadataWrapperOnly",
+        "note": "현행 명칭·시행일·대통령령 번호 대조. 전체본문 취득 아님",
+        "officialUrl": "https://www.law.go.kr/lsInfoP.do?ancYnChk=0&lsId=003728",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-innovation-current.html",
+        "sha256": "c3c121953910ba3823e8cf60037f6f6eab20120e58274bf065bbfae939fe7556",
+        "retrievedAtUtc": "2026-11-16T02:29:11.930802+00:00"
+      },
+      {
+        "sourceId": "administrative-rule-management",
+        "evidenceLevel": "Http200ButNotFound",
+        "note": "해당 행정규칙이 존재하지 않는다는 본문. 유효 규범 수에 포함하지 않음",
+        "officialUrl": "https://law.go.kr/admRulLsInfoP.do?admRulId=2002794",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/administrative-rule-management.html",
+        "sha256": "02ccfc189dcdc5a714f6dd0382e4a8e4e69e8db00ebe0ad18e9e497ff27ed1a7",
+        "retrievedAtUtc": "2026-11-16T02:29:12.879540+00:00"
+      },
+      {
+        "sourceId": "regulatory-basics-art2",
+        "evidenceLevel": "HistoricalArticleSnapshot",
+        "note": "과거 2026-05-12 시행 조문 링크. 현행판은 별도 -current 자료로 대체",
+        "officialUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029989883",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/regulatory-basics-art2.html",
+        "sha256": "b395bae10e801c9edaba439091761ce74eda9069b5419d2d93b129ad7a3b724b",
+        "retrievedAtUtc": "2026-11-16T02:27:29.216985+00:00"
+      },
+      {
+        "sourceId": "moleg-law-hierarchy",
+        "evidenceLevel": "OfficialHistoricalCommentary",
+        "note": "법제처 지식창고 등록일 2009-01-01. 입법론 설명 참고이며 현행 법령/판례 판정 아님",
+        "officialUrl": "https://moleg.go.kr/mpbleg/mpblegInfo.mo?mid=a10402020000&mpb_leg_pst_seq=129281",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/moleg-law-hierarchy.html",
+        "sha256": "4d8991d053b4b7b81fd995d1eff8fa3f1ee9a6116fd4aadfc8063f79fc74920a",
+        "retrievedAtUtc": "2026-11-16T02:29:11.889379+00:00"
+      },
+      {
+        "sourceId": "moleg-legislative-process",
+        "evidenceLevel": "OfficialProcessGuidance",
+        "note": "현재 공식 입법과정 안내. 법령안 심사/공포 흐름 참고이며 실체 위임조문 아님",
+        "officialUrl": "https://moleg.go.kr/menu.es?mid=a10105020000",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/moleg-legislative-process.html",
+        "sha256": "394faffc1762253030c27ffb8e21bcf627adb148084c8e4a5ebab7f6cceb80d2",
+        "retrievedAtUtc": "2026-11-16T02:27:29.308998+00:00"
+      },
+      {
+        "sourceId": "government-art19",
+        "evidenceLevel": "RetrievedArticleOutOfChosenScope",
+        "note": "현행 부총리 조문을 탐색 중 취득했으나 선택 핵심 근거에는 사용하지 않음",
+        "officialUrl": "https://www.law.go.kr/lsLinkProc.do?joNo=001900&lsClsCd=L&lsId=001720&mode=4",
+        "rawPath": "artifacts/local/map-legal-orders-r254-20261116/sources-hierarchy/government-art19.html",
+        "sha256": "6a2c004dc4cefb353031694d0e6b8a1a808b9d085dab794d1475d377826257d9",
+        "retrievedAtUtc": "2026-11-16T02:29:11.778854+00:00"
+      }
+    ]
+  },
+  "evidenceFiles": [
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/logistics-research.json",
+      "sha256": "1bbb33524c84e81b8ad7661431337ac91903df247e7c122996a10f39674883fe"
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/logistics-verification.json",
+      "sha256": "bbf618b81a6741be51fc5f56a80f13ff41269011546b931bc774dadb8700a1ed"
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/food-land-research.json",
+      "sha256": "b1243766013ee9fad949aed60b9c30d9bf3fbc1792e3a50c00b5c8183eca6ca0"
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/food-land-verification.json",
+      "sha256": "65a379fd38ad97d285f9d16f9f3712a73a295dc317a7687bf2f45c07dc881f06"
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/hierarchy-research.json",
+      "sha256": "07d2e5a60d30837f3714b2c17edd64c933bd99a0ecf72f041b40f4da011fbaf1"
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/hierarchy-verification.json",
+      "sha256": "6a9ea766236a9055ece83f7f30c17b87b3279b1415a43d01dc741efba6f0dff5"
+    }
+  ],
+  "localArtifacts": [
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/delegation-cases.csv",
+      "sha256": "534bfcbae2cbeca929c6636ba5d38ee2de7239d2904cb1ad93c503bceb882ff2",
+      "bytes": 43018
+    },
+    {
+      "path": "artifacts/local/map-legal-orders-r254-20261116/map-legal-orders.sqlite",
+      "sha256": "dddea16ddaf24123b8c5edc938776236adf59005c18bc3e01f8428330604521a",
+      "bytes": 217088
+    }
+  ],
+  "limits": [
+    "Selected current legal provisions only; no case-specific legal applicability decision",
+    "Local ordinances, delegated local authorities, actual designations/permits and GIS boundaries pending",
+    "Public law instruments and governmental dispositions separate from proposed company operating policies",
+    "Wrapper/support captures are not counted as retrieved legal article text"
+  ],
+  "mutations": {
+    "sharedDatabaseWritten": false,
+    "productCodeChanged": false,
+    "gameFeatureImplemented": false,
+    "scheduledJobsChanged": false,
+    "commitPerformed": false,
+    "pushPerformed": false
+  },
+  "planningRef": {
+    "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
+    "revision": "r255",
+    "documentRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-legal-delegation-and-operating-orders.research.r254.md",
+    "sha256": "20c47adc6b050903a1b2a61e7b67073d8ebe499d6e099176f93813937a85c412",
+    "roleChoiceConfirmed": false,
+    "individualCardImplementationApproved": false
+  },
+  "previousRoleAnswerContext": "CurrentBusinessOperator",
+  "researchPurpose": "InformationOnly_PreOperationRegistrationPermitNotificationFacilityRequirements",
+  "gameDesignStatus": "Undecided_NotRequested",
+  "scopeClarification": {
+    "revision": "r255",
+    "confirmedAtUtc": "2026-11-16T02:49:41.320840+00:00",
+    "priorOperatingOrdersInferenceWithdrawn": true,
+    "rawSourcesAndPriorDerivedArtifactsPreserved": true,
+    "priorOperatorProposalsAreUserRequirements": false
+  }
+}

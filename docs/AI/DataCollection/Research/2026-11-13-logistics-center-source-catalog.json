@@ -761,7 +761,96 @@
       ]
     }
   ],
-  "publicFacilitySamples": [],
+  "publicFacilitySamples": [
+    {
+      "originalBusinessName": "(주)씨제이이엔엠",
+      "originalPublicAddress": "인천광역시 남동구 호구포로 161, 11~15층 (고잔동)",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "주식회사 발렉스특수물류",
+      "originalPublicAddress": "서울특별시 송파구 송파대로 55, 서울복합물류 C동 20~23호 (장지동)",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "한국로지스풀(주)",
+      "originalPublicAddress": "울산광역시 울주군 두서면 활천산업로 119, (주)KCC울산물류창고 1층",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "주식회사 엠에스로지스쓰리피엘",
+      "originalPublicAddress": "경기도 화성시 만세구 양감면 두머리길 37-10",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "용마로지스(주)",
+      "originalPublicAddress": "경기도 안성시 일죽면 노성로 168-74, E동 4층",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "한국도심공항자산관리(주)",
+      "originalPublicAddress": "인천광역시 영종구 자유무역로107번길 20, 한국도심공항(주) 인천공항1단계 물류센터 (운서동)",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "제주특별자치도 스마트공동물류센터",
+      "originalPublicAddress": "제주특별자치도 제주시 곰방매길 103 (아라이동)",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    },
+    {
+      "originalBusinessName": "주식회사 에이치원메디",
+      "originalPublicAddress": "경기도 화성시 만세구 양감면 정문송산로184번길 17, 지상 1층(일부) 및 지하1층(일부)",
+      "addressPublic": true,
+      "sourceUrl": "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action",
+      "sourceKind": "official-web-table read; independent from binary workbook row parsing",
+      "facilityType": "물류시설법 물류창고업 공표시설",
+      "classificationCertainty": "공표유형만 확인; 택배/배송센터/허브 역할 확정 아님",
+      "coordinates": null,
+      "evidenceAsOf": null
+    }
+  ],
   "equipmentSourcesAreNotKoreanFacilityVendorAssignments": true,
   "privateDataCollected": false,
   "officialFactoryLayoutsObtained": false,
@@ -776,13 +865,5 @@
   "productChanged": false,
   "schedulesChanged": false,
   "dbChanged": false,
-  "distributionApprovedByThisResearch": false,
-  "publicFacilitySampleEvidence": {
-    "observedRows": 8,
-    "sharedRows": 0,
-    "sourceUrls": [
-      "https://www.nlic.go.kr/nlic/WhsInfoWarehouseSch.action"
-    ],
-    "reason": "시설명·원문주소 8행과 원본은 내부 조사 자료에 보관한다. 이 대장에는 열람 수와 공식 출처를 남긴다."
-  }
+  "distributionApprovedByThisResearch": false
 }

@@ -1,0 +1,1556 @@
+{
+  "schemaVersion": "hongdal.visual-data-effect-research-catalog.v1",
+  "titleKo": "홍달 디오라마 시각 효과·보유 자료·기술 근거 모음",
+  "collectedAtUtc": "2026-11-15T14:12:47.481691+00:00",
+  "scope": "ResearchAndPreparationOnly",
+  "summary": {
+    "datasetCategories": 15,
+    "effectEntries": 15,
+    "officialSources": 8,
+    "bindingExamples": 8,
+    "dataEvidenceFiles": 26,
+    "effectCodeAnchors": 51
+  },
+  "workspaces": {
+    "unity": {
+      "name": "ssalddel",
+      "commit": "42e337d79ffa87187845334613e62d68b36efe2e"
+    },
+    "mirror": {
+      "name": "Hongdal",
+      "commit": "81b6af97e244cbcfd73199e9f0cdcc04234e4723"
+    }
+  },
+  "evidenceCeilingKo": "현재 작업본과 커밋 소스·기존 반환/실행 기록·확보된 manifest를 읽었다. 이번에 Unity 실행·새 빌드·원본 DB 반입·새 원자료 수집·팩 설치는 하지 않았다.",
+  "existingCatalogRefs": [
+    "eng/world-seedbeds/neighborhood-packages/semantic-layers.v1.json",
+    "eng/world-seedbeds/spatial-resource-inventory/catalog.v1.json",
+    "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/data-packs-and-observation-layers.proposal.r160.md"
+  ],
+  "spatialEditionContract": {
+    "normalRuntime": {
+      "manifestScopeModuleCount": 30,
+      "includedDongModules": 6,
+      "sourceVintage": "oa22160-file-20231031+al-d010-20260809+nodelink-20260812+mois-jscode-20260301+projection-r2",
+      "sha256": "878c18ede26c61bfe08c80c42840b46015c2f0404e39197a189fb071a001963d"
+    },
+    "historicalDongCount": 64,
+    "registryDongCount": 65,
+    "sameCodeLinks": 63,
+    "secondary20261001Count": 65,
+    "verifiedOfficialCurrentPolygonCount": 0,
+    "reviewBuildIncludedDongModules": 6,
+    "reviewBuildDistinction": "검토판 6동의 기존 실행 증거. 현재 일반판 포함이나 외부 배포를 의미하지 않는다."
+  },
+  "sourceSnapshots": [
+    {
+      "kind": "implementation",
+      "path": "artifacts/local/visual-data-intake-20261115/implementation-fragment.json",
+      "bytes": 34797,
+      "sha256": "957b87a059be2e3aa8125e93903ecdadab45acd38cf9a65d431ce746c8264c42"
+    },
+    {
+      "kind": "data",
+      "path": "artifacts/local/visual-data-intake-20261115/data-fragment.json",
+      "bytes": 23835,
+      "sha256": "cd0b61305a45cb4a7de78cfcef3d25ee3d656d182dad11e4d7bcc6214d34af48"
+    },
+    {
+      "kind": "official-sources",
+      "path": "artifacts/local/visual-data-intake-20261115/official-sources-fragment.json",
+      "bytes": 9402,
+      "sha256": "d1b2a5b1300d893a4c4b87662a62eaaf16637efa490603f4d80d9d27da94184b"
+    }
+  ],
+  "dataEvidence": {
+    "boundary": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/boundary/manifest.json",
+      "sha256": "b1916f144797e65b32c14d1bff89561feaf2303e4b9f50e9edcb8260144a92fd",
+      "bytes": 15312,
+      "repo": "mirror"
+    },
+    "r3": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/catalog.json",
+      "sha256": "d795eb25cc8f7c483bc15829394ec47f4e30905f009a84e182f20ca2ab2ab743",
+      "bytes": 26540,
+      "repo": "mirror"
+    },
+    "detail": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/candidate-detail/manifest.json",
+      "sha256": "3422642105b8ed76ed11dd4a98f181fe7973e05bc9629bbdb0f83b9d65ae634e",
+      "bytes": 77824,
+      "repo": "mirror"
+    },
+    "streets": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/streets/candidate-20261001/manifest.json",
+      "sha256": "f641354dbd1989c9710b6b6d44f7c168422aca7344c2882da1ae07be5142330c",
+      "bytes": 56913,
+      "repo": "mirror"
+    },
+    "lanes": {
+      "path": "artifacts/local/public-data/admin-dong-lane-marking-20260926-r1/source-manifest.json",
+      "sha256": "1653911737093b53541245c89017aafbb94e13d1340848bfdbc8f2b5c664bfb6",
+      "bytes": 1458,
+      "repo": "mirror"
+    },
+    "furniture": {
+      "path": "artifacts/local/admin-dong-diorama-supplement-20261115-r2/street-furniture/manifest.json",
+      "sha256": "9fb9115ab99bfb8f2181896ce7d3101fc756fbc13a8a32df9ff84b058ed5af58",
+      "bytes": 74235,
+      "repo": "mirror"
+    },
+    "green": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/green/candidate-20261001/manifest.json",
+      "sha256": "a631dac865440e0a93254b79025b65c184b9134bc7e7669f0983f343d922f31e",
+      "bytes": 22642,
+      "repo": "mirror"
+    },
+    "trees": {
+      "path": "artifacts/local/admin-dong-diorama-precision-r3/green/receipt-OA-23040.json",
+      "sha256": "041bb19209efbd4edaed9d10235e6cfd5f38018f8104b51d608ca10ffd3750cf",
+      "bytes": 766,
+      "repo": "mirror"
+    },
+    "historical": {
+      "path": "artifacts/local/admin-dong-precision-modules-20261115/package-manifest.json",
+      "sha256": "a0c1da9f340a94ea3772fa40cead4d0e998ff4c65dd9bc6b06843dd957cb11ee",
+      "bytes": 33521,
+      "repo": "mirror"
+    },
+    "height": {
+      "path": "artifacts/local/seasonal-scenery-terrain-r221-20261115/source-readback.json",
+      "sha256": "3097689a5452dfbf1754ee45f342a93cb766fbac28313dcd265dc0e15a5fb6c8",
+      "bytes": 4606,
+      "repo": "mirror"
+    },
+    "bind": {
+      "path": "artifacts/local/dong-restaurants-building-binding-20261115/pack/supplemented-r4/catalog.json",
+      "sha256": "d9775880351cf12efc15dd14bf86102f7cdda96abeb156737362567d1e987998",
+      "bytes": 76906,
+      "repo": "mirror"
+    },
+    "floors": {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/catalog.json",
+      "sha256": "c123a60da8f93820e98625e0cc978fdc6645f8525d3843446103b6c1e2564dfc",
+      "bytes": 17177,
+      "repo": "mirror"
+    },
+    "doors": {
+      "path": "artifacts/local/dong-restaurants-floor-entrance-20261115/verification.json",
+      "sha256": "dc3e58e1b10c2082bb8c910147083cfcb233ab399cf942783c371cec4d288be1",
+      "bytes": 839,
+      "repo": "mirror"
+    },
+    "pop": {
+      "path": "artifacts/local/admin-dong-diorama-supplement-20261115-r2/population/manifest.json",
+      "sha256": "229d658020afaab8f5cd986a48e5dd202bf0dd01f2ce5520cfad4ac590e1e55d",
+      "bytes": 43109,
+      "repo": "mirror"
+    },
+    "resident": {
+      "path": "artifacts/local/dong-population-map-demand-r200-20261114/data-review.json",
+      "sha256": "eb2f8f9ce138f3b65eb76ed73a8c60c960801f9d71ff486552a2bce267d2bd29",
+      "bytes": 978,
+      "repo": "mirror"
+    },
+    "hub": {
+      "path": "artifacts/local/logistics-facilities-intake-20261114/summary.json",
+      "sha256": "054179f8d90f7b77e2eaeeaab18505f16d04047db0d4a5ff49911755cda5b9e6",
+      "bytes": 3126,
+      "repo": "mirror"
+    },
+    "trade": {
+      "path": "artifacts/local/public-data/korea-trade-2025-r1/globe-preview.json",
+      "sha256": "79e45c22c16414461796954e8d749380d0b9b41bbd8187cfc1ce3d5846312f71",
+      "bytes": 2608,
+      "repo": "mirror"
+    },
+    "tradeTerms": {
+      "path": "artifacts/local/public-data/korea-trade-2025-r1/metadata.json",
+      "sha256": "fffc5881bc85066406c86d6ce4d28a2069b62470e85bc628a1017e094c84ced7",
+      "bytes": 2360,
+      "repo": "mirror"
+    },
+    "wx": {
+      "path": "docs/AI/DataCollection/Research/2026-11-13-observer-source-catalog.json",
+      "sha256": "aed2abc01b6185bfc4cfa08598045015d1bdf73da34232da44e8de31eb3c0fab",
+      "bytes": 45646,
+      "repo": "mirror"
+    },
+    "r4Bake": {
+      "path": "artifacts/local/admin-dong-unity-r4/bake/receipt.json",
+      "sha256": "4830b678548ff4bc9939e18a3b4bc2282c03a5c5800f51eb6d654ad7f9ba0ad8",
+      "bytes": 13722,
+      "repo": "mirror"
+    },
+    "r4Screen": {
+      "path": "artifacts/local/admin-dong-unity-r4/capture/normal-20261115-123936-361/normal-launch.json",
+      "sha256": "805c93d61673edcf13dac72e76a83f9e22e2acdae6cae820055553c3ae5db884",
+      "bytes": 596,
+      "repo": "mirror"
+    },
+    "windows": {
+      "path": "Assets/Ssalddel/WindowsGame/Resources/hongdal-dong-modules.json",
+      "sha256": "878c18ede26c61bfe08c80c42840b46015c2f0404e39197a189fb071a001963d",
+      "bytes": 27008,
+      "repo": "unity"
+    },
+    "demand": {
+      "path": "Assets/Ssalddel/WindowsGame/Resources/hongdal-dong-demand.json",
+      "sha256": "614f49d52e67d5b272de46a2372e825a154c99f21d6aba2230a591f23f091eb0",
+      "bytes": 4519,
+      "repo": "unity"
+    },
+    "screenStatus": {
+      "path": "docs/AI/Handoffs/Unity-Windows-구현현황.md",
+      "sha256": "1951bab25b0b7a7c5c3b5118c6f5a5f2d90b0da02031450a350f20c8ad9fc532",
+      "bytes": 46850,
+      "repo": "mirror"
+    },
+    "seasons": {
+      "path": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-scenery-trees-and-terrain.design.r221.md",
+      "sha256": "5a0c63666631d4edf95b9823351426f05bbb4772aa2f2510cf27e817a6f6d754",
+      "bytes": 14515,
+      "repo": "mirror"
+    },
+    "licenses": {
+      "path": "docs/AI/DataCollection/Research/2026-11-13-restaurants-regions-menus-intake.json",
+      "sha256": "f954a66fe8c501221433d53e8074b163329f33ff916e01c30807e08c1b1cf8a8",
+      "bytes": 22447,
+      "repo": "mirror"
+    }
+  },
+  "datasets": [
+    {
+      "id": "boundary",
+      "titleKo": "행정동 경계와 인접 지역",
+      "evidenceRefs": [
+        "boundary",
+        "r3",
+        "historical",
+        "windows",
+        "r4Bake",
+        "r4Screen"
+      ],
+      "observedScope": {
+        "currentRegistryCount": 65,
+        "historicalViewerCount": 64,
+        "secondaryDatedOutlineCount": 65,
+        "officialCurrentCount": 0
+      },
+      "spatialReferenceAndUnits": "2026 후보 OGC:CRS84 경도/위도, 역사 검토 EPSG:5186 m",
+      "sourceTime": "현재 명부와 2026-10-01 SGIS 가공 후보, 2023-10-31 역사 경계",
+      "reuse": "2026 SGIS 공공누리 1유형, 가공본 CC BY 4.0. 출처·가공 내용 명시. 묶음 배포 승인 없음.",
+      "windowsGameEvidence": "일반판은 2023 후보의 면목 6동. 2026 후보는 별도 r4 6동 실행 이력.",
+      "proposedVisual": "선택 동 테두리, 이웃의 낮은 명도. 동 이름과 판본을 함께 표시.",
+      "limitations": "같은 코드 63곳도 도형 동일 보장 없음. 옛 용신동을 신설동·용두동으로 임의 분배하지 않는다."
+    },
+    {
+      "id": "building",
+      "titleKo": "건물 외곽·용도·층수·높이",
+      "evidenceRefs": [
+        "detail",
+        "windows",
+        "r4Bake"
+      ],
+      "observedScope": {
+        "sourceRows": 116780,
+        "pieces": 117551,
+        "sourceRowsWithMissingHeight": 68006,
+        "sourceRowsAcrossSelectedBoundaries": 771,
+        "repeatedNonemptySourceIdsAcrossRows": 56,
+        "rowsWithoutSourceId": 0
+      },
+      "spatialReferenceAndUnits": "EPSG:5186 m, 층수는 층. 높이 결측은 원자료 상태 유지.",
+      "sourceTime": "서울 AL_D010 2026-08-09",
+      "reuse": "건물 자료 이용조건 충돌(RightsConflictUnresolved). 내부 검토용.",
+      "windowsGameEvidence": "일반판의 기존 건물 표현과 r4 검토판의 새 조각은 다른 판본.",
+      "proposedVisual": "실제 외곽의 건물 덩어리, 선택 시 층수·높이 근거, 운영 중인 점포만 별도 빛.",
+      "limitations": "조각 합계를 독립 건물 수로 읽을 수 없음. 원본 높이 68,006행 결측. 표현 높이는 실측으로 표시하지 않는다."
+    },
+    {
+      "id": "roads",
+      "titleKo": "방향 있는 도로 중심선",
+      "evidenceRefs": [
+        "detail",
+        "windows",
+        "r4Bake"
+      ],
+      "observedScope": {
+        "sourceRows": 9446,
+        "pieces": 10303,
+        "sourceRowsAcrossSelectedBoundaries": 836,
+        "repeatedNonemptySourceIdsAcrossRows": 0,
+        "rowsWithoutSourceId": 0
+      },
+      "spatialReferenceAndUnits": "작업 EPSG:5186 m, 원천 노드·링크 ID와 중심선",
+      "sourceTime": "표준노드링크 2026-08-12",
+      "reuse": "원천 UseScopeUnrestricted. 새 경계와 건물을 함께 쓸 때는 각각의 조건 적용.",
+      "windowsGameEvidence": "일반판 길 폭과 골목에는 표현용 계산이 포함된다. r4 6동은 중심선 915조각 수록.",
+      "proposedVisual": "회색 중심선, 선택 배달의 진행 방향과 확인된 구간 강조.",
+      "limitations": "중심선만으로 노폭·실시간 차량·배달기사 실제 동선·통행성을 알 수 없다."
+    },
+    {
+      "id": "walk-lane",
+      "titleKo": "보행선·교통지점·차선",
+      "evidenceRefs": [
+        "streets",
+        "lanes",
+        "r4Bake"
+      ],
+      "observedScope": {
+        "walkLinks": 48948,
+        "walkLandmarks": 1526,
+        "laneMarkingFragments": 50035,
+        "drawableLaneSegments": 131509
+      },
+      "spatialReferenceAndUnits": "도보 WGS84→EPSG:5186. 차선 SHP EPSG:5186. 기준 평면 m, 포장값 mm",
+      "sourceTime": "도보망 2020, 차선 첨부 2021-08-09",
+      "reuse": "보행망 KOGL1. 차선과 합성 시 출처·파일 조건 확인. 전체 묶음 배포 미승인.",
+      "windowsGameEvidence": "r4 6동에 지표 도보선 5,086조각. 전체 교통지점·차선의 일반판 렌더 미확인.",
+      "proposedVisual": "가까운 확대에서 보행 연결·차선 구분. 군중은 확인된 지표 링크에서만 가상 연출.",
+      "limitations": "실내·육교와 지표를 분리한다. 도색 상태·현재 통행과 안전성 미확인."
+    },
+    {
+      "id": "crossings",
+      "titleKo": "교차로 및 횡단보도",
+      "evidenceRefs": [
+        "furniture",
+        "windows"
+      ],
+      "observedScope": {
+        "intersectionsSourceRows": 8097,
+        "intersectionsOutputFeatures": 1232,
+        "crosswalksSourceRows": 21776
+      },
+      "spatialReferenceAndUnits": "교차로 EPSG:5186 m. 횡단보도 별도 원본 X/Y의 원천 좌표계 미해결.",
+      "sourceTime": "교차로 OA-15534 첨부 2025-08-14. r2 보완 2026-11-15.",
+      "reuse": "서울시 교차로·횡단보도 출처표시. 미확정 좌표는 원문 보관.",
+      "windowsGameEvidence": "일반판은 횡단보도 출처를 표시한다. r2 4구의 QA 완료/정확한 보행점 결속으로 읽지 않는다.",
+      "proposedVisual": "확인된 교차로 표식, 선택 시 횡단 자료 품질 표시.",
+      "limitations": "4구 원시 횡단보도 3,321행은 이 팩에서 좌표 미확정. 보행·충돌 판정에 사용하지 않는다."
+    },
+    {
+      "id": "streetlights",
+      "titleKo": "가로등 위치 후보",
+      "evidenceRefs": [
+        "furniture",
+        "seasons"
+      ],
+      "observedScope": {
+        "streetlightsSourceRows": 19316,
+        "streetlightsInvalidCoordinateRows": 25,
+        "streetlights-candidateOutputFeatures": 3183
+      },
+      "spatialReferenceAndUnits": "원본 위·경도 열의 datum 미선언. WGS84 가정 후 역사 r2 EPSG:5186 m",
+      "sourceTime": "OA-22205 첨부 2023-12-22",
+      "reuse": "KOGL1. 공급자·판본과 해석 가정 표기.",
+      "windowsGameEvidence": "일반판 길가 불빛은 장식. 이 시설 목록으로 배치했다는 근거 없음.",
+      "proposedVisual": "밤에 가로등 후보만 별도 켜고, 실측 등 위치가 확인되면 동일 ID를 결속.",
+      "limitations": "도로사업소·시설공단 범위만 포함. 실제 점등 상태와 골목 보안등을 대표하지 않는다."
+    },
+    {
+      "id": "street-trees",
+      "titleKo": "가로수 위치 원본",
+      "evidenceRefs": [
+        "green",
+        "trees"
+      ],
+      "observedScope": {
+        "receivedXlsx": 1,
+        "bytes": 12928578,
+        "treePointExports": 0
+      },
+      "spatialReferenceAndUnits": "원본 위치정보 XLSX. 표시용 좌표·CRS·개체 수는 이 조사에서 확정하지 않았다.",
+      "sourceTime": "2026 서울시 가로수 위치정보",
+      "reuse": "OA-23040 공공누리 4유형. 현재 팩은 원본 보관만. 파생 배치 및 배포 권리 미확인.",
+      "windowsGameEvidence": "확인된 일반판 데이터 결속 없음.",
+      "proposedVisual": "적합한 별도 허용 소스나 사용자가 직접 만든 나무 위치에서 수관·계절 색을 연출.",
+      "limitations": "보관본 좌표 추출·배포 0. 관광용 장식 수목은 실제 개체로 표시하지 않는다."
+    },
+    {
+      "id": "parks-biotope",
+      "titleKo": "공원 계획면·대표점·비오톱",
+      "evidenceRefs": [
+        "green",
+        "historical",
+        "windows",
+        "r4Bake"
+      ],
+      "observedScope": {
+        "parkFeatures4Gu": 313,
+        "parkClippedPieces": 356,
+        "acceptedMajorParkAnchors": 17,
+        "quarantinedRelevantMajorParkRows": 1,
+        "historicalBiotopeFeatures": 8530
+      },
+      "spatialReferenceAndUnits": "공원 계획면 EPSG:5174, 대표점 EPSG:4326 → EPSG:5186 m. 비오톱은 역사 경계 별도.",
+      "sourceTime": "계획 2018 / 대표점 2026 하반기 / 비오톱 2025",
+      "reuse": "서울시 OA-15529·OA-394·OA-21145 KOGL1. 공원 계획과 현재 개장 여부 구별.",
+      "windowsGameEvidence": "일반판에는 기존 비오톱 기반 녹지. r4 6동에는 공원 계획면 30조각.",
+      "proposedVisual": "공원 면은 연한 식생색, 대표점은 별도 표식. 계절 분위기의 밑바탕.",
+      "limitations": "실제 공원 경계·개장·수종을 대표점이나 계획면으로 단정하지 않는다."
+    },
+    {
+      "id": "relief",
+      "titleKo": "등고선·표고점",
+      "evidenceRefs": [
+        "historical",
+        "height",
+        "seasons"
+      ],
+      "observedScope": {
+        "contours": 2100,
+        "spot-elevations": 6982
+      },
+      "spatialReferenceAndUnits": "역사 모듈 공통 동·북 평면 m. 표고의 원천 단위 및 수직 기준 미검증.",
+      "sourceTime": "2023 역사 64동 모듈에 QA한 서울 OA-22241 자료. 개별 측량 시점 미확인.",
+      "reuse": "원천·보충층별 조건. 로컬 내부 검토만.",
+      "windowsGameEvidence": "WindowsGame 근거상 건물 표면과 평면 바닥. 해당 표고 기반 지형 결속·런타임 승인 없음.",
+      "proposedVisual": "선택 지형 선형/상대 기복 검토. 단위·수직 기준 확인 후 원근 음영.",
+      "limitations": "시각 표고 후보를 도로 경사·충돌·절대 해발이라고 표시할 수 없다."
+    },
+    {
+      "id": "restaurants",
+      "titleKo": "음식점·건물·층·시설 출입구",
+      "evidenceRefs": [
+        "bind",
+        "floors",
+        "doors",
+        "licenses"
+      ],
+      "observedScope": {
+        "sourceActiveLicenseKeys": 19804,
+        "linkedLicenseKeys": 16988,
+        "uniqueUnboundKeys": 2816,
+        "boundKeysWithExactMenuReferences": 313,
+        "officialEntranceObservations": 2254,
+        "osmEntranceObservations": 4718,
+        "storefrontEntranceConfirmedCount": 0
+      },
+      "spatialReferenceAndUnits": "인허가 관리키·지번(PNU)·건물 조각. PNU는 좌표 아님. 공간 후보와 점포 문 구분.",
+      "sourceTime": "2026-11-13 인허가 수집, 11-15 65동 결속·층/출입구 보완. 각 원천 기준일 상이.",
+      "reuse": "공공 인허가·주소 및 건물 권리 별도. OSM ODbL. 메뉴·사진 자동 재배포 없음. 외부 배포 미승인.",
+      "windowsGameEvidence": "r4 검토판 일부 건물에서 필지 후보 수. 최신 16,988키·층/문 보완 팩은 runtimeApplied=false.",
+      "proposedVisual": "건물을 누르면 같은 필지의 점포 목록 및 층 출처. 증명된 점포만 별개 빛; 점포 문 0.",
+      "limitations": "1필지 다건물·건물 다점포. 자료상 영업 상태이며 오늘 영업·실제 주문·상세 주소 속 층과 문은 별개의 상태."
+    },
+    {
+      "id": "flow",
+      "titleKo": "행정동별 추정 유동인구",
+      "evidenceRefs": [
+        "pop",
+        "resident",
+        "demand"
+      ],
+      "observedScope": {
+        "sourceRows": 9350,
+        "selectedRows": 1408,
+        "historicalModuleCount": 64,
+        "currentSameCodeReferenceCount": 63,
+        "sourcePeriodCount": 22,
+        "timeBands": 6
+      },
+      "spatialReferenceAndUnits": "통계 행정동 코드별 추정 인원. 도로·건물 위치 없음.",
+      "sourceTime": "2021Q1~2026Q2, 22분기. 6개 시간대.",
+      "reuse": "OA-22178 KOGL1. 집계 출처·기준분기 표기.",
+      "windowsGameEvidence": "공공 추정치를 동별 군중 개체에 결속한 근거 없음. 일반판 가상 수요팩과 분리.",
+      "proposedVisual": "한 동에서 오전·점심·저녁의 상대 밀도 비교. 합성 보행자를 통계에서 직접 식별하지 않는다.",
+      "limitations": "거리 유동 관측 0. 과거 용신동 통계를 현재 두 동으로 나누지 않는다."
+    },
+    {
+      "id": "resident",
+      "titleKo": "거주인구와 주거연면적 대리값",
+      "evidenceRefs": [
+        "resident",
+        "demand"
+      ],
+      "observedScope": {
+        "officialResidentBodyAcquiredInR200": false,
+        "windowsDemandAreas": 6
+      },
+      "spatialReferenceAndUnits": "주거연면적(m²) 및 행정동 코드. 주민등록 인원과 별도.",
+      "sourceTime": "주거건물 입력 2026-08-09. 실제 주민등록 인구는 확인할 기준월 필요.",
+      "reuse": "현 대리값은 내부 건물자료 기반. 새 주민등록 자료는 원천 이용조건 확인.",
+      "windowsGameEvidence": "일반판 6동 수요팩의 population basis는 residentialFloorArea.",
+      "proposedVisual": "현재 수요 지표가 면적 대리임을 표시. 사용자가 기준월·행정동코드·인원 단위를 갖춘 집계를 넣으면 별도 인구색 표현.",
+      "limitations": "검토한 r200에서 주민 수 원본 미취득. 주거연면적을 사람 수로 환산하지 않는다."
+    },
+    {
+      "id": "hubs",
+      "titleKo": "등록 창고·물류단지·터미널",
+      "evidenceRefs": [
+        "hub"
+      ],
+      "observedScope": {
+        "sourceRows": 6100,
+        "RegisteredWarehouse": 6011,
+        "LogisticsComplex": 59,
+        "LogisticsTerminal": 30,
+        "verifiedCoordinates": 0
+      },
+      "spatialReferenceAndUnits": "등록/시설 목록 행, 시설 유형. 영업시설의 검증 좌표 없음.",
+      "sourceTime": "11-14 수집 대장, 원자료 관측일 미상 6,100행.",
+      "reuse": "NLIC 원본 조건을 파일별로 확인해야 함. 내부 DB 실명/주소 표본 외부 반출 없음.",
+      "windowsGameEvidence": "기존 가상 센터 화면과 별도. 수집물의 게임 반영 없음.",
+      "proposedVisual": "지역·시설유형 표/집계. 위치 검증이 끝난 후보부터 지도 아이콘.",
+      "limitations": "등록 행은 고유 운영센터 수가 아님. 좌표·현재영업·실물 이동경로·층별 배치 미검증."
+    },
+    {
+      "id": "trade",
+      "titleKo": "국가별 수출입 물량·금액",
+      "evidenceRefs": [
+        "trade",
+        "tradeTerms"
+      ],
+      "observedScope": {
+        "previewYear": 2025,
+        "partnerCodes": 5,
+        "directionalItems": 10
+      },
+      "spatialReferenceAndUnits": "국가코드, 수출입 방향, kg·USD. 항로 도형 없음.",
+      "sourceTime": "2025년 통관 통계, 조회 2026-09-22",
+      "reuse": "관세청 원천 메타데이터 이용허락범위 제한 없음. 기존 미리보기는 내부 검토용.",
+      "windowsGameEvidence": "같은 통계가 현재 홍달 전국/세계 화면에 결속됐는지 미확인.",
+      "proposedVisual": "국가 간 거래 관계를 가는 곡선과 물량 범례로 선택 표시.",
+      "limitations": "수단 Unknown. 곡선은 국가 간 집계 관계이며 실제 선박 항로/화물 궤적이 아님."
+    },
+    {
+      "id": "weather-season",
+      "titleKo": "관측 날씨와 계절 분위기",
+      "evidenceRefs": [
+        "wx",
+        "seasons",
+        "height",
+        "screenStatus"
+      ],
+      "observedScope": {
+        "asosRowsInThisReviewedSourceCatalog": 0,
+        "sourceCatalogResearchId": "research:kma:asos-hourly:15057210"
+      },
+      "spatialReferenceAndUnits": "ASOS 관측소 코드·관측시각. 기온/강수/바람 단위는 취득 필드별 확인. KST 달력 계절은 별도.",
+      "sourceTime": "시간 관측 메타데이터. 기준일 기준 디오라마용 관측묶음 미확인.",
+      "reuse": "포털 출처표시·제3자 저작권 표시. 원자료 전송/배포 가능한 항목 확인.",
+      "windowsGameEvidence": "날씨 관측 기반 동별 비/빛/수목 배치 확인 없음. 계절 표현 r221은 기획.",
+      "proposedVisual": "계절 팔레트는 연출로 표시. 비/바람은 가까운 관측소·시각·거리와 함께 실제 관측 또는 사용자 가상값을 선택.",
+      "limitations": "관측소를 행정동 전체 실측으로 볼 수 없다. 자료 없는 날을 맑음/강수량 0으로 보간하지 않는다."
+    }
+  ],
+  "effects": [
+    {
+      "id": "courier-position",
+      "effect": "배차 기사 위치와 기사색 불빛",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "state.couriers[].id",
+        "latitude",
+        "longitude"
+      ],
+      "currentMapping": "현재 배차 상태 좌표를 지도에 투영해 기사색 중심점과 후광을 그린다.",
+      "controlOrDefault": "동 지도에 표시. 표식을 선택하면 기사 상세를 읽는다.",
+      "observationUse": "기사별 위치를 읽기에 적합. 2D 오토바이 이미지를 대체한다.",
+      "importGap": "사용자 기록에 대한 좌표·시각·기사 식별자 변환기 없음.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+          "line": 590,
+          "anchor": "DrawCourierGlow(courier, position)",
+          "commitBlobSha256": "f29f299e5831d8f9f607481cf291e1e667957c94b1fa614f2cad048148bd3c9b",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 494,
+          "anchor": "private void DrawCourierGlow(",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-기사를빛으로-반환.md"
+      ]
+    },
+    {
+      "id": "patrol-activity",
+      "effect": "고용 기사 순찰과 지면 잔광",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "dongDemand.Dongs[].Open",
+        "Riders",
+        "길 그래프의 미터 좌표와 도로/골목 구분",
+        "state.couriers[].route",
+        "_ActivityMap",
+        "_ActivityRect"
+      ],
+      "currentMapping": "고용 기사 순찰은 건물 사이를 결정적으로 길찾기한다. 진행 중인 배차 기사는 상태 좌표를 사용한다. 지면·도로·벽에 지나온 자취와 자주 다닌 길의 온기를 합성한다.",
+      "controlOrDefault": "동 모듈·길 그래프가 있어야 순찰이 작동한다. 게임 정지 시 이동과 잔광 누적도 멈춘다.",
+      "observationUse": "두 종류의 이동을 분리해 설명해야 한다. 생성 순찰은 과거 이동 기록의 재생이 아니다.",
+      "importGap": "실제 경로가 없으면 설정한 출발·도착만 표시할 수 있다. 주소 두 점으로 주행 궤적을 확정할 수 없다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 110,
+          "anchor": "private bool RoamActive",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 161,
+          "anchor": "trade.Open ? Mathf.Min(trade.Riders",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 313,
+          "anchor": "roamLight.Ride((float)east",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Resources/HongdalDiorama.shader",
+          "line": 8,
+          "anchor": "_ActivityMap, _ActivityRect",
+          "commitBlobSha256": "3645b835f352a88a7115ca2162a99c18f21adee50e66927ef5ac8d2cc276a132",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-기사를빛으로-반환.md"
+      ]
+    },
+    {
+      "id": "store-drop-role",
+      "effect": "매장·전달지·역할 건물의 식별 불빛",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "state.stores[].id / latitude / longitude",
+        "state.orders[].storeId / stage, AssignmentOpen",
+        "state.destinations[].latitude / longitude",
+        "BuildingRole.placeId / title",
+        "buildingShapes[building]"
+      ],
+      "currentMapping": "매장은 평소 주황색, 배정 가능한 주문이 있으면 금빛으로 보인다. 전달지는 하늘색이고 역할 건물은 해당 사업색을 쓴다.",
+      "controlOrDefault": "순찰 표현이 가능한 동 지도에서 적용. 마우스를 올리면 이름이 보이고 클릭하면 대상 정보가 열린다.",
+      "observationUse": "검증된 매장을 점으로 나타내는 데 재사용하기 적합. 픽업지 점과 건물의 역할은 서로 별개다.",
+      "importGap": "현재 표식의 자료원은 게임 상태다. 사용자가 넣은 장소·주소·건물의 연결은 따로 검증해야 한다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+          "line": 557,
+          "anchor": "private void DrawStore(",
+          "commitBlobSha256": "f29f299e5831d8f9f607481cf291e1e667957c94b1fa614f2cad048148bd3c9b",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 573,
+          "anchor": "private bool DrawStoreLight(",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 602,
+          "anchor": "private bool DrawDropLight(",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 631,
+          "anchor": "private bool DrawRoleLight(",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-이름표를빛으로-빛1-반환.md"
+      ]
+    },
+    {
+      "id": "store-overlap",
+      "effect": "밀집 매장 중심점과 서로 다른 숨의 박자",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "화면 좌표·후광 반경",
+        "점포/기사의 안정 키",
+        "LightPhase",
+        "GroundCrowd"
+      ],
+      "currentMapping": "겹친 후광의 세기를 조절하고 중심점을 따로 그린다. ID별 위상으로 가까운 표시를 구별한다.",
+      "controlOrDefault": "lightSeparate 기본 켜짐. 비교 촬영용 해제와 일반 사용자 설정은 구분된다.",
+      "observationUse": "같은 건물 주변에 여러 업소가 있을 때 어울린다.",
+      "importGap": "완전히 같은 좌표의 여러 사업장을 선택할 목록·층·호 구분은 이 효과가 만들지 않는다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLightCrowd.cs",
+          "line": 17,
+          "anchor": "private bool lightSeparate",
+          "commitBlobSha256": "388f74efda68eab57a666bfca55d627ed0dae1dabaebdf613e8fe7361f186852",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLightCrowd.cs",
+          "line": 26,
+          "anchor": "private float GlowCrowd(",
+          "commitBlobSha256": "388f74efda68eab57a666bfca55d627ed0dae1dabaebdf613e8fe7361f186852",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLightCrowd.cs",
+          "line": 60,
+          "anchor": "private void FlushGlowCores(",
+          "commitBlobSha256": "388f74efda68eab57a666bfca55d627ed0dae1dabaebdf613e8fe7361f186852",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLightCrowd.cs",
+          "line": 93,
+          "anchor": "private float LightPhase(string",
+          "commitBlobSha256": "388f74efda68eab57a666bfca55d627ed0dae1dabaebdf613e8fe7361f186852",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-빛이몰렸을때-1-2-반환.md"
+      ]
+    },
+    {
+      "id": "ownership",
+      "effect": "회색 건물 사이 관리 건물의 색·창·주위 밝기",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "dongDemand.Dongs[].Open / Partners",
+        "buildingShapes[].Record.id / kind / area / fill / height",
+        "역할 건물·사업 레이어",
+        "_LightMap",
+        "_Grey",
+        "_Lit"
+      ],
+      "currentMapping": "역할과 제휴 자리를 구분해 건물 메시와 조명을 덧댄다. 제휴 수로 가상의 후보 건물을 고르는 경로도 있다.",
+      "controlOrDefault": "행정동 모듈을 읽은 뒤 관리 표시, 사업 레이어 상태를 따른다.",
+      "observationUse": "자신이 관리하는 검증 건물을 강조하는 데 적합.",
+      "importGap": "개인 업소 목록을 모두 관리 건물로 처리하지 않는다. 사업장 ID↔건물 ID와 관리 여부를 별도 제공해야 한다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchManaged.cs",
+          "line": 65,
+          "anchor": "private void SyncManagedBuildings(",
+          "commitBlobSha256": "4b91683aa50bb7faecb93f1f17a7a0cf47c1e996fbbdb0c4b94d397644cf6ef6",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchManaged.cs",
+          "line": 113,
+          "anchor": "관리건물Policy.PartnerSites(",
+          "commitBlobSha256": "4b91683aa50bb7faecb93f1f17a7a0cf47c1e996fbbdb0c4b94d397644cf6ef6",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchManaged.cs",
+          "line": 267,
+          "anchor": "private void UpdateManagedLightMap(",
+          "commitBlobSha256": "4b91683aa50bb7faecb93f1f17a7a0cf47c1e996fbbdb0c4b94d397644cf6ef6",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Resources/HongdalDiorama.shader",
+          "line": 6,
+          "anchor": "_LightMap, _LightRect",
+          "commitBlobSha256": "3645b835f352a88a7115ca2162a99c18f21adee50e66927ef5ac8d2cc276a132",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-회색동네관리건물-r143-첫걸음-반환.md"
+      ]
+    },
+    {
+      "id": "delivery-route",
+      "effect": "픽업·전달 이동선",
+      "implementation": "기본 선 구현, 곡선·동색 통일 후속 기획",
+      "currentInputs": [
+        "DispatchCourier.id",
+        "phase",
+        "route[].latitude / longitude"
+      ],
+      "currentMapping": "좌표열을 선분으로 연결한다. ToPickup은 금빛 점선, 다른 단계는 기사색 실선이다.",
+      "controlOrDefault": "경로점이 두 개 이상일 때만 표시한다.",
+      "observationUse": "거리의 경로 자료와 단계가 있을 때 유용하다.",
+      "importGap": "현재 DrawRoute에 곡선화가 없고 픽업 점선 색은 기사 빛과 다르다. 수집한 주소 두 개만으로 통행 도로를 임의 생성하지 않는다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+          "line": 543,
+          "anchor": "private void DrawRoute(",
+          "commitBlobSha256": "f29f299e5831d8f9f607481cf291e1e667957c94b1fa614f2cad048148bd3c9b",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMap.cs",
+          "line": 553,
+          "anchor": "pickup ? Gold : RiderColor",
+          "commitBlobSha256": "f29f299e5831d8f9f607481cf291e1e667957c94b1fa614f2cad048148bd3c9b",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-road-following-delivery-lines.design.r212.md"
+      ]
+    },
+    {
+      "id": "new-order",
+      "effect": "새 주문의 낙하 핀과 파동",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "state.orders[].id / storeId",
+        "state.events[].code / orderId",
+        "DispatchStore.latitude / longitude"
+      ],
+      "currentMapping": "order_received 사건과 주문 고유 ID를 맞추고 같은 매장의 새 주문을 묶는다. 시작·복원 시 기존 주문은 기준선에만 넣는다.",
+      "controlOrDefault": "지도 효과는 기본 ‘간단히’. 효과 사용 시 낙하·물결, 해제 시 진행 중 움직임을 정리하며 과거 사건을 재발동하지 않는다.",
+      "observationUse": "과거 자료를 처음 열 때 핀이 한꺼번에 발생하지 않도록 기준선을 재사용할 수 있다.",
+      "importGap": "새 입력에서 사건 ID·주문 ID·매장 키·시각을 안정적으로 매겨야 한다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMapEvents.cs",
+          "line": 24,
+          "anchor": "private void LoadMapEffects(",
+          "commitBlobSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMapEvents.cs",
+          "line": 50,
+          "anchor": "private void ObserveNewOrders(",
+          "commitBlobSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMapEvents.cs",
+          "line": 74,
+          "anchor": "private void DrawOrderRipples(",
+          "commitBlobSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMapEvents.cs",
+          "line": 95,
+          "anchor": "private void DrawOrderDrops(",
+          "commitBlobSha256": "16ce4d87a9cf1bc653fbf843369df00c90a566e081244e519d9f55bc6518aacd",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-13-Claude-새주문핀파동과효과선택-반환.md"
+      ]
+    },
+    {
+      "id": "street-light",
+      "effect": "도로변 가까이 보기 조명",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "길 그래프 Road / Alley",
+        "도로 선분의 지역 미터 좌표",
+        "근접 정도",
+        "_HongdalLampMap"
+      ],
+      "currentMapping": "그래프를 따라 큰길·골목의 간격 규칙으로 램프를 놓고 바닥과 벽 아래쪽을 밝힌다.",
+      "controlOrDefault": "기본 켬, 근접할 때만 표시. 설정에서 켜기·끄기 가능.",
+      "observationUse": "실제 위치가 없는 지역에 쓸 수 있는 분위기 표현이다.",
+      "importGap": "현재 실측 가로등 점위치·기종·점등 기록을 입력으로 받지 않는다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchStreetLamps.cs",
+          "line": 42,
+          "anchor": "private bool LampsOn",
+          "commitBlobSha256": "6e87651fb266f117b8c30c3e6ba6393016ae10803dfda853e323d5116d86289e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchStreetLamps.cs",
+          "line": 77,
+          "anchor": "private void EnsureLampMap(",
+          "commitBlobSha256": "6e87651fb266f117b8c30c3e6ba6393016ae10803dfda853e323d5116d86289e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchStreetLamps.cs",
+          "line": 119,
+          "anchor": "길그래프.Road : 길그래프.Alley",
+          "commitBlobSha256": "6e87651fb266f117b8c30c3e6ba6393016ae10803dfda853e323d5116d86289e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchSettings.cs",
+          "line": 355,
+          "anchor": "ScreenLabel(x, y, \"길가 불빛(표현)\")",
+          "commitBlobSha256": "a087c17fe897bfe2e73070bc38560cafdf09b47fe11fcc7ea4355f5ad083b875",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-15-Claude-길가불빛-품6-반환.md"
+      ]
+    },
+    {
+      "id": "street-surface",
+      "effect": "보도·연석·점자블록·횡단보도",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "도로·건물·녹지 도형",
+        "OA-23081 횡단보도 시설 위치",
+        "street surface mesh uv.x"
+      ],
+      "currentMapping": "관측된 횡단보도 위치와 도로 조합에서 표면을 굽는다. 보도 여유 공간과 점자블록·연석 등의 형상은 표현 규칙으로 생성한다.",
+      "controlOrDefault": "행정동 메시의 확대 수준에 따라 거리 표면을 구별한다.",
+      "observationUse": "공식 관측 위치와 모델로 계산한 표면을 구분해 보는 바탕으로 적합하다.",
+      "importGap": "개별 보도 경계·경사·접근 가능 여부·신호 주기를 확인했다고 간주할 수 없다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Tools~/make_dong_modules.py",
+          "line": 1206,
+          "anchor": "def load_crossings(",
+          "commitBlobSha256": "603e3d1a8569d24eef78435f8ffe975bb3e25b064bd6e63028beb19fa797b79a",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Tools~/make_dong_modules.py",
+          "line": 1222,
+          "anchor": "def street_layers(",
+          "commitBlobSha256": "603e3d1a8569d24eef78435f8ffe975bb3e25b064bd6e63028beb19fa797b79a",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Resources/HongdalDiorama.shader",
+          "line": 179,
+          "anchor": "5~9는 거리 겹",
+          "commitBlobSha256": "3645b835f352a88a7115ca2162a99c18f21adee50e66927ef5ac8d2cc276a132",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-15-Claude-보도횡단보도-보1거1-반환.md"
+      ]
+    },
+    {
+      "id": "green-season",
+      "effect": "녹지 범위와 계절 변화",
+      "implementation": "녹지 바탕 구현, 사계절 변색은 계획",
+      "currentInputs": [
+        "서울시 생태현황도 구역",
+        "행정동 경계",
+        "mesh uv.x 녹지 갈래"
+      ],
+      "currentMapping": "동 경계에 맞춘 산림·조경녹지·하천·경작지의 범위를 구워 보존한다. 현행 셰이더는 정점 색으로 녹지를 구별한다.",
+      "controlOrDefault": "동 지도의 고정 바탕. 확인한 셰이더에는 달·절기에 따른 색 전환이 없다.",
+      "observationUse": "녹지 분포는 관찰 가능. 봄·여름·가을·겨울 비교는 후속이다.",
+      "importGap": "날짜·계절 및 수종·분포 관측과의 결속, 자산 선택은 미연결이다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Tools~/make_dong_modules.py",
+          "line": 61,
+          "anchor": "BIOTOPE =",
+          "commitBlobSha256": "603e3d1a8569d24eef78435f8ffe975bb3e25b064bd6e63028beb19fa797b79a",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Resources/HongdalDiorama.shader",
+          "line": 25,
+          "anchor": "녹지(r221 계1",
+          "commitBlobSha256": "3645b835f352a88a7115ca2162a99c18f21adee50e66927ef5ac8d2cc276a132",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Resources/HongdalDiorama.shader",
+          "line": 179,
+          "anchor": "float nature =",
+          "commitBlobSha256": "3645b835f352a88a7115ca2162a99c18f21adee50e66927ef5ac8d2cc276a132",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-15-Claude-녹지굽기-계1-반환.md",
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/seasonal-scenery-trees-and-terrain.design.r221.md"
+      ]
+    },
+    {
+      "id": "population-crowd",
+      "effect": "오전·점심·저녁의 군중 밀도",
+      "implementation": "수요 모듈 있음, 보행 군중 렌더 미확인",
+      "currentInputs": [
+        "DongDemandModule: dailyOrders / bands / bandHours",
+        "PopulationBasis",
+        "군중 렌더 입력 없음"
+      ],
+      "currentMapping": "수요 모듈에는 시간대별 예상 주문량과 인구 근거가 있다. 순찰 기사 수나 빛 겹침은 보행 인구 표시가 아니다.",
+      "controlOrDefault": "한 행정동에서 세 시간대를 비교하는 기획. 현행 Windows 화면에서 군중 레이어·점멸 설정을 찾지 못했다.",
+      "observationUse": "동·시간대 단위의 밀도 범주를 먼저 보여주는 데 적합하다.",
+      "importGap": "주민등록·유동인구의 기준시점과 정의를 분리하고, 행정동 추정 인원을 실측 도로 좌표·개인 보행 궤적으로 바꾸지 않는다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Kernel/DongDemandModule.cs",
+          "line": 157,
+          "anchor": "return dong.dailyOrders * day",
+          "commitBlobSha256": "88f8e2a48669d2b6d77f9071b77d09d3934ded034fb6b9ddec2c6a300cac1f14",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchDongBusiness.cs",
+          "line": 250,
+          "anchor": "dongDemand.PopulationBasis ==",
+          "commitBlobSha256": "654da3bcc8c325f25a2fac1990db6e176996e88e2e46f4e1888a1669392a0283",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchLightCrowd.cs",
+          "line": 26,
+          "anchor": "private float GlowCrowd(",
+          "commitBlobSha256": "388f74efda68eab57a666bfca55d627ed0dae1dabaebdf613e8fe7361f186852",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/population-driven-map-crowds.design.r180.md",
+        "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/single-dong-crowd-focus.confirmed.r182.md"
+      ]
+    },
+    {
+      "id": "national-flow",
+      "effect": "전국 해상·항공 통계 연결선과 이동 기호",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "NationHub.id / kind / x / y / monthly",
+        "NationFlow.hub / gate / mode / monthly / path",
+        "NationPartner.teu / bl",
+        "nationPeriod / nationIndicator"
+      ],
+      "currentMapping": "관세청 월별 자료의 규모 등급을 선 굵기와 거점 크기로 표현한다. 해상·항공의 경로선은 통계 관계를 읽기 위한 표시다.",
+      "controlOrDefault": "월 또는 연간, 해상·항공별 레이어, TEU·BL 선택. 지도 효과를 켜면 상징이 움직인다.",
+      "observationUse": "공개 물동량의 기간·거점 비교에 적합. 실제 항로·진행 중 운항과 구분한다.",
+      "importGap": "사용자 거래의 출발·도착 거점과 단위·집계기간이 없으면 통계선과 같은 의미로 합칠 수 없다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 97,
+          "anchor": "private sealed class NationFlow",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 453,
+          "anchor": "private void PrepareNationFlows(",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 475,
+          "anchor": "private void DrawNationFlows(",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 892,
+          "anchor": "NationLayerRow(0,",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-13-Claude-전국지도해상항공흐름N0N1-반환.md"
+      ]
+    },
+    {
+      "id": "national-demo-truck",
+      "effect": "내 화물 예시 경로와 트럭",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "NationRoute.path / centreX / centreY / homeX / homeY",
+        "nationRouteOn",
+        "mapEffects"
+      ],
+      "currentMapping": "가상의 화물 회차를 별도 층의 점선·트럭으로 그린다.",
+      "controlOrDefault": "내 화물 레이어를 끌 수 있다. 간단히는 트럭이 멈춰 있고 효과 사용에서 이동한다.",
+      "observationUse": "가상 경로 예시로만 적합하다.",
+      "importGap": "배차·상차·배송 실적이나 사용자의 차량 위치가 이 경로를 바꾸지 않는다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 116,
+          "anchor": "private sealed class NationRoute",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 591,
+          "anchor": "private void DrawNationRoute(",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchNation.cs",
+          "line": 606,
+          "anchor": "var t = mapEffects ? 0.08f",
+          "commitBlobSha256": "448041bf67ca3eeedf86bf38af331dc241aa780e4f8e3e337a31faa10c25e698",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-13-Claude-전국지도해상항공흐름N0N1-반환.md"
+      ]
+    },
+    {
+      "id": "music-light",
+      "effect": "사용자가 선택한 음원에 맞춘 빛",
+      "implementation": "현행 소스 구현",
+      "currentInputs": [
+        "AudioClip.GetData",
+        "musicMap.Bpm / FirstBeat / Confidence / HasBeat",
+        "musicMap.Low / Level",
+        "musicBeatNow"
+      ],
+      "currentMapping": "로컬 곡을 분석해 음악의 박과 저음으로 빛의 순간 세기를 바꾼다. 박이 불확실하면 음량과 완만한 호흡을 쓴다.",
+      "controlOrDefault": "설정의 음악·소리에서 파일 선택/끌어놓기, 재생·멈춤·음량 조절. 곡을 선택하지 않으면 기본 숨을 쓴다.",
+      "observationUse": "개인 로컬 파일을 직접 사용하는 선례다.",
+      "importGap": "시스템 전체 소리나 멜론·유튜브 스트리밍을 가져오는 경로는 확인되지 않았다. 이 입력은 공간 자료 반입 기능이 아니다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMusic.cs",
+          "line": 53,
+          "anchor": "private bool MusicDrivesLight",
+          "commitBlobSha256": "ba504c315567bcd1b69da83a510162917d4b6444d71504c9659b4b969f779e1e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMusic.cs",
+          "line": 103,
+          "anchor": "musicBeatNow = musicMap.BeatAt(",
+          "commitBlobSha256": "ba504c315567bcd1b69da83a510162917d4b6444d71504c9659b4b969f779e1e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMusic.cs",
+          "line": 121,
+          "anchor": "private float MusicLightBeat(",
+          "commitBlobSha256": "ba504c315567bcd1b69da83a510162917d4b6444d71504c9659b4b969f779e1e",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMusic.cs",
+          "line": 360,
+          "anchor": "clip.GetData(buffer, start)",
+          "commitBlobSha256": "ba504c315567bcd1b69da83a510162917d4b6444d71504c9659b4b969f779e1e",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-14-Claude-음악파일에맞춘빛-반환.md"
+      ]
+    },
+    {
+      "id": "mingde-scale",
+      "effect": "명덕에 따른 빛의 크기·세기",
+      "implementation": "표현 규칙·검토 촬영만 구현",
+      "currentInputs": [
+        "MingdeOf(kind,id)",
+        "mingdeProof",
+        "명덕빛Policy.Of"
+      ],
+      "currentMapping": "기사·점포 ID에 명덕 값이 주어지면 화면의 크기·세기를 바꾸는 규칙이 있다. 현재 조회는 촬영 시험 사전만 읽고 정상 플레이는 null이다.",
+      "controlOrDefault": "일반판에서는 기본 크기. 값 없음 상태를 0으로 확정하지 않는다.",
+      "observationUse": "검증된 게임 원장이 생긴 후 관찰 지표로 쓸 수 있다.",
+      "importGap": "개인 배송 횟수·상호·방문 기록을 명덕으로 자동 해석하는 계산식은 없다.",
+      "code": [
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMingdeLight.cs",
+          "line": 19,
+          "anchor": "private double? MingdeOf(",
+          "commitBlobSha256": "3a907e65d58fadd0b13bba1cc35db65e73d96eed472ba09083dcbefc828dd368",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchMingdeLight.cs",
+          "line": 22,
+          "anchor": "private 명덕빛 MingdeGlow(",
+          "commitBlobSha256": "3a907e65d58fadd0b13bba1cc35db65e73d96eed472ba09083dcbefc828dd368",
+          "workingTextMatchesCommit": true
+        },
+        {
+          "repo": "unity",
+          "path": "Assets/Ssalddel/WindowsGame/Runtime/SagajeongDispatchRoam.cs",
+          "line": 501,
+          "anchor": "var grow = MingdeGlow(\"courier\"",
+          "commitBlobSha256": "d3525c44e573dd82f23a67d5be55656122e8669d1de7a024f5e8a6886310c680",
+          "workingTextMatchesCommit": true
+        }
+      ],
+      "documents": [
+        "docs/AI/Handoffs/2026-11-15-Claude-명1-명덕빛-뼈대-반환.md"
+      ]
+    }
+  ],
+  "officialSources": [
+    {
+      "id": "geojson-rfc7946",
+      "publisher": "IETF / RFC Editor",
+      "title": "RFC 7946 — The GeoJSON Format",
+      "url": "https://www.rfc-editor.org/info/rfc7946/",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "§3.1.1 Position, §3.2 Feature Object, §4 Coordinate Reference System",
+      "verifiedFacts": [
+        "점은 WGS 84 경도·위도 순의 십진도 좌표를 사용한다. 선택적인 세 번째 수치는 WGS 84 기준 타원체에서 잰 미터 높이다.",
+        "원천에서 통용되는 식별자가 있으면 Feature의 id에 문자열 또는 숫자로 기록하도록 권장한다."
+      ],
+      "hongdalUse": "가게는 점, 공급 노선은 선, 관할 동은 면으로 받아 디오라마의 지역 원점으로 변환한다. 건물의 지상 높이·층·호는 출처와 단위를 가진 별도 속성으로 보존한다.",
+      "limits": "원천 좌표계와 축 순서를 먼저 확인한다. 유효한 원점과 변환 근거가 없는 배치는 검토 대기에 둔다. 서로 다른 자료의 같은 id는 출처까지 대조한다."
+    },
+    {
+      "id": "unity-line",
+      "publisher": "Unity Technologies",
+      "title": "Line Renderer properties reference",
+      "url": "https://docs.unity.com/en-us/engine/6000.0/manual/visual-effects/lines-trails-billboards/rendering-lines/class-line-renderer/line-renderer-properties",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "Unity 6.0 Manual, Line Renderer properties",
+      "verifiedFacts": [
+        "선의 점·폭·색·모서리·끝 모양을 지정할 수 있다.",
+        "좌표 설정에 따라 점을 월드 공간 또는 소속 오브젝트의 로컬 공간에서 해석한다."
+      ],
+      "hongdalUse": "확정된 도로 점열에 기사 빛과 같은 계열의 색을 입힌다. 조망 단계에 맞게 모서리만 둥글게 해도 교차로 위치를 지킬 수 있다.",
+      "limits": "렌더러는 도로 경로를 찾아주지 않는다. 입력으로 받은 출발지와 도착지만으로 실제 주행 경로를 확정할 수 없다."
+    },
+    {
+      "id": "unity-trail",
+      "publisher": "Unity Technologies",
+      "title": "Trail Renderer component reference",
+      "url": "https://docs.unity.com/en-us/engine/6000.0/manual/visual-effects/lines-trails-billboards/rendering-trails/class-trail-renderer",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "Unity 6.0 Manual, Trail settings",
+      "verifiedFacts": [
+        "지나온 점이 남는 시간은 초로, 다음 점을 더하는 최소 간격은 월드 단위로 설정한다.",
+        "Emitting을 끄면 새 점이 추가되지 않는다. 폭과 색은 생성된 꼭짓점에서 평가된다."
+      ],
+      "hongdalUse": "움직이는 기사 뒤에 짧은 잔상을 남기고 정차·숨김·순간이동 때 잔상의 이어짐을 구분할 수 있다.",
+      "limits": "화면에 그린 잔상은 업무 기록이 아니다. 이전 주행을 다시 보이려면 별도의 경로와 시각 자료가 필요하다."
+    },
+    {
+      "id": "unity-particle-systems",
+      "publisher": "Unity Technologies",
+      "title": "Choosing Your Particle System",
+      "url": "https://docs.unity.com/en-us/engine/6000.0/manual/visual-effects/particle-systems/choosing-your-particle-system",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "Unity 6.0 Manual, comparison of particle systems",
+      "verifiedFacts": [
+        "기본 Particle System은 C#으로 개별 입자를 읽고 쓰고 재생을 제어할 수 있고 Built-in·URP·HDRP에서 사용할 수 있다.",
+        "Visual Effect Graph는 GPU를 활용하는 별도 선택지이며 런타임에서 노출한 속성을 제어할 수 있다."
+      ],
+      "hongdalUse": "주문 핀이 꽂힐 때의 파동이나 단시간의 입고 표시에는 소규모 기본 입자부터 비교한다. 배차·재고 상태가 바뀐 사건에만 효과를 붙인다.",
+      "limits": "입자 수를 실제 주문 건수나 보행자 수로 해석하려면 별도의 대응 규칙과 범례가 필요하다. 효과가 줄어도 원천 수치는 유지한다."
+    },
+    {
+      "id": "unity-vfx-requirements",
+      "publisher": "Unity Technologies",
+      "title": "Requirements and compatibility | Visual Effect Graph 17.5.0",
+      "url": "https://docs.unity3d.com/Packages/com.unity.visualeffectgraph@17.5/manual/System-Requirements.html",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "Render pipeline compatibility / Unity Player system requirements",
+      "verifiedFacts": [
+        "VFX Graph 17.5는 URP·HDRP를 지원한다. URP에서는 지원 대상이 제한되고 감마 색공간을 지원하지 않는다.",
+        "최소 하드웨어 요구에는 컴퓨트 셰이더와 셰이더 저장 버퍼(SSBO) 지원이 포함된다."
+      ],
+      "hongdalUse": "많은 입자가 동시에 필요해질 때 후보로 검토한다. 기본 입자나 단순한 점을 표시할 수 있는 형식으로 효과 정의를 보관한다.",
+      "limits": "현재 홍달 Unity 작업본의 패키지 목록과 잠금 파일에 VFX Graph 항목이 없다. Windows 대상 하드웨어별 지원·소요 자원·실제 실행은 확인하지 않았다."
+    },
+    {
+      "id": "unity-audio-spectrum",
+      "publisher": "Unity Technologies",
+      "title": "AudioSource.GetSpectrumData",
+      "url": "https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/audiosource/getspectrumdata",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "Unity 6.0 Scripting API, float[] overload",
+      "verifiedFacts": [
+        "재생 중인 오디오 소스의 채널별 주파수 대역과 세기를 오디오 출력 샘플레이트 기준으로 얻는다.",
+        "재사용할 배열의 길이는 64~8192 사이 2의 거듭제곱이다. 문서는 정확한 시간순 분석이나 낮은 지연이 필수인 용도에는 적합하지 않다고 설명한다."
+      ],
+      "hongdalUse": "게임에서 재생하는 곡의 대역별 에너지를 완만하게 반영해 빛의 순간 움직임을 조절하는 근거다. 명덕에 따른 기본 크기는 독립적으로 읽는다.",
+      "limits": "이 API의 결과만으로 BPM·첫 박이나 외부 앱 음악 입력이 제공되지는 않는다. 박 검출·외부 입력·곡 이용 범위는 소스별로 따로 다룬다."
+    },
+    {
+      "id": "deck-trips",
+      "publisher": "deck.gl",
+      "title": "TripsLayer",
+      "url": "https://deck.gl/docs/api-reference/geo-layers/trips-layer",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "currentTime / fadeTrail / trailLength / getPath / getTimestamps",
+      "verifiedFacts": [
+        "경로 점열과 점마다 대응하는 시각을 이용해 이동을 재생한다.",
+        "재생 위치와 잔상 시간은 경로 시각과 단위를 맞춘다. 시각을 float32로 처리하므로 큰 절대 타임스탬프는 정밀도를 잃을 수 있다."
+      ],
+      "hongdalUse": "본인 경로 자료를 가져올 때 원본 시각을 보존하고, 재생에 쓸 값만 기준시각으로부터의 경과 초로 계산하는 참고 사례다.",
+      "limits": "시각이 없으면 정적 경로로 먼저 표시한다. 양 끝점만 있는 자료에는 실제 중간 이동을 재현했다는 설명을 붙이지 않는다. deck.gl 웹 라이브러리의 표현 원리만 참고한다."
+    },
+    {
+      "id": "deck-heatmap",
+      "publisher": "deck.gl",
+      "title": "HeatmapLayer",
+      "url": "https://deck.gl/docs/api-reference/aggregation-layers/heatmap-layer",
+      "retrievedAtUtc": "2026-11-15T14:05:51Z",
+      "section": "aggregation / radiusPixels / colorDomain",
+      "verifiedFacts": [
+        "공간 점과 가중치를 주변에 퍼뜨려 합계 또는 가중 평균으로 밀도를 그린다. 반경은 픽셀 단위다.",
+        "명시적인 색 범위가 없으면 보이는 구간의 값에 따라 색이 달라질 수 있다."
+      ],
+      "hongdalUse": "같은 행정동 오전·점심·저녁을 비교할 때 동일 집계 단위·반경·줌·색 범위를 쓰는 예로 참고한다. 동 총계만 있는 경우 동 면을 칠하고 도로별 관측값은 따로 표시한다.",
+      "limits": "점이 없는 곳이 관측 누락인지 실제 0인지 구분해야 한다. 행정동 합계를 임의의 도로별 실측 밀도로 바꾸는 근거는 되지 않는다."
+    }
+  ],
+  "officialTechnologyContext": {
+    "editor": "6000.5.6f1",
+    "urp": "17.5.0",
+    "vfxGraphListedInManifestOrPackageLock": false,
+    "evidence": [
+      "ProjectSettings/ProjectVersion.txt",
+      "Packages/manifest.json",
+      "Packages/packages-lock.json"
+    ],
+    "scope": "별도 Unity 작업본에서 설정 파일만 확인했다. 기술 문서는 자료 표현 후보의 근거이며 홍달에서 구현·검증한 효과 목록과 구분한다."
+  },
+  "bindingExamples": [
+    {
+      "id": "points-values",
+      "titleKo": "지점 숫자와 후광",
+      "datasetRefs": [
+        "restaurants"
+      ],
+      "effectRefs": [
+        "store-drop-role",
+        "store-overlap"
+      ],
+      "candidateTechniqueRefs": [
+        "geojson-rfc7946"
+      ],
+      "requirementsKo": [
+        "공간 위치 또는 지도 판본에 맞는 건물 ID",
+        "숫자 단위·기간·고정 눈금",
+        "0·결측·범위 초과를 구분"
+      ],
+      "state": "ProposedCustomInput",
+      "exampleRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/visual-layer-example.r243.json"
+    },
+    {
+      "id": "area-statistics",
+      "titleKo": "행정동 통계와 영역 음영",
+      "datasetRefs": [
+        "boundary",
+        "flow",
+        "resident"
+      ],
+      "effectRefs": [
+        "population-crowd"
+      ],
+      "candidateTechniqueRefs": [
+        "deck-heatmap"
+      ],
+      "requirementsKo": [
+        "자료와 경계의 코드·기준일 대응",
+        "행정동 집계를 영역에 귀속",
+        "동별 비교에 고정 범례 사용"
+      ],
+      "state": "DataPreparedBindingPending",
+      "noteKo": "행정동 면의 색을 먼저 검토한다. deck.gl 점 기반 밀도는 참고 자료이며 중심점에 인구를 몰아 표현하는 설정은 사용하지 않는다."
+    },
+    {
+      "id": "routes",
+      "titleKo": "도로 경로와 기사 이동선",
+      "datasetRefs": [
+        "roads",
+        "walk-lane"
+      ],
+      "effectRefs": [
+        "courier-position",
+        "delivery-route"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-line"
+      ],
+      "requirementsKo": [
+        "실제 경로 점열 또는 게임이 확정한 경로",
+        "예정·진행 구간 구분",
+        "통행 가능성·일방통행 별도 검증"
+      ],
+      "state": "CurrentGamePathWithCustomInputPending"
+    },
+    {
+      "id": "events",
+      "titleKo": "사건과 착지 파동",
+      "datasetRefs": [
+        "restaurants"
+      ],
+      "effectRefs": [
+        "new-order"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-particle-systems"
+      ],
+      "requirementsKo": [
+        "사건 고유 ID·시각·위치",
+        "기존 주문과 별개인 사용자 사건의 이름",
+        "자료 새로 읽기와 신규 사건 발생 구분"
+      ],
+      "state": "CurrentGameEventWithCustomInputPending"
+    },
+    {
+      "id": "movement-history",
+      "titleKo": "시간 기록과 지나온 흔적",
+      "datasetRefs": [
+        "roads"
+      ],
+      "effectRefs": [
+        "courier-position",
+        "patrol-activity"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-trail",
+        "deck-trips"
+      ],
+      "requirementsKo": [
+        "시각이 있는 순서별 위치",
+        "원 자료의 기록 간격·시간대",
+        "공백·관측과 가상 재생의 표시"
+      ],
+      "state": "ProposedCustomInput",
+      "noteKo": "현재 순찰은 게임이 생성한다. 외부의 실제 이동 기록은 이번 조사에서 수집하지 않았다."
+    },
+    {
+      "id": "facility-lights",
+      "titleKo": "시설 위치와 밤의 조명",
+      "datasetRefs": [
+        "streetlights",
+        "restaurants",
+        "hubs"
+      ],
+      "effectRefs": [
+        "street-light",
+        "ownership"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-particle-systems"
+      ],
+      "requirementsKo": [
+        "검증된 시설 위치",
+        "시설·내 사업·정상 점등 상태를 따로 해석",
+        "사용 조건과 후보 품질 표시"
+      ],
+      "state": "DataAndDecorationSeparate",
+      "noteKo": "현재 길가 조명은 실측 가로등 목록과 별도이며 등록 물류시설의 검증 좌표는 0개다."
+    },
+    {
+      "id": "season",
+      "titleKo": "녹지·계절과 주변 분위기",
+      "datasetRefs": [
+        "parks-biotope",
+        "street-trees",
+        "weather-season",
+        "relief"
+      ],
+      "effectRefs": [
+        "green-season",
+        "street-surface"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-particle-systems",
+        "unity-vfx-requirements"
+      ],
+      "requirementsKo": [
+        "계절 또는 관측·예보의 유효시각",
+        "원자료 권리·위치 품질",
+        "고도·높이의 기준면과 단위"
+      ],
+      "state": "GreenBaseAvailableSeasonBindingPending"
+    },
+    {
+      "id": "audio",
+      "titleKo": "음악 특징량과 빛의 호흡",
+      "datasetRefs": [],
+      "effectRefs": [
+        "music-light"
+      ],
+      "candidateTechniqueRefs": [
+        "unity-audio-spectrum"
+      ],
+      "requirementsKo": [
+        "사용자가 고른 로컬 음원",
+        "재생 위치·분석 신뢰도",
+        "빛의 기본 의미와 순간 장식 변화 구분"
+      ],
+      "state": "LocalAudioCodePresent",
+      "noteKo": "시스템 소리 취득·멜론·유튜브 직접 입력의 실제 연결은 확인하지 않았다."
+    }
+  ],
+  "sampleRef": "docs/AI/Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/visual-layer-example.r243.json",
+  "boundaries": {
+    "productionRegistry": false,
+    "runtimeUserFileLoaderImplementedByThisWork": false,
+    "rawPrivateRowsIncluded": false,
+    "newSimulationRules": false,
+    "scheduleChanged": false,
+    "licenseApprovalByThisCatalog": false,
+    "dataStateSeparateFromEffectState": true,
+    "newSharedDioramaRuleCandidates": []
+  }
+}

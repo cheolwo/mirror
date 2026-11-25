@@ -1,0 +1,427 @@
+{
+  "operations": [
+    {
+      "id": "bus_cities",
+      "portalId": "15098534",
+      "kind": "bus_city",
+      "url": "https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCtyCodeList",
+      "keyParam": "serviceKey",
+      "defaults": {"_type": "json"},
+      "required": [],
+      "optional": [],
+      "shape": "standard",
+      "keyFields": [["citycode"]],
+      "keepFields": ["citycode", "cityname"]
+    },
+    {
+      "id": "bus_stops_near",
+      "portalId": "15098534",
+      "kind": "bus_stop",
+      "url": "https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCrdntPrxmtSttnList",
+      "keyParam": "serviceKey",
+      "defaults": {"_type": "json"},
+      "required": ["gpsLati", "gpsLong"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["nodeid"]],
+      "keepFields": ["nodeid", "nodenm", "nodeno", "citycode", "gpslati", "gpslong"]
+    },
+    {
+      "id": "bus_stops_city",
+      "portalId": "15098534",
+      "kind": "bus_stop",
+      "url": "https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getSttnNoList",
+      "keyParam": "serviceKey",
+      "defaults": {"_type": "json"},
+      "required": ["cityCode"],
+      "optional": ["nodeNm", "nodeNo"],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["nodeid"]],
+      "keepFields": ["nodeid", "nodenm", "nodeno", "citycode", "gpslati", "gpslong"]
+    },
+    {
+      "id": "bus_routes_at_stop",
+      "portalId": "15098534",
+      "kind": "bus_route_at_stop",
+      "url": "https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getSttnThrghRouteList",
+      "keyParam": "serviceKey",
+      "defaults": {"_type": "json"},
+      "required": ["cityCode", "nodeid"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "identityParams": ["cityCode", "nodeid"],
+      "keyFields": [["routeid"]],
+      "keepFields": ["routeid", "routeno", "routetp", "startnodenm", "endnodenm"]
+    },
+    {
+      "id": "traffic_sites",
+      "portalId": "15076407",
+      "kind": "traffic_site",
+      "url": "https://apis.data.go.kr/1613000/KictTms/spotlist",
+      "keyParam": "serviceKey",
+      "defaults": {"output": "json"},
+      "required": ["year", "dtype"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 0},
+      "pageMax": 100,
+      "shape": "traffic",
+      "itemsPath": ["spot"],
+      "identityParams": ["year", "dtype"],
+      "keyFields": [["spot"]],
+      "keepFields": [
+        "spot", "id5", "xcode", "ycode", "dolevel", "year", "gugan_no", "docode",
+        "stname", "midname", "endname", "hosun", "laneup", "lanedn", "city",
+        "section", "country", "locate", "length"
+      ]
+    },
+    {
+      "id": "traffic_vehicle_month",
+      "portalId": "15076407",
+      "kind": "traffic_count",
+      "url": "https://apis.data.go.kr/1613000/KictTms/vt",
+      "keyParam": "serviceKey",
+      "defaults": {"output": "json"},
+      "required": ["year", "dtype", "month"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 0},
+      "pageMax": 100,
+      "shape": "traffic",
+      "itemsPath": ["traffic"],
+      "identityParams": ["year", "dtype", "month"],
+      "keyFields": [["spot_id", "month", "day", "direction"]],
+      "measures": {
+        "total_count": ["traffic_total", "vehicle"],
+        "vehicle_type1": ["traffic_vehicle_type_1", "vehicle"], "vehicle_type2": ["traffic_vehicle_type_2", "vehicle"],
+        "vehicle_type3": ["traffic_vehicle_type_3", "vehicle"], "vehicle_type4": ["traffic_vehicle_type_4", "vehicle"],
+        "vehicle_type5": ["traffic_vehicle_type_5", "vehicle"], "vehicle_type6": ["traffic_vehicle_type_6", "vehicle"],
+        "vehicle_type7": ["traffic_vehicle_type_7", "vehicle"], "vehicle_type8": ["traffic_vehicle_type_8", "vehicle"],
+        "vehicle_type9": ["traffic_vehicle_type_9", "vehicle"], "vehicle_type10": ["traffic_vehicle_type_10", "vehicle"],
+        "vehicle_type11": ["traffic_vehicle_type_11", "vehicle"], "vehicle_type12": ["traffic_vehicle_type_12", "vehicle"]
+      },
+      "keepFields": [
+        "spot_id", "month", "day", "direction", "total_count", "vehicle_type1", "vehicle_type2",
+        "vehicle_type3", "vehicle_type4", "vehicle_type5", "vehicle_type6", "vehicle_type7",
+        "vehicle_type8", "vehicle_type9", "vehicle_type10", "vehicle_type11", "vehicle_type12"
+      ]
+    },
+    {
+      "id": "traffic_hour_month",
+      "portalId": "15076407",
+      "kind": "traffic_count",
+      "url": "https://apis.data.go.kr/1613000/KictTms/itmsh",
+      "keyParam": "serviceKey",
+      "defaults": {"output": "json"},
+      "required": ["year", "dtype", "month"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 0},
+      "pageMax": 100,
+      "shape": "traffic",
+      "itemsPath": ["traffic"],
+      "identityParams": ["year", "dtype", "month"],
+      "keyFields": [["spot_id", "month", "day", "direction"]],
+      "measures": {
+        "total_count": ["traffic_total", "vehicle"],
+        "time_type1": ["traffic_time_slot_1", "vehicle"], "time_type2": ["traffic_time_slot_2", "vehicle"],
+        "time_type3": ["traffic_time_slot_3", "vehicle"], "time_type4": ["traffic_time_slot_4", "vehicle"],
+        "time_type5": ["traffic_time_slot_5", "vehicle"], "time_type6": ["traffic_time_slot_6", "vehicle"],
+        "time_type7": ["traffic_time_slot_7", "vehicle"], "time_type8": ["traffic_time_slot_8", "vehicle"],
+        "time_type9": ["traffic_time_slot_9", "vehicle"], "time_type10": ["traffic_time_slot_10", "vehicle"],
+        "time_type11": ["traffic_time_slot_11", "vehicle"], "time_type12": ["traffic_time_slot_12", "vehicle"],
+        "time_type13": ["traffic_time_slot_13", "vehicle"], "time_type14": ["traffic_time_slot_14", "vehicle"],
+        "time_type15": ["traffic_time_slot_15", "vehicle"], "time_type16": ["traffic_time_slot_16", "vehicle"],
+        "time_type17": ["traffic_time_slot_17", "vehicle"], "time_type18": ["traffic_time_slot_18", "vehicle"],
+        "time_type19": ["traffic_time_slot_19", "vehicle"], "time_type20": ["traffic_time_slot_20", "vehicle"],
+        "time_type21": ["traffic_time_slot_21", "vehicle"], "time_type22": ["traffic_time_slot_22", "vehicle"],
+        "time_type23": ["traffic_time_slot_23", "vehicle"], "time_type24": ["traffic_time_slot_24", "vehicle"]
+      },
+      "keepFields": [
+        "spot_id", "month", "day", "direction", "total_count",
+        "time_type1", "time_type2", "time_type3", "time_type4", "time_type5", "time_type6",
+        "time_type7", "time_type8", "time_type9", "time_type10", "time_type11", "time_type12",
+        "time_type13", "time_type14", "time_type15", "time_type16", "time_type17", "time_type18",
+        "time_type19", "time_type20", "time_type21", "time_type22", "time_type23", "time_type24"
+      ]
+    },
+    {
+      "id": "parcels_bbox",
+      "portalId": "15056910",
+      "kind": "parcel",
+      "url": "https://api.vworld.kr/req/data",
+      "keyParam": "key",
+      "defaults": {"service": "data", "version": "2.0", "request": "GetFeature", "data": "LP_PA_CBND_BUBUN", "format": "json", "crs": "EPSG:4326"},
+      "required": ["geomFilter"],
+      "optional": [],
+      "paging": {"page": "page", "size": "size", "start": 1},
+      "pageMax": 1000,
+      "shape": "vworld",
+      "itemsPath": ["response", "result", "featureCollection", "features"],
+      "totalPath": ["response", "record", "total"],
+      "keyFields": [["pnu"]],
+      "keepFields": ["pnu", "jibun", "bonbun", "bubun", "addr", "jiga", "stdr_year", "stdr_month", "geometry"]
+    },
+    {
+      "id": "shops_by_region",
+      "portalId": "15012005",
+      "kind": "shop",
+      "url": "https://apis.data.go.kr/B553077/api/open/sdsc2/storeListInDong",
+      "keyParam": "ServiceKey",
+      "defaults": {"type": "json"},
+      "required": ["divId", "key"],
+      "optional": ["indsLclsCd", "indsMclsCd", "indsSclsCd"],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["bizesId"]],
+      "keepFields": [
+        "bizesId", "stdrYm", "indsLclsCd", "indsLclsNm", "indsMclsCd", "indsMclsNm",
+        "indsSclsCd", "indsSclsNm", "ksicCd", "ksicNm", "ctprvnCd", "ctprvnNm",
+        "signguCd", "signguNm", "adongCd", "adongNm", "ldongCd", "ldongNm", "lnoCd",
+        "rdnmCd", "bldMngNo", "flrNo", "lon", "lat"
+      ]
+    },
+    {
+      "id": "shops_by_date",
+      "portalId": "15012005",
+      "kind": "shop",
+      "url": "https://apis.data.go.kr/B553077/api/open/sdsc2/storeListByDate",
+      "keyParam": "ServiceKey",
+      "defaults": {"type": "json"},
+      "required": ["key"],
+      "optional": ["indsLclsCd", "indsMclsCd", "indsSclsCd"],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "pageMax": 1000,
+      "shape": "standard",
+      "keyFields": [["bizesId"]],
+      "keepFields": [
+        "bizesId", "stdrYm", "indsLclsCd", "indsLclsNm", "indsMclsCd", "indsMclsNm",
+        "indsSclsCd", "indsSclsNm", "ksicCd", "ksicNm", "ctprvnCd", "ctprvnNm",
+        "signguCd", "signguNm", "adongCd", "adongNm", "ldongCd", "ldongNm", "lnoCd",
+        "rdnmCd", "bldMngNo", "flrNo", "lon", "lat", "chgGb", "chgDt"
+      ]
+    },
+    {
+      "id": "market_areas",
+      "portalId": "15012005",
+      "kind": "market_area",
+      "url": "https://apis.data.go.kr/B553077/api/open/sdsc2/storeZoneInAdmi",
+      "keyParam": "servicekey",
+      "defaults": {"type": "json"},
+      "required": ["divId", "key"],
+      "optional": [],
+      "shape": "standard",
+      "keyFields": [["trarNo"]],
+      "measures": {"trarArea": ["market_area", "m2"]},
+      "keepFields": [
+        "trarNo", "mainTrarNm", "ctprvnCd", "ctprvnNm", "signguCd", "signguNm",
+        "adongCd", "stdrDt", "trarArea", "coordNum", "coords"
+      ]
+    },
+    {
+      "id": "building_titles",
+      "portalId": "15134735",
+      "kind": "building",
+      "url": "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo",
+      "keyParam": "serviceKey",
+      "defaults": {"_type": "json"},
+      "required": ["sigunguCd", "bjdongCd"],
+      "optional": ["platGbCd", "bun", "ji", "startDate", "endDate"],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["mgmBldrgstPk"]],
+      "measures": {
+        "heit": ["building_height", "m"],
+        "grndFlrCnt": ["building_ground_floors", "floor"],
+        "ugrndFlrCnt": ["building_underground_floors", "floor"],
+        "archArea": ["building_footprint_area", "m2"],
+        "totArea": ["building_total_floor_area", "m2"]
+      },
+      "keepFields": [
+        "mgmBldrgstPk", "sigunguCd", "bjdongCd", "platGbCd", "bun", "ji", "platPlc",
+        "newPlatPlc", "naRoadCd", "naBjdongCd", "naUgrndCd", "naMainBun", "naSubBun",
+        "bldNm", "dongNm", "regstrGbCd", "regstrKindCd", "mainAtchGbCd", "mainPurpsCd",
+        "mainPurpsCdNm", "strctCd", "strctCdNm", "heit", "grndFlrCnt", "ugrndFlrCnt",
+        "roofCd", "roofCdNm", "archArea", "totArea", "useAprDay", "crtnDay"
+      ]
+    },
+    {
+      "id": "large_retail",
+      "portalId": "15154948",
+      "kind": "retail",
+      "url": "https://apis.data.go.kr/1741000/large_scale_retail_stores/info",
+      "keyParam": "serviceKey",
+      "defaults": {"returnType": "json"},
+      "required": [],
+      "optional": [
+        "cond[OPN_ATMY_GRP_CD::EQ]", "cond[SALS_STTS_CD::EQ]",
+        "cond[DAT_UPDT_PNT::GTE]", "cond[DAT_UPDT_PNT::LT]"
+      ],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "pageMax": 100,
+      "shape": "local",
+      "keyFields": [["OPN_ATMY_GRP_CD", "MNG_NO"]],
+      "keepFields": [
+        "OPN_ATMY_GRP_CD", "MNG_NO", "BPLC_NM", "STOR_SE_NM", "BZSTAT_SE_NM", "ROAD_NM_ADDR",
+        "SALS_STTS_CD", "DTL_SALS_STTS_CD", "LCPMT_YMD", "CLSBIZ_YMD", "DAT_UPDT_SE",
+        "DAT_UPDT_PNT", "LCTN_AREA", "CRD_INFO_X", "CRD_INFO_Y"
+      ]
+    },
+    {
+      "id": "livestock_farms",
+      "portalId": "15155089",
+      "kind": "livestock",
+      "url": "https://apis.data.go.kr/1741000/livestock_farming_v2/info_v2",
+      "keyParam": "serviceKey",
+      "defaults": {"returnType": "json"},
+      "required": [],
+      "optional": [
+        "cond[OPN_ATMY_GRP_CD::EQ]", "cond[SALS_STTS_CD::EQ]", "cond[PRMN_LSFBIZ_SPECS::LIKE]",
+        "cond[DAT_UPDT_PNT::GTE]", "cond[DAT_UPDT_PNT::LT]"
+      ],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "pageMax": 100,
+      "shape": "local",
+      "keyFields": [["OPN_ATMY_GRP_CD", "MNG_NO"]],
+      "keepFields": [
+        "OPN_ATMY_GRP_CD", "MNG_NO", "PRMN_LSFBIZ_SPECS", "ANMLHSBNDR_TASK_SE_NM",
+        "SALS_STTS_CD", "DTL_SALS_STTS_CD", "LCPMT_YMD", "CLSBIZ_YMD", "DAT_UPDT_SE",
+        "DAT_UPDT_PNT", "LCTN_AREA"
+      ]
+    },
+    {
+      "id": "slaughterhouses",
+      "portalId": "15155105",
+      "kind": "slaughter",
+      "url": "https://apis.data.go.kr/1741000/slaughterhouses/info",
+      "keyParam": "serviceKey",
+      "defaults": {"returnType": "json"},
+      "required": [],
+      "optional": [
+        "cond[OPN_ATMY_GRP_CD::EQ]", "cond[SALS_STTS_CD::EQ]", "cond[TNOEMP::GTE]",
+        "cond[DAT_UPDT_PNT::GTE]", "cond[DAT_UPDT_PNT::LT]"
+      ],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "pageMax": 100,
+      "shape": "local",
+      "keyFields": [["OPN_ATMY_GRP_CD", "MNG_NO"]],
+      "keepFields": [
+        "OPN_ATMY_GRP_CD", "MNG_NO", "ANMLHSBNDR_TASK_SE_NM", "SALS_STTS_CD", "DTL_SALS_STTS_CD",
+        "LCPMT_YMD", "CLSBIZ_YMD", "DAT_UPDT_SE", "DAT_UPDT_PNT", "LCTN_AREA", "CRD_INFO_X", "CRD_INFO_Y"
+      ]
+    },
+    {
+      "id": "trade_sido",
+      "portalId": "15101641",
+      "kind": "trade",
+      "url": "https://apis.data.go.kr/1220000/sidoitemtrade/getSidoitemtradeList",
+      "keyParam": "serviceKey",
+      "defaults": {},
+      "required": ["strtYymm", "endYymm", "sidoCd"],
+      "optional": [],
+      "shape": "standard",
+      "identityParams": ["sidoCd", "strtYymm", "endYymm"],
+      "keyFields": [["priodTitle", "hsSgn"]],
+      "measures": {
+        "expLnCnt": ["export_count", "record"], "impLnCnt": ["import_count", "record"],
+        "expUsdAmt": ["export_value", "USD"], "impUsdAmt": ["import_value", "USD"],
+        "cmtrBlncAmt": ["trade_balance", "USD"]
+      },
+      "keepFields": ["priodTitle", "hsSgn", "korePrlstNm", "expLnCnt", "expUsdAmt", "impLnCnt", "impUsdAmt", "cmtrBlncAmt"]
+    },
+    {
+      "id": "trade_sigungu",
+      "portalId": "15134343",
+      "kind": "trade",
+      "url": "https://apis.data.go.kr/1220000/sigunguperprlstperacrs/getSigunguPerPrlstPerAcrs",
+      "keyParam": "serviceKey",
+      "defaults": {},
+      "required": ["strtYymm", "endYymm", "HsSgn", "sidoCd"],
+      "optional": [],
+      "shape": "standard",
+      "identityParams": ["sidoCd", "HsSgn"],
+      "keyFields": [["priodTitle", "sggNm"]],
+      "measures": {
+        "expCnt": ["export_count", "record"], "impCnt": ["import_count", "record"],
+        "expUsdAmt": ["export_value", "USD"], "impUsdAmt": ["import_value", "USD"],
+        "cmtrBlncAmt": ["trade_balance", "USD"]
+      },
+      "keepFields": ["priodTitle", "sggNm", "hsSgn", "korePrlstNm", "expCnt", "expUsdAmt", "impCnt", "impUsdAmt", "cmtrBlncAmt"]
+    },
+    {
+      "id": "port_vessels_month",
+      "portalId": "15059059",
+      "kind": "port",
+      "url": "https://apis.data.go.kr/1192000/SsopVsslEtryndHarbor2/YM",
+      "keyParam": "serviceKey",
+      "defaults": {},
+      "required": ["sym", "eym"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["useYm", "prtAgNm", "nm"]],
+      "detailGroup": ["details", "detail"],
+      "measures": {
+        "etrVsslCo": ["vessel_arrivals", "vessel"], "satVsslCo": ["vessel_departures", "vessel"],
+        "etrGrtg": ["vessel_arrival_gross_tonnage", "GT"], "satGrtg": ["vessel_departure_gross_tonnage", "GT"]
+      },
+      "keepFields": ["useYm", "prtAgNm", "nm", "etrVsslCo", "etrGrtg", "satVsslCo", "satGrtg"]
+    },
+    {
+      "id": "port_containers_month",
+      "portalId": "15059131",
+      "kind": "port",
+      "url": "https://apis.data.go.kr/1192000/SsopCargContnImxprt2/Ym",
+      "keyParam": "serviceKey",
+      "defaults": {},
+      "required": ["sym", "eym"],
+      "optional": [],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "keyFields": [["useYm", "areaCd"]],
+      "measures": {
+        "eContnTeuTotal": ["container_import_total", "TEU"],
+        "eIntrvsslContnTeuTotal": ["container_import_domestic_vessel_total", "TEU"],
+        "eIntrvsslFcontnTeu": ["container_import_domestic_vessel_full", "TEU"],
+        "eIntrvsslEcontnTeu": ["container_import_domestic_vessel_empty", "TEU"],
+        "eFnshplContnTeuTotal": ["container_import_foreign_vessel_total", "TEU"],
+        "eFnshpFcontnTeu": ["container_import_foreign_vessel_full", "TEU"],
+        "eFnshpEcontnTeu": ["container_import_foreign_vessel_empty", "TEU"],
+        "tContnTeuTotal": ["container_export_total", "TEU"],
+        "tIntrvsslContnTeuTotal": ["container_export_domestic_vessel_total", "TEU"],
+        "tIntrvsslFcontnTeu": ["container_export_domestic_vessel_full", "TEU"],
+        "tIntrvsslEcontnTeu": ["container_export_domestic_vessel_empty", "TEU"],
+        "tFnshplContnTeuTotal": ["container_export_foreign_vessel_total", "TEU"],
+        "tFnshpFcontnTeu": ["container_export_foreign_vessel_full", "TEU"],
+        "tFnshpEcontnTeu": ["container_export_foreign_vessel_empty", "TEU"]
+      },
+      "keepFields": [
+        "useYm", "areaCd", "areaNm", "eContnTeuTotal", "eIntrvsslContnTeuTotal", "eIntrvsslFcontnTeu", "eIntrvsslEcontnTeu",
+        "eFnshplContnTeuTotal", "eFnshpFcontnTeu", "eFnshpEcontnTeu", "tContnTeuTotal",
+        "tIntrvsslContnTeuTotal", "tIntrvsslFcontnTeu", "tIntrvsslEcontnTeu", "tFnshplContnTeuTotal",
+        "tFnshpFcontnTeu", "tFnshpEcontnTeu"
+      ]
+    },
+    {
+      "id": "airport_transport",
+      "portalId": "15158834",
+      "kind": "airport",
+      "url": "https://apis.data.go.kr/B551178/airport-transport-stats/info",
+      "keyParam": "serviceKey",
+      "defaults": {"type": "json"},
+      "required": ["startDePd", "endDePd"],
+      "optional": ["routeBe", "nvgBe", "pasngrCargoBe", "pasngrBe", "cargoBe"],
+      "paging": {"page": "pageNo", "size": "numOfRows", "start": 1},
+      "shape": "standard",
+      "identityParams": ["startDePd", "endDePd", "routeBe", "nvgBe", "pasngrCargoBe", "pasngrBe", "cargoBe"],
+      "keyFields": [["Airport"]],
+      "measures": {
+        "Arrflgt": ["flight_arrivals", "flight"], "depflgtn": ["flight_departures", "flight"],
+        "Subflgt": ["flight_total", "flight"], "Arrpassenger": ["passenger_arrivals", "person"],
+        "Deppassenger": ["passenger_departures", "person"], "subpassenger": ["passenger_total", "person"],
+        "Arrcargo": ["cargo_arrivals", "kg"], "Depcargo": ["cargo_departures", "kg"], "subcargo": ["cargo_total", "kg"]
+      },
+      "keepFields": ["Airport", "Arrflgt", "depflgtn", "Subflgt", "Arrpassenger", "Deppassenger", "subpassenger", "Arrcargo", "Depcargo", "subcargo"]
+    }
+  ]
+}

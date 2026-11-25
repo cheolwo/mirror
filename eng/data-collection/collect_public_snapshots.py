@@ -534,9 +534,166 @@ def validate_activity_csv(body, source, max_records):
     return validate_seoul_csv(body, source, max_records, error_type=CollectionError)
 
 
+def validate_business_license_csv(body, source, max_records):
+    """인허가 원문행을 보존하며 기관·헤더를 검증하고 결측/중복을 요약한다."""
+    def fail(code):
+        raise CollectionError(code)
+
+    def column_list(key, default=None):
+        value = source.get(key, [] if default is None else default)
+        if (not isinstance(value, list) or any(not isinstance(x, str) or not x or x != x.strip()
+                                              for x in value) or len(value) != len(set(value))):
+            fail("license_csv_config_invalid")
+        return value
+
+    if not isinstance(body, bytes) or not isinstance(source, dict):
+        fail("license_csv_config_invalid")
+    if isinstance(max_records, bool) or not isinstance(max_records, int) or not 0 < max_records <= HARD_RECORDS:
+        fail("invalid_record_limit")
+    exact = column_list("exactHeader")
+    expected_hash = source.get("headerSha256")
+    if (not exact and expected_hash is None) or (expected_hash is not None and
+            (not isinstance(expected_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", expected_hash))):
+        fail("license_csv_header_contract_required")
+    required = column_list("requiredColumns")
+    agency_column = source.get("agencyColumn", "개방자치단체코드")
+    management = source.get("managementIdColumn", "관리번호")
+    agency = source.get("expectedAgencyCode")
+    if (not required or not isinstance(agency, str) or not re.fullmatch(r"[0-9]{7}", agency)
+            or not all(isinstance(x, str) and x and x == x.strip() for x in [agency_column, management])):
+        fail("license_csv_config_invalid")
+    dates = column_list("dateColumns", ["인허가일자", "폐업일자", "최종수정일자", "데이터갱신일자"])
+    statuses = column_list("statusColumns", ["영업상태코드", "영업상태명", "상세영업상태코드", "상세영업상태명"])
+    numbers = column_list("numericColumns")
+    pairs = source.get("coordinatePairs", [["좌표정보(X)", "좌표정보(Y)"], ["X좌표", "Y좌표"]])
+    if (not isinstance(pairs, list) or any(not isinstance(pair, list) or len(pair) != 2
+            or any(not isinstance(x, str) or not x or x != x.strip() for x in pair)
+            or pair[0] == pair[1] for pair in pairs)):
+        fail("license_csv_config_invalid")
+    configured_encoding = source.get("encoding", "auto")
+    if configured_encoding not in {"auto", "cp949", "utf-8", "utf-8-sig"}:
+        fail("license_csv_config_invalid")
+    candidates = (["utf-8-sig"] if body.startswith(b"\xef\xbb\xbf") else ["utf-8", "cp949"]) if configured_encoding == "auto" else [configured_encoding]
+    for encoding in candidates:
+        try:
+            text = body.decode(encoding, errors="strict")
+            break
+        except UnicodeError:
+            continue
+    else:
+        fail("license_csv_encoding_invalid")
+    if not text.strip():
+        fail("license_csv_empty")
+    if "\x00" in text or text.lstrip().startswith(("<", "{", "[")):
+        fail("license_csv_not_csv")
+    count = blank = 0
+    keys = {}
+    date_summary = {k: {"missing": 0, "invalid": 0, "minimum": None, "maximum": None,
+                        "invalidSourceRows": []} for k in dates}
+    status_summary = {k: {"missing": 0, "values": {}} for k in statuses}
+    numeric_summary = {k: {"missing": 0, "invalid": 0, "zero": 0, "negative": 0,
+                           "invalidSourceRows": []} for k in sorted(set(numbers + [x for pair in pairs for x in pair]))}
+    pair_summary = [{"columns": pair, "missingBoth": 0, "missingOne": 0, "invalid": 0,
+                     "zeroBoth": 0, "finiteNonzero": 0} for pair in pairs]
+
+    def number(value):
+        if not value:
+            return None
+        try:
+            parsed = float(value)
+            return parsed if math.isfinite(parsed) else "invalid"
+        except (ValueError, OverflowError):
+            return "invalid"
+
+    try:
+        rows = csv.DictReader(io.StringIO(text, newline=""), strict=True)
+        header = rows.fieldnames
+        if (not header or len(header) != len(set(header)) or any(not x or x != x.strip() for x in header)):
+            fail("license_csv_headers_invalid")
+        digest = hashlib.sha256(json.dumps(header, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
+        if (exact and header != exact) or (expected_hash and digest != expected_hash.lower()):
+            fail("license_csv_headers_mismatch")
+        configured = [*required, agency_column, management, *dates, *statuses, *numeric_summary]
+        if not set(configured).issubset(header):
+            fail("license_csv_required_columns_missing")
+        for source_row, row in enumerate(rows, 2):
+            if None in row or any(value is None for value in row.values()):
+                fail("license_csv_row_shape_invalid")
+            values = {k: v.strip() for k, v in row.items()}
+            if not any(values.values()):
+                blank += 1
+                continue
+            count += 1
+            if count > max_records:
+                fail("record_limit_exceeded")
+            if values[agency_column] != agency:
+                fail("license_csv_agency_mismatch")
+            if not values[management]:
+                fail("license_csv_management_id_empty")
+            keys[values[management]] = keys.get(values[management], 0) + 1
+            for k, summary in date_summary.items():
+                value = values[k]
+                if not value:
+                    summary["missing"] += 1
+                    continue
+                try:
+                    parsed = (datetime.strptime(value, "%Y%m%d") if re.fullmatch(r"[0-9]{8}", value)
+                              else datetime.fromisoformat(value.replace("Z", "+00:00")))
+                    normalized = parsed.isoformat()
+                    summary["minimum"] = min(summary["minimum"] or normalized, normalized)
+                    summary["maximum"] = max(summary["maximum"] or normalized, normalized)
+                except (ValueError, OverflowError):
+                    summary["invalid"] += 1
+                    if len(summary["invalidSourceRows"]) < 5:
+                        summary["invalidSourceRows"].append(source_row)
+            for k, summary in status_summary.items():
+                value = values[k]
+                if not value:
+                    summary["missing"] += 1
+                else:
+                    summary["values"][value] = summary["values"].get(value, 0) + 1
+            for k, summary in numeric_summary.items():
+                value = number(values[k])
+                if value is None:
+                    summary["missing"] += 1
+                elif value == "invalid":
+                    summary["invalid"] += 1
+                    if len(summary["invalidSourceRows"]) < 5:
+                        summary["invalidSourceRows"].append(source_row)
+                else:
+                    summary["zero"] += value == 0
+                    summary["negative"] += value < 0
+            for summary in pair_summary:
+                x, y = [number(values[k]) for k in summary["columns"]]
+                if x is None and y is None:
+                    summary["missingBoth"] += 1
+                elif x is None or y is None:
+                    summary["missingOne"] += 1
+                elif x == "invalid" or y == "invalid":
+                    summary["invalid"] += 1
+                elif x == 0 and y == 0:
+                    summary["zeroBoth"] += 1
+                else:
+                    summary["finiteNonzero"] += 1
+    except csv.Error:
+        fail("license_csv_syntax_invalid")
+    if not count:
+        fail("license_csv_no_records")
+    return {"recordCount": count, "evidenceAsOf": None, "observationPeriods": [],
+            "unit": source.get("unit"), "spatialUnit": source.get("spatialUnit"), "columns": header,
+            "encoding": encoding, "headerSha256": digest, "expectedAgencyCode": agency,
+            "uniqueManagementIds": len(keys), "duplicateManagementRows": count - len(keys),
+            "duplicateManagementGroups": sum(v > 1 for v in keys.values()), "blankRecordRows": blank,
+            "duplicatesPreserved": True, "dateSummary": date_summary, "statusSummary": status_summary,
+            "numericSummary": numeric_summary, "coordinateSummary": pair_summary,
+            "coordinateCrsVerified": False, "reportedStatusIsFieldConfirmed": False,
+            "missingValuesFilled": False}
+
+
 VALIDATORS = {"worldbank": validate_worldbank, "bls": validate_bls,
               "legal_dong_zip": validate_legal_zip, "catalog_json": validate_catalog,
-              "html": validate_html, "seoul_activity_csv": validate_activity_csv}
+              "html": validate_html, "seoul_activity_csv": validate_activity_csv,
+              "seoul_business_license_csv": validate_business_license_csv}
 
 
 def policy_fingerprint(source, now):
@@ -557,8 +714,75 @@ def policy_fingerprint(source, now):
             "idColumns", "numericColumns", "spatialUnit")}
     if source.get("validator") == "worldbank" and "indicatorId" in source:
         value["worldbankPolicy"] = {"indicatorId": source["indicatorId"]}
+    if source.get("validator") == "seoul_business_license_csv":
+        value["licensePolicy"] = {key: source.get(key) for key in (
+            "exactHeader", "headerSha256", "requiredColumns", "encoding", "agencyColumn",
+            "expectedAgencyCode", "managementIdColumn", "dateColumns", "statusColumns",
+            "coordinatePairs", "numericColumns", "spatialUnit", "countDiscovery",
+            "attemptCooldownHours", "intervalHours", "maxRecords", "maxBytes")}
     return hashlib.sha256(json.dumps(value, sort_keys=True,
         ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def license_count_contract(source, allowed, max_records):
+    discovery = source.get("countDiscovery")
+    if not isinstance(discovery, dict) or set(discovery) != {"url", "maxBytes"}:
+        raise CollectionError("license_count_discovery_required", blocked=True)
+    validate_url(discovery["url"], allowed)
+    parsed = parse.urlsplit(discovery["url"])
+    query = parse.parse_qs(parsed.query, keep_blank_values=True)
+    if (parsed.hostname != "data.seoul.go.kr" or parsed.path != "/dataList/dataView.do"
+            or query.get("infId") != [source.get("datasetId")]
+            or query.get("filterCol") != ["OPNSFTEAMCODE"]
+            or query.get("txtFilter") != [source.get("expectedAgencyCode")]
+            or query.get("onepagerow") != ["1"]):
+        raise CollectionError("license_count_scope_mismatch", blocked=True)
+    form = source.get("form", {})
+    if (source.get("method") != "POST" or form.get("gridTotalCnt") != "__DISCOVERED_COUNT__"
+            or form.get("infId") != source.get("datasetId")
+            or form.get("filterCol") != "OPNSFTEAMCODE"
+            or form.get("txtFilter") != source.get("expectedAgencyCode")):
+        raise CollectionError("license_download_scope_mismatch", blocked=True)
+    cap = positive_limit(discovery["maxBytes"], 262144, "invalid_discovery_byte_limit")
+    cooldown = source.get("attemptCooldownHours", 24)
+    if isinstance(cooldown, bool) or not isinstance(cooldown, (int, float)) or not math.isfinite(cooldown) or cooldown < 24:
+        raise CollectionError("invalid_license_attempt_cooldown", blocked=True)
+    if source.get("intervalHours", 24) < 24:
+        raise CollectionError("license_interval_too_short", blocked=True)
+    return cap, cooldown
+
+
+def discover_license_count(source, source_dir, limits, budget, now, open_client, resolve_dns):
+    remaining = limits["maxTotalBytes"] - budget["bytes"]
+    if budget["requests"] + 2 > limits["maxRequests"] or remaining <= 0:
+        raise CollectionError("job_request_or_byte_budget_reached", blocked=True)
+    budget["requests"] += 1
+    code, body, _ = fetch({"url": source["countDiscovery"]["url"], "method": "GET"}, None,
+        limits["timeoutSeconds"], min(source["countDiscovery"]["maxBytes"], remaining), now,
+        open_client=open_client, resolve_dns=resolve_dns)
+    budget["bytes"] += len(body)
+    if code != 200:
+        raise CollectionError("license_count_response_invalid")
+    try:
+        text = body.decode("utf-8-sig")
+    except UnicodeError:
+        raise CollectionError("license_count_encoding_invalid") from None
+    matches = re.findall(r'''(?<!\w)["']?totalCount["']?\s*:\s*([^\s,;}\]]+)''', text)
+    if (len(matches) != 1 or not re.fullmatch(r"[0-9]+", matches[0])
+            or not 0 < int(matches[0]) <= source.get("maxRecords", HARD_RECORDS)):
+        raise CollectionError("license_count_invalid_or_exceeds_limit")
+    count = int(matches[0]); body_sha = hashlib.sha256(body).hexdigest()
+    path = beneath(source_dir, "count-bodies", body_sha + ".raw")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if hashlib.sha256(path.read_bytes()).hexdigest() != body_sha:
+            raise CollectionError("existing_count_body_digest_mismatch")
+    else:
+        with path.open("xb") as stream:
+            stream.write(body)
+    return count, {"url": source["countDiscovery"]["url"], "sha256": body_sha,
+                   "body": "count-bodies/" + body_sha + ".raw", "bytes": len(body),
+                   "recordCount": count, "checkedAt": stamp(now), "agencyCode": source["expectedAgencyCode"]}
 
 
 @contextmanager
@@ -662,6 +886,9 @@ def collect_source(source, source_dir, allowed, limits, now, budget, *, dry_run=
         no_credentials(source.get("form"))
         year_tokens(source.get("json"), now)
         year_tokens(source.get("form"), now)
+        license_policy = source.get("validator") == "seoul_business_license_csv"
+        if license_policy:
+            _, attempt_cooldown = license_count_contract(source, allowed, max_records)
         # A refused identical request stays refused until the reviewed request or
         # explicit policy revision changes. Time passing is not new permission.
         fingerprint = policy_fingerprint(source, now)
@@ -677,19 +904,40 @@ def collect_source(source, source_dir, allowed, limits, now, budget, *, dry_run=
         if reusable and now < aware_time(reusable["collectedAt"]) + timedelta(hours=interval):
             return dict(result, status="not_due", previousCollectedAt=reusable["collectedAt"],
                         evidenceAsOf=reusable.get("evidenceAsOf"))
+        if license_policy:
+            attempt_path = beneath(source_dir, "license-last-attempt.json")
+            if attempt_path.exists():
+                attempt = json.loads(attempt_path.read_text(encoding="utf-8"))
+                if (attempt.get("requestPolicyFingerprint") == fingerprint
+                        and now < aware_time(attempt["attemptedAt"]) + timedelta(hours=attempt_cooldown)):
+                    return dict(result, status="not_due", reason="license_attempt_cooldown",
+                                previousAttemptedAt=attempt["attemptedAt"])
         if dry_run:
             return dict(result, status="dry_run", reason="ready_no_request")
+        effective_source, expected_count = source, None
+        if license_policy:
+            if budget["requests"] + 2 > limits["maxRequests"] or budget["bytes"] >= limits["maxTotalBytes"]:
+                raise CollectionError("job_request_or_byte_budget_reached", blocked=True)
+            atomic_json(attempt_path, {"requestPolicyFingerprint": fingerprint, "attemptedAt": stamp(now)})
+            expected_count, result["countDiscovery"] = discover_license_count(
+                source, source_dir, limits, budget, now, open_client, resolve_dns)
+            effective_source = dict(source, form={**source["form"], "gridTotalCnt": str(expected_count)})
+            result["resolvedDownloadRecordCount"] = expected_count
         remaining = limits["maxTotalBytes"] - budget["bytes"]
         if budget["requests"] >= limits["maxRequests"] or remaining <= 0:
             raise CollectionError("job_request_or_byte_budget_reached", blocked=True)
         budget["requests"] += 1
-        code, body, headers = fetch(source, reusable, limits["timeoutSeconds"], min(max_bytes, remaining),
+        code, body, headers = fetch(effective_source, reusable, limits["timeoutSeconds"], min(max_bytes, remaining),
                                     now, open_client=open_client, resolve_dns=resolve_dns)
         budget["bytes"] += len(body)
         if code == 304:
             if reusable is None:
                 raise CollectionError("not_modified_without_previous_body")
+            if expected_count is not None and reusable.get("recordCount") != expected_count:
+                raise CollectionError("license_discovery_count_changed_304")
             pointer = dict(reusable, collectedAt=stamp(now), httpStatus=304)
+            if license_policy:
+                pointer.update(countDiscovery=result["countDiscovery"], resolvedDownloadRecordCount=expected_count)
             atomic_json(beneath(source_dir, "latest.json"), pointer)
             return dict(result, status="unchanged", sha256=reusable["sha256"], httpStatus=304,
                         collectedAt=stamp(now), evidenceAsOf=reusable.get("evidenceAsOf"),
@@ -701,6 +949,8 @@ def collect_source(source, source_dir, allowed, limits, now, budget, *, dry_run=
                             "spatialUnit", "columns", "encoding", "missingNumericCells"]
                            if key in reusable})
         validated = validator(body, source, max_records)
+        if expected_count is not None and validated.get("recordCount") != expected_count:
+            raise CollectionError("license_discovery_record_count_mismatch")
         digest = hashlib.sha256(body).hexdigest()
         body_path = beneath(source_dir, "bodies", digest + ".raw")
         body_path.parent.mkdir(parents=True, exist_ok=True)
