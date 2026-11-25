@@ -49,6 +49,8 @@ public sealed partial class 판매채널주문목록PageViewModel(
     [NotifyPropertyChangedFor(nameof(검색결과없음))]
     public partial bool 초기화됨 { get; private set; }
 
+    internal SalesOrderNavigationContext 적용된목록문맥 { get; private set; } = new();
+
     internal int 재조회페이지 => 오류발생 ? _requestedPage : 현재페이지;
     public int 총페이지수 => Math.Max(1, (int)Math.Ceiling(전체건수 / (double)DefaultPageSize));
     public bool 검색조건있음 => !string.IsNullOrWhiteSpace(검색어)
@@ -65,14 +67,18 @@ public sealed partial class 판매채널주문목록PageViewModel(
             async token =>
             {
                 _requestedPage = Math.Max(1, page);
-                var response = await service.목록조회Async(new 판매채널주문목록조회요청
+                var request = new 판매채널주문목록조회요청
                 {
                     Page = _requestedPage - 1,
                     PageSize = DefaultPageSize,
                     Search = 검색어,
                     SyncScope = 국내외구분,
                     Status = 출고상태
-                }, token);
+                };
+                var response = await service.목록조회Async(request, token);
+                // 새 행의 변경 알림 전에 실제 성공 요청과 응답 페이지를 함께 보존한다.
+                적용된목록문맥 = new SalesOrderNavigationContext()
+                    .WithListState(request.Search, request.SyncScope, request.Status, response.Page + 1);
                 주문목록 = response.Items;
                 수집보류목록 = response.SyncIssues;
                 전체건수 = response.TotalCount;
@@ -93,8 +99,11 @@ public sealed partial class 판매채널주문목록PageViewModel(
 
 /// <summary>주소나 목록에서 선택한 정확한 orderId의 출고 후보 묶음만 조회합니다.</summary>
 public sealed partial class 판매채널주문상세PageViewModel(
-    I판매채널주문읽기Service service) : 업무작업ViewModelBase
+    I판매채널주문읽기Service service,
+    IWorkflowRecoveryContext? recovery = null) : 업무작업ViewModelBase
 {
+    private long _detailGeneration;
+
     [ObservableProperty]
     public partial long? 요청OrderId { get; private set; }
 
@@ -106,19 +115,34 @@ public sealed partial class 판매채널주문상세PageViewModel(
 
     public Task<bool> 조회Async(long orderId, CancellationToken cancellationToken = default)
     {
+        var generation = ++_detailGeneration;
         if (orderId <= 0)
         {
+            요청OrderId = null;
+            상세 = null;
+            찾을수없음 = false;
+            최신조회초기화();
             return Task.FromResult(유효성실패("조회할 판매채널 주문 ID를 확인해 주세요."));
         }
 
         요청OrderId = orderId;
         상세 = null;
         찾을수없음 = false;
-        return 작업실행Async(
+        return 최신조회실행Async(
             async token =>
             {
-                상세 = await service.상세조회Async(orderId, token);
-                찾을수없음 = 상세 is null;
+                token.ThrowIfCancellationRequested();
+                var scope = recovery?.Capture();
+                bool Current() => generation == _detailGeneration && 요청OrderId == orderId
+                    && !token.IsCancellationRequested && (scope is null || recovery!.IsCurrent(scope));
+                판매채널주문상세응답? response;
+                try { response = await service.상세조회Async(orderId, token); }
+                catch (Exception) when (!Current()) { throw new OperationCanceledException(token); }
+                if (!Current()) throw new OperationCanceledException(token);
+                if (response is not null && (response.주문 is null || response.주문.OrderId != orderId))
+                    throw new InvalidDataException("요청한 주문과 상세 응답이 다릅니다. 같은 주문을 다시 조회해 주세요.");
+                상세 = response;
+                찾을수없음 = response is null;
             },
             "판매채널 주문 출고 후보 상세를 불러왔습니다.",
             cancellationToken,
@@ -127,10 +151,11 @@ public sealed partial class 판매채널주문상세PageViewModel(
 
     public void 선택해제()
     {
+        ++_detailGeneration;
         요청OrderId = null;
         상세 = null;
         찾을수없음 = false;
-        작업상태초기화();
+        최신조회초기화();
     }
 }
 

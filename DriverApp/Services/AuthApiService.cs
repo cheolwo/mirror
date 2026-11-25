@@ -39,16 +39,30 @@ public sealed class AuthApiService
         return (result.IsSuccess, result.ErrorMessage ?? string.Empty);
     }
 
-    public async Task<string?> EnsureAccessTokenAsync(
+    public Task<string?> EnsureAccessTokenAsync(
         bool forceRefresh = false,
         CancellationToken cancellationToken = default,
         long? expectedSessionVersion = null)
+        => EnsureAccessTokenCoreAsync(forceRefresh, cancellationToken, expectedSessionVersion, expectedSessionRevision: null);
+
+    internal Task<string?> EnsureAccessTokenForRequestAsync(long expectedSessionRevision,
+        CancellationToken cancellationToken = default)
+        => EnsureAccessTokenCoreAsync(false, cancellationToken, expectedSessionVersion: null,
+            expectedSessionRevision: expectedSessionRevision);
+
+    private async Task<string?> EnsureAccessTokenCoreAsync(bool forceRefresh, CancellationToken cancellationToken,
+        long? expectedSessionVersion, long? expectedSessionRevision)
     {
+        // 첫 복원을 마친 뒤 이 요청의 계정 수명을 고정합니다. 정상 갱신은 이 판본을 바꾸지 않습니다.
+        await _authSession.RestoreAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        var sessionRevision = expectedSessionRevision ?? _authSession.SessionRevision;
+        if (_authSession.SessionRevision != sessionRevision) return SessionChangedMessage;
         await _refreshGate.WaitAsync(cancellationToken);
         try
         {
-            await _authSession.RestoreAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
+            if (_authSession.SessionRevision != sessionRevision) return SessionChangedMessage;
             var sessionVersion = _authSession.Version;
             if (expectedSessionVersion is { } expected && expected != sessionVersion)
                 return SessionChangedMessage;
@@ -56,11 +70,14 @@ public sealed class AuthApiService
                 && !string.IsNullOrWhiteSpace(_authSession.AccessToken)
                 && _authSession.AccessTokenExpiresAtUtc > DateTime.UtcNow.AddSeconds(30))
             {
-                return null;
+                return _authSession.SessionRevision == sessionRevision ? null : SessionChangedMessage;
             }
 
-            if (string.IsNullOrWhiteSpace(_authSession.UserId)
-                || string.IsNullOrWhiteSpace(_authSession.RefreshToken)
+            var userId = _authSession.UserId;
+            var refreshToken = _authSession.RefreshToken;
+            if (!IsCurrentSession(sessionVersion, sessionRevision)) return SessionChangedMessage;
+            if (string.IsNullOrWhiteSpace(userId)
+                || string.IsNullOrWhiteSpace(refreshToken)
                 || _authSession.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
                 if (!await TryEndSessionAsync(sessionVersion, cancellationToken))
@@ -68,12 +85,13 @@ public sealed class AuthApiService
                 return "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.";
             }
 
+            if (!IsCurrentSession(sessionVersion, sessionRevision)) return SessionChangedMessage;
             var result = await SendTokenRequestAsync(
                 "api/v1/auth/refresh",
                 new 토큰갱신요청
                 {
-                    UserId = _authSession.UserId,
-                    RefreshToken = _authSession.RefreshToken
+                    UserId = userId,
+                    RefreshToken = refreshToken
                 },
                 "로그인 정보를 갱신하지 못했습니다. 잠시 후 다시 시도해 주세요.",
                 sessionVersion,
@@ -94,6 +112,9 @@ public sealed class AuthApiService
             _refreshGate.Release();
         }
     }
+
+    private bool IsCurrentSession(long version, long revision)
+        => _authSession.Version == version && _authSession.SessionRevision == revision;
 
     private async Task<bool> TryEndSessionAsync(long expectedVersion, CancellationToken cancellationToken)
     {

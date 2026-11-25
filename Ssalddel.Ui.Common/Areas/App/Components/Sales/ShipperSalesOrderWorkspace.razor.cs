@@ -44,6 +44,9 @@ public partial class ShipperSalesOrderWorkspace
     public int InitialPage { get; set; } = 1;
 
     [Parameter]
+    public string LoginHref { get; set; } = "/login";
+
+    [Parameter]
     public string HomeHref { get; set; } = "/shipper";
 
     [Parameter]
@@ -243,12 +246,11 @@ public partial class ShipperSalesOrderWorkspace
 
     private string DetailPath(long orderId)
     {
-        var listPath = new SalesOrderNavigationContext()
-            .WithListState(List.검색어, List.국내외구분, List.출고상태, List.현재페이지)
+        var listPath = List.적용된목록문맥
             .PathFor(SalesOrderScreenKind.List);
 
         return new SalesOrderNavigationContext { From = listPath }
-            .PathFor(SalesOrderScreenKind.Detail, orderId);
+            .PathFor(SalesOrderScreenKind.Detail, orderId).TrimStart('/');
     }
 
     private static string ChannelName(string? channelType)

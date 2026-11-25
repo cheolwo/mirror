@@ -40,6 +40,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
     private IReadOnlyList<기사예약샘플항목> _예약목록 = [];
     private IReadOnlyList<기사운송샘플항목> _운송목록 = [];
     private long? _currentTransportId;
+    private 기사화물운송작업공간응답? _화물작업공간;
     private IReadOnlyList<기사알림샘플항목> _알림목록 = [];
 
     public ServerBackedDriverSampleDataService(
@@ -91,6 +92,8 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
 
             var owner = _authSession.UserId;
             var revision = _authSession.SessionRevision;
+            if (force || !_loaded || !string.Equals(_loadedAccessToken, accessToken, StringComparison.Ordinal))
+                _화물작업공간 = null;
             using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _refreshLifetime = lifetime;
             var token = lifetime.Token;
@@ -169,6 +172,12 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
 
     public DriverWorkspaceReadState ReadState { get; private set; } = new();
 
+    public 기사화물운송작업공간응답? 화물작업공간
+        => _authSession.IsAuthenticated && ReadState.CurrentTransport.IsCurrent
+            && _stateRevision == _authSession.SessionRevision
+            && string.Equals(_stateOwner, _authSession.UserId, StringComparison.Ordinal)
+                ? _화물작업공간 : null;
+
     public 기사근무샘플상태 근무상태 => _근무상태;
 
     public 기사현재위치샘플 기사현재위치 => _기사현재위치;
@@ -210,6 +219,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         DriverWorkspaceSliceReadState realtimeState, CancellationToken cancellationToken)
     {
         // A new read invalidates actionable offers until this session's latest result is confirmed.
+        _화물작업공간 = null;
         ReadState = ReadState with { Recommendations = DriverWorkspaceSliceReadState.Unknown("추천 운송") };
         // Core transport is queried independently from provider-dependent recommendations/financial summaries.
         var freight = await ReadSliceAsync("현재 운송", async ct =>
@@ -264,6 +274,8 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         }, owner, sessionRevision, cancellationToken);
         EnsureCurrent(owner, sessionRevision, cancellationToken);
 
+        _화물작업공간 = freight.State.IsCurrent && freightWorkspace?.활성운송목록.Count > 0
+            ? freightWorkspace : null;
         _추천의뢰목록 = recommendations.Value?.Select(ToRequestItem).ToArray() ?? [];
         _운송목록 = freightWorkspace?.활성운송목록
             .Select(item => ToTransportItem(currentTransportDetail is not null && item.Id == currentTransportDetail.Id
@@ -273,10 +285,16 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         _예약목록 = reservations.Value?.Select(ToReservationItem).ToArray() ?? [];
         if (work.State.IsCurrent) ApplyWorkState(work.Value.status, work.Value.current);
         else ApplyUnknownWorkState();
+        var stopOrderHeld = freightWorkspace?.BlockCodes.Any(code =>
+            code.StartsWith("FreightAcceptedStopOrder.", StringComparison.Ordinal)) == true;
         ReadState = new()
         {
             CurrentTransport = freight.State, TransportDetail = detailState, Work = work.State,
-            Recommendations = recommendations.State, Settlement = settlement.State,
+            // 현재 운송 조회는 보존하고 새 추천 수락만 잠급니다. 기존 지도 경고·재확인 동선을 재사용합니다.
+            Recommendations = stopOrderHeld
+                ? new(DriverWorkspaceReadStatus.Failed, "저장된 방문 순서를 다시 확인해 주세요. 확인 전에는 새 추천을 수락할 수 없습니다.")
+                : recommendations.State,
+            Settlement = settlement.State,
             Reservations = reservations.State, Realtime = realtimeState
         };
     }
@@ -373,6 +391,10 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
             예상수익 = source.예상수익,
             추천점수 = source.추천점수,
             추천사유 = source.추천사유,
+            일정삽입가능여부 = source.일정삽입가능여부,
+            전체일정완수가능여부 = source.전체일정완수가능여부,
+            최적삽입인덱스 = source.최적삽입인덱스,
+            권장경로순서 = source.권장경로순서.ToArray(),
             복귀지기준추천여부 = source.복귀지기준추천여부,
             복귀지출처 = source.복귀지출처,
             복귀추천사유 = source.복귀추천사유,
@@ -449,6 +471,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         _예약목록 = [];
         _운송목록 = [];
         _currentTransportId = null;
+        _화물작업공간 = null;
         _알림목록 = [];
     }
 
@@ -478,6 +501,7 @@ public sealed class ServerBackedDriverSampleDataService : IDriverSampleDataServi
         _예약목록 = _sampleFallback.예약목록;
         _운송목록 = _sampleFallback.운송목록;
         _currentTransportId = null;
+        _화물작업공간 = null;
         _알림목록 = _sampleFallback.알림목록;
     }
 

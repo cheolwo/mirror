@@ -1,0 +1,19 @@
+@page "/community/work-availability"
+@using Ssalddel.Ui.Common.Areas.App.Components.HumanResources
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@inject 근무가능요청ViewModel Model
+@inject WebAuthSessionService AuthSession
+@implements IDisposable
+
+<PageTitle>내 근무 요청 · 살뜰</PageTitle>
+<WebPageHeader Title="내 근무 요청" Description="등록된 창고의 근무 요청을 확인하고 가능 여부를 답합니다." Eyebrow="Community Work" Badge="본인 의향 확인" />
+@if (!AuthSession.IsLoggedIn) { <p>본인 근무 요청을 보려면 로그인해 주세요.</p><a href="/login?returnUrl=%2Fcommunity%2Fwork-availability">로그인 후 내 근무 요청으로</a> }
+else { <SsalddelWorkforceAvailabilityWorkspace Model="Model" LoginHref="/login?returnUrl=%2Fcommunity%2Fwork-availability" /> }
+<a href="/community/roles/apply">역할 지원으로</a>
+
+@code {
+    protected override void OnInitialized() => AuthSession.Changed += Changed;
+    protected override async Task OnInitializedAsync() { if (AuthSession.IsLoggedIn) await Model.LoadAsync(null); }
+    private void Changed() => _ = InvokeAsync(async () => { Model.Reset(); StateHasChanged(); if (AuthSession.IsLoggedIn) await Model.LoadAsync(null); StateHasChanged(); });
+    public void Dispose() { AuthSession.Changed -= Changed; Model.Reset(); }
+}

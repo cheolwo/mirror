@@ -1,0 +1,155 @@
+@using Ssalddel.Contracts.Common.Hr
+@using Ssalddel.Contracts.Common.Inventory
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+
+<section class="workforce" aria-label="근무 가능 요청과 인력 계획">
+    @if (Model.Error is { } error) { <p role="alert" class="wf-error">@error</p> }
+    @if (Model.ErrorStatus == 401 && LoginHref is not null) { <a href="@LoginHref">다시 로그인 후 같은 화면으로</a> }
+    @if (Model.Notice is { } notice) { <p role="status">@notice</p> }
+    @if (Model.Busy) { <p role="status">현재 요청을 확인하고 있습니다.</p> }
+    <p class="wf-note">가능 답변과 인력 계획 확정을 구분합니다. 고용·근무 배정·출근·급여 확정은 별도입니다.</p>
+    @if (Model.Pending is { } pending)
+    {
+        <aside class="wf-card"><p role="status">저장 결과 미확인 · 선택 @pending.RecipientUserIds.Count 명 · 요청 @pending.NeededWorkers 명 · @Time(pending.WorkStartUtc) ~ @Time(pending.WorkEndUtc). 입력을 보존하고 같은 요청으로 확인합니다.</p><button disabled="@Model.Busy" @onclick="() => Model.CreateAsync(pending)">같은 요청 결과 확인</button></aside>
+    }
+    @if (Model.Scope is null)
+    {
+        @if (Model.Preference is { } preference)
+        {
+            <section class="wf-card"><h2>내 근무 요청 수신 설정</h2>
+                <p>등록된 창고에서 오는 근무 가능 확인 요청입니다. 수신 동의가 근무 약속은 아닙니다.</p>
+                <label class="wf-check"><input type="checkbox" @bind="AllowInApp" disabled="@Model.Busy" />앱 수신함으로 요청 받기</label>
+                <label class="wf-check"><input type="checkbox" @bind="AllowKakao" disabled="@Model.Busy" />카카오 알림톡도 받기 · 연결된 경우, 인증된 기존 연락처 사용</label>
+                <button disabled="@Model.Busy" @onclick="() => Model.SavePreferenceAsync(new() { AllowInApp = AllowInApp, AllowKakao = AllowKakao, Revision = preference.Revision })">수신 설정 저장</button>
+            </section>
+        }
+    }
+    else if (Model.Context is { } context)
+    {
+        <header><h2>@context.WarehouseName · @StageLabel(Model.Scope.Stage) 인력 계획</h2><p>수량 확인 @Time(context.ObservedAtUtc) · 선택한 접수 구간의 현재 상태</p></header>
+        <details class="wf-composer" open="@((Model.Requests?.Items.Count ?? 0) == 0 || Model.Pending is not null)"><summary>새 근무 가능 요청 작성</summary>
+        <section class="wf-card"><h3>1. 처리할 묶음 확인</h3>
+            <p>조회 구간은 실제 근무 회차가 아닙니다. 미완료 수량의 근거가 확인된 묶음만 선택할 수 있습니다.</p>
+            @if (context.Groups.Count == 0) { <p role="status">이 페이지에 처리 묶음이 없습니다. 원래 공정에서 조건과 페이지를 확인해 주세요.</p> }
+            <div class="wf-groups">@foreach (var group in context.Groups)
+            {
+                var valid = Eligible(group);
+                <label class="wf-group"><input type="radio" name="work-group" value="@group.Key" checked="@(GroupKey == group.Key)" @onchange="() => GroupKey = group.Key" disabled="@(!valid || Locked)" /><span><strong>@group.Label</strong><br />@group.SourcePlanCount 건 · 작업 @group.TaskCount · 총 @group.Quantity · 완료 @(group.CompletedQuantity?.ToString() ?? "미확인")<br /><b>남음 @(valid ? (group.Quantity - group.CompletedQuantity!.Value).ToString() : "확인 필요")</b>@if (!valid) { <span> · @group.Reason</span> }</span></label>
+            }</div>
+            <nav aria-label="묶음 페이지">@if (Model.Scope.GroupPage > 0) { <button disabled="@Locked" @onclick="() => ChangePage(-1)">이전 묶음 페이지</button> }@if (context.HasNextGroupPage) { <button disabled="@Locked" @onclick="() => ChangePage(1)">다음 묶음 페이지</button> }</nav>
+        </section>
+        @if (SelectedGroup is { } selected)
+        {
+            <div class="wf-columns"><section class="wf-card"><h3>2. 필요 인원 검토</h3>
+                <p><strong>@selected.Label · 남은 수량 @(selected.Quantity - selected.CompletedQuantity!.Value)</strong></p>
+                <label>1인 시간당 처리량 · 관리자 가정<input type="number" min="0" step="0.1" @bind="Rate" disabled="@Locked" /></label>
+                <label>1인 순작업시간 · 시간<input type="number" min="0" step="0.1" @bind="NetHours" disabled="@Locked" /></label>
+                <p>참고 필요 인원 <strong>@(Estimate?.ToString() ?? "미확인")</strong> · 가정값 기준, 실제 생산성이 아닙니다.</p>
+                <label>요청할 인원<input type="number" min="1" max="50" @bind="Needed" disabled="@Locked" /></label>
+                <label>업무 시작 · 한국 시간<input type="datetime-local" @bind="Start" disabled="@Locked" /></label>
+                <label>업무 종료 · 한국 시간<input type="datetime-local" @bind="End" disabled="@Locked" /></label>
+                <label>답변 기한 · 한국 시간<input type="datetime-local" @bind="ReplyBy" disabled="@Locked" /></label>
+                <label>안내할 시간당 금액 · 원, 선택<input type="number" min="0" step="0.01" @bind="Amount" disabled="@Locked" /></label>
+                <p>금액을 비워 두면 조건 미확인으로 표시합니다. 급여 지급이나 계약 확정은 하지 않습니다.</p>
+            </section><section class="wf-card"><h3>3. 등록 인력에게 가능 여부 묻기</h3>
+                <label>연락 방식<select @bind="Channel" disabled="@Locked">@foreach (var channel in context.Channels) { <option value="@channel.Code" disabled="@(!channel.Available)">@channel.Name@(!channel.Available ? " · 미연결" : "")</option> }</select></label>
+                @foreach (var channel in context.Channels) { <p class="wf-note">@channel.Name: @channel.Reason</p> }
+                <p>같은 창고 등록 인력 중 현재 수신 동의한 사람에게만 요청합니다. 아래 목록은 최대 100개 등록 관계 범위입니다.</p>
+                @if (context.Candidates.Count == 0) { <p role="status">확인할 등록 인력이 없습니다.</p> }
+                @foreach (var person in context.Candidates)
+                {
+                    var eligible = person.AllowInApp && (Channel != 근무연락채널.Kakao || person.AllowKakao && person.HasVerifiedPhone);
+                    <label class="wf-check"><input type="checkbox" checked="@Recipients.Contains(person.UserId)" @onchange="e => SelectPerson(person.UserId, e.Value is true)" disabled="@(Locked || !eligible)" /><span><strong>@person.DisplayName</strong> · @person.RoleName<br />@(eligible ? "요청 가능" : "수신 동의 또는 연락처 확인 필요")</span></label>
+                }
+                <label class="wf-check"><input type="checkbox" @bind="Acknowledged" disabled="@Locked" />근무 가능 의향 확인이며 고용·출근 확정이 아님을 확인했습니다.</label>
+                <p>선택 @Recipients.Count 명 · 요청 @Needed 명 · @Time(ToUtc(Start)) ~ @Time(ToUtc(End))</p>
+                @if (Model.Pending is not null) { <p role="alert">이전 저장 결과가 미확인입니다. 입력은 보존됐습니다. 같은 요청으로 결과를 확인해 주세요.</p> }
+                @if (Model.Pending is null) { <button class="wf-primary" disabled="@(Model.Busy || !Acknowledged || Recipients.Count == 0)" @onclick="Create">가능 여부 요청 등록</button> }
+            </section></div>
+        }
+        </details>
+    }
+    <section class="wf-card"><header><h2 tabindex="-1" @ref="ResultsHeading">@(Model.Scope is null ? "내가 받은 근무 요청" : "요청별 답변과 확보 계획")</h2><button disabled="@Model.Busy" @onclick="Refresh">다시 조회</button></header>
+        @if (Model.Requests is { } requests)
+        {
+            @if (requests.Items.Count == 0) { <p role="status">@(Model.Scope is null ? "받은 요청이 없습니다. 수신 설정과 창고 등록을 확인해 주세요." : "이 창고의 등록된 근무 요청이 없습니다.")</p> }
+            @foreach (var request in requests.Items)
+            {
+                <article class="wf-request" data-request-id="@request.RequestId"><h3>@request.GroupLabel</h3>
+                    <p>@request.WarehouseName · @StageLabel(request.Stage) · 수량 확인 당시 남음 @request.RemainingQuantity</p>
+                    <dl><div><dt>업무 시간</dt><dd>@Time(request.WorkStartUtc) ~ @Time(request.WorkEndUtc)</dd></div><div><dt>답변 기한</dt><dd>@Time(request.ReplyByUtc) @(request.Expired ? "· 기한 지남" : "")</dd></div><div><dt>인력 계획</dt><dd>필요 @request.NeededWorkers 명 · 확정 @request.ConfirmedWorkers 명</dd></div><div><dt>시간당 안내 금액</dt><dd>@Money(request.ProposedHourlyAmount)</dd></div></dl>
+                    <p class="wf-note">수량 기준 @Time(request.SourceObservedAtUtc) · 현재 작업량은 원래 묶음에서 다시 확인</p>
+                    @if (Model.Scope is not null) { <a href="@SourceHref(request)">같은 처리 묶음으로</a> }
+                    @foreach (var recipient in request.Recipients)
+                    {
+                        <div class="wf-recipient"><strong>@recipient.DisplayName</strong><span class="wf-status">@근무가능상태코드.표시명(recipient.Status)</span><small>@Delivery(recipient.DeliveryStatus)</small>
+                            @if (recipient.CanReply) { <button disabled="@Model.Busy" @onclick="() => Reply(recipient, 근무가능상태코드.Available)">가능</button><button disabled="@Model.Busy" @onclick="() => Reply(recipient, 근무가능상태코드.Unavailable)">불가</button> }
+                            @if (recipient.CanWithdraw) { <button disabled="@Model.Busy" @onclick="() => Reply(recipient, 근무가능상태코드.Withdrawn)">내 답변 철회</button> }
+                            @if (recipient.CanConfirm) { <button disabled="@Model.Busy" @onclick="() => Reply(recipient, 근무가능상태코드.Confirmed)">인력 계획에 확정</button> }
+                        </div>
+                    }
+                </article>
+            }
+            <nav aria-label="근무 요청 목록 페이지"><span>@(Model.RequestPage + 1) 페이지 · 최신 순, 최대 50개</span>@if (Model.RequestPage > 0) { <button disabled="@Model.Busy" @onclick="() => Model.RequestPageAsync(Model.RequestPage - 1)">이전 요청 페이지</button> }@if (requests.HasMore) { <button disabled="@Model.Busy" @onclick="() => Model.RequestPageAsync(Model.RequestPage + 1)">다음 요청 페이지</button> }</nav>
+        }
+        else if (!Model.Busy) { <p role="status">조회가 완료되지 않았습니다. 다시 확인해 주세요.</p> }
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 근무가능요청ViewModel Model { get; set; } = default!;
+    [Parameter] public string? LoginHref { get; set; }
+    private 근무가능문맥응답? appliedContext;
+    private 근무연락동의? appliedPreference;
+    private string GroupKey = "", Channel = 근무연락채널.InApp;
+    private decimal? Rate, NetHours, Amount;
+    private int Needed = 1;
+    private bool Acknowledged, AllowInApp, AllowKakao;
+    private DateTime Start = DateTime.UtcNow.AddHours(9).Date.AddDays(1).AddHours(9);
+    private DateTime End = DateTime.UtcNow.AddHours(9).Date.AddDays(1).AddHours(13);
+    private DateTime ReplyBy = DateTime.UtcNow.AddHours(9).Date.AddDays(1).AddHours(8);
+    private readonly HashSet<string> Recipients = [];
+    private ElementReference ResultsHeading;
+    private bool Locked => Model.Busy || Model.Pending is not null;
+    private OutboundPeriodGroup? SelectedGroup => Model.Context?.Groups.FirstOrDefault(x => x.Key == GroupKey && Eligible(x));
+    private int? Estimate => SelectedGroup is { } group ? 근무인력추정.필요인원(group.Quantity - group.CompletedQuantity!.Value, Rate, NetHours) : null;
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(appliedPreference, Model.Preference)) { appliedPreference = Model.Preference; AllowInApp = appliedPreference?.AllowInApp ?? false; AllowKakao = appliedPreference?.AllowKakao ?? false; }
+        if (!ReferenceEquals(appliedContext, Model.Context)) { appliedContext = Model.Context; GroupKey = Model.Scope?.GroupKey ?? ""; Recipients.Clear(); }
+    }
+    private static bool Eligible(OutboundPeriodGroup g) => !g.NeedsReview && g.MembershipComplete && !g.HasOutsideScopeMembers && g.CompletedQuantity is >= 0 && g.CompletedQuantity < g.Quantity;
+    private void SelectPerson(string id, bool selected) { if (selected) Recipients.Add(id); else Recipients.Remove(id); }
+    private async Task ChangePage(int delta)
+    {
+        var s = Model.Scope!;
+        await Model.LoadAsync(new() { WarehouseId = s.WarehouseId, Stage = s.Stage, PeriodStartUtc = s.PeriodStartUtc, PeriodEndUtc = s.PeriodEndUtc, GroupPage = s.GroupPage + delta });
+        GroupKey = ""; Recipients.Clear(); appliedContext = Model.Context;
+    }
+    private async Task Create()
+    {
+        var s = Model.Scope!;
+        await Model.CreateAsync(new() { ClientRequestId = Guid.NewGuid(), WarehouseId = s.WarehouseId, Stage = s.Stage, GroupKey = GroupKey, GroupPage = s.GroupPage,
+            PeriodStartUtc = s.PeriodStartUtc, PeriodEndUtc = s.PeriodEndUtc, WorkStartUtc = ToUtc(Start), WorkEndUtc = ToUtc(End), ReplyByUtc = ToUtc(ReplyBy),
+            NeededWorkers = Needed, ProposedHourlyAmount = Amount, Channel = Channel, RecipientUserIds = Recipients.ToArray(), ConfirmedAvailabilityOnly = Acknowledged });
+        if (Model.Error is null) await ResultsHeading.FocusAsync();
+    }
+    private async Task Refresh()
+    {
+        await Model.RefreshAsync();
+        if (Model.Preference is { } pref) { AllowInApp = pref.AllowInApp; AllowKakao = pref.AllowKakao; appliedPreference = pref; }
+        if (SelectedGroup is null) GroupKey = "";
+        if (Model.Pending is null && Model.Context is { } context) Recipients.IntersectWith(context.Candidates.Where(x => x.AllowInApp && (Channel != 근무연락채널.Kakao || x.AllowKakao && x.HasVerifiedPhone)).Select(x => x.UserId));
+    }
+    private async Task Reply(근무가능대상응답 target, string status)
+    {
+        await Model.ReplyAsync(target, status);
+        if (Model.Error is null) await ResultsHeading.FocusAsync();
+    }
+    private static DateTime ToUtc(DateTime value) => DateTime.SpecifyKind(value.Ticks < TimeSpan.FromHours(9).Ticks ? DateTime.MinValue : value.AddHours(-9), DateTimeKind.Utc);
+    private static string Time(DateTime value) => value.Year is < 2 or > 9998 ? "시각 확인 필요" : DateTime.SpecifyKind(value, DateTimeKind.Utc).AddHours(9).ToString("MM.dd HH:mm");
+    private static string StageLabel(string stage) => stage == "picking" ? "피킹" : "포장";
+    private static string Money(decimal? amount) => amount is { } value ? value.ToString(value == decimal.Truncate(value) ? "N0" : "N2") + "원" : "조건 미확인";
+    private static string Delivery(string status) => status switch { "Inbox" => "앱 수신함 등록 · 읽음 미확인", "ProviderAccepted" => "알림톡 공급자 접수 · 실제 수신 미확인", "NotSent" => "알림톡 미발송 · 앱 수신함 확인", _ => "알림톡 접수 여부 미확인 · 자동 재발송하지 않음" };
+    private static string SourceHref(근무가능요청응답 r) => $"/warehouse/general/outbound-plan-review?stage={Uri.EscapeDataString(r.Stage)}&warehouseId={r.WarehouseId}&periodStartUtc={Uri.EscapeDataString(r.PeriodStartUtc.ToString("O"))}&periodEndUtc={Uri.EscapeDataString(r.PeriodEndUtc.ToString("O"))}&batchKey={Uri.EscapeDataString(r.GroupKey)}&batchPage={r.GroupPage}";
+}

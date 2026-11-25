@@ -1,0 +1,105 @@
+.route-map {
+    margin: 0 0 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: .7rem;
+    background: var(--mud-palette-surface);
+}
+
+.route-map figcaption {
+    display: grid;
+    gap: .2rem;
+    padding: .75rem 1rem;
+}
+
+.route-map figcaption span,
+.route-legend {
+    color: var(--mud-palette-text-secondary);
+    font-size: .875rem;
+}
+
+.route-map svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.map-ground { fill: #edf1ed; }
+.map-park { fill: #dbe9d8; }
+.map-blocks { fill: #e1e7e4; stroke: #d6ded9; }
+.map-streets {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 13;
+    stroke-linejoin: round;
+}
+
+.route-segment {
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.route-segment.passed { stroke: #087875; }
+.route-segment.active { stroke: #6249a5; }
+.route-segment.pending { stroke: #6a8a9c; stroke-dasharray: 4 8; }
+
+.route-stop line {
+    stroke: #527c83;
+    stroke-width: 2;
+}
+
+.route-stop circle {
+    fill: #f5fbfb;
+    stroke: #527c83;
+    stroke-width: 2;
+}
+
+.route-stop.reached circle { fill: #b8f0dd; stroke: #087875; }
+.route-stop text {
+    fill: #123f44;
+    text-anchor: middle;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.route-courier {
+    fill: #492e8c;
+    stroke: #fff;
+    stroke-width: 2;
+}
+
+.route-key,
+.route-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem 1rem;
+    margin: 0;
+    padding: .55rem .9rem;
+    list-style: none;
+}
+
+.route-key li,
+.route-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.route-key li span {
+    display: inline-grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 1px solid #087875;
+    border-radius: 50%;
+    background: #b8f0dd;
+    color: #123f44;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.route-legend { border-top: 1px solid var(--mud-palette-lines-default); }
+.route-legend i { width: 1.1rem; border-top: 3px solid #087875; }
+.route-legend .active { border-color: #6249a5; }
+.route-legend .pending { border-color: #6a8a9c; border-top-style: dashed; }

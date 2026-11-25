@@ -1,0 +1,186 @@
+@using Ssalddel.Contracts.Common.Inventory
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+
+<section class="outbound-flow @(StageEntry ? "stage-entry" : null)" aria-label="공정별 작업 흐름" aria-busy="@(Model.IsLoading ? "true" : "false")">
+    @if (!StageEntry)
+    {
+    <header><h3>공정별 작업 흐름</h3><p>공정을 고르고 연결된 작업 묶음과 개별 출고를 확인합니다.</p></header>
+    <nav aria-label="출고 공정">
+        <ol class="flow-stages">
+            @for (var index = 0; index < Stages.Length; index++)
+            {
+                var stage = Stages[index];
+                <li @key="stage.Code"><button type="button" @ref="stageButtons[stage.Code]" aria-pressed="@(Model.StageCode == stage.Code ? "true" : "false")" disabled="@(Model.WarehouseId <= 0 || !Model.WarehousesLoaded)" @onclick="() => SelectStageAsync(stage.Code)"><span class="stage-number">@(index + 1)</span><strong>@stage.Label</strong></button></li>
+            }
+        </ol>
+    </nav>
+    }
+    @if (Model.BatchKey is not null && Model.Snapshot is null && !Model.IsLoading)
+    {
+        <button type="button" class="flow-back" @onclick="ShowBatchListAsync">묶음 목록으로</button>
+    }
+    @if (Model.Snapshot is { } report)
+    {
+        @if (report.Workflow is not { } flow)
+        {
+            <p class="flow-warning" role="status">공정별 작업 연결을 확인하지 못했습니다. 기존 출고 목록에서 같은 건을 확인해 주세요.</p>
+        }
+        else
+        {
+            @if ((!StageEntry || flow.SelectedGroup is null) && flow.Stages.FirstOrDefault(stage => stage.Code == Model.StageCode) is { } summary)
+            {
+                <section class="flow-card" aria-label="선택 공정 현황">
+                    @if (!StageEntry) { <h4>@summary.Label</h4> }
+                    <dl class="flow-metrics"><div><dt>대상 출고</dt><dd>@summary.SourcePlanCount.ToString("N0")건</dd></div><div><dt>작업</dt><dd>@summary.TaskCount.ToString("N0")개</dd></div><div><dt>@QuantityLabel(Model.StageCode)</dt><dd>@summary.WorkQuantity.ToString("N0")개</dd></div><div><dt>완료 확인</dt><dd>@Quantity(summary.CompletedQuantity)</dd></div></dl>
+                    @if (StageEntry) { <details class="flow-reading-notes"><summary>수량 읽는 기준</summary><p class="flow-caption">선택 구간 접수와 이전 미완료의 현재 기록입니다. 출고 건수·작업 수·수량은 각각 구분합니다.</p></details> }
+                    else { <p class="flow-caption">선택 구간 접수와 이전 미완료의 현재 기록입니다. 출고 건수·작업 수·수량은 각각 구분합니다.</p> }
+                    @if (Model.StageCode == OutboundWorkflowStageCodes.Handoff) { <p class="flow-caption">완료 확인은 창고 인계 기록 기준입니다.</p> }
+                    <p class="flow-caption">기존 묶음 @summary.RecordedBatchCount.ToString("N0")개 · 개별 처리 @summary.SingleWorkCount.ToString("N0")개 · 연결 미확인 @summary.UnconfirmedGroupCount.ToString("N0")개</p>
+                    @if (summary.CancelledCount > 0) { <p class="flow-caption">취소된 출고 @summary.CancelledCount.ToString("N0")건을 포함합니다.</p> }
+                </section>
+            }
+            @if (flow.SelectedGroup is { } selected)
+            {
+                <section class="flow-card" aria-label="선택 묶음의 구성 내역" data-selected-group="@selected.Key">
+                    <button type="button" class="flow-back" disabled="@Model.IsLoading" @onclick="ShowBatchListAsync">묶음 목록으로</button>
+                    <header class="flow-group-title"><h4 tabindex="-1" @ref="groupHeading">@selected.Label</h4><span class="flow-kind">@Kind(selected.Kind)</span></header>
+                    <dl class="flow-metrics"><div><dt>출고</dt><dd>@selected.SourcePlanCount.ToString("N0")건</dd></div><div><dt>작업</dt><dd>@selected.TaskCount.ToString("N0")개</dd></div><div><dt>@QuantityLabel(Model.StageCode)</dt><dd>@GroupQuantity(selected)</dd></div><div><dt>완료 확인</dt><dd>@(selected.Kind == "unconfirmed" ? "미확인" : Quantity(selected.CompletedQuantity))</dd></div></dl>
+                    @GroupNotice(selected)
+                    <ol class="flow-reading" aria-label="선택 공정의 확인 순서">@foreach (var label in ReadingOrder(Model.StageCode)) { <li>@label</li> }</ol>
+                    <p class="flow-caption">후속 공정의 연결 여부는 구성 내역에서 확인합니다. 처리 기한은 미확인입니다.</p>
+                    @foreach (var member in selected.Members)
+                    {
+                        <article class="flow-member" data-plan-id="@member.OutboundPlanId">
+                            <h5>@member.ProductName</h5>
+                            <p class="flow-caption">@(member.IsCarryover ? "이전 접수" : "선택 구간 접수") · @member.Status</p>
+                            <dl class="flow-fields"><div><dt>기록 수량</dt><dd>@member.Quantity.ToString("N0")개</dd></div><div><dt>담당</dt><dd>@(string.IsNullOrWhiteSpace(member.WorkerDisplayName) ? "배정 근거 미확인" : member.WorkerDisplayName)</dd></div><div><dt>기록 시각</dt><dd>@Time(member.CreatedAtUtc)</dd></div><div><dt>완료 확인</dt><dd>@Time(member.CompletedAtUtc)</dd></div></dl>
+                            @if (member.StartedAtUtc is not null) { <p class="flow-caption">피킹 시작 @Time(member.StartedAtUtc)</p> }
+                            @if (member.TaskKey is not null)
+                            {
+                                <p class="flow-caption">@(member.PreviousTaskKey is null ? "선행 작업 연결 미확인" : "선행 작업 연결 확인") → 현재 작업 → @(member.NextTaskKey is null ? "후속 작업 연결 미확인" : "후속 작업 연결 확인")</p>
+                            }
+                            <button type="button" disabled="@(Model.IsLoading || !member.CanOpenReview)" aria-label="@($"{member.ProductName} 출고 검토")" @onclick="() => OnPlanSelected.InvokeAsync(member.OutboundPlanId)">@(member.CanOpenReview ? "같은 출고 검토" : "출고 검토 불가")</button>
+                        </article>
+                    }
+                    @if (StageEntry && !Model.IsLoading && Model.Error is null && selected.MemberCount > 0 && selected.Members.Count == 0)
+                    {
+                        <div class="flow-notice" aria-label="현재 구성 페이지 안내">
+                            <p role="status">이 페이지에 표시할 구성 내역이 없습니다.</p>
+                            <p class="flow-caption">선택한 묶음·창고·조회 구간·공정은 유지하고 첫 페이지를 다시 확인해 주세요.</p>
+                            <button type="button" class="flow-back" disabled="@Model.IsLoading" @onclick="() => ChangeMemberPageAsync(0)">첫 구성 페이지로</button>
+                        </div>
+                    }
+                    @if (selected.MemberCount == 0) { <p role="status">이 묶음에서 조회할 구성 내역이 없습니다.</p> }
+                    <div class="flow-pagination"><button type="button" disabled="@(Model.IsLoading || selected.MemberPage == 0)" @onclick="() => ChangeMemberPageAsync(selected.MemberPage - 1)">이전 내역</button><span>@(StageEntry ? (long)selected.MemberPage + 1 : selected.MemberPage + 1)페이지 · 구성 @selected.MemberCount.ToString("N0")개</span><button type="button" disabled="@(Model.IsLoading || !selected.HasNextMemberPage)" @onclick="() => ChangeMemberPageAsync(selected.MemberPage + 1)">다음 내역</button></div>
+                </section>
+            }
+            else
+            {
+                <section class="flow-groups" aria-label="선택 공정의 처리 묶음">
+                    @if (flow.TotalGroups == 0) { <p role="status">이 공정에서 조회할 처리 대상이 없습니다.</p> }
+                    @if (StageEntry && !Model.IsLoading && Model.Error is null && flow.TotalGroups > 0 && flow.Groups.Count == 0)
+                    {
+                        <section class="flow-card" aria-label="현재 묶음 페이지 안내">
+                            <p role="status">이 페이지에 표시할 처리 묶음이 없습니다.</p>
+                            <p class="flow-caption">선택한 창고·조회 구간·공정은 유지하고 첫 페이지를 다시 확인해 주세요.</p>
+                            <button type="button" class="flow-back" disabled="@Model.IsLoading" @onclick="() => ChangeBatchPageAsync(0)">첫 묶음 페이지로</button>
+                        </section>
+                    }
+                    @if (StageEntry && flow.Groups.Count > 0)
+                    {
+                        <table class="flow-table">
+                            <caption>@Stages.First(stage => stage.Code == Model.StageCode).Label 처리 묶음</caption>
+                            <thead><tr><th scope="col">묶음</th><th scope="col">구분</th><th scope="col">출고·작업</th><th scope="col">@QuantityLabel(Model.StageCode)</th><th scope="col">완료 확인</th><th scope="col">구성</th></tr></thead>
+                            <tbody>@foreach (var group in flow.Groups)
+                            {
+                                <tr data-group-key="@group.Key">
+                                    <td data-label="묶음"><strong>@group.Label</strong>@GroupNotice(group)</td>
+                                    <td data-label="구분"><span class="flow-kind">@Kind(group.Kind)</span></td>
+                                    <td data-label="출고·작업">출고 @group.SourcePlanCount.ToString("N0")건<br />작업 @group.TaskCount.ToString("N0")개</td>
+                                    <td data-label="@QuantityLabel(Model.StageCode)">@GroupQuantity(group)</td>
+                                    <td data-label="완료 확인">@(group.Kind == "unconfirmed" ? "미확인" : Quantity(group.CompletedQuantity))</td>
+                                    <td data-label="구성"><a class="flow-open" @ref="groupButtons[group.Key]" href="@(BatchHref?.Invoke(group.Key) ?? "#")" aria-disabled="@(Model.IsLoading ? "true" : "false")" aria-label="@($"{group.Label} 구성 내역 보기")" @onclick="() => SelectBatchAsync(group.Key)" @onclick:preventDefault>구성 내역 보기</a></td>
+                                </tr>
+                            }</tbody>
+                        </table>
+                    }
+                    else if (!StageEntry)
+                    {
+                    @foreach (var group in flow.Groups)
+                    {
+                        <article class="flow-card" data-group-key="@group.Key">
+                            <header class="flow-group-title"><h4>@group.Label</h4><span class="flow-kind">@Kind(group.Kind)</span></header>
+                            <dl class="flow-metrics"><div><dt>출고</dt><dd>@group.SourcePlanCount.ToString("N0")건</dd></div><div><dt>작업</dt><dd>@group.TaskCount.ToString("N0")개</dd></div><div><dt>@QuantityLabel(Model.StageCode)</dt><dd>@GroupQuantity(group)</dd></div><div><dt>완료 확인</dt><dd>@(group.Kind == "unconfirmed" ? "미확인" : Quantity(group.CompletedQuantity))</dd></div></dl>
+                            @GroupNotice(group)
+                            <button type="button" @ref="groupButtons[group.Key]" disabled="@Model.IsLoading" aria-label="@($"{group.Label} 구성 내역 보기")" @onclick="() => SelectBatchAsync(group.Key)">구성 내역 보기</button>
+                        </article>
+                    }
+                    }
+                    <div class="flow-pagination"><button type="button" disabled="@(Model.IsLoading || flow.Page == 0)" @onclick="() => ChangeBatchPageAsync(flow.Page - 1)">이전 묶음</button><span>@(StageEntry ? (long)flow.Page + 1 : flow.Page + 1)페이지 · 전체 @flow.TotalGroups.ToString("N0")개</span><button type="button" disabled="@(Model.IsLoading || !flow.HasNextPage)" @onclick="() => ChangeBatchPageAsync(flow.Page + 1)">다음 묶음</button></div>
+                </section>
+            }
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public 출고회차ViewModel Model { get; set; } = default!;
+    [Parameter] public EventCallback<long> OnPlanSelected { get; set; }
+    [Parameter] public bool StageEntry { get; set; }
+    [Parameter] public Func<string, string>? BatchHref { get; set; }
+    [Parameter] public EventCallback NavigationChanged { get; set; }
+    private readonly Dictionary<string, ElementReference> stageButtons = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ElementReference> groupButtons = new(StringComparer.Ordinal);
+    private ElementReference groupHeading;
+    private string? focusGroup;
+    private string? returnGroup;
+    private long focusVersion;
+    private static readonly (string Code, string Label)[] Stages = [(OutboundWorkflowStageCodes.Review, "출고 검토"), (OutboundWorkflowStageCodes.Picking, "피킹"), (OutboundWorkflowStageCodes.Packing, "포장"), (OutboundWorkflowStageCodes.Handoff, "운송 인계")];
+    private static string Kind(string value) => value switch { "recorded-batch" => "기존 묶음 연결", "single-task" => "개별 작업", "source-ledger" => "개별 출고", _ => "연결 미확인" };
+    private static string Quantity(long? value) => value is null ? "미확인" : $"{value:N0}개";
+    private static string GroupQuantity(OutboundPeriodGroup group) => group.Kind == "unconfirmed" ? "미확인" : $"{group.Quantity:N0}개";
+    private static string QuantityLabel(string stage) => stage is OutboundWorkflowStageCodes.Review or OutboundWorkflowStageCodes.Handoff ? "출고 수량" : "작업 수량";
+    private static string Time(DateTime? value)
+    {
+        if (value is null || value == default(DateTime)) return "미확인";
+        var utc = DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        var offset = TimeSpan.FromHours(9);
+        if (utc.Ticks > DateTime.MaxValue.Ticks - offset.Ticks) return "미확인";
+        return new DateTimeOffset(utc).ToOffset(offset).ToString("MM-dd HH:mm");
+    }
+    private static string[] ReadingOrder(string stage) => stage switch
+    {
+        OutboundWorkflowStageCodes.Review => ["접수 내역", "검토 조건", "후속 작업"],
+        OutboundWorkflowStageCodes.Picking => ["연결 출고", "피킹 작업", "포장 연결"],
+        OutboundWorkflowStageCodes.Packing => ["선행 피킹", "포장 작업", "인계 확인"],
+        _ => ["출고 기록", "운송 연결", "인계 기록"]
+    };
+    private static RenderFragment GroupNotice(OutboundPeriodGroup group) => @<div class="flow-notice">
+        @if (!string.IsNullOrWhiteSpace(group.Reason)) { <p class="@(group.NeedsReview ? "flow-warning" : "flow-caption")">@group.Reason</p> }
+        @if (group.HasOutsideScopeMembers) { <p class="flow-warning">조회 범위 밖 구성원이 있습니다. 표시 수량은 현재 조회 범위의 값입니다.</p> }
+        else if (!group.MembershipComplete) { <p class="flow-caption">묶음 전체 구성은 확인되지 않았습니다.</p> }
+    </div>;
+    private Task SelectStageAsync(string code) { focusGroup = returnGroup = null; return Model.SelectStageAsync(code); }
+    private Task SelectBatchAsync(string key) { if (Model.IsLoading) return Task.CompletedTask; focusGroup = key; returnGroup = null; var pending = Model.SelectBatchAsync(key); var version = Model.QueryVersion; focusVersion = version; return NotifyNavigationAsync(pending, version); }
+    private Task ChangeMemberPageAsync(int page) { focusGroup = Model.BatchKey; var pending = Model.ChangeMemberPageAsync(page); var version = Model.QueryVersion; focusVersion = version; return NotifyNavigationAsync(pending, version); }
+    private Task ShowBatchListAsync() { returnGroup = Model.BatchKey; focusGroup = null; var pending = Model.ShowBatchListAsync(); var version = Model.QueryVersion; focusVersion = version; return NotifyNavigationAsync(pending, version); }
+    private Task ChangeBatchPageAsync(int page) { var pending = Model.ChangeBatchPageAsync(page); return NotifyNavigationAsync(pending, Model.QueryVersion); }
+    private async Task NotifyNavigationAsync(Task pending, long version)
+    {
+        await pending;
+        if (version == Model.QueryVersion) await NavigationChanged.InvokeAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusVersion != Model.QueryVersion) { focusGroup = returnGroup = null; return; }
+        if (Model.IsLoading || Model.Snapshot?.Workflow is not { } flow) return;
+        if (focusGroup is { } key && flow.SelectedGroup?.Key == key)
+        { focusGroup = null; await groupHeading.FocusAsync(); }
+        else if (returnGroup is { } back && flow.SelectedGroup is null)
+        {
+            returnGroup = null;
+            if (flow.Groups.Any(group => group.Key == back) && groupButtons.TryGetValue(back, out var button)) await button.FocusAsync();
+            else if (stageButtons.TryGetValue(Model.StageCode, out var stage)) await stage.FocusAsync();
+        }
+    }
+}

@@ -10,7 +10,7 @@
         {
         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="flex-wrap: wrap;">
             <MudStack Spacing="0" Style="flex: 1 1 240px; min-width: 0;">
-                <MudText Typo="Typo.h4">음식 주문 내역</MudText>
+                <h4 class="mud-typography mud-typography-h4" tabindex="-1" @ref="_historyHeading">음식 주문 내역</h4>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
                     주문과 배달 진행을 확인하세요.
                 </MudText>
@@ -31,6 +31,8 @@
 </MudContainer>
 
 @code {
+    private ElementReference _historyHeading;
+    private string? _focusOrderNo;
     private bool _authenticationMode = true;
     private bool _disposed;
     private OrdererPageDisplayContext.PageLease? _displayLease;
@@ -48,10 +50,23 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_disposed || _authenticationMode || _displayLease is { IsCurrent: false }
+            || _focusOrderNo is null || !string.Equals(_focusOrderNo, OrderNo, StringComparison.Ordinal))
+            return;
+
+        _focusOrderNo = null;
+        try { await _historyHeading.FocusAsync(preventScroll: false); }
+        catch (Microsoft.JSInterop.JSDisconnectedException) { }
+        catch (TaskCanceledException) { }
+    }
+
     private void OnAuthenticationModeChanged(bool mode)
     {
         if (_disposed || _displayLease is { IsCurrent: false }) return;
         _authenticationMode = mode;
+        if (mode) _focusOrderNo = null;
         _displayLease?.SetAuthenticationMode(mode);
     }
 
@@ -67,9 +82,10 @@
     private Task OnOrderSelectedAsync(string? orderNo)
     {
         if (_disposed || _displayLease is { IsCurrent: false }) return Task.CompletedTask;
-        var target = string.IsNullOrWhiteSpace(orderNo)
-            ? "/orders/food"
-            : $"/orders/food?orderNo={Uri.EscapeDataString(orderNo.Trim())}";
+        _focusOrderNo = string.IsNullOrWhiteSpace(orderNo) ? null : orderNo.Trim();
+        var target = _focusOrderNo is { } selectedOrderNo
+            ? $"/orders/food?orderNo={Uri.EscapeDataString(selectedOrderNo)}"
+            : "/orders/food";
         Navigation.NavigateTo(target, replace: true);
         return Task.CompletedTask;
     }

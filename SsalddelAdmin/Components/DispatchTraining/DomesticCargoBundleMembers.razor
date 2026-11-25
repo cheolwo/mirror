@@ -1,0 +1,80 @@
+@using System.Globalization
+@using Ssalddel.Contracts.Admin.Dispatch
+
+@{
+    var rows = BuildRows();
+    var countNeedsReview = Bundle is null || Bundle.BundleSize <= 0 || Bundle.BundleSize != rows.Count;
+}
+<details class="cargo-bundle-members">
+    <summary>구성 의뢰 확인</summary>
+    <div class="cargo-bundle-members__content">
+        <p class="cargo-bundle-members__note">AI 제안의 구성 의뢰입니다. 방문 순서와 배차 결과는 별도로 확인해 주세요.</p>
+        @if (countNeedsReview)
+        {
+            <p role="status" class="cargo-bundle-members__warning">제안 표시 건수와 구성 의뢰 참조를 다시 확인해 주세요.</p>
+        }
+        @if (rows.Count == 0)
+        {
+            <p role="status" class="cargo-bundle-members__warning">구성 의뢰 연결을 확인하지 못했습니다.</p>
+        }
+        else
+        {
+            <ul class="cargo-bundle-members__list">
+                @foreach (var row in rows)
+                {
+                    <li>
+                        @if (row.Request is { } request)
+                        {
+                            <strong class="cargo-bundle-members__id">@request.RequestId</strong>
+                            <p class="cargo-bundle-members__cargo">@(string.IsNullOrWhiteSpace(request.CargoType) ? "화물 내용 미확인" : request.CargoType)</p>
+                            <dl class="cargo-bundle-members__time"><dt>상차 시간창 종료</dt><dd>@FormatPickupWindowEnd(request.PickupWindowEndUtc)</dd></dl>
+                        }
+                        else
+                        {
+                            <strong class="cargo-bundle-members__unknown">의뢰 연결 미확인</strong>
+                            <p class="cargo-bundle-members__note">@row.Notice</p>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public DomesticCargoDispatchAIReviewBundleDto Bundle { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<DomesticCargoDispatchAIReviewRequestDto> Requests { get; set; } = [];
+
+    private IReadOnlyList<MemberRow> BuildRows()
+    {
+        if (Bundle?.RequestIds is not { } ids) return [];
+        var referenceCounts = ids.Where(id => !string.IsNullOrWhiteSpace(id))
+            .GroupBy(id => id, StringComparer.Ordinal).ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+        var current = (Requests ?? []).Where(request => request is not null && !string.IsNullOrWhiteSpace(request.RequestId))
+            .GroupBy(request => request.RequestId, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.ToArray(), StringComparer.Ordinal);
+        return ids.Select(id =>
+        {
+            if (string.IsNullOrWhiteSpace(id)) return new MemberRow(null, "구성 의뢰의 연결 정보를 확인해 주세요.");
+            if (referenceCounts[id] != 1) return new MemberRow(null, "같은 의뢰 참조가 중복되어 구성을 확인해야 합니다.");
+            if (!current.TryGetValue(id, out var matches)) return new MemberRow(null, "현재 조회한 의뢰와 연결을 확인해 주세요.");
+            return matches.Length == 1 ? new MemberRow(matches[0], null)
+                : new MemberRow(null, "같은 번호의 현재 의뢰가 여러 건이어서 연결 확인이 필요합니다.");
+        }).ToArray();
+    }
+
+    private static string FormatPickupWindowEnd(DateTime? value)
+    {
+        if (value is null || value.Value == default) return "미확인";
+        try
+        {
+            var instant = value.Value.Kind == DateTimeKind.Local
+                ? new DateTimeOffset(value.Value).ToUniversalTime()
+                : new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc));
+            return instant.ToOffset(TimeSpan.FromHours(9)).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) + " (한국)";
+        }
+        catch (ArgumentException) { return "미확인"; }
+    }
+
+    private sealed record MemberRow(DomesticCargoDispatchAIReviewRequestDto? Request, string? Notice);
+}

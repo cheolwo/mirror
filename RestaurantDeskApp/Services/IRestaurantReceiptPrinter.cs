@@ -3,6 +3,8 @@ namespace RestaurantDeskApp.Services;
 public interface IRestaurantReceiptPrinter
 {
     bool UsesNativeDialog { get; }
+    // 기존 native 분기/메서드 이름은 호환을 유지하며 Windows 직접 출력도 포함한다.
+    bool PrintsWithoutDialog => false;
     Task RequestPrintDialogAsync(string title, string html, CancellationToken cancellationToken);
 }
 

@@ -142,6 +142,9 @@ public sealed class 음식점주문수락결과
 {
     public bool 성공 { get; init; }
 
+    // 서버에서 이미 수락된 현재 상태를 읽어 복원한 결과다. 자동 인쇄의 근거가 아니다.
+    public bool 수락복구됨 { get; init; }
+
     public string 메시지 { get; init; } = string.Empty;
 
     public 음식점주문DeskItem? 주문 { get; init; }

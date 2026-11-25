@@ -1,0 +1,112 @@
+@page "/information/food-delivery-replay"
+@implements IAsyncDisposable
+
+<PageTitle>가상 음식배달 체험 · 살뜰</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-5">
+    <div class="replay">
+        <header>
+            <p class="eyebrow">살뜰 공개 체험</p>
+            <h1>가상 음식배달 체험</h1>
+            <p>기존 음식배달 검증 기록을 시간 순서로 재생합니다. 한 회차는 1분이며, 다음 회차에 새 가상 주문이 나타납니다.</p>
+        </header>
+
+        <section class="replay-summary" aria-labelledby="replay-order">
+            <div>
+                <p class="summary-label">가상 주문 번호</p>
+                <h2 id="replay-order">@frame.OrderNumber</h2>
+                <p class="summary-label" role="status">현재 상태 · @CurrentStatus</p>
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="TogglePause">
+                @(paused ? "재생 계속" : "잠시 멈추기")
+            </MudButton>
+        </section>
+
+        <FoodDeliveryReplayMap Elapsed="frame.Elapsed" />
+
+        <section aria-labelledby="replay-timeline">
+            <h2 id="replay-timeline">주문 진행 순서</h2>
+            <ol class="timeline">
+                @for (var index = 0; index < FoodDeliveryReplay.Milestones.Count; index++)
+                {
+                    var milestone = FoodDeliveryReplay.Milestones[index];
+                    var reached = index < frame.VisibleMilestoneCount;
+                    var current = index == frame.VisibleMilestoneCount - 1;
+                    <li class="@(current ? "current" : null)" aria-current="@(current ? "step" : null)">
+                        <span class="step-number" aria-hidden="true">@(index + 1)</span>
+                        <div class="step-body">
+                            <span class="step-role">@milestone.Role</span>
+                            <strong>@milestone.Label</strong>
+                        </div>
+                        <span class="step-state">
+                            @(reached ? $"{milestone.Elapsed.TotalSeconds:0.00}초" : "예정")
+                        </span>
+                    </li>
+                }
+            </ol>
+        </section>
+
+        <MudLink Href="/information/public-data">공개 정보로 돌아가기</MudLink>
+    </div>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource stop = new();
+    private FoodDeliveryReplayFrame frame = FoodDeliveryReplay.GetFrame(DateTimeOffset.UtcNow);
+    private Task? refreshTask;
+    private bool paused;
+
+    private string CurrentStatus => frame.VisibleMilestoneCount == 0
+        ? "주문 등록 대기"
+        : FoodDeliveryReplay.Milestones[frame.VisibleMilestoneCount - 1].Label;
+
+    protected override void OnInitialized() => refreshTask = RefreshAsync();
+
+    private void TogglePause()
+    {
+        paused = !paused;
+        if (!paused)
+        {
+            frame = FoodDeliveryReplay.GetFrame(DateTimeOffset.UtcNow);
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stop.Token))
+            {
+                await InvokeAsync(() =>
+                {
+                    if (paused || stop.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    var next = FoodDeliveryReplay.GetFrame(DateTimeOffset.UtcNow);
+                    if (next != frame)
+                    {
+                        frame = next;
+                        StateHasChanged();
+                    }
+                });
+            }
+        }
+        catch (OperationCanceledException) when (stop.IsCancellationRequested)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        stop.Cancel();
+        if (refreshTask is not null)
+        {
+            await refreshTask;
+        }
+
+        stop.Dispose();
+    }
+}

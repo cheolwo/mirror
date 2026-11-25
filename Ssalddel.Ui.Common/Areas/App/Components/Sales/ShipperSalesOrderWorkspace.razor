@@ -35,7 +35,7 @@
             <MudText Typo="Typo.subtitle2">판매채널 주문 출고 후보는 화주·판매자 로그인이 필요합니다.</MudText>
             <MudText Typo="Typo.body2">로그인하면 본인이 소유한 판매 주문을 확인할 수 있습니다.</MudText>
             <MudStack Row="true" Spacing="1" Class="mt-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="/login">로그인</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Href="@LoginHref">로그인</MudButton>
                 <MudButton Variant="Variant.Text" Color="Color.Default" Href="@PublicHref">@PublicLabel</MudButton>
             </MudStack>
         </MudAlert>
@@ -173,6 +173,17 @@
                 }
                 else if (List.초기화됨)
                 {
+                    @if (List.주문목록.Count == 0)
+                    {
+                        <div class="sales-order-state sales-order-state--compact">
+                            <MudIcon Icon="@Icons.Material.Filled.FirstPage" Size="Size.Large" Color="Color.Primary" />
+                            <MudText Typo="Typo.subtitle2">이 페이지에 표시할 출고 후보가 없습니다.</MudText>
+                            <MudText Typo="Typo.body2">현재 입력한 검색 조건으로 첫 페이지를 다시 조회해 주세요.</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FirstPage" Disabled="@ReadActionsBlocked" OnClick="SearchAsync">첫 페이지 조회</MudButton>
+                        </div>
+                    }
+                    else
+                    {
                     <MudText Typo="Typo.caption" Class="sales-order-count">@($"전체 {List.전체건수:N0}건 · {List.현재페이지}/{List.총페이지수}페이지")</MudText>
                     <MudTable T="판매채널주문요약응답"
                               Items="@List.주문목록"
@@ -190,12 +201,16 @@
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="채널·주문">
-                                <strong>@ChannelName(context.채널종류)</strong>
-                                <span>@context.채널주문번호</span>
+                                <div class="sales-order-row-values">
+                                    <strong>@ChannelName(context.채널종류)</strong>
+                                    <span>@context.채널주문번호</span>
+                                </div>
                             </MudTd>
                             <MudTd DataLabel="상품·수량">
-                                <strong>@context.대표상품명</strong>
-                                <span>@($"{context.출고라인수:N0}개 라인 · 총 {context.총수량:N0}개")</span>
+                                <div class="sales-order-row-values">
+                                    <strong>@context.대표상품명</strong>
+                                    <span>@($"{context.출고라인수:N0}개 라인 · 총 {context.총수량:N0}개")</span>
+                                </div>
                             </MudTd>
                             <MudTd DataLabel="출고 창고">@context.출고창고표시</MudTd>
                             <MudTd DataLabel="상태">
@@ -212,6 +227,7 @@
                             </MudTd>
                         </RowTemplate>
                     </MudTable>
+                    }
 
                     @if (List.총페이지수 > 1)
                     {

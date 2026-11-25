@@ -1,0 +1,81 @@
+<figure class="route-map">
+    <figcaption>
+        <strong>가상 배달 경로</strong>
+        <span>가상 동네 · 진행 단계에 맞춘 이동 표시</span>
+    </figcaption>
+
+    <svg viewBox="0 0 520 300" role="img" aria-label="기사 출발, 매장 픽업, 전달 지점을 잇는 가상 배달 지도">
+        <rect width="520" height="300" class="map-ground" />
+        <path class="map-park" d="M25 16H110V94L25 115ZM356 186H416V252L356 276ZM442 139H509V198H442Z" />
+        <path class="map-blocks" d="M34 140H84V194H34ZM150 20H208V77H150ZM223 22H270V69H223ZM154 205H210V275H154ZM231 191H273V224H231ZM241 241H312V277H241ZM325 22H380V70H325ZM393 20H422V69H393ZM332 121H375V154H332ZM386 121H419V155H386ZM466 76H506V113H466ZM456 222H505V274H456Z" />
+        <path class="map-streets" d="M0 237H130V175L211 158H276L311 102H387L451 63H520M0 124H130V0M0 278H130V237M130 175V124H211V0M211 158V300M276 158V0M276 158L316 229V300M311 102H276M387 102V0M387 102L434 171V300M434 171H520M451 63V0M0 50H130" />
+
+        @for (var index = 0; index < Points.Length - 1; index++)
+        {
+            var from = Points[index];
+            var to = Points[index + 1];
+            var style = progress >= index + 1 ? "passed" : progress > index ? "active" : "pending";
+            <line class="route-segment @style" x1="@from.X" y1="@from.Y" x2="@to.X" y2="@to.Y" />
+        }
+
+        @for (var index = 0; index < Stops.Length; index++)
+        {
+            var stop = Stops[index];
+            var point = Points[stop.PointIndex];
+            <g class="route-stop @(progress >= stop.PointIndex ? "reached" : null)">
+                <title>@stop.Label</title>
+                <line x1="@point.X" y1="@point.Y" x2="@point.X" y2="@(point.Y + stop.OffsetY)" />
+                <circle cx="@point.X" cy="@(point.Y + stop.OffsetY)" r="17" />
+                <text x="@point.X" y="@(point.Y + stop.OffsetY)" dy=".33em">@(index + 1)</text>
+            </g>
+        }
+
+        @if (progress > 0 && progress < Points.Length - 1)
+        {
+            var index = (int)progress;
+            var from = Points[index];
+            var to = Points[index + 1];
+            var offset = progress - index;
+            <circle class="route-courier" r="6" cx="@Coordinate(from.X, to.X, offset)" cy="@Coordinate(from.Y, to.Y, offset)" />
+        }
+    </svg>
+
+    <ol class="route-key" aria-label="지도 번호의 의미">
+        @for (var index = 0; index < Stops.Length; index++)
+        {
+            <li><span>@(index + 1)</span> @Stops[index].Label</li>
+        }
+    </ol>
+    <div class="route-legend">
+        <span><i class="passed" aria-hidden="true"></i>지나온 구간</span>
+        <span><i class="active" aria-hidden="true"></i>이동 중</span>
+        <span><i class="pending" aria-hidden="true"></i>예정 구간</span>
+    </div>
+</figure>
+
+@code {
+    private const int PickupPoint = 3;
+    private static readonly (int X, int Y)[] Points =
+        [(64, 237), (130, 237), (130, 175), (211, 158), (276, 158), (311, 102), (387, 102), (451, 63)];
+    private static readonly (int PointIndex, int OffsetY, string Label)[] Stops =
+        [(0, 29, "기사 출발"), (PickupPoint, -30, "매장 픽업"), (Points.Length - 1, -28, "전달 지점")];
+
+    [Parameter] public TimeSpan Elapsed { get; set; }
+
+    private double progress;
+
+    protected override void OnParametersSet()
+    {
+        var departure = FoodDeliveryReplay.Milestones[2].Elapsed;
+        var pickup = FoodDeliveryReplay.Milestones[4].Elapsed;
+        var delivery = FoodDeliveryReplay.Milestones[5].Elapsed;
+        progress = Elapsed < pickup
+            ? PickupPoint * Fraction(departure, pickup)
+            : PickupPoint + (Points.Length - 1 - PickupPoint) * Fraction(pickup, delivery);
+    }
+
+    private double Fraction(TimeSpan start, TimeSpan end) => Math.Clamp((Elapsed - start) / (end - start), 0, 1);
+
+    private static string Coordinate(int from, int to, double offset)
+        => (from + (to - from) * offset).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}

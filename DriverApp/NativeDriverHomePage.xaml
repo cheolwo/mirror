@@ -29,6 +29,14 @@
                     Clicked="OnRetryWorkspaceClicked"
                     IsVisible="False" />
 
+            <Label x:Name="PushConnectionNoticeLabel"
+                   FontSize="13"
+                   TextColor="#92400E"
+                   BackgroundColor="#FFF7ED"
+                   Padding="8"
+                   LineBreakMode="WordWrap"
+                   IsVisible="False" />
+
             <Border Padding="12,9" BackgroundColor="#FFFFFF" Stroke="#DCE5E9" StrokeThickness="1"
                     HorizontalOptions="Start" MaximumWidthRequest="340">
                 <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
@@ -127,7 +135,30 @@
                              Margin="16,0,16,16"
                              Spacing="10"
                              VerticalOptions="End">
+            <Border x:Name="RouteOrderPanel" Padding="12,9" BackgroundColor="#F7FFFFFF"
+                    Stroke="#DCE5E9" StrokeThickness="1" IsVisible="False">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label x:Name="RouteOrderHeadingLabel" Text="방문 순서"
+                               FontSize="14" TextColor="#172B36" VerticalOptions="Center" LineBreakMode="WordWrap" />
+                        <Button x:Name="RouteOrderToggleButton" Grid.Column="1" Text="펼치기" FontSize="14"
+                                BackgroundColor="#F4F7F8" TextColor="#1D4ED8" HorizontalOptions="End"
+                                MinimumHeightRequest="44" Padding="12,4" CornerRadius="8"
+                                Clicked="OnToggleRouteOrderClicked" IsVisible="False" />
+                    </Grid>
+                    <Label x:Name="RouteOrderNoticeLabel" FontSize="14" TextColor="#172B36"
+                           LineBreakMode="WordWrap" />
+                    <Label x:Name="RouteOrderLegendLabel" Text="주황 상차 · 파랑 하차 · 회색 이후 순서"
+                           FontSize="12" TextColor="#586B78" IsVisible="False" />
+                    <ScrollView x:Name="RouteOrderDetails" MaximumHeightRequest="180" IsVisible="False">
+                        <Label x:Name="RouteOrderSummaryLabel" FontSize="14" TextColor="#334155"
+                               LineBreakMode="WordWrap" />
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Border>
             <controls:DriverTransportFooterBar x:Name="TransportFooterBar"
+                                               IsMapCompact="True"
                                                OpenMenuRequested="OnOpenLegacyMenuClicked"
                                                OpenTransportRequested="OnOpenCurrentTransportClicked" />
             <Button Text="직접 피킹·배송 순회"

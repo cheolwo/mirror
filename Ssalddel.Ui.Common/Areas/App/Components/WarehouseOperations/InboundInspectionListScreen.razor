@@ -80,7 +80,7 @@
     {
         <div class="inbound-inspection-list__summary">
             <strong>@ViewModel.응답.TotalCount.ToString("N0")건</strong>
-            <span>목록 선택은 상태를 바꾸지 않고 stable-ID 상세 route만 엽니다.</span>
+            <span>상세 확인으로 보관 위치·검수 상태 보기</span>
         </div>
 
         <div class="inbound-inspection-list__cards">
@@ -166,7 +166,7 @@
 
     private string DetailHref(long inboundItemId)
         => Context
-            .WithListState(ViewModel.검색어, ViewModel.조회상태, ViewModel.응답.Page)
+            .WithListState(ViewModel.적용조회조건.Search, ViewModel.적용조회조건.InspectionStatus, ViewModel.응답.Page)
             .PathFor(InboundInspectionScreenKind.Detail, inboundItemId);
 
     private static string StatusLabel(string status)

@@ -14,11 +14,13 @@
     {
         @if (current.AccountNotice is { } notice)
         { <p class="driver-current-work__notice" role="status">@notice</p> }
+        var sections = current.Sections;
+        var retryKey = sections.FirstOrDefault(section => section.State == DriverCurrentWorkLoadState.Error)?.Key;
         <div class="driver-current-work__sections">
-            @foreach (var section in current.Sections)
+            @foreach (var section in sections)
             {
                 <section class="driver-current-work__section" data-work-kind="@section.Key" data-load-state="@section.State"
-                         aria-label="@section.Title">
+                         aria-label="@section.Title" tabindex="-1" @key="section.Key" @ref="sectionFocus[section.Key]">
                     <header><DriverOfferBadge Visual="@Visual(section)" />
                         @if (section.State is DriverCurrentWorkLoadState.Ready or DriverCurrentWorkLoadState.Empty)
                         { <span class="driver-current-work__count">@(section.Items.Count)@section.Unit</span> }
@@ -38,6 +40,11 @@
                     else
                     {
                         <p class="driver-current-work__state" role="status">@section.Notice</p>
+                        @if (section.Key == retryKey)
+                        {
+                            <button type="button" class="driver-current-work__retry" disabled="@current.IsBusy"
+                                    @onclick="() => RefreshFromError(section.Key)">전체 업무 다시 확인</button>
+                        }
                         @if (section.State is DriverCurrentWorkLoadState.LoginRequired or DriverCurrentWorkLoadState.OtherAccount)
                         { <a class="driver-current-work__login" href="@section.LoginHref">기사 로그인</a> }
                     }
@@ -51,6 +58,7 @@
 
 @code {
     [Parameter] public DriverCurrentWorkPageViewModel? Model { get; set; }
+    private readonly Dictionary<string, ElementReference> sectionFocus = new(StringComparer.Ordinal);
     private DriverCurrentWorkPageViewModel? current;
     private bool ownsModel;
     protected override async Task OnInitializedAsync()
@@ -61,6 +69,15 @@
         if (ownsModel) await current.LoadAsync();
     }
     private Task Refresh() => current?.LoadAsync() ?? Task.CompletedTask;
+    private async Task RefreshFromError(string key)
+    {
+        if (current is null || current.IsBusy) return;
+        // 다시 읽는 동안 버튼이 사라져도 같은 업무 영역에 초점을 둡니다.
+        try { await sectionFocus[key].FocusAsync(preventScroll: true); }
+        catch (Microsoft.JSInterop.JSDisconnectedException) { return; }
+        catch (TaskCanceledException) { return; }
+        await Refresh();
+    }
     private void Changed() => _ = InvokeAsync(StateHasChanged);
     private static DriverOfferVisual Visual(DriverCurrentWorkSection section) => section.Key switch
     {

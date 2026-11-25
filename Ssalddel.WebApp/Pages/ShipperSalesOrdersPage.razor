@@ -9,6 +9,7 @@
                Badge="읽기 전용 베타" />
 
 <ShipperSalesOrderWorkspace Mode="ShipperSalesOrderWorkspaceMode.List"
+                            LoginHref="@LoginHref"
                             InitialSearch="@NavigationContext.Search"
                             InitialSyncScope="@NavigationContext.SyncScope"
                             InitialStatus="@NavigationContext.Status"
@@ -18,6 +19,8 @@
     [Parameter]
     [SupplyParameterFromQuery(Name = "orderId")]
     public long? OrderId { get; set; }
+
+    private string LoginHref => $"/login?returnUrl={Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)}";
 
     private SalesOrderNavigationContext NavigationContext
         => SalesOrderNavigationContext.Parse(Navigation.Uri);
@@ -36,6 +39,6 @@
         var detailPath = new SalesOrderNavigationContext { From = listPath }
             .PathFor(SalesOrderScreenKind.Detail, OrderId.Value);
 
-        Navigation.NavigateTo(detailPath, replace: true);
+        Navigation.NavigateTo(detailPath.TrimStart('/'), replace: true);
     }
 }

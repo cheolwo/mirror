@@ -3,20 +3,21 @@
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components.Routing
 
+<div class="admin-shell">
 <MudLayout>
-    <MudAppBar Dense="true" Fixed="false" Elevation="0" Color="Color.Default">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+    <MudAppBar ToolBarClass="admin-toolbar" Dense="true" Fixed="false" Elevation="0" Color="Color.Default">
+        <MudIconButton Class="admin-toolbar-menu" Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Inherit"
                        Edge="Edge.Start"
                        OnClick="ToggleDrawer"
                        aria-label="관리자 메뉴 열기 또는 닫기" />
-        <MudButton Variant="Variant.Text" Color="Color.Inherit" Disabled="@(!CanGoBack)" OnClick="GoBack" StartIcon="@Icons.Material.Filled.ArrowBack">뒤로가기</MudButton>
-        <MudStack Spacing="0">
+        <MudButton Class="admin-toolbar-back" Variant="Variant.Text" Color="Color.Inherit" Disabled="@(!CanGoBack)" OnClick="GoBack" StartIcon="@Icons.Material.Filled.ArrowBack">뒤로가기</MudButton>
+        <MudStack Class="admin-toolbar-identity" Spacing="0">
             <MudText Typo="Typo.subtitle1">살뜰 관리자</MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">운영자 백오피스</MudText>
         </MudStack>
         <MudSpacer />
-        <MudButton Href="https://learn.microsoft.com/aspnet/core/"
+        <MudButton Class="admin-toolbar-about" Href="https://learn.microsoft.com/aspnet/core/"
                    Target="_blank"
                    Variant="Variant.Text"
                    Color="Color.Inherit"
@@ -39,6 +40,7 @@
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+</div>
 
 @code {
     private readonly Stack<string> _navigationHistory = new();

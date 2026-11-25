@@ -1,4 +1,5 @@
 @using Ssalddel.Contracts.Common.Inbound
+@inject IDialogService DialogService
 @implements IDisposable
 
 <section class="photo-inbound" aria-busy="@Model.IsBusy">
@@ -94,6 +95,7 @@
     [Parameter] public EventCallback<Guid> FormalRequested { get; set; }
     [Parameter] public EventCallback<Guid> SelectedRequested { get; set; }
     private 가입고사진신청ViewModel? subscribed;
+    private bool confirmingNew;
     private bool InputsDisabled => Model.IsBusy || Model.HasPendingRequest || Model.RecoveryBlocked;
     private string InputAriaDisabled => InputsDisabled ? "true" : "false";
     protected override void OnParametersSet()
@@ -108,7 +110,30 @@
     private Task SubmitAsync() => Model.SubmitAsync();
     private Task RefreshAsync() => Model.RefreshAsync();
     private Task RenameAsync() => Model.RenameAsync();
-    private Task NewAsync() => Model.NewAsync();
+    private async Task NewAsync()
+    {
+        if (InputsDisabled || confirmingNew) return;
+        var model = Model;
+        if (model.Current is null && (model.HasSelectedPhoto || !string.IsNullOrWhiteSpace(model.Name)))
+        {
+            var preview = model.PreviewUrl;
+            var name = model.Name;
+            confirmingNew = true;
+            try
+            {
+                var keepDraft = await DialogService.ShowMessageBoxAsync(
+                    "작성 중인 사진 신청",
+                    "새로 시작하면 사진과 이름을 지웁니다.",
+                    yesText: "계속 작성",
+                    noText: "입력 비우고 시작",
+                    options: new DialogOptions { CloseOnEscapeKey = true });
+                if (keepDraft is not false || !ReferenceEquals(subscribed, model) || InputsDisabled
+                    || model.Current is not null || model.PreviewUrl != preview || model.Name != name) return;
+            }
+            finally { confirmingNew = false; }
+        }
+        await model.NewAsync();
+    }
     private Task PreviousAsync() => Model.LoadPageAsync(Model.List.Page - 1);
     private Task NextAsync() => Model.LoadPageAsync(Model.List.Page + 1);
     private async Task SelectItemAsync(Guid id)
@@ -119,5 +144,9 @@
     private Task FormalAsync() => Model.Current is { } current && Model.CanStartFormal ? FormalRequested.InvokeAsync(current.Id) : Task.CompletedTask;
     private static string DisplayName(가입고사진신청응답 item) => string.IsNullOrWhiteSpace(item.이름) ? "이름 없는 입고 신청" : item.이름;
     private static string FormalDetailHref(long id) => $"/shipper/inbound/requests/{id}";
-    public void Dispose() { if (subscribed is not null) subscribed.Changed -= Changed; }
+    public void Dispose()
+    {
+        if (subscribed is not null) subscribed.Changed -= Changed;
+        subscribed = null;
+    }
 }

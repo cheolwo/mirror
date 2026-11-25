@@ -1,0 +1,66 @@
+@page "/store/franchise-operations"
+
+<PageTitle>가맹 운영 미리보기</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
+    <MudStack Spacing="3">
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.overline">가게 관리 · 검토용 예시</MudText>
+            <MudText Typo="Typo.h4">카페 가맹 운영</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                본부에서 준비할 기준과 매장에서 기록할 업무를 단계별로 확인하세요.
+            </MudText>
+        </MudStack>
+
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">라떼 주문에서 우유 보충까지</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">카페 한 점포와 우유 한 품목의 가상 기록입니다.</MudText>
+                <ol class="pl-5 my-0">
+                    <li class="mb-2"><strong>메뉴 기준.</strong> 본부가 라떼 한 잔에 우유 170mL를 사용하는 레시피를 정합니다.</li>
+                    <li class="mb-2"><strong>제조와 폐기.</strong> 정상 판매 3잔에 510mL를 쓰고, 제조 후 취소 1잔의 170mL는 폐기로 기록합니다.</li>
+                    <li class="mb-2"><strong>마감 실사.</strong> 입고한 1,000mL에서 사용량을 빼면 장부 잔량은 320mL입니다. 점주가 실제 잔량과 대조합니다.</li>
+                    <li><strong>다음 발주.</strong> 실사 잔량이 장부와 같고 다음 입고까지 20잔이 예상되면, 안전량 1L와 사용 가능 비율 95%를 반영한 초안은 1L 우유 5팩입니다.</li>
+                </ol>
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                    <MudButton Href="/orders" Variant="Variant.Filled" Color="Color.Primary">주문 수신함 열기</MudButton>
+                    <MudButton Href="/menus" Variant="Variant.Outlined" Color="Color.Primary">메뉴 관리 열기</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <section aria-labelledby="franchise-stages-title">
+            <MudText Typo="Typo.h6" id="franchise-stages-title" Class="mb-2">본부와 점포의 운영 단계</MudText>
+            <MudStack Spacing="1">
+                @foreach (var stage in 운영단계목록)
+                {
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+                        <details>
+                            <summary><strong>@stage.제목</strong></summary>
+                            <p class="mt-2 mb-1"><strong>담당</strong> @stage.담당</p>
+                            <p class="mb-0">@stage.확인</p>
+                        </details>
+                    </MudPaper>
+                }
+            </MudStack>
+        </section>
+
+        <div>
+            <MudButton Href="/store" Variant="Variant.Text" Color="Color.Primary">가게 관리로 돌아가기</MudButton>
+        </div>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private static readonly 운영단계[] 운영단계목록 =
+    [
+        new("1. 공급업체 계약", "본부·공급업체", "재료 규격, 포장 단위, 단가 적용일과 대체품 조건을 확인합니다."),
+        new("2. 물류 준비", "본부·물류 담당", "배송 경로, 냉장 보관, 주문 마감과 납품 시간을 확인합니다."),
+        new("3. 가맹점 계약", "본부·점주", "점포별 공급 품목, 구매 방식과 담당자를 확인합니다."),
+        new("4. 개점 준비", "본부·점주", "메뉴 기준과 교육, 추출·제빙·냉장 설비의 준비 상태를 확인합니다."),
+        new("5. 첫 납품", "점주·납품 담당", "보낸 수량과 받은 수량을 대조하고 검수 결과를 남깁니다."),
+        new("6. 운영 중 반복 공급", "점주·공급 담당", "판매·폐기·실사를 대조해 남은 재료와 다음 발주량을 확인합니다.")
+    ];
+
+    private sealed record 운영단계(string 제목, string 담당, string 확인);
+}

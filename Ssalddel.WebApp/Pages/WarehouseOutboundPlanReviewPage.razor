@@ -3,16 +3,48 @@
 @inject NavigationManager Navigation
 @inject WebAuthSessionService AuthSession
 @implements IDisposable
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
 
-<PageTitle>출고예정 운송 전 검토 · 살뜰</PageTitle>
-<WebPageHeader Eyebrow="Warehouse Web" Title="출고예정 운송 전 검토" Description="준비된 출고예정 원장과 운송의뢰 생성 전 필수 입력을 읽기 전용으로 확인합니다." Badge="Beta · ReadOnly" />
-@if(!AuthSession.IsLoggedIn){<MudPaper Elevation="0" Outlined="true" Class="pa-6"><MudStack AlignItems="AlignItems.Center" Spacing="2"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" /><MudText Typo="Typo.h6">출고예정 검토에는 로그인이 필요합니다.</MudText><MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">서버에서 창고 배정과 HR 출고 역할을 확인합니다. 익명 허용 커뮤니티는 로그인 없이 이용할 수 있습니다.</MudText><MudStack Row="true"><MudButton Href="/login" Variant="Variant.Filled">로그인</MudButton><MudButton Href="/community" Variant="Variant.Outlined">익명 커뮤니티 보기</MudButton></MudStack></MudStack></MudPaper>}
+<PageTitle>@(_batchState is null ? "출고예정 운송 전 검토" : $"{StageLabel} 처리 묶음") · 살뜰</PageTitle>
+<WebPageHeader Eyebrow="Warehouse Web" Title="@(_batchState is null ? "출고예정 운송 전 검토" : $"{StageLabel} 처리 묶음")" Description="@(_batchState is null ? "준비된 출고예정 원장과 운송의뢰 생성 전 필수 입력을 읽기 전용으로 확인합니다." : "업무 단계의 처리 묶음을 고르고 구성 업무와 같은 출고 검토를 이어 확인합니다.")" Badge="Beta · ReadOnly" />
+@if(!AuthSession.IsLoggedIn){<MudPaper Elevation="0" Outlined="true" Class="pa-6"><MudStack AlignItems="AlignItems.Center" Spacing="2"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" /><MudText Typo="Typo.h6">출고예정 검토에는 로그인이 필요합니다.</MudText><MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">서버에서 창고 배정과 HR 출고 역할을 확인합니다. 익명 허용 커뮤니티는 로그인 없이 이용할 수 있습니다.</MudText><MudStack Row="true"><MudButton Href="@LoginHref" Variant="Variant.Filled">로그인</MudButton><MudButton Href="/community" Variant="Variant.Outlined">익명 커뮤니티 보기</MudButton></MudStack></MudStack></MudPaper>}
+else if (_navigationError is not null){<p role="alert">@_navigationError</p><a href="warehouse/general/outbound-plan-review?stage=picking">처리 묶음 목록으로</a>}
+else if (_batchState is not null){<SsalddelOutboundBatchWorkspace State="_batchState" OutboundPlanId="OutboundPlanId" OnNavigationChanged="UpdateBatchRoute" OnPlanSelected="UpdateBatchPlan" WorkforceHref="@WorkforceHref" />}
 else{<SsalddelOutboundPlanReviewWorkspace OutboundPlanId="@OutboundPlanId" OnPlanSelected="UpdateRoute" />}
 
 @code {
     [SupplyParameterFromQuery(Name="outboundPlanId")] public long? OutboundPlanId { get; set; }
+    [SupplyParameterFromQuery(Name="stage")] public string? Stage { get; set; }
+    [SupplyParameterFromQuery(Name="warehouseId")] public string? WarehouseId { get; set; }
+    [SupplyParameterFromQuery(Name="periodStartUtc")] public string? PeriodStartUtc { get; set; }
+    [SupplyParameterFromQuery(Name="periodEndUtc")] public string? PeriodEndUtc { get; set; }
+    [SupplyParameterFromQuery(Name="batchPage")] public string? BatchPage { get; set; }
+    [SupplyParameterFromQuery(Name="batchKey")] public string? BatchKey { get; set; }
+    [SupplyParameterFromQuery(Name="memberPage")] public string? MemberPage { get; set; }
+    [SupplyParameterFromQuery(Name="planPage")] public string? PlanPage { get; set; }
+    private OutboundBatchNavigationState? _batchState;
+    private string? _navigationError;
+    private string LoginHref => $"/login?returnUrl={Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)}";
+    private string? WorkforceHref => _batchState is { Stage: "picking" or "packing", WarehouseId: > 0, StartUtc: not null, EndUtc: not null }
+        ? _batchState.Href().Replace("/warehouse/general/outbound-plan-review", "/warehouse/general/workforce", StringComparison.Ordinal) : null;
+    private string StageLabel => _batchState?.Stage switch { "review" => "출고 검토", "picking" => "피킹", "packing" => "포장", "handoff" => "운송 인계", _ => "출고" };
+    protected override void OnParametersSet()
+    {
+        _batchState = null;
+        _navigationError = null;
+        if (string.IsNullOrEmpty(Stage)) return;
+        if (!ReadLong(WarehouseId, out var warehouse) || !ReadInt(BatchPage, out var batchPage)
+            || !ReadInt(MemberPage, out var memberPage) || !ReadInt(PlanPage, out var planPage))
+        { _navigationError = "주소의 창고나 페이지 값을 확인해 주세요."; return; }
+        OutboundBatchNavigationState.TryCreate(Stage, warehouse, PeriodStartUtc, PeriodEndUtc,
+            batchPage, BatchKey, memberPage, planPage, out _batchState, out _navigationError);
+    }
     protected override void OnInitialized()=>AuthSession.Changed+=AuthChanged;
     private void AuthChanged()=>_=InvokeAsync(StateHasChanged);
-    private Task UpdateRoute(long? id){Navigation.NavigateTo(id is>0?$"{WarehouseManagerRoutes.OutboundPlanReview}?outboundPlanId={id}":WarehouseManagerRoutes.OutboundPlanReview,replace:true);return Task.CompletedTask;}
+    private Task UpdateRoute(long? id){Navigation.NavigateTo((id is>0?$"{WarehouseManagerRoutes.OutboundPlanReview}?outboundPlanId={id}":WarehouseManagerRoutes.OutboundPlanReview).TrimStart('/'),replace:true);return Task.CompletedTask;}
+    private Task UpdateBatchRoute(OutboundBatchNavigationState state){Navigation.NavigateTo(state.Href().TrimStart('/'));return Task.CompletedTask;}
+    private Task UpdateBatchPlan(long? id){if(_batchState is not null)Navigation.NavigateTo(_batchState.Href(id).TrimStart('/'));return Task.CompletedTask;}
+    private static bool ReadLong(string? value,out long? result){result=null;if(value is null)return true;if(!long.TryParse(value,System.Globalization.NumberStyles.Integer,System.Globalization.CultureInfo.InvariantCulture,out var parsed))return false;result=parsed;return true;}
+    private static bool ReadInt(string? value,out int? result){result=null;if(value is null)return true;if(!int.TryParse(value,System.Globalization.NumberStyles.Integer,System.Globalization.CultureInfo.InvariantCulture,out var parsed))return false;result=parsed;return true;}
     public void Dispose()=>AuthSession.Changed-=AuthChanged;
 }

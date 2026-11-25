@@ -253,8 +253,6 @@
     }
 
     .sales-order-filters,
-    .sales-order-metrics,
-    .sales-order-detail-metrics,
     .sales-order-line-card dl,
     .sales-order-source-grid {
         grid-template-columns: 1fr;
@@ -262,6 +260,24 @@
 
     .sales-order-panel {
         padding: 1rem;
+    }
+
+    .sales-order-workspace ::deep .sales-order-table.mud-sm-table td[data-label="채널·주문"]::before,
+    .sales-order-workspace ::deep .sales-order-table.mud-sm-table td[data-label="상품·수량"]::before {
+        white-space: nowrap;
+    }
+
+    .sales-order-row-values {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        text-align: end;
+    }
+
+    .sales-order-table .sales-order-row-values > span {
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .sales-order-workspace ::deep .mud-button-root {

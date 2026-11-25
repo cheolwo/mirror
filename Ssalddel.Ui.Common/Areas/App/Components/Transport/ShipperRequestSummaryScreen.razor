@@ -51,6 +51,8 @@
 
                 <ShipperRequestNextActionPanel Item="@item" Context="@Context" />
 
+                @DispatchExplanation
+
                 <화물운송조건Panel Fields="@CargoWorkspacePresentation.조건목록(item.TransportMethod, item.VehicleType,
                     item.화물중량Kg, item.화물수량, item.상차시간창시작일시, item.상차시간창종료일시,
                     item.하차시간창시작일시, item.하차시간창종료일시)" />
@@ -123,6 +125,7 @@
 
 @code {
     [Parameter, EditorRequired] public ShipperRequestDetailPageState State { get; set; } = default!;
+    [Parameter] public RenderFragment? DispatchExplanation { get; set; }
     [Parameter, EditorRequired] public ShipperRequestDetailNavigationContext Context { get; set; } = new();
     [Parameter] public string? ScreenCode { get; set; }
     [Parameter] public string Title { get; set; } = "의뢰 내역";

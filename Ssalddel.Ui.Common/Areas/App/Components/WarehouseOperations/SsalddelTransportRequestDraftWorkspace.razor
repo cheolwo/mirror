@@ -105,7 +105,7 @@
                     <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@(TaskOnly ? "인계 상태를 확인하지 못했습니다. 다시 확인해 주세요." : ViewModel.원장.오류메시지)</MudAlert>
                 }
                 <MudText Typo="Typo.body2" Color="Color.Secondary">@plan.NextStep</MudText>
-                <MudStack Row="true" Spacing="2">
+                <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshStatusAsync">인계 상태 새로고침</MudButton>
                     <MudButton Href="@ReviewLink(plan.OutboundPlanId)" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FactCheck">@(TaskOnly ? "출고 내역 확인" : "출고 원장 다시 보기")</MudButton>
                 </MudStack>

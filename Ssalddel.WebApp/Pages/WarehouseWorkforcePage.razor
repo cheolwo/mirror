@@ -1,0 +1,42 @@
+@page "/warehouse/general/workforce"
+@using Ssalddel.Contracts.Common.Hr
+@using Ssalddel.Ui.Common.Areas.App.Components.HumanResources
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@inject 근무가능요청ViewModel Model
+@inject WebAuthSessionService AuthSession
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>창고 인력 계획 · 살뜰</PageTitle>
+<WebPageHeader Title="창고 인력 계획" Description="실제 피킹·포장 묶음의 수량을 보고 등록 인력에게 가능 여부를 묻습니다." Eyebrow="Warehouse Web" Badge="근무 의향 · 계획" />
+@if (!AuthSession.IsLoggedIn) { <p>인력 계획에는 로그인이 필요합니다.</p><a href="@LoginHref">로그인 후 같은 인력 계획으로</a> }
+else if (error is not null) { <p role="alert">@error</p><a href="/warehouse/general/outbound-plan-review?stage=picking">피킹 처리 묶음으로</a> }
+else { <a href="@ReturnHref">원래 처리 묶음으로</a><SsalddelWorkforceAvailabilityWorkspace Model="Model" LoginHref="@LoginHref" /> }
+
+@code {
+    [SupplyParameterFromQuery] public string? Stage { get; set; }
+    [SupplyParameterFromQuery] public long? WarehouseId { get; set; }
+    [SupplyParameterFromQuery] public string? PeriodStartUtc { get; set; }
+    [SupplyParameterFromQuery] public string? PeriodEndUtc { get; set; }
+    [SupplyParameterFromQuery] public string? BatchKey { get; set; }
+    [SupplyParameterFromQuery] public int? BatchPage { get; set; }
+    private string? loaded, error;
+    private string ReturnHref = "/warehouse/general/outbound-plan-review?stage=picking";
+    private string LoginHref => "/login?returnUrl=" + Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery);
+    protected override void OnInitialized() => AuthSession.Changed += Changed;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loaded == Navigation.Uri && AuthSession.IsLoggedIn) return;
+        Model.Reset(); error = null; loaded = null;
+        if (!AuthSession.IsLoggedIn) return;
+        if (Stage is not ("picking" or "packing") || !OutboundBatchNavigationState.TryCreate(Stage, WarehouseId,
+            PeriodStartUtc, PeriodEndUtc, BatchPage, BatchKey, 0, 0, out var state, out error)
+            || state is null || state.WarehouseId <= 0 || state.StartUtc is null || state.EndUtc is null)
+        { error ??= "원래 피킹·포장 화면에서 창고와 조회 구간을 선택해 주세요."; return; }
+        ReturnHref = state.Href(); loaded = Navigation.Uri;
+        await Model.LoadAsync(new 근무가능업무범위 { WarehouseId = state.WarehouseId, Stage = state.Stage,
+            PeriodStartUtc = state.StartUtc.Value, PeriodEndUtc = state.EndUtc.Value, GroupKey = state.BatchKey ?? "", GroupPage = state.BatchPage });
+    }
+    private void Changed() => _ = InvokeAsync(async () => { loaded = null; Model.Reset(); StateHasChanged(); await OnParametersSetAsync(); StateHasChanged(); });
+    public void Dispose() { AuthSession.Changed -= Changed; Model.Reset(); }
+}

@@ -1,7 +1,33 @@
 @using Ssalddel.Contracts.Common.Inventory
 @using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Microsoft.Extensions.DependencyInjection
 @inherits MvvmComponentBase<출고예정검토PageViewModel>
 
+@if (!SingleTask)
+{
+    <MudStack Row="true" Spacing="2" Class="mb-4">
+        <MudButton Variant="@(_periodView ? Variant.Outlined : Variant.Filled)" OnClick="ShowReview" aria-pressed="@(!_periodView ? "true" : "false")">운송 전 검토</MudButton>
+        <MudButton Variant="@(_periodView ? Variant.Filled : Variant.Outlined)" OnClick="ShowPeriods" aria-pressed="@(_periodView ? "true" : "false")">회차별 현황</MudButton>
+    </MudStack>
+}
+@if (_reviewReloading)
+{
+    <p role="status">현재 계정의 검토 목록을 다시 확인하고 있습니다.</p>
+}
+else if (!_periodView && !_periodDetail && ReviewContextExpired)
+{
+    <MudAlert Severity="Severity.Warning">현재 계정의 검토 목록을 다시 확인해 주세요. 운송 전 검토를 누르면 목록을 새로 조회합니다.</MudAlert>
+}
+else if (_periodDetail && !ReferenceEquals(_periodDetailSnapshot, _periodModel?.Snapshot))
+{
+    <MudAlert Severity="Severity.Warning">로그인이나 서버가 바뀌었습니다. 회차별 현황에서 다시 조회해 주세요.</MudAlert>
+}
+else if (_periodView && !SingleTask && _periodModel is not null)
+{
+    <SsalddelOutboundPeriodWorkspace Model="@_periodModel" OnPlanSelected="SelectFromPeriodAsync" />
+}
+else
+{
 <MudStack Spacing="3" Class="outbound-review-workspace">
     @if (SingleTask)
     {
@@ -29,7 +55,7 @@
     </MudAlert>
     }
 
-    @if (!SingleTask)
+    @if (!SingleTask && !_periodDetail)
     {
     <MudPaper Class="pa-4" Elevation="0" Outlined="true">
         <MudGrid>
@@ -43,7 +69,7 @@
     @if(ViewModel.목록.오류발생){<MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@ViewModel.목록.오류메시지</MudAlert>}
 
     <MudGrid>
-        @if (!SingleTask)
+        @if (!SingleTask && !_periodDetail)
         {
         <MudItem xs="12" lg="5">
             <MudPaper Class="pa-4 review-panel" Elevation="0" Outlined="true"><MudStack Spacing="2">
@@ -54,7 +80,7 @@
             </MudStack></MudPaper>
         </MudItem>
         }
-        <MudItem xs="12" lg="@(SingleTask ? 12 : 7)">
+        <MudItem xs="12" lg="@(SingleTask || _periodDetail ? 12 : 7)">
             <MudPaper Class="pa-4 review-panel" Elevation="0" Outlined="true">
                 @if(ViewModel.상세.처리중){<div class="review-empty"><MudProgressCircular Indeterminate="true" /><MudText>@(SingleTask ? "출고할 물품을 확인하고 있습니다." : "출고예정 원장을 같은 ID로 확인하고 있습니다.")</MudText></div>}
                 else if(ViewModel.상세.오류발생){<div class="review-empty"><MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large" /><MudText>@(SingleTask ? "출고 상태를 확인하지 못했습니다. 다시 확인해 주세요." : ViewModel.상세.오류메시지)</MudText></div>}
@@ -72,6 +98,7 @@
         </MudItem>
     </MudGrid>
 </MudStack>
+}
 
 @code {
     [Parameter] public long? OutboundPlanId { get; set; }
@@ -89,7 +116,80 @@
     protected override void Dispose(bool disposing)
     {
         if (disposing && ExternalViewModel is not null) ExternalViewModel.PropertyChanged -= ExternalChanged;
+        if (disposing && _periodModel is not null)
+        {
+            _periodModel.PropertyChanged -= PeriodChanged;
+            _periodModel.Dispose();
+        }
         base.Dispose(disposing);
+    }
+    private bool _periodView;
+    private bool _periodDetail;
+    private long _periodDetailGeneration;
+    private OutboundPeriodResponse? _periodDetailSnapshot;
+    private 출고회차ViewModel? _periodModel;
+    private IWorkflowRecoveryContext? _periodContext;
+    private WorkflowRecoverySnapshot? _reviewScope;
+    private bool _reviewReloading;
+    private bool ReviewContextExpired => _periodContext is not null && (_reviewScope is null || !_periodContext.IsCurrent(_reviewScope));
+    private async Task ShowReview()
+    {
+        if (_reviewReloading) return;
+        _periodView = false;
+        _periodDetail = false;
+        var current = ++_periodDetailGeneration;
+        if (!ReviewContextExpired || _reviewReloading) return;
+        _reviewReloading = true;
+        try
+        {
+            var scope = _periodContext!.Capture();
+            ViewModel.선택해제();
+            ViewModel.목록.검색어 = string.Empty;
+            ViewModel.목록.조회상태 = 출고예정검토조회상태코드.검토대기;
+            var loaded = await ViewModel.초기화Async();
+            if (current != _periodDetailGeneration || !_periodContext.IsCurrent(scope) || !loaded) return;
+            _reviewScope = scope;
+            _periodDetailSnapshot = null;
+            _loadedId = null;
+            await OnPlanSelected.InvokeAsync(null);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or InvalidDataException)
+        { ViewModel.선택해제(); }
+        finally { _reviewReloading = false; }
+    }
+    private void ShowPeriods()
+    {
+        if (_periodModel is null)
+        {
+            _periodModel = Services.GetRequiredService<출고회차ViewModel>();
+            _periodModel.PropertyChanged += PeriodChanged;
+            _periodContext = Services.GetRequiredService<IWorkflowRecoveryContext>();
+        }
+        _periodDetail = false;
+        _periodDetailGeneration++;
+        _periodView = true;
+    }
+    private void PeriodChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(() =>
+    {
+        if (_periodDetailSnapshot is not null && !ReferenceEquals(_periodDetailSnapshot, _periodModel?.Snapshot))
+            ViewModel.선택해제();
+        StateHasChanged();
+    });
+    private async Task SelectFromPeriodAsync(long id)
+    {
+        var period = _periodModel?.Snapshot;
+        if (period is null || _periodModel?.CanOpenPlan(id) != true) return;
+        _periodView = false;
+        _periodDetail = true;
+        _periodDetailSnapshot = period;
+        var current = ++_periodDetailGeneration;
+        var loaded = await ViewModel.대상선택Async(id);
+        if (current != _periodDetailGeneration || !ReferenceEquals(period, _periodModel?.Snapshot) || _periodModel?.CanOpenPlan(id) != true)
+        {
+            ViewModel.선택해제();
+            return;
+        }
+        if (loaded) { _loadedId = id; await OnPlanSelected.InvokeAsync(id); }
     }
     private string DraftLink(long id) => DraftHref ?? $"/warehouse/general/transport-request-draft?outboundPlanId={id}";
     private bool _initialized;

@@ -33,7 +33,7 @@
     @if (!Model.ListOnly)
     {
     <section class="role-map-workspace__geography" aria-label="현재 업무 지도">
-        <div id="role-workspace-map-canvas" class="role-map-workspace__canvas" aria-label="업무 위치와 이동 경로"></div>
+        <div id="role-workspace-map-canvas" class="role-map-workspace__canvas @(IsShipperMapUnconfigured ? "role-map-workspace__canvas--unconfigured" : null)" aria-label="업무 위치와 이동 경로"></div>
         @if (IsDriver)
         { <div class="role-map-workspace__driver-map-control"><FoodDriverDispatchToggle Action="DispatchControl" ReceivingActionKey="@ReceivingActionKey" IsBusy="@(Model.CommandBusy || Model.AccountBusy)" IsStateKnown="DispatchStateKnown" AutomaticStopNotice="@Model.DispatchReceptionNotice" Toggled="ToggleDispatch" /></div> }
         @if (_hostStatus.Code != "ready")
@@ -118,7 +118,7 @@
                                 { <a href="@href" class="@(action.IsPrimary ? "is-primary" : "")"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></a> }
                                 else
                                 { <button type="button" class="@(action.IsPrimary ? "is-primary" : "")" disabled="@(!action.Enabled || Model.CommandBusy || Model.AccountBusy || Model.IsRefreshing || Model.RefreshError is not null || action.Route is not null)" @onclick="() => RequestAction(item.Id, action)"><RoleWorkspaceActionContent ActionKey="@action.Key" Label="@action.Label" /></button> }
-                                @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason) { <p class="role-map-workspace__hint">@reason</p> }
+                                @if (!action.Enabled && action.DisabledReason is { Length: > 0 } reason && !PickupGuideShownInSummary(item, action)) { <p class="role-map-workspace__hint">@reason</p> }
                             }
                         }
                     </div>
@@ -269,7 +269,12 @@
 @code {
     private bool CanShowWorkspace => Model.IsAuthenticated && !Model.RequiresLogin && !Model.AccessDenied;
     private bool IsFoodDriver => Model.Role?.Key == "food-driver";
+    private bool PickupGuideShownInSummary(RoleWorkspaceItem item, RoleWorkspaceAction action)
+        => IsFoodDriver && action.Key == Ssalddel.Contracts.Food.음식배달가능행동Ids.기사픽업확인
+            && item.Summary?.Request?.Value is { Length: > 0 } guide
+            && string.Equals(guide, action.DisabledReason, StringComparison.Ordinal);
     private bool IsCargoWorkspace => Model.BusinessCode == "freight-delivery";
+    private bool IsShipperMapUnconfigured => Model.Role?.Key == RoleWorkspaceCatalog.Shipper && _hostStatus.Code == "unconfigured";
     private bool IsDriver => IsFoodDriver || Model.Role?.Key == "cargo-driver";
     private string ReceivingActionKey => IsFoodDriver ? FoodDriverRoleWorkspaceAdapter.DisableDispatch : CargoDriverWorkSession.DisableDispatch;
     private RoleWorkspaceAction? DispatchControl => !IsDriver ? null : Model.EmptyActions.FirstOrDefault(action => action.Key is

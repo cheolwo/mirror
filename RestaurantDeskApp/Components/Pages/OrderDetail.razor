@@ -143,6 +143,14 @@
                 <MudButton Variant="Variant.Outlined" Disabled="@(isBusy || isLoading || isRefreshing)" OnClick="RefreshAsync" StartIcon="@Icons.Material.Filled.Refresh">새로고침</MudButton>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">@(lastSuccessfulRefresh is null ? "확인 대기" : $"마지막 확인 {lastSuccessfulRefresh.Value.ToLocalTime():HH:mm:ss}")</MudText>
             </div>
+            <div class="order-flow-secondary-row">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">장수는 빌지 출력 설정에서 선택</MudText>
+                @if (ReceiptPrinter?.PrintsWithoutDialog == true)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">수락 후 기본 프린터로 빌지 자동 출력</MudText>
+                }
+                <MudButton Href="/settings/receipts" Variant="Variant.Text" Disabled="@WorkDisabled" StartIcon="@Icons.Material.Filled.Settings">빌지 출력 설정</MudButton>
+            </div>
             <details class="order-flow-details">
                 <summary>상세 정보</summary>
                 <div class="order-details-content">

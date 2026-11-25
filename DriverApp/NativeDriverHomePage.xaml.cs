@@ -12,12 +12,12 @@ public partial class NativeDriverHomePage : ContentPage
     private readonly IDriverSampleDataService _sampleDataService;
     private readonly IDriverRecommendationNotificationService _recommendationNotificationService;
     private readonly DriverHomeRoutePlanningService _routePlanningService;
-    private readonly I기사푸시토큰등록Service _pushTokenRegistrationService;
     private readonly DriverOperatingProfileService _operatingProfileService;
     private readonly DriverNativeHomeWorkspaceState _workspaceState;
     private readonly IServiceProvider _services;
     private readonly 기사위치표시설정Service _locationDisplayPreferences;
     private readonly DriverForegroundRecommendationSignal _recommendationSignal;
+    private readonly DriverForegroundPushRegistration _pushRegistration;
     private long _pageRefreshGeneration;
     private bool _isSubscribed;
     private DriverRequestItem? _incomingRecommendationRequest;
@@ -32,6 +32,8 @@ public partial class NativeDriverHomePage : ContentPage
     private bool _foreground;
     private bool _workspaceRefreshing;
     private bool _recommendationCommandBusy;
+    private bool _routeOrderExpanded;
+    private bool _routeOrderHasCoordinateGap;
 
     public NativeDriverHomePage(
         IDriverSampleDataService sampleDataService,
@@ -47,13 +49,14 @@ public partial class NativeDriverHomePage : ContentPage
         _sampleDataService = sampleDataService;
         _recommendationNotificationService = recommendationNotificationService;
         _routePlanningService = routePlanningService;
-        _pushTokenRegistrationService = pushTokenRegistrationService;
         _operatingProfileService = operatingProfileService;
         _locationDisplayPreferences = locationDisplayPreferences;
         _workspaceState = workspaceState;
         _services = services;
-        _recommendationSignal = new(services.GetRequiredService<IAuthSession>(),
+        var authSession = services.GetRequiredService<IAuthSession>();
+        _recommendationSignal = new(authSession,
             services.GetRequiredService<IDriverCargoRecommendationAlertService>());
+        _pushRegistration = new(authSession, pushTokenRegistrationService.저장토큰등록Async);
         ApplyOperatingProfile();
     }
 
@@ -62,6 +65,7 @@ public partial class NativeDriverHomePage : ContentPage
         base.OnAppearing();
         _foreground = true;
         _recommendationSignal.Resume();
+        _pushRegistration.Resume();
         ApplyDirectionSettings();
         SubscribeEvents();
         ObserveWindow();
@@ -85,6 +89,7 @@ public partial class NativeDriverHomePage : ContentPage
             else await _workspaceState.RefreshAsync();
             if (!_isSubscribed || !_foreground || generation != _pageRefreshGeneration) return;
             ApplyCurrentWorkspaceDisplay();
+            if (_workspaceState.IsReady) _ = RegisterStoredPushTokenQuietlyAsync();
             if (_workspaceState.CanRespondToRecommendation)
                 _ = _recommendationSignal.TryPublishAsync(signalTicket, _incomingRecommendationRequest);
         }
@@ -114,8 +119,7 @@ public partial class NativeDriverHomePage : ContentPage
             RetryWorkspaceButton.IsVisible = true;
             RecommendationBanner.IsVisible = false;
             StopRecommendationCountdown();
-            if (_currentTransport is null) { MapView.Markers = []; MapView.RouteOverlays = []; }
-            else RestoreDefaultMapState(); // 확인 실패 시 추천 검토 경로를 현재 업무 경로로 오인하지 않게 합니다.
+            RestoreDefaultMapState(); // 확인 실패 시 저장된 방문 순서를 최신 경로로 강조하지 않습니다.
             return;
         }
 
@@ -144,6 +148,7 @@ public partial class NativeDriverHomePage : ContentPage
         ++_pageRefreshGeneration;
         _foreground = false;
         _recommendationSignal.Pause();
+        _pushRegistration.Pause();
         MapView.IsDirectionTrackingActive = false;
         StopWorkspaceRefresh();
         StopObservingWindow();
@@ -180,6 +185,7 @@ public partial class NativeDriverHomePage : ContentPage
         if (!_isSubscribed || _foreground) return;
         _foreground = true;
         _recommendationSignal.Resume();
+        _pushRegistration.Resume();
         ApplyDirectionSettings();
         await RefreshCurrentWorkspaceAsync(); StartWorkspaceRefresh();
     }
@@ -189,6 +195,7 @@ public partial class NativeDriverHomePage : ContentPage
         if (!_isSubscribed || !_foreground) return;
         _foreground = false; ++_pageRefreshGeneration;
         _recommendationSignal.Pause();
+        _pushRegistration.Pause();
         MapView.IsDirectionTrackingActive = false;
         StopWorkspaceRefresh(); StopRecommendationCountdown(); _workspaceState.Pause();
         TransportFooterBar.IsEnabled = false;
@@ -202,7 +209,6 @@ public partial class NativeDriverHomePage : ContentPage
         _workspaceRefreshTimer.Interval = DriverNativeHomeWorkspaceState.RefreshInterval;
         _workspaceRefreshTimer.Tick += async (_, _) => await RefreshCurrentWorkspaceAsync(periodic: true);
         _workspaceRefreshTimer.Start();
-        _ = RegisterStoredPushTokenQuietlyAsync();
     }
 
     private void StopWorkspaceRefresh()
@@ -280,6 +286,12 @@ public partial class NativeDriverHomePage : ContentPage
         MapProviderLabel.Text = "NAVER 지도 · Directions";
         MapView.Markers = [];
         MapView.RouteOverlays = [];
+        _routeOrderExpanded = false;
+        _routeOrderHasCoordinateGap = false;
+        RouteOrderPanel.IsVisible = false;
+        RouteOrderDetails.IsVisible = false;
+        RouteOrderNoticeLabel.Text = string.Empty;
+        RouteOrderSummaryLabel.Text = string.Empty;
         TransportFooterBar.ShowTransport(null);
         TransportFooterBar.IsVisible = false;
         RecommendationBanner.IsVisible = false;
@@ -309,17 +321,14 @@ public partial class NativeDriverHomePage : ContentPage
     private 기사현재위치샘플 RouteCurrentLocation()
         => DriverNativeLocationPolicy.ForCurrentRoute(MapView.CurrentLocation ?? _sampleDataService.기사현재위치, DateTime.UtcNow);
 
-    private async Task RegisterStoredPushTokenQuietlyAsync()
+    private async Task RegisterStoredPushTokenQuietlyAsync() => await _pushRegistration.TryRegisterAsync();
+
+    private void OnPushConnectionChanged() => Dispatcher.Dispatch(() =>
     {
-        try
-        {
-            await _pushTokenRegistrationService.저장토큰등록Async();
-        }
-        catch (Exception ex)
-        {
-            StatusLabel.Text = $"푸시 토큰 등록 확인 실패: {ex.Message}";
-        }
-    }
+        var notice = _isSubscribed && _foreground ? _pushRegistration.Notice : string.Empty;
+        PushConnectionNoticeLabel.Text = notice;
+        PushConnectionNoticeLabel.IsVisible = !string.IsNullOrWhiteSpace(notice);
+    });
 
     private void ShowIncomingRecommendation(DriverRequestItem? request)
     {
@@ -391,12 +400,36 @@ public partial class NativeDriverHomePage : ContentPage
         MapView.CenterLatitude = _defaultCenterLatitude;
         MapView.CenterLongitude = _defaultCenterLongitude;
         MapView.Zoom = DefaultMapZoom;
-        var currentMarker = _routePlanningService.CurrentMarker(_currentTransport);
-        MapView.Markers = currentMarker is null ? [] : [currentMarker];
-        MapView.RouteOverlays = _routePlanningService.BuildCurrentRouteOverlays(RouteCurrentLocation(), _currentTransport);
+        var routeState = _routePlanningService.BuildWorkspaceRouteState(RouteCurrentLocation(), _currentTransport,
+            _sampleDataService.화물작업공간,
+            _workspaceState.IsReady && _sampleDataService.ReadState.CurrentTransport.IsCurrent);
+        MapView.Markers = routeState.Markers;
+        MapView.RouteOverlays = routeState.RouteOverlays;
+        RouteOrderNoticeLabel.Text = routeState.Notice;
+        RouteOrderSummaryLabel.Text = routeState.StopSummary;
+        RouteOrderPanel.IsVisible = _currentTransport is not null && !string.IsNullOrWhiteSpace(routeState.Notice);
+        var hasOrder = !string.IsNullOrWhiteSpace(routeState.StopSummary);
+        _routeOrderHasCoordinateGap = routeState.HasCoordinateGap;
+        RouteOrderHeadingLabel.IsVisible = hasOrder;
+        RouteOrderToggleButton.IsVisible = hasOrder;
+        ApplyRouteOrderExpansion(hasOrder);
         TransportFooterBar.IsVisible = true;
         TransportFooterBar.ShowTransport(_currentTransport);
         TransportFooterBar.IsEnabled = _workspaceState.IsReady;
+    }
+
+    private void OnToggleRouteOrderClicked(object? sender, EventArgs e)
+    {
+        _routeOrderExpanded = !_routeOrderExpanded;
+        ApplyRouteOrderExpansion(!string.IsNullOrWhiteSpace(RouteOrderSummaryLabel.Text));
+    }
+
+    private void ApplyRouteOrderExpansion(bool hasOrder)
+    {
+        RouteOrderNoticeLabel.IsVisible = !hasOrder || _routeOrderExpanded || _routeOrderHasCoordinateGap;
+        RouteOrderLegendLabel.IsVisible = hasOrder && _routeOrderExpanded;
+        RouteOrderDetails.IsVisible = hasOrder && _routeOrderExpanded;
+        RouteOrderToggleButton.Text = _routeOrderExpanded ? "접기" : "펼치기";
     }
 
     private void OnIncomingRecommendationChanged(DriverIncomingRecommendation? incoming)
@@ -421,6 +454,7 @@ public partial class NativeDriverHomePage : ContentPage
         _operatingProfileService.Changed += OnOperatingProfileChanged;
         _locationDisplayPreferences.Changed += OnDirectionSettingsChanged;
         _workspaceState.Invalidated += OnWorkspaceInvalidated;
+        _pushRegistration.Changed += OnPushConnectionChanged;
         _isSubscribed = true;
     }
 
@@ -436,6 +470,7 @@ public partial class NativeDriverHomePage : ContentPage
         _operatingProfileService.Changed -= OnOperatingProfileChanged;
         _locationDisplayPreferences.Changed -= OnDirectionSettingsChanged;
         _workspaceState.Invalidated -= OnWorkspaceInvalidated;
+        _pushRegistration.Changed -= OnPushConnectionChanged;
         _isSubscribed = false;
     }
 

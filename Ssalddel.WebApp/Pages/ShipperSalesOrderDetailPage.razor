@@ -12,7 +12,7 @@
     <MudButton Variant="Variant.Text"
                Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.ArrowBack"
-               Href="@ReturnPath">
+               Href="@GetReturnPath()">
         주문 목록으로
     </MudButton>
 </div>
@@ -24,7 +24,14 @@
     [Parameter]
     public long OrderId { get; set; }
 
-    private string ReturnPath
-        => SalesOrderNavigationContext.Parse(Navigation.Uri)
-            .ResolveReturnPath();
+    private string GetReturnPath()
+    {
+        var path = SalesOrderNavigationContext.Parse(Navigation.Uri).ResolveReturnPath();
+        var listPath = SalesOrderPageRoutes.Root;
+        return string.Equals(path, listPath, StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(listPath + "?", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(listPath + "#", StringComparison.OrdinalIgnoreCase)
+                ? path.TrimStart('/')
+                : path;
+    }
 }

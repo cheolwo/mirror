@@ -4,7 +4,7 @@
                        RowsPerPage="25"
                        MinimumWidth="980"
                        SkeletonColumns="6"
-                       SearchPlaceholder="업체 코드·명칭, 상품, SKU, 참조번호 검색"
+                       SearchPlaceholder="@SearchPlaceholder"
                        EmptyText="조건에 맞는 입고 예정이 없습니다.">
     <ToolBarContent>
         <MudText Typo="Typo.h6">입고 예정 목록</MudText>
@@ -50,11 +50,17 @@
             <TemplateColumn T="입고요청항목응답" Title="" Sortable="false">
                 <CellTemplate>
                     <MudTooltip Text="@SelectLabel">
-                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                        <MudIconButton Icon="@(ShowMobileSelectLabel ? null : Icons.Material.Filled.ChevronRight)"
                                        Color="@Color"
                                        Size="Size.Small"
                                        OnClick="@(() => OnSelect.InvokeAsync(context.Item))"
-                                       aria-label="@SelectLabel" />
+                                       aria-label="@SelectLabel">
+                            @if (ShowMobileSelectLabel)
+                            {
+                                <span class="d-sm-none expected-inbounds-action-label">@SelectLabel</span>
+                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                            }
+                        </MudIconButton>
                     </MudTooltip>
                 </CellTemplate>
             </TemplateColumn>
@@ -73,6 +79,12 @@
 
     [Parameter]
     public string SelectLabel { get; set; } = "입고 작업 열기";
+
+    [Parameter]
+    public bool ShowMobileSelectLabel { get; set; }
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "업체 코드·명칭, 상품, SKU, 참조번호 검색";
 
     [Parameter]
     public Color Color { get; set; } = Color.Primary;

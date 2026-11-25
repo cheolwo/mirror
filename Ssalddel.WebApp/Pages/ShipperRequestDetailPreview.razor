@@ -12,7 +12,14 @@
                              NewRequestHref="@ShipperRoutes.Request"
                              LoginHref="/login"
                              RefreshRequested="RefreshAsync"
-                             LookupRequested="OpenRequest" />
+                             LookupRequested="OpenRequest">
+    <DispatchExplanation>
+        @if (PageModel.State.Request is { } current)
+        {
+            <CargoDispatchExplanationFeedbackPanel RequestId="@current.RequestId" />
+        }
+    </DispatchExplanation>
+</ShipperRequestSummaryScreen>
 
 @if (!string.IsNullOrWhiteSpace(EffectiveRequestId))
 {

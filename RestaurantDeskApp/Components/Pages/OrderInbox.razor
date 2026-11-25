@@ -7,6 +7,9 @@
 @inject IOptions<RestaurantDeskOptions> DeskOptions
 @inject NavigationManager NavigationManager
 @inject RestaurantOrderNotificationCoordinator Notifications
+@inject RestaurantAuthService AuthService
+@inject IHttpClientFactory ApiHttpFactory
+@inject Ssalddel.Ui.Common.Areas.App.Services.SsalddelIsmsPClientEncryptionService Encryption
 
 <PageTitle>주문 처리</PageTitle>
 
@@ -31,7 +34,7 @@
         {
             var label = queue switch { RestaurantPosQueue.New => "신규", RestaurantPosQueue.InProgress => "진행", RestaurantPosQueue.Attention => "확인 필요", _ => "수신함" };
             var count = queue switch { RestaurantPosQueue.New => NewCount, RestaurantPosQueue.InProgress => ProgressCount, RestaurantPosQueue.Attention => AttentionCount, _ => orders.Count };
-            <button type="button" class="pos-queue @(workspace.Queue == queue ? "is-active" : "")" aria-pressed="@(workspace.Queue == queue)" @onclick="() => SelectQueue(queue)">
+            <button type="button" class="pos-queue @(workspace.Queue == queue ? "is-active" : "")" aria-pressed="@(workspace.Queue == queue ? "true" : "false")" @onclick="() => SelectQueue(queue)">
                 @label <strong>@(hasLoaded ? count.ToString() : "—")</strong>
             </button>
         }
@@ -56,14 +59,38 @@
             {
                 <div class="pos-empty"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" /><h2>@(orders.Count == 0 ? "새 주문을 기다리고 있어요" : "해당 주문이 없습니다")</h2></div>
             }
-            @foreach (var order in workspace.VisibleOrders(orders))
+            @if (workspace.VisibleOrders(orders).Count > 0)
             {
-                <article @key="order.주문번호" class="pos-order @(workspace.SelectedOrderNo == order.주문번호 ? "is-selected" : "")">
-                    <button type="button" class="pos-order-select pos-desktop-select" disabled="@(workspace.CommandInProgress || workLocked)" aria-pressed="@(workspace.SelectedOrderNo == order.주문번호)" @onclick="() => SelectOrderAsync(order.주문번호)">
-                        @OrderSummary(order)
-                    </button>
-                    <a class="pos-order-select pos-mobile-select" aria-label="주문 보기" href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")">@OrderSummary(order)</a>
-                </article>
+                <div class="pos-table-frame">
+                    <table class="pos-order-table">
+                        <caption>현재 수신함 주문</caption>
+                        <colgroup><col class="pos-col-time" /><col class="pos-col-number" /><col class="pos-col-menu" /><col class="pos-col-amount" /><col class="pos-col-preparation" /><col class="pos-col-status" /></colgroup>
+                        <thead><tr><th scope="col">접수</th><th scope="col">주문번호</th><th scope="col">메뉴 · 수량</th><th scope="col" class="pos-number">주문금액</th><th scope="col">조리예상</th><th scope="col">처리상태</th></tr></thead>
+                        <tbody>
+                            @foreach (var order in workspace.VisibleOrders(orders))
+                            {
+                                <tr @key="order.주문번호" class="pos-order-row @(workspace.SelectedOrderNo == order.주문번호 ? "is-selected" : "")" @onclick="() => SelectOrderAsync(order.주문번호)">
+                                    <td class="pos-time"><time>@order.접수시각.ToLocalTime().ToString("HH:mm")</time></td>
+                                    <td><button type="button" class="pos-table-select" aria-label="@($"주문 {order.주문번호} 보기")" aria-pressed="@(workspace.SelectedOrderNo == order.주문번호 ? "true" : "false")" disabled="@(workspace.CommandInProgress || workLocked)" @onclick="() => SelectOrderAsync(order.주문번호)" @onclick:stopPropagation="true">@order.주문번호</button></td>
+                                    <td><span class="pos-table-menu" title="@order.메뉴요약">@order.메뉴요약</span></td>
+                                    <td class="pos-number">@order.주문금액.ToString("N0")원</td>
+                                    <td class="pos-time">@(order.선택조리예상분 ?? order.추천조리예상분)분</td>
+                                    <td><strong class="pos-table-status">@RestaurantPosPresentation.StatusLabel(order)</strong>
+                                        @if (RestaurantPosPresentation.NeedsAttention(order)) { <span class="pos-attention">확인 필요</span> }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pos-mobile-orders">
+                    @foreach (var order in workspace.VisibleOrders(orders))
+                    {
+                        <article @key="order.주문번호" class="pos-order @(workspace.SelectedOrderNo == order.주문번호 ? "is-selected" : "")">
+                            <a class="pos-order-select pos-mobile-select" aria-label="주문 보기" href="@($"/orders/{Uri.EscapeDataString(order.주문번호)}")">@OrderSummary(order)</a>
+                        </article>
+                    }
+                </div>
             }
         </section>
         <section class="pos-selected" aria-label="선택 주문 상세">
@@ -87,10 +114,11 @@
                 <MudButton Href="/settings/notifications" Variant="Variant.Text">주문 알림 설정</MudButton>
                 <MudButton Variant="Variant.Text" Disabled="@(isRefreshing || workLocked)" OnClick="EnableSystemNotificationsAsync">주문 알림 허용</MudButton>
             }
-            <MudButton Variant="Variant.Text" OnClick="@(() => showFulfillmentSupport = !showFulfillmentSupport)">음식점 배송 지원 설정</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="ToggleFulfillmentSupport">음식점 배송 지원 설정</MudButton>
         </div>
         @if (!string.IsNullOrWhiteSpace(notificationPermissionMessage)) { <p role="status">@notificationPermissionMessage</p> }
-        @if (showFulfillmentSupport) { <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodMerchantFulfillmentSettingsPanel /> }
+        @if (showFulfillmentSupport && fulfillmentSettings?.Current is { } settingsModel)
+        { <Ssalddel.Ui.Common.Areas.App.Components.Food.FoodMerchantFulfillmentSettingsPanel @key="settingsModel" ViewModel="settingsModel" /> }
     </details>
 </section>
 
@@ -106,6 +134,33 @@
 
 @code {
     private bool showFulfillmentSupport;
+    private 음식점배송지원설정Session? fulfillmentSettings;
+    private void ToggleFulfillmentSupport()
+    {
+        if (showFulfillmentSupport && fulfillmentSettings?.Current is not null)
+        {
+            showFulfillmentSupport = false;
+            return;
+        }
+        try
+        {
+            fulfillmentSettings!.Open();
+            showFulfillmentSupport = true;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            showFulfillmentSupport = false;
+            messageSeverity = Severity.Warning;
+            message = ex.Message;
+        }
+    }
+
+    private void FulfillmentSettingsInvalidated() => _ = InvokeAsync(() =>
+    {
+        if (disposed) return;
+        showFulfillmentSupport = false;
+        StateHasChanged();
+    });
     private readonly RestaurantPosPresentation workspace = new();
     private Task SelectOrderAsync(string orderNo)
     {
@@ -166,6 +221,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        fulfillmentSettings = new(AuthService, ApiHttpFactory, Encryption, () => DeskOptions.Value.GetServerBaseAddress().AbsoluteUri);
+        fulfillmentSettings.Invalidated += FulfillmentSettingsInvalidated;
         RestaurantRealtimeService.주문수신 += HandleRealtimeOrderReceivedAsync;
         RestaurantRealtimeService.주문상태변경 += HandleOrderStatusChangedAsync;
         RestaurantRealtimeService.상태변경 += HandleRealtimeStatusChangedAsync;
@@ -431,6 +488,11 @@
     public async ValueTask DisposeAsync()
     {
         disposed = true;
+        if (fulfillmentSettings is not null)
+        {
+            fulfillmentSettings.Invalidated -= FulfillmentSettingsInvalidated;
+            fulfillmentSettings.Dispose();
+        }
         refreshCancellation.Cancel();
         RestaurantRealtimeService.주문수신 -= HandleRealtimeOrderReceivedAsync;
         RestaurantRealtimeService.주문상태변경 -= HandleOrderStatusChangedAsync;

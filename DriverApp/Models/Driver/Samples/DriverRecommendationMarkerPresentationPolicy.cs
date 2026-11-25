@@ -28,9 +28,11 @@ public static class DriverRecommendationMarkerPresentationPolicy
         var result = new List<DriverRecommendationMarkerPresentation>();
         foreach (var item in markers)
         {
-            var selected = highlightSelectedRecommendation && !string.IsNullOrWhiteSpace(selectedRecommendationRequestId)
-                && string.Equals(item.RequestId, selectedRecommendationRequestId, StringComparison.Ordinal);
-            var muted = highlightSelectedRecommendation && !selected;
+            var orderedStop = item.StopOrder is > 0;
+            var selected = orderedStop ? item.IsNextStop
+                : highlightSelectedRecommendation && !string.IsNullOrWhiteSpace(selectedRecommendationRequestId)
+                    && string.Equals(item.RequestId, selectedRecommendationRequestId, StringComparison.Ordinal);
+            var muted = orderedStop ? !item.IsNextStop : highlightSelectedRecommendation && !selected;
             AddPoint(item.PickupLatitude, item.PickupLongitude, item.PickupLabel, item.PickupAddress, isPickup: true);
             AddPoint(item.DropoffLatitude, item.DropoffLongitude, item.DropoffLabel, item.DropoffAddress, isPickup: false);
 
@@ -44,7 +46,8 @@ public static class DriverRecommendationMarkerPresentationPolicy
         }
 
         // 선택 핀을 나중에 추가하고 높은 ZIndex로 그려 같은 픽업 좌표의 회색 핀 뒤에 숨지 않게 합니다.
-        return highlightSelectedRecommendation ? result.OrderBy(x => x.ZIndex).ToArray() : result;
+        return highlightSelectedRecommendation || markers.Any(item => item.StopOrder is > 0)
+            ? result.OrderBy(x => x.ZIndex).ToArray() : result;
     }
 
     private static bool CoordinatesValid(double latitude, double longitude)

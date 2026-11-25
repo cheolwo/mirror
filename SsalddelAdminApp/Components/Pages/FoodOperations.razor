@@ -7,7 +7,7 @@
 
 <PageTitle>음식 주문</PageTitle>
 
-<MudStack Spacing="3" Class="food-mobile-workspace">
+<div class="d-flex flex-column gap-3 food-mobile-workspace">
     <MudText Typo="Typo.h4">음식 주문</MudText>
     <MudButton Href="/food-operations/demand-surcharge" Variant="Variant.Text">음식 배달 한시 할증</MudButton>
     @if (restoring || state is null)
@@ -54,7 +54,7 @@
         <MudButton Variant="Variant.Text" Disabled="@state.IsBusy" OnClick="@(() => LoadPageAsync(state.Page))">다시 조회</MudButton>
     }
     <MudButton Href="/overview" Variant="Variant.Text">운영 개요로</MudButton>
-</MudStack>
+</div>
 
 @code {
     private AdminFoodOperationsState? state;

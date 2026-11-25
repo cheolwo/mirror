@@ -271,9 +271,12 @@ public sealed class NativeDriverRecommendationPage : ContentPage
         var vehicle = Text(string.Empty, 14);
         var fullPickupWindow = Text(string.Empty, 14);
         var fullDropoffWindow = Text(string.Empty, 14);
+        var stopOrder = Text(string.Empty, 14);
+        var explanationButton = new Button { Text = "배차 설명·의견", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false,
+            BackgroundColor = Color.FromArgb("#EAF5F3"), TextColor = Color.FromArgb("#0F766E") };
         var details = new VerticalStackLayout { IsVisible = false, Spacing = 6,
             Children = { new BoxView { HeightRequest = 1, Color = Color.FromArgb("#DCE5E9") },
-                Text("운송 상세", 15, true), cargo, mode, vehicle, fullPickupWindow, fullDropoffWindow } };
+                Text("운송 상세", 15, true), cargo, mode, vehicle, fullPickupWindow, fullDropoffWindow, stopOrder, explanationButton } };
         var summary = new VerticalStackLayout { Spacing = 12, VerticalOptions = LayoutOptions.Start,
             Children = { metrics, route, fareRow, details } };
         var reject = new Button { Text = "거절", HeightRequest = 48, FontSize = 14, FontAutoScalingEnabled = false,
@@ -299,6 +302,23 @@ public sealed class NativeDriverRecommendationPage : ContentPage
         };
         var surface = new RecommendationCardSurface(card, summary, summaryScroll, body, reject, accept, detailsButton);
         _cardSurfaces.Add(new(surface));
+        explanationButton.Clicked += async (_, _) =>
+        {
+            if (_busy || _prompting || surface.Key is not { } key || key != _selection.SelectedKey) return;
+            _busy = true; UpdateActions();
+            try
+            {
+                var route = "/driver/dispatch/" + Uri.EscapeDataString(key.RequestId) + "/explanation";
+                if (Navigation.NavigationStack.Count > 1 && Navigation.NavigationStack[^2] is MainPage existing)
+                {
+                    await Navigation.PopAsync();
+                    await existing.OpenRouteAsync(route);
+                }
+                else await Navigation.PushAsync(new MainPage(route));
+            }
+            catch { _status.Text = "배차 설명 화면을 열지 못했습니다. 다시 확인해 주세요."; }
+            finally { _busy = false; UpdateActions(); }
+        };
         detailsButton.Clicked += (_, _) =>
         {
             if (_busy || _prompting || surface.Key is not { } key || key != _selection.SelectedKey) return;
@@ -337,6 +357,9 @@ public sealed class NativeDriverRecommendationPage : ContentPage
             vehicle.Text = $"차량 · {item.차량조건표시}";
             fullPickupWindow.Text = $"상차 · {item.상차시간표시}" + (item.당일상차필수 ? " · 당일 상차 필수" : string.Empty);
             fullDropoffWindow.Text = $"하차 · {item.하차시간표시}" + (item.당일하차필수 ? " · 당일 하차 필수" : string.Empty);
+            stopOrder.Text = item.권장방문순서표시;
+            explanationButton.IsVisible = item.WorkKind == Ssalddel.Contracts.Driver.Settings.DriverWorkKinds.CargoTransport
+                || item.WorkKind is null && item.운송의뢰유형코드 == "GeneralCargoTransport";
             accept.Text = item.수락버튼표시;
             SemanticProperties.SetDescription(accept, item.수락버튼표시 is "독차" or "혼적" ? $"{item.수락버튼표시} 추천 수락" : "현재 추천 수락");
             surface.DisplayedConditions = item.CaptureCargoConditions();

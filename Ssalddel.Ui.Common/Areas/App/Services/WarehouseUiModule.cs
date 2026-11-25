@@ -74,6 +74,7 @@ internal static class WarehouseUiModule
         services.TryAddTransient<출고예정검토목록ViewModel>();
         services.TryAddTransient<출고예정검토상세ViewModel>();
         services.TryAddTransient<출고예정검토PageViewModel>();
+        services.TryAddTransient<출고회차ViewModel>();
         services.TryAddTransient<운송의뢰초안원장ViewModel>();
         services.TryAddTransient<운송의뢰초안작성ViewModel>();
         services.TryAddTransient<운송의뢰초안저장ViewModel>();

@@ -10,6 +10,7 @@ using Ssalddel.WebApp.Services;
 using Ssalddel.WebApp.ViewModels;
 using Ssalddel.Ui.Common.Areas.App.Services;
 using Ssalddel.Ui.Common.Areas.App.ViewModels;
+using Ssalddel.Ui.Common.Areas.App.RoleWorkspace.DistributedFulfillment;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -31,6 +32,9 @@ builder.Services.AddTransient<화주Controller기능모음ViewModel>();
 builder.Services.AddSsalddelDocumentOutputServices();
 builder.Services.AddSingleton<IClientSessionGuard, ClientSessionGuard>();
 builder.Services.AddScoped<WebAuthSessionService>();
+builder.Services.AddScoped<I업무사진촬영Adapter, 미지원업무사진촬영Adapter>();
+builder.Services.AddScoped<ICargoDispatchExplanationClient, WebCargoDispatchExplanationClient>();
+builder.Services.AddTransient<CargoDispatchExplanationFeedbackViewModel>();
 builder.Services.AddScoped<I주문자앱인증Service, WebOrdererAuthenticationService>();
 builder.Services.AddScoped<CommunityPersonalPreferenceService>();
 builder.Services.AddScoped<커뮤니티세계지도Client>();

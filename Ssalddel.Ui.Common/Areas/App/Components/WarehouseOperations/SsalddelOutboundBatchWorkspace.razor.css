@@ -1,0 +1,22 @@
+.batch-workspace { display: grid; gap: 16px; color: var(--mud-palette-text-primary, #172b36); }
+.batch-workspace header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; }
+.batch-workspace h2 { margin: 0; font-size: 24px; }
+.batch-workspace a { color: var(--mud-palette-primary, #0f766e); }
+.batch-stage-menu { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.batch-stage-menu a { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--mud-palette-lines-default, #dce5e9); border-radius: 8px; box-sizing: border-box; text-decoration: none; }
+.batch-stage-menu a[aria-current="page"] { background: var(--mud-palette-primary, #0f766e); color: var(--mud-palette-primary-text, #fff); }
+.batch-stage-menu span { font-size: 14px; }
+.batch-query { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 12px; align-items: end; padding: 16px; border: 1px solid var(--mud-palette-lines-default, #dce5e9); border-radius: 12px; }
+.batch-query label { display: grid; gap: 8px; font-size: 14px; min-width: 0; }
+.batch-query-panel summary { min-height: 48px; padding: 12px; box-sizing: border-box; cursor: pointer; border: 1px solid var(--mud-palette-lines-default, #dce5e9); border-radius: 8px; }
+.batch-query input, .batch-query select, .batch-workspace button { min-height: 48px; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--mud-palette-primary, #0f766e); border-radius: 6px; font: inherit; background: var(--mud-palette-surface, #fff); color: inherit; }
+.batch-query input, .batch-query select { width: 100%; min-width: 0; }
+.batch-workspace button { cursor: pointer; }
+.batch-workspace button:disabled { opacity: .55; cursor: default; }
+.batch-back { justify-self: start; }
+.batch-caption { font-size: 14px; color: var(--mud-palette-text-secondary, #586b78); line-height: 1.6; margin: 0; }
+.batch-error { color: var(--mud-palette-error, #b42318); }
+.batch-warning { padding: 12px; background: color-mix(in srgb, var(--mud-palette-warning, #92400e) 12%, var(--mud-palette-surface, #fff)); }
+.batch-workspace :focus-visible { outline: 2px solid var(--mud-palette-primary, #0f766e); outline-offset: 3px; }
+.batch-workspace :is(a, h2, p, label) { word-break: keep-all; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .batch-query { grid-template-columns: 1fr; } .batch-stage-menu a { padding: 8px; gap: 4px; font-size: 14px; } }

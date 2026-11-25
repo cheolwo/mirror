@@ -1,0 +1,36 @@
+.period-workspace { display: grid; gap: 16px; color: var(--mud-palette-text-primary, #173b49); }
+.period-workspace h2, .period-workspace h3, .period-workspace h4, .period-workspace p { margin: 0; }
+.period-workspace h2 { font-size: 24px; }
+.period-workspace h3 { font-size: 18px; margin-bottom: 12px; }
+.period-workspace h4 { font-size: 17px; }
+.period-workspace p { line-height: 1.6; }
+.period-card { padding: 20px; border: 1px solid var(--mud-palette-lines-default, #d9e4e7); border-radius: 12px; background: var(--mud-palette-surface, #fff); }
+.period-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.period-form label { display: grid; gap: 6px; }
+.period-workspace input, .period-workspace select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 8px; border: 1px solid var(--mud-palette-lines-default, #bbcdd1); border-radius: 6px; color: inherit; background: var(--mud-palette-surface, #fff); font: inherit; }
+.period-workspace button { min-height: 48px; padding: 8px 12px; border: 1px solid var(--mud-palette-primary, #00858a); border-radius: 6px; font: inherit; color: var(--mud-palette-primary, #006c74); background: var(--mud-palette-surface, #fff); cursor: pointer; }
+.period-workspace button:disabled { opacity: .55; cursor: default; }
+.period-workspace :focus-visible { outline: 2px solid var(--mud-palette-primary, #00858a); outline-offset: 3px; }
+.period-workspace .period-primary { background: var(--mud-palette-primary, #00858a); color: var(--mud-palette-primary-text, #fff); }
+.period-period-actions { display: flex; gap: 8px; flex-wrap: wrap; grid-column: span 2; }
+.period-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0 0 12px; }
+.period-totals dt, .period-fields dt, .period-caption { color: var(--mud-palette-text-secondary, #586b78); }
+.period-totals dd { margin: 4px 0 0; font-size: 21px; font-weight: 700; color: var(--mud-palette-primary, #006c74); }
+.period-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.period-fields dd { margin: 0; }
+.period-item { display: grid; gap: 12px; padding: 16px 0; border-top: 1px solid var(--mud-palette-lines-default, #d9e4e7); }
+.period-item-status { font-size: 14px; color: var(--mud-palette-primary, #006c74); }
+.period-caption { font-size: 14px; }
+.period-warning { padding: 8px; border-radius: 4px; background: color-mix(in srgb, var(--mud-palette-warning, #c58a15) 12%, var(--mud-palette-surface, #fff)); }
+.period-error { padding: 12px; border-left: 4px solid var(--mud-palette-error, #b42318); }
+.period-pagination { display: flex; gap: 12px; justify-content: space-between; align-items: center; }
+.period-days { display: grid; gap: 12px; list-style: none; padding: 0; margin-bottom: 0; }
+.period-days li { display: flex; gap: 12px; justify-content: space-between; }
+.period-workspace :is(p, dd, h4, span, strong) { overflow-wrap: anywhere; word-break: keep-all; }
+@media (max-width: 600px) {
+    .period-card { padding: 16px; }
+    .period-form { grid-template-columns: 1fr; }
+    .period-period-actions { grid-column: auto; }
+    .period-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .period-fields, .period-days li { display: grid; grid-template-columns: 1fr; gap: 8px; }
+}

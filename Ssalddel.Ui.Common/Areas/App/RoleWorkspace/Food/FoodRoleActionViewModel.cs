@@ -297,7 +297,7 @@ public sealed class FoodRoleActionViewModel : IDisposable
         if (completion?.Matches(current) != true)
         {
             Message = commandAcknowledged ? "요청 응답을 받았지만 반영 상태를 아직 확인하지 못했습니다. 결과를 다시 확인해 주세요."
-                : "현재 업무를 조회했지만 이 요청의 처리 결과는 확인되지 않았습니다. 같은 요청을 다시 확인할 수 있습니다.";
+                : "현재 업무를 조회했지만 이 요청의 처리 결과는 확인되지 않았습니다.";
             return false;
         }
         detail = current; pending = null; completion = null; Confirmed = false; IsCompleted = true; IsLoaded = false; Message = null;

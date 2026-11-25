@@ -1,0 +1,20 @@
+@media (max-width: 600px) {
+    .expected-inbounds-results ::deep .mud-table-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        height: auto;
+        padding: 8px;
+    }
+
+    .expected-inbounds-results ::deep .mud-table-toolbar > .flex-grow-1 {
+        display: none;
+    }
+
+    .expected-inbounds-results ::deep .expected-inbounds-action-label {
+        margin-inline-end: 4px;
+        color: var(--mud-palette-text-primary);
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+}

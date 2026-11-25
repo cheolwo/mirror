@@ -141,6 +141,9 @@ internal sealed class SsalddelDocumentHtmlRenderer(ISsalddelIdentifierCodeGenera
         SsalddelPrintLayoutProfile layout)
     {
         var title = string.IsNullOrWhiteSpace(draft.Title) ? fallbackTitle : draft.Title;
+        var copies = draft.PrintLayout.ReceiptCopies;
+        if (copies is not (1 or 2)) throw new ArgumentOutOfRangeException(nameof(draft), "빌지 출력 장수는 1장 또는 2장이어야 합니다.");
+        var customCopyLayout = copies > 1 || (draft.PrintLayout.ReceiptCopyLabels?.Count ?? 0) > 0;
         var html = new StringBuilder();
         html.AppendLine("<!doctype html>");
         html.AppendLine("<html lang=\"ko\">");
@@ -153,17 +156,32 @@ internal sealed class SsalddelDocumentHtmlRenderer(ISsalddelIdentifierCodeGenera
         html.AppendLine($":root{{--slip-width:{layout.SheetWidthCss};--slip-padding:{layout.SheetPaddingCss};--gap:{layout.GapCss};--title-font:{layout.TitleFontCss};--body-font:{layout.TableFontCss};--small-font:{layout.TableHeadFontCss};--qty-font:{layout.QuantityFontCss};--line-code-width:{layout.LineCodeWidthCss};}}");
         html.AppendLine("body{font-family:Arial,'Malgun Gothic',sans-serif;margin:0;color:#111827;background:#fff;}");
         html.AppendLine(".receipt-slip{width:var(--slip-width);margin:0 auto;padding:var(--slip-padding);box-sizing:border-box;background:#fff;font-size:var(--body-font);}");
+        if (customCopyLayout)
+            html.AppendLine(".receipt-slip+.receipt-slip{margin-top:16px;break-before:page;page-break-before:always}.slip-copy-label{font-weight:800;font-size:var(--title-font);margin-bottom:4px}");
         html.AppendLine(".center{text-align:center}.slip-title{font-size:var(--title-font);font-weight:800;line-height:1.25}.slip-subtitle{font-size:var(--small-font);color:#4b5563;line-height:1.35;margin-top:2px;}");
         html.AppendLine(".divider{border-top:1px dashed #111827;margin:var(--gap) 0}.row{display:flex;justify-content:space-between;gap:6px;line-height:1.35}.row span:first-child{color:#4b5563}.row strong{font-weight:800;text-align:right;}");
         html.AppendLine(".doc-code{margin-top:var(--gap)}.doc-code svg{display:block;max-width:100%;height:auto;margin:2px auto}.raw{font-family:Consolas,'Courier New',monospace;font-size:var(--small-font);overflow-wrap:anywhere;line-height:1.25;}");
         html.AppendLine(".item{padding:var(--gap) 0;break-inside:avoid}.item-head{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}.item-name{font-size:var(--body-font);font-weight:800;line-height:1.25}.qty{font-size:var(--qty-font);font-weight:900;white-space:nowrap;text-align:right}.item-meta{font-size:var(--small-font);color:#374151;line-height:1.35;margin-top:2px;}");
         html.AppendLine(".line-code{display:block;max-width:var(--line-code-width);margin-top:2px;overflow:hidden}.line-code svg{display:block;max-width:var(--line-code-width);height:auto}.total{font-weight:900;font-size:var(--qty-font)}.memo{white-space:pre-wrap;line-height:1.35}.foot{font-size:var(--small-font);color:#6b7280;line-height:1.35;margin-top:var(--gap)}");
         html.AppendLine("@media print{body{background:#fff}.receipt-slip{width:auto;margin:0;padding:0}.item,.doc-code{break-inside:avoid}}");
+        if (customCopyLayout) html.AppendLine("@media print{.receipt-slip+.receipt-slip{margin-top:0}}");
         html.AppendLine("</style>");
         html.AppendLine("</head>");
         html.AppendLine("<body>");
+        for (var copy = 0; copy < copies; copy++)
+            AppendExpectedItemsReceiptCopy(html, draft, title, documentPayload, layout, copy);
+        html.AppendLine("</body>");
+        html.AppendLine("</html>");
+        return html.ToString();
+    }
+
+    private void AppendExpectedItemsReceiptCopy(StringBuilder html, SsalddelExpectedItemDocumentDraft draft,
+        string title, SsalddelIdentifierCodePayload documentPayload, SsalddelPrintLayoutProfile layout, int copy)
+    {
         html.AppendLine($"<main class=\"receipt-slip\" data-paper=\"{E(layout.PaperSize)}\" data-density=\"{E(layout.Density)}\" data-print-style=\"{E(layout.PrintStyle)}\">");
         html.AppendLine("<section class=\"center\">");
+        if (draft.PrintLayout.ReceiptCopyLabels is { } labels && copy < labels.Count && !string.IsNullOrWhiteSpace(labels[copy]))
+            html.AppendLine($"<div class=\"slip-copy-label\">{E(labels[copy])}</div>");
         html.AppendLine($"<div class=\"slip-title\">{E(title)}</div>");
         html.AppendLine($"<div class=\"slip-subtitle\">{E(draft.WarehouseName)}</div>");
         html.AppendLine($"<div class=\"slip-subtitle\">{draft.CreatedAt:yyyy-MM-dd HH:mm}</div>");
@@ -205,9 +223,6 @@ internal sealed class SsalddelDocumentHtmlRenderer(ISsalddelIdentifierCodeGenera
         html.AppendLine("<div>Ssalddel order slip</div>");
         html.AppendLine("</section>");
         html.AppendLine("</main>");
-        html.AppendLine("</body>");
-        html.AppendLine("</html>");
-        return html.ToString();
     }
 
     private void AppendReceiptDocumentCode(StringBuilder html, SsalddelIdentifierCodePayload payload, SsalddelPrintLayoutProfile layout)

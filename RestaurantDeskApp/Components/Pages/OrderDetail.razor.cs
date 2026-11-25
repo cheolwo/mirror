@@ -17,6 +17,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
     [Inject] public IJSRuntime JS { get; set; } = default!;
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
     [Inject] public IRestaurantReceiptPrinter ReceiptPrinter { get; set; } = default!;
+    [Inject] public I음식점전표출력설정Service ReceiptSettings { get; set; } = default!;
     [Inject] public RestaurantAuthService AuthService { get; set; } = default!;
     [Inject] public RestaurantOrderNotificationCoordinator Notifications { get; set; } = default!;
     [Parameter]
@@ -390,6 +391,8 @@ public partial class OrderDetail : ComponentBase, IDisposable
             return;
         }
 
+        var receiptSettingsReady = TryGetReceiptCopies(out var receiptCopies);
+
         await BeginCommandAsync();
         message = null;
         var requestedOrderNo = OrderNo;
@@ -408,6 +411,27 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (!Current()) return;
+            if (result.수락복구됨)
+            {
+                if (!result.성공 || result.주문?.상세주문 is not { } restored
+                    || !string.Equals(restored.주문번호, requestedOrderNo, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(result.주문.주문번호, requestedOrderNo, StringComparison.OrdinalIgnoreCase)
+                    || !restored.음식점수락시각Utc.HasValue
+                    || !음식주문상태코드.전체.Contains(restored.상태, StringComparer.Ordinal)
+                    || restored.상태 is 음식주문상태코드.취소 or 음식주문상태코드.거절 or 음식주문상태코드.주문대기)
+                {
+                    readFailed = true;
+                    messageSeverity = Severity.Warning;
+                    message = "수락 상태를 확인하지 못했습니다. 새로고침으로 현재 주문을 확인해 주세요.";
+                    return;
+                }
+                ApplyServerOrder(result.주문);
+                readFailed = false;
+                lastSuccessfulRefresh = DateTimeOffset.UtcNow;
+                messageSeverity = Severity.Info;
+                message = "서버에서 이미 수락된 주문을 복구했습니다. 빌지가 필요하면 전표 출력을 눌러 주세요.";
+                return;
+            }
             if (!result.성공 || result.전표Draft is null)
             {
                 readFailed = true;
@@ -416,7 +440,18 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 return;
             }
 
-            var output = DocumentOutputService.CreateOutboundExpectedItems(result.전표Draft);
+            if (!receiptSettingsReady)
+            {
+                var accepted = await OrderDeskService.주문조회Async(requestedOrderNo, cancellationToken: cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!Current()) return;
+                ApplyServerOrder(accepted);
+                messageSeverity = Severity.Warning;
+                message = "주문 확인은 완료됐습니다. 빌지 출력 설정을 확인하지 못해 출력만 보류했습니다. 설정을 다시 불러온 뒤 전표 출력으로 재시도해 주세요.";
+                return;
+            }
+
+            var output = DocumentOutputService.CreateOutboundExpectedItems(음식점전표출력구성.Apply(result.전표Draft, receiptCopies));
             try
             {
                 await RequestPrintDialogAsync(output.Title, output.Html, cancellationToken);
@@ -431,7 +466,9 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 if (!Current()) return;
                 ApplyServerOrder(loaded);
                 messageSeverity = Severity.Warning;
-                message = $"{OrderNo} 주문 확인은 완료됐습니다. 전표 출력 창을 열지 못했어요. 전표 출력으로 다시 시도할 수 있습니다.";
+                message = ReceiptPrinter?.PrintsWithoutDialog == true
+                    ? $"{OrderNo} 주문 확인은 완료됐습니다. 프린터 출력 요청 결과를 확인하지 못했습니다. 출력 장치를 확인한 뒤 필요하면 전표 출력으로 다시 요청해 주세요."
+                    : $"{OrderNo} 주문 확인은 완료됐습니다. 전표 출력 창을 열지 못했어요. 전표 출력으로 다시 시도할 수 있습니다.";
                 return;
             }
 
@@ -440,7 +477,9 @@ public partial class OrderDetail : ComponentBase, IDisposable
             if (!Current()) return;
             ApplyServerOrder(latest);
             messageSeverity = Severity.Success;
-            message = $"{OrderNo} 주문을 확인해 배차를 요청하고 전표 출력 요청을 보냈습니다.";
+            message = ReceiptPrinter?.PrintsWithoutDialog == true
+                ? $"{OrderNo} 주문을 확인해 배차를 요청하고 빌지 {receiptCopies}장분을 기본 프린터로 보냈습니다. 실제 인쇄 결과는 출력 장치에서 확인해 주세요."
+                : $"{OrderNo} 주문을 확인해 배차를 요청하고 빌지 {receiptCopies}장분의 전표 출력 요청을 보냈습니다. 인쇄 창의 부수는 1로 확인하고 실제 인쇄 결과는 출력 장치에서 확인해 주세요.";
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested || !Current())
         {
@@ -476,6 +515,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
     private async Task PrintReceiptAsync()
     {
         if (WorkDisabled || !CanPrintReceipt) return;
+        if (!TryGetReceiptCopies(out var receiptCopies)) return;
         var requestedOrderNo = OrderNo;
         var generation = selectionGeneration;
         var owner = AuthService?.Session.UserId;
@@ -499,7 +539,7 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 return;
             }
             printPhase = "create-document";
-            var output = DocumentOutputService.CreateOutboundExpectedItems(prepared.전표Draft);
+            var output = DocumentOutputService.CreateOutboundExpectedItems(음식점전표출력구성.Apply(prepared.전표Draft, receiptCopies));
             printPhase = "request-print-dialog";
             await RequestPrintDialogAsync(output.Title, output.Html, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
@@ -507,14 +547,18 @@ public partial class OrderDetail : ComponentBase, IDisposable
             printPhase = "record-print-request";
             await OrderDeskService.전표출력요청기록Async(requestedOrderNo, cancellationToken);
             messageSeverity = Severity.Success;
-            message = "전표 출력 창을 요청했습니다. 실제 인쇄 결과는 출력 장치에서 확인해 주세요.";
+            message = ReceiptPrinter?.PrintsWithoutDialog == true
+                ? $"빌지 {receiptCopies}장분을 기본 프린터로 보냈습니다. 실제 인쇄 결과는 출력 장치에서 확인해 주세요."
+                : $"전표 출력 창을 요청했습니다. 빌지 {receiptCopies}장분이 담겨 있습니다. 인쇄 창의 부수는 1로 확인하고 실제 인쇄 결과는 출력 장치에서 확인해 주세요.";
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested || !Current()) { }
         catch (Exception ex) when (ex is JSException or InvalidOperationException or TimeoutException)
         {
             LogPrintDiagnosticFailure(printPhase, ex);
             messageSeverity = Severity.Warning;
-            message = "전표 출력 창을 열지 못했습니다. 주문은 다시 수락되지 않았어요. 전표 출력으로 재시도해 주세요.";
+            message = ReceiptPrinter?.PrintsWithoutDialog == true
+                ? "프린터 출력 요청 결과를 확인하지 못했습니다. 주문은 다시 수락되지 않았어요. 출력 장치를 확인한 뒤 필요하면 전표 출력으로 다시 요청해 주세요."
+                : "전표 출력 창을 열지 못했습니다. 주문은 다시 수락되지 않았어요. 전표 출력으로 재시도해 주세요.";
         }
         catch (Exception ex)
         {
@@ -528,6 +572,20 @@ public partial class OrderDetail : ComponentBase, IDisposable
                 await EndCommandAsync();
             }
         }
+    }
+
+    private bool TryGetReceiptCopies(out int copies)
+    {
+        try
+        {
+            copies = ReceiptSettings.현재조회().출력장수;
+            if (copies is 1 or 2) return true;
+        }
+        catch (Exception) { }
+        copies = 0;
+        messageSeverity = Severity.Warning;
+        message = "빌지 출력 설정을 확인하지 못했습니다. 빌지 출력 설정에서 다시 불러온 뒤 시도해 주세요.";
+        return false;
     }
 
     private async Task RejectAsync()

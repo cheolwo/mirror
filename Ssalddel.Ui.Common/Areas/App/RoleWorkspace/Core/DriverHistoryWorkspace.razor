@@ -30,7 +30,17 @@ else
             <p class="rw-warning" role="status">@Model.DetailAccessNotice</p>
             @if (Model.OrderDetails is { } order)
             {
-                <section class="rw-card"><h2>주문 정보</h2><p>@order.RestaurantAddress</p><ul>@foreach (var menu in order.Items) { <li>@menu.MenuName · @menu.Quantity 개</li> }</ul><p>주문금액 @order.TotalOrderAmount.ToString("N0")원</p></section>
+                <section class="rw-card">
+                    <h2>주문 정보</h2>
+                    <p>@order.RestaurantAddress</p>
+                    <ul class="rw-order-menu">
+                        @foreach (var menu in order.Items)
+                        {
+                            <li>@menu.MenuName · @menu.Quantity 개</li>
+                        }
+                    </ul>
+                    <p>주문금액 @order.TotalOrderAmount.ToString("N0")원</p>
+                </section>
             }
             @if (Model.CustomerDetails is { } customer)
             { <section class="rw-card"><h2>고객 정보</h2><dl class="rw-fields"><div><dt>수령인</dt><dd>@customer.DisplayName</dd></div><div><dt>연락처</dt><dd>@customer.ContactPhone</dd></div><div><dt>전달지</dt><dd>@customer.Address</dd></div><div><dt>요청</dt><dd>@customer.DeliveryInstructions</dd></div></dl></section> }

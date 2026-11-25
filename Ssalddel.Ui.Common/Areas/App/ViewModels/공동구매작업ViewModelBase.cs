@@ -158,6 +158,73 @@ public abstract class 업무작업ViewModelBase : ObservableObject
         }
     }
 
+    /// <summary>상세 읽기에 한해 새 요청으로 이전 조회를 대체합니다. 명령의 중복 실행 방지는 변경하지 않습니다.</summary>
+    protected async Task<bool> 최신조회실행Async(
+        Func<CancellationToken, Task> action,
+        string successMessage,
+        CancellationToken cancellationToken = default,
+        Func<Exception, string>? errorMessageFactory = null)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        using var current = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var previous = _실행취소;
+        _실행취소 = current;
+        오류메시지 = null;
+        오류 = null;
+        성공메시지 = null;
+        마지막완료시각 = null;
+        상태 = Api작업상태.처리중;
+        OnPropertyChanged(nameof(취소가능));
+
+        try
+        {
+            previous?.Cancel();
+            if (!ReferenceEquals(_실행취소, current)) return false;
+            current.Token.ThrowIfCancellationRequested();
+            await action(current.Token);
+            if (!ReferenceEquals(_실행취소, current)) return false;
+            current.Token.ThrowIfCancellationRequested();
+            성공메시지 = successMessage;
+            상태 = Api작업상태.성공;
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            if (ReferenceEquals(_실행취소, current)) 상태 = Api작업상태.취소됨;
+            return false;
+        }
+        catch (Exception ex)
+        {
+            if (!ReferenceEquals(_실행취소, current)) return false;
+            오류 = Api작업오류.변환(ex);
+            오류메시지 = errorMessageFactory?.Invoke(ex) ?? 오류.메시지;
+            if (!string.Equals(오류메시지, 오류.메시지, StringComparison.Ordinal))
+                오류 = 오류 with { 메시지 = 오류메시지 };
+            상태 = Api작업상태.실패;
+            return false;
+        }
+        finally
+        {
+            if (ReferenceEquals(_실행취소, current))
+            {
+                _실행취소 = null;
+                OnPropertyChanged(nameof(취소가능));
+                마지막완료시각 = DateTimeOffset.Now;
+            }
+        }
+    }
+
+    /// <summary>선택을 비울 때 취소를 무시한 조회의 본문·오류·완료 게시도 함께 무효화합니다.</summary>
+    protected void 최신조회초기화()
+    {
+        var previous = _실행취소;
+        _실행취소 = null;
+        previous?.Cancel();
+        상태 = Api작업상태.대기;
+        작업상태초기화();
+        OnPropertyChanged(nameof(취소가능));
+    }
+
     public void 작업취소() => _실행취소?.Cancel();
 }
 

@@ -39,10 +39,10 @@
             <MudItem xs="12" lg="8">
                 <DriverCurrentTransportOverview Transport="@transport" />
             </MudItem>
-
             <MudItem xs="12" lg="4">
                 <MudStack Spacing="3">
                     <DriverCurrentTransportNextActionPanel Transport="@transport" />
+                    <DriverCurrentTransportTimeline Status="@transport.상태" Class="d-lg-none" />
                     <DriverCurrentTransportNavigation IsBusy="@ViewModel.Refresh.IsBusy"
                                                       OnRefresh="ViewModel.Refresh.RefreshAsync" />
                 </MudStack>

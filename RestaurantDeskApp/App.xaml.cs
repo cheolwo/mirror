@@ -26,9 +26,11 @@ public partial class App : Application
 
         AttachLifecycle(window);
 
-#if WINDOWS && DEBUG
-        window.Width = 430;
-        window.Height = 860;
+#if WINDOWS
+        window.Width = 1440;
+        window.Height = 900;
+        window.MinimumWidth = 1100;
+        window.MinimumHeight = 720;
 #endif
 
         return window;

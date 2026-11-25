@@ -13,7 +13,7 @@ internal sealed class 음식점주문ProgressSession : IDisposable
     private readonly I음식주문ApiClient _foodOrderClient;
     private readonly RestaurantAuthService? _authService;
     private readonly IRestaurantProgressPendingStore _pendingStore;
-    private readonly Dictionary<string, Guid> _operationRequestIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, 음식점주문수락요청> _acceptanceRequests = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, RestaurantProgressPendingRequest> _pendingProgress = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _pendingPersistenceGate = new(1, 1);
     private string? _pendingLoadedOwner;
@@ -40,7 +40,7 @@ internal sealed class 음식점주문ProgressSession : IDisposable
         lock (_gate)
         {
             var item = _inbox.ApplyAcceptedOrder(orderNo, detail, preparationMinutes);
-            RemoveOperationRequestId(orderNo, "acceptance");
+            ForgetAcceptanceRequest(orderNo);
             return item;
         }
     }
@@ -158,7 +158,7 @@ internal sealed class 음식점주문ProgressSession : IDisposable
             {
                 _cacheOwner = owner;
                 _inbox.Clear();
-                _operationRequestIds.Clear();
+                _acceptanceRequests.Clear();
                 _pendingProgress.Clear();
                 _pendingLoadedOwner = null;
             }
@@ -278,7 +278,7 @@ internal sealed class 음식점주문ProgressSession : IDisposable
         lock (_gate)
         {
             _inbox.Clear();
-            _operationRequestIds.Clear();
+            _acceptanceRequests.Clear();
             if (explicitLogout)
             {
                 _pendingProgress.Clear();
@@ -317,29 +317,28 @@ internal sealed class 음식점주문ProgressSession : IDisposable
         return _inbox.GetExpectedRevision(orderNo, actionId);
     }
 
-    public Guid GetOperationRequestId(string orderNo, string operation)
+    public 음식점주문수락요청 GetAcceptanceRequest(string orderNo, Func<Guid, 음식점주문수락요청> create)
     {
-        var key = $"{orderNo.Trim()}::{operation}";
         lock (_gate)
         {
-            if (_operationRequestIds.TryGetValue(key, out var existing))
+            var key = orderNo.Trim();
+            if (!_acceptanceRequests.TryGetValue(key, out var request))
+                _acceptanceRequests[key] = request = create(Guid.NewGuid());
+            // 동일 프로세스의 명시 재시도도 원래 번호·조리시간·입력을 유지한다.
+            return new()
             {
-                return existing;
-            }
-
-            var created = Guid.NewGuid();
-            _operationRequestIds[key] = created;
-            return created;
+                클라이언트요청Id = request.클라이언트요청Id, 처리UserId = request.처리UserId,
+                음식점명 = request.음식점명, 음식점주소 = request.음식점주소,
+                음식점상세주소 = request.음식점상세주소, 음식점위도 = request.음식점위도,
+                음식점경도 = request.음식점경도, 조리예상분 = request.조리예상분,
+                즉시픽업가능여부 = request.즉시픽업가능여부, 수락메모 = request.수락메모
+            };
         }
     }
 
-    private void RemoveOperationRequestId(string orderNo, string operation)
+    public void ForgetAcceptanceRequest(string orderNo)
     {
-        var key = $"{orderNo.Trim()}::{operation}";
-        lock (_gate)
-        {
-            _operationRequestIds.Remove(key);
-        }
+        lock (_gate) _acceptanceRequests.Remove(orderNo.Trim());
     }
 
 }

@@ -19,14 +19,34 @@
             @foreach (var item in CurrentItems)
             {
                 var pageState = IntegratedBetaCatalog.Resolve(item.Href);
-                <MudNavLink Href="@EffectiveHref(item)"
-                            Match="@(item.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)"
-                            Icon="@item.Icon">
-                    <span class="web-navigation-item-copy">
-                        <span>@NavigationTitle(item)</span>
-                        <small class="@IntegratedBetaCatalog.StageCssClass(pageState.Stage)">@StageLabel(pageState.StageLabel)</small>
-                    </span>
-                </MudNavLink>
+                @if (WarehouseBatchMenuSelection.IsBatchMenu(item.Href))
+                {
+                    var selected = WarehouseBatchMenuSelection.IsActive(Navigation.BaseUri, Navigation.Uri, item.Href);
+                    <div class="mud-nav-item">
+                        <a href="@EffectiveHref(item)"
+                           class="@($"mud-nav-link mud-ripple{(selected ? " active" : string.Empty)}")"
+                           aria-current="@(selected ? "page" : null)">
+                            <MudIcon Icon="@item.Icon" Class="mud-nav-link-icon mud-nav-link-icon-default" />
+                            <div class="mud-nav-link-text">
+                                <span class="web-navigation-item-copy">
+                                    <span>@NavigationTitle(item)</span>
+                                    <small class="@IntegratedBetaCatalog.StageCssClass(pageState.Stage)">@StageLabel(pageState.StageLabel)</small>
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <MudNavLink Href="@EffectiveHref(item)"
+                                Match="@(item.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)"
+                                Icon="@item.Icon">
+                        <span class="web-navigation-item-copy">
+                            <span>@NavigationTitle(item)</span>
+                            <small class="@IntegratedBetaCatalog.StageCssClass(pageState.Stage)">@StageLabel(pageState.StageLabel)</small>
+                        </span>
+                    </MudNavLink>
+                }
             }
         </MudNavMenu>
     </div>

@@ -134,7 +134,9 @@ public partial class Menus : ComponentBase, IDisposable
         catch (Exception)
         {
             if (!IsCurrentScope(generation, requestedOwner)) return;
-            message = "메뉴를 조회하지 못했습니다. 연결 상태를 확인한 뒤 다시 시도하세요. 이전 목록은 유지합니다.";
+            message = loaded
+                ? "메뉴를 갱신하지 못했습니다. 마지막으로 조회한 결과를 표시합니다."
+                : "메뉴를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
             severity = Severity.Error;
         }
         finally { if (generation == requestGeneration && !disposed) busy = false; }

@@ -1,8 +1,10 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Ssalddel.Client.Infrastructure.Security;
 using Ssalddel.Contracts.Common;
 using Microsoft.JSInterop;
+using Ssalddel.Ui.Common.Areas.App.Models.Auth;
 using Ssalddel.Ui.Common.Areas.App.Services;
 
 namespace Ssalddel.WebApp.Services;
@@ -88,6 +90,57 @@ public sealed class WebAuthSessionService : ISsalddelAccessTokenProvider, ISsald
                 : $"서버 로그인에 실패했습니다. HTTP {(int)response.StatusCode}: {body}");
         }
 
+        await SaveLoginTokenAsync(response, cancellationToken);
+    }
+
+    internal async Task<string[]> GetSocialLoginProvidersAsync(Uri applicationUri)
+    {
+        if (_httpClient.BaseAddress is not { } apiAddress
+            || !string.Equals(apiAddress.GetLeftPart(UriPartial.Authority), applicationUri.GetLeftPart(UriPartial.Authority),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        try
+        {
+            var providers = await _httpClient.GetFromJsonAsync<string[]>("/api/v1/auth/social/providers");
+            return providers?.Where(소셜로그인ProviderIds.지원여부).ToArray() ?? [];
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException or TaskCanceledException)
+        {
+            return [];
+        }
+    }
+
+    internal async Task<WebSocialLoginResult> CompleteSocialLoginAsync(
+        string flowId, 공통로그인요청? credentials = null)
+    {
+        using var response = await _httpClient.PostAsJsonAsync("/api/v1/auth/social/complete", new
+        {
+            flowId,
+            userNameOrEmail = credentials?.UserNameOrEmail,
+            password = credentials?.Password
+        });
+
+        if (response.StatusCode == HttpStatusCode.Conflict)
+        {
+            var error = await response.Content.ReadFromJsonAsync<SocialLoginError>();
+            if (error?.Code == "social_link_required") return WebSocialLoginResult.LinkRequired;
+        }
+        if (response.StatusCode == HttpStatusCode.Unauthorized) return WebSocialLoginResult.InvalidCredentials;
+        if (response.StatusCode == HttpStatusCode.BadRequest) return WebSocialLoginResult.Expired;
+        if (response.StatusCode == HttpStatusCode.Forbidden) return WebSocialLoginResult.AccountUnavailable;
+        response.EnsureSuccessStatusCode();
+
+        await SaveLoginTokenAsync(response, CancellationToken.None);
+        return WebSocialLoginResult.SignedIn;
+    }
+
+    private sealed record SocialLoginError(string Code);
+
+    private async Task SaveLoginTokenAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
         var token = await response.Content.ReadFromJsonAsync<토큰응답>(cancellationToken);
         if (token is null || string.IsNullOrWhiteSpace(token.AccessToken))
         {
@@ -198,4 +251,13 @@ public sealed class WebAuthSessionService : ISsalddelAccessTokenProvider, ISsald
     {
         Changed?.Invoke();
     }
+}
+
+internal enum WebSocialLoginResult
+{
+    SignedIn,
+    LinkRequired,
+    InvalidCredentials,
+    Expired,
+    AccountUnavailable
 }

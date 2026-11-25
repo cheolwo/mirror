@@ -7,9 +7,26 @@ h1 { font-size:26px; line-height:34px; margin:2px 0 0; font-weight:700; }
 .pos-queue { display:flex; gap:12px; align-items:center; padding:12px 16px; background:#fff; border:1px solid #dce5e9; border-radius:12px; color:inherit; font:inherit; cursor:pointer; }
 .pos-queue strong { font-variant-numeric:tabular-nums; }
 .pos-queue.is-active { color:#0b5c56; background:#eaf5f3; border-color:#0f766e; }
-.pos-queue:focus-visible,.pos-order-select:focus-visible { outline:3px solid #0f766e; outline-offset:2px; }
+.pos-queue:focus-visible,.pos-order-select:focus-visible,.pos-table-select:focus-visible { outline:3px solid #0f766e; outline-offset:2px; }
 .pos-workspace { min-width:0; display:grid; gap:16px; }
 .pos-inbox { min-width:0; display:flex; flex-direction:column; gap:8px; }
+.pos-mobile-orders { display:flex; flex-direction:column; gap:8px; }
+.pos-table-frame { display:none; min-width:0; min-height:0; }
+.pos-order-table { width:100%; min-width:540px; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:14px; background:#fff; }
+.pos-order-table caption { padding:12px; text-align:left; font-weight:600; background:#f7f9fa; color:#586b78; }
+.pos-order-table th { position:sticky; top:0; z-index:1; background:#edf3f3; font-size:13px; font-weight:600; color:#465c69; white-space:nowrap; }
+.pos-order-table th,.pos-order-table td { padding:12px 8px; text-align:left; border-bottom:1px solid #e5ecef; vertical-align:middle; overflow-wrap:anywhere; }
+.pos-order-table .pos-number { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.pos-col-time { width:10%; }.pos-col-number { width:14%; }.pos-col-menu { width:27%; }.pos-col-amount { width:17%; }.pos-col-preparation { width:12%; }.pos-col-status { width:20%; }
+.pos-time { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.pos-order-row { cursor:pointer; }
+.pos-order-row:hover td { background:#f4f8f8; }
+.pos-order-row.is-selected td { background:#eaf5f3; }
+.pos-order-row.is-selected td:first-child { box-shadow:inset 3px 0 #0f766e; }
+.pos-table-select { min-height:48px; width:100%; padding:4px 0; border:0; text-align:left; font:inherit; font-weight:600; color:#0b5c56; background:transparent; cursor:pointer; overflow-wrap:anywhere; }
+.pos-table-select:disabled { cursor:wait; opacity:.65; }
+.pos-table-menu { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.6; }
+.pos-table-status { display:block; font-size:13px; line-height:1.6; font-weight:600; }
 .pos-order { border:1px solid #dce5e9; border-radius:12px; background:white; overflow:hidden; flex-shrink:0; }
 .pos-order.is-selected { border-color:#0f766e; box-shadow:inset 4px 0 #0f766e; background:#f5fbfa; }
 .pos-order-select { width:100%; box-sizing:border-box; padding:16px; display:flex; flex-direction:column; gap:10px; background:transparent; border:0; color:inherit; text-decoration:none; text-align:left; align-items:stretch; font:inherit; cursor:pointer; }
@@ -31,8 +48,10 @@ h1 { font-size:26px; line-height:34px; margin:2px 0 0; font-weight:700; }
 .pos-support summary { cursor:pointer; padding:8px 0; }
 @media(min-width:1100px) {
     .restaurant-pos { height:calc(100dvh - 104px); min-height:560px; }
-    .pos-workspace { grid-template-columns:minmax(280px,.9fr) minmax(440px,1.5fr); flex:1; min-height:0; }
-    .pos-inbox { overflow:auto; scrollbar-gutter:stable; }
+    .pos-workspace { grid-template-columns:minmax(0,1.6fr) minmax(340px,1fr); flex:1; min-height:0; }
+    .pos-inbox { overflow:hidden; min-height:0; }
+    .pos-table-frame { display:block; flex:1; overflow:auto; scrollbar-gutter:stable; border:1px solid #dce5e9; border-radius:12px; }
+    .pos-mobile-orders { display:none; }
     .pos-selected { overflow:hidden; }
     .pos-selected { display:block; }
     .pos-desktop-select { display:flex; }

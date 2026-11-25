@@ -7,8 +7,8 @@
     {
         var photoIndex = index; var photo = Model.Photo.Photos[index];
         <figure><img src="@photo.PreviewUrl" alt="보내기 전 완료 사진 @(index + 1)" /><figcaption>사진 @(index + 1)</figcaption>
-            <button type="button" disabled="@Model.PhotoInputsLocked" @onclick="() => Retake(photoIndex)">이 사진 다시 촬영</button>
-            <button type="button" disabled="@Model.PhotoInputsLocked" @onclick="() => Model.RemovePhoto(photoIndex)">사진 제거</button></figure>
+            <button type="button" disabled="@Model.PhotoInputsLocked" aria-label="이 사진 다시 촬영 (사진 @(photoIndex + 1))" @onclick="() => Retake(photoIndex)">이 사진 다시 촬영</button>
+            <button type="button" disabled="@Model.PhotoInputsLocked" aria-label="사진 제거 (사진 @(photoIndex + 1))" @onclick="() => Model.RemovePhoto(photoIndex)">사진 제거</button></figure>
     }
     <button type="button" disabled="@(!Model.Photo.CaptureSupported || Model.PhotoInputsLocked || !Model.CanEdit || Model.Photo.Photos.Count >= 3 || Work is null)" @onclick="Capture">@(Model.Photo.HasPhotos ? "사진 추가 촬영" : "사진 촬영")</button>
     <p>JPEG·PNG 1~3장, 한 장당 5MB 이하입니다. 사진만 전송해도 업무가 완료되지는 않습니다.</p>

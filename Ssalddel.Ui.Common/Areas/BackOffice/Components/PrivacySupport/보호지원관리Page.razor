@@ -83,7 +83,23 @@
                     </fieldset></form>
                 }
             </section>
-            <section><h2>처리 이력</h2>@if (row.History.Count == 0) { <p class="support-muted">추가 처리 기록이 없습니다.</p> }@foreach (var entry in row.History) { <p>@ActionLabel(entry.Action) <span class="support-muted">· @Time(entry.RecordedAtUtc)</span></p> }@if (row.Notifications.Count > 0) { <hr /><h3>안내 증빙 기록</h3>@foreach (var entry in row.Notifications) { <p>@NoticeLabel(entry.Kind) · @RecipientLabel(entry.RecipientRoleCode)<span class="support-muted"> · @(entry.RecordedDeliveredAtUtc is { } time ? Time(time) : "시각 미확인")</span></p> } }</section>
+            <section>
+                <h2>처리 이력</h2>
+                @if (row.History.Count == 0) { <p class="support-muted">추가 처리 기록이 없습니다.</p> }
+                @foreach (var entry in row.History)
+                {
+                    <p>@ActionLabel(entry.Action) <span class="support-muted support-record-time">· @Time(entry.RecordedAtUtc)</span></p>
+                }
+                @if (row.Notifications.Count > 0)
+                {
+                    <hr />
+                    <h3>안내 증빙 기록</h3>
+                    @foreach (var entry in row.Notifications)
+                    {
+                        <p>@NoticeLabel(entry.Kind) · @RecipientLabel(entry.RecipientRoleCode) <span class="support-muted support-record-time">· @(entry.RecordedDeliveredAtUtc is { } time ? Time(time) : "시각 미확인")</span></p>
+                    }
+                }
+            </section>
             <nav><a href="@ListReturnHref">요청 목록으로</a><button disabled="@(Model.IsBusy || Model.HasPending)" @onclick="ReloadAsync">최신 상태 조회</button></nav>
         }
         else if (!Model.IsBusy) { <section><h2>사건을 확인하지 못했습니다</h2><a href="@ListReturnHref">요청 목록으로</a></section> }

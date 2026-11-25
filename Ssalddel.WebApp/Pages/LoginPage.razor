@@ -1,6 +1,8 @@
 @page "/login"
+@using System.Text.Json
 @inject WebAuthSessionService AuthSession
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <WebPageHeader Eyebrow="Community Account"
                Title="로그인과 선택 회원가입"
@@ -32,14 +34,23 @@
     <MudItem xs="12" md="9" lg="7">
         <MudTabs Rounded="true" Elevation="0">
             <MudTabPanel Text="로그인">
-                <Ssalddel공통로그인Panel 제목="살뜰 로그인"
+                <Ssalddel공통로그인Panel @key="IsLinkingSocialAccount"
+                                      제목="살뜰 로그인"
                                       설명="이미 계정이 있거나 로그인 전용 기능이 필요할 때 이용합니다."
-                                      초기아이디="web-user@ssalddel.local"
+                                      초기아이디="@(IsLinkingSocialAccount ? string.Empty : "web-user@ssalddel.local")"
+                                      일반로그인버튼텍스트="@(IsLinkingSocialAccount ? "계정 연결하고 로그인" : "로그인")"
                                       상태메시지="@LoginStatusMessage"
                                       상태Severity="@LoginStatusSeverity"
-                                      개발힌트목록="Hints"
+                                      IsBusy="@LoginBusy"
+                                      개발힌트목록="@(IsLinkingSocialAccount ? [] : Hints)"
+                                      소셜로그인표시="@(!IsLinkingSocialAccount)"
+                                      활성소셜로그인Provider목록="@SocialProviders"
                                       OnPasswordLogin="HandlePasswordLoginAsync"
                                       OnSocialLogin="HandleSocialLoginAsync">
+                    @if (IsLinkingSocialAccount)
+                    {
+                        <MudButton Disabled="@LoginBusy" OnClick="CancelSocialLoginAsync">계정 연결 취소</MudButton>
+                    }
                     <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
                         로그인에 성공하면 브라우저 localStorage에 웹앱용 토큰을 보관하고, 대표 역할에 맞춰 웹앱 레이아웃 색상이 바뀝니다.
                     </MudAlert>
@@ -60,7 +71,15 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = "social")]
+    public string? SocialResult { get; set; }
+
+    private const string SocialAttemptKey = "ssalddel.web.social-login.v1";
     private static readonly IReadOnlyList<string> Hints = ["서버관리자", "화주", "기사", "창고관리자", "주문자", "흥여회"];
+    private IReadOnlyList<string> SocialProviders { get; set; } = [];
+    private SocialLoginAttempt? SocialAttempt { get; set; }
+    private bool IsLinkingSocialAccount { get; set; }
+    private bool LoginBusy { get; set; }
     private string? LoginStatusMessage { get; set; }
     private Severity LoginStatusSeverity { get; set; } = Severity.Info;
     private string? RegistrationStatusMessage { get; set; }
@@ -71,7 +90,7 @@
 
     private string? SafeReturnHref()
     {
-        var returnUrl = ReturnUrl?.Trim();
+        var returnUrl = (SocialAttempt?.ReturnUrl ?? ReturnUrl)?.Trim();
         if (string.IsNullOrWhiteSpace(returnUrl)
             || !returnUrl.StartsWith("/", StringComparison.Ordinal)
             || returnUrl.StartsWith("//", StringComparison.Ordinal)
@@ -91,6 +110,11 @@
         var baseUri = new Uri(Navigation.BaseUri);
         var absolute = Navigation.ToAbsoluteUri(returnUrl);
         if (baseUri.IsBaseOf(absolute)) return absolute.ToString();
+        if (baseUri.AbsolutePath == "/roles/01/"
+            && string.Equals(baseUri.GetLeftPart(UriPartial.Authority), absolute.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase)
+            && (decodedPath is "/roles/05/warehouse/general/outbound-plan-review" or "/roles/05/work/outbound/plans"
+                || decodedPath == "/roles/03" + SalesOrderPageRoutes.Root))
+            return absolute.ToString();
         // 기존 역할 앱의 절대 경로는 유지하고, 공통 canonical route는 현재 앱 안에서 해석합니다.
         if (returnUrl.StartsWith("/roles/", StringComparison.OrdinalIgnoreCase)) return null;
         var withinApp = Navigation.ToAbsoluteUri(returnUrl.TrimStart('/'));
@@ -105,16 +129,30 @@
         }
 
         await AuthSession.RestoreAsync();
-        if (AuthSession.IsLoggedIn)
+        if (SocialResult is "complete" or "failed")
+        {
+            await HandleSocialReturnAsync();
+        }
+        else if (AuthSession.IsLoggedIn)
         {
             LoginStatusSeverity = Severity.Success;
             LoginStatusMessage = $"{AuthSession.UserName ?? AuthSession.UserId} 계정의 서버 인증 토큰을 복구했습니다. 현재 레이아웃 역할: {AuthSession.CurrentTheme.RoleLabel}";
-            StateHasChanged();
         }
+
+        SocialProviders = await AuthSession.GetSocialLoginProvidersAsync(new Uri(Navigation.BaseUri));
+        StateHasChanged();
     }
 
     private async Task HandlePasswordLoginAsync(공통로그인요청 request)
     {
+        if (LoginBusy) return;
+        if (IsLinkingSocialAccount)
+        {
+            await CompleteSocialLoginAsync(request);
+            return;
+        }
+
+        LoginBusy = true;
         try
         {
             LoginStatusSeverity = Severity.Info;
@@ -130,6 +168,10 @@
         {
             LoginStatusSeverity = Severity.Error;
             LoginStatusMessage = ex.Message;
+        }
+        finally
+        {
+            LoginBusy = false;
         }
     }
 
@@ -163,12 +205,119 @@
         }
     }
 
-    private Task HandleSocialLoginAsync(공통소셜로그인요청 request)
+    private async Task HandleSocialLoginAsync(공통소셜로그인요청 request)
     {
-        LoginStatusSeverity = Severity.Info;
-        LoginStatusMessage = $"{request.ProviderDisplayName} OAuth 연결은 서버 인증 API 연결 단계에서 활성화됩니다.";
-        return Task.CompletedTask;
+        if (LoginBusy || !SocialProviders.Contains(request.ProviderId, StringComparer.Ordinal)) return;
+
+        var flowId = Guid.NewGuid().ToString("N");
+        var returnPath = SafeReturnHref() is { } href ? new Uri(href).PathAndQuery : null;
+        var attempt = new SocialLoginAttempt(flowId, request.ProviderDisplayName, returnPath);
+        LoginBusy = true;
+        try
+        {
+            await JS.InvokeVoidAsync("sessionStorage.setItem", SocialAttemptKey, JsonSerializer.Serialize(attempt));
+            var surface = new Uri(Navigation.BaseUri).AbsolutePath == "/roles/01/" ? "community" : "integrated";
+            Navigation.NavigateTo($"/api/v1/auth/social/{request.ProviderId}/start?surface={surface}&flowId={flowId}", forceLoad: true);
+        }
+        catch (JSException)
+        {
+            LoginBusy = false;
+            LoginStatusSeverity = Severity.Error;
+            LoginStatusMessage = "브라우저에서 로그인 요청을 저장할 수 없습니다. 일반 로그인을 이용해 주세요.";
+        }
     }
+
+    private async Task HandleSocialReturnAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("sessionStorage.getItem", SocialAttemptKey);
+            SocialAttempt = json is null ? null : JsonSerializer.Deserialize<SocialLoginAttempt>(json);
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            SocialAttempt = null;
+        }
+
+        if (SocialResult == "complete" && SocialAttempt is not null)
+        {
+            await CompleteSocialLoginAsync();
+            return;
+        }
+
+        LoginStatusSeverity = Severity.Warning;
+        LoginStatusMessage = "소셜 로그인을 완료하지 못했습니다. 다시 시도하거나 일반 로그인을 이용해 주세요.";
+        await ClearSocialAttemptAsync();
+    }
+
+    private async Task CompleteSocialLoginAsync(공통로그인요청? credentials = null)
+    {
+        if (SocialAttempt is not { } attempt) return;
+
+        LoginBusy = true;
+        try
+        {
+            switch (await AuthSession.CompleteSocialLoginAsync(attempt.FlowId, credentials))
+            {
+                case WebSocialLoginResult.SignedIn:
+                    var destination = SafeReturnHref() ?? CommunityHref;
+                    await JS.InvokeVoidAsync("sessionStorage.removeItem", SocialAttemptKey);
+                    Navigation.NavigateTo(destination, replace: true);
+                    break;
+                case WebSocialLoginResult.LinkRequired:
+                    IsLinkingSocialAccount = true;
+                    LoginStatusSeverity = Severity.Info;
+                    LoginStatusMessage = $"{attempt.ProviderName}을 처음 이용합니다. 연결할 살뜰 계정의 아이디와 비밀번호를 입력해 주세요.";
+                    break;
+                case WebSocialLoginResult.InvalidCredentials:
+                    LoginStatusSeverity = Severity.Warning;
+                    LoginStatusMessage = "살뜰 계정의 아이디 또는 비밀번호를 확인해 주세요.";
+                    break;
+                default:
+                    LoginStatusSeverity = Severity.Warning;
+                    LoginStatusMessage = "소셜 계정을 연결할 수 없거나 인증 시간이 지났습니다. 다시 시도해 주세요.";
+                    await ClearSocialAttemptAsync();
+                    break;
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or JSException or InvalidOperationException or TaskCanceledException)
+        {
+            LoginStatusSeverity = Severity.Error;
+            LoginStatusMessage = "소셜 로그인을 마치지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
+            await ClearSocialAttemptAsync();
+        }
+        finally
+        {
+            LoginBusy = false;
+        }
+    }
+
+    private Task CancelSocialLoginAsync()
+    {
+        LoginStatusMessage = null;
+        return ClearSocialAttemptAsync();
+    }
+
+    private async Task ClearSocialAttemptAsync()
+    {
+        var returnPath = SafeReturnHref() is { } href ? new Uri(href).PathAndQuery : null;
+        SocialAttempt = null;
+        IsLinkingSocialAccount = false;
+        try
+        {
+            await JS.InvokeVoidAsync("sessionStorage.removeItem", SocialAttemptKey);
+        }
+        catch (JSException)
+        {
+            // The server ticket remains time-limited even if browser storage is unavailable.
+        }
+
+        var loginPath = Navigation.ToAbsoluteUri("login").AbsolutePath;
+        var url = returnPath is null ? loginPath : $"{loginPath}?returnUrl={Uri.EscapeDataString(returnPath)}";
+        Navigation.NavigateTo(url, replace: true);
+    }
+
+    private sealed record SocialLoginAttempt(string FlowId, string ProviderName, string? ReturnUrl);
 
     private void NavigateToReturnUrl()
     {

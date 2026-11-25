@@ -1,0 +1,193 @@
+@using Ssalddel.Contracts.Common.Inventory
+@using Ssalddel.Ui.Common.Areas.App.ViewModels
+@using Microsoft.Extensions.DependencyInjection
+@implements IDisposable
+@inject IServiceProvider Services
+
+<section class="batch-workspace" aria-label="단계별 출고 처리 묶음">
+    <nav class="batch-stage-menu" aria-label="출고 업무 단계">
+        @for (var index = 0; index < Stages.Length; index++)
+        {
+            var stage = Stages[index];
+            <a href="@StageHref(stage.Code)" aria-current="@(State.Stage == stage.Code ? "page" : null)"><span>@(index + 1)</span>@stage.Label</a>
+        }
+    </nav>
+    <header><h2 tabindex="-1" @ref="_heading">@Title</h2><a href="warehouse/general/outbound-plan-review">출고예정 검토·회차 현황</a>@if (WorkforceHref is not null && _model?.Snapshot is not null) { <a href="@WorkforceHref">이 공정의 인력 계획</a> }</header>
+    @if (_model is not { } model)
+    {
+        <p role="status">창고의 업무 단계를 준비하고 있습니다.</p>
+    }
+    else if (!model.IsAuthenticated)
+    {
+        <p role="alert">로그인 후 창고와 처리 묶음을 다시 확인해 주세요.</p>
+    }
+    else
+    {
+        @if (model.IsLoading) { <p role="status">선택한 단계의 처리 묶음을 확인하고 있습니다.</p> }
+        @if (_detailLoading) { <p role="status">선택한 출고의 검토 내역을 확인하고 있습니다.</p> }
+        @if (model.Error is { } error) { <p role="alert" class="batch-error">@error</p> }
+        @if (model.Warning is { } warning) { <p role="status" class="batch-warning">@warning</p> }
+        @if (!model.WarehousesLoaded && !model.IsLoading) { <button type="button" @onclick="RetryAsync">창고 목록 다시 확인</button> }
+        @if (model.WarehousesLoaded && model.Warehouses.Count == 0) { <p role="status">현재 계정에서 조회할 창고가 없습니다.</p> }
+        @if (OutboundPlanId is > 0)
+        {
+            <button type="button" class="batch-back" @onclick="ReturnToGroupAsync">묶음 구성 내역으로</button>
+            @if (CanShowDetail)
+            {
+                <SsalddelOutboundPlanReviewWorkspace SingleTask="true" OutboundPlanId="OutboundPlanId" ExternalViewModel="_review" DraftHref="@($"warehouse/general/transport-request-draft?outboundPlanId={OutboundPlanId}")" />
+            }
+            else if (!_detailLoading) { <p role="alert">선택한 묶음의 출고를확인하지 못했습니다. 구성 내역으로 돌아가 다시 선택해 주세요.</p>@if (MemberCanOpen(OutboundPlanId)) { <button type="button" @onclick="RetryPlanAsync">출고 검토 다시 확인</button> } }
+        }
+        else
+        {
+            @if (model.BatchKey is null)
+            {
+                <details class="batch-query-panel" open="@(model.Snapshot is null)">
+                <summary>@(model.Snapshot is null ? "창고·조회 구간 선택" : "조회 조건 바꾸기")</summary>
+                <form class="batch-query" @onsubmit="QueryAsync" @onsubmit:preventDefault>
+                    <label>창고<select aria-label="창고" @bind="model.WarehouseId" disabled="@(!model.WarehousesLoaded || model.IsLoading)"><option value="0">창고 선택</option>@foreach (var warehouse in model.Warehouses) { <option value="@warehouse.Id">@warehouse.창고명</option> }</select></label>
+                    <label>조회 시작 · 한국 시간<input type="datetime-local" @bind="model.StartLocal" disabled="@model.IsLoading" /></label>
+                    <label>조회 종료 · 한국 시간<input type="datetime-local" @bind="model.EndLocal" disabled="@model.IsLoading" /></label>
+                    <button type="submit" disabled="@(model.IsLoading || !model.WarehousesLoaded)">처리 묶음 조회</button>
+                </form>
+                </details>
+            }
+            @if (model.Snapshot is { } report)
+            {
+                <p class="batch-caption">@report.WarehouseName · @Time(report.PeriodStartUtc) ~ @Time(report.PeriodEndUtc)<br />확인 @Time(report.ObservedAtUtc) · 선택 구간·이전 미완료</p>
+            }
+            <SsalddelOutboundWorkflowPanel Model="model" StageEntry="true" BatchHref="GroupHref" NavigationChanged="PublishAsync" OnPlanSelected="OpenPlanAsync" />
+            @if (!model.IsLoading && model.Error is null && model.WarehouseId == 0 && model.Warehouses.Count > 0) { <p role="status">창고와 조회 구간을 선택해 이 단계의 처리 묶음을 확인해 주세요.</p> }
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public OutboundBatchNavigationState State { get; set; } = new(OutboundWorkflowStageCodes.Picking);
+    [Parameter] public long? OutboundPlanId { get; set; }
+    [Parameter] public string? WorkforceHref { get; set; }
+    [Parameter] public EventCallback<OutboundBatchNavigationState> OnNavigationChanged { get; set; }
+    [Parameter] public EventCallback<long?> OnPlanSelected { get; set; }
+    private 출고회차ViewModel? _model;
+    private 출고예정검토PageViewModel? _review;
+    private OutboundBatchNavigationState? _applied;
+    private long? _appliedPlan;
+    private long _generation;
+    private bool _disposed;
+    private bool _detailLoading;
+    private OutboundPeriodResponse? _detailSnapshot;
+    private ElementReference _heading;
+    private (OutboundBatchNavigationState State, long? Plan)? _focus;
+    private static readonly (string Code, string Label)[] Stages = [(OutboundWorkflowStageCodes.Review, "출고 검토"), (OutboundWorkflowStageCodes.Picking, "피킹"), (OutboundWorkflowStageCodes.Packing, "포장"), (OutboundWorkflowStageCodes.Handoff, "운송 인계")];
+    private string StageLabel => Stages.FirstOrDefault(stage => stage.Code == State.Stage).Label ?? "출고";
+    private string Title => OutboundPlanId is > 0 ? "출고 검토" : State.BatchKey is null ? $"{StageLabel} 처리 묶음" : $"{StageLabel} 묶음 상세";
+    private bool CanShowDetail => !_detailLoading && _detailSnapshot is not null && ReferenceEquals(_detailSnapshot, _model?.Snapshot)
+        && MemberCanOpen(OutboundPlanId) && _review?.상세.조회대상Id == OutboundPlanId && _review?.상세.항목?.OutboundPlanId == OutboundPlanId;
+    private bool MemberCanOpen(long? id) => id is > 0 && _model?.Snapshot?.Workflow?.SelectedGroup?.Members.Any(member => member.OutboundPlanId == id && member.CanOpenReview) == true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_applied == State && _appliedPlan == OutboundPlanId) return;
+        var current = ++_generation;
+        _focus = (State, OutboundPlanId);
+        _detailSnapshot = null;
+        _detailLoading = false;
+        _review?.선택해제();
+        if (_model is null)
+        {
+            _model = Services.GetRequiredService<출고회차ViewModel>();
+            _model.PropertyChanged += ModelChanged;
+        }
+        await _model.InitializeAsync();
+        if (_disposed || current != _generation) return;
+        _applied = State;
+        _appliedPlan = OutboundPlanId;
+        await _model.LoadNavigationAsync(State);
+        if (_disposed || current != _generation) return;
+        if (OutboundPlanId is > 0) await LoadPlanAsync(OutboundPlanId.Value, current);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focus is { } target && target.State == State && target.Plan == OutboundPlanId
+            && _model?.IsLoading == false && !_detailLoading)
+        { _focus = null; await _heading.FocusAsync(); }
+    }
+
+    private async Task LoadPlanAsync(long id, long current)
+    {
+        if (!MemberCanOpen(id)) return;
+        var snapshot = _model!.Snapshot;
+        _review ??= Services.GetRequiredService<출고예정검토PageViewModel>();
+        _detailLoading = true;
+        try
+        {
+            var loaded = await _review.대상선택Async(id);
+            if (_disposed || current != _generation || !ReferenceEquals(snapshot, _model.Snapshot) || !MemberCanOpen(id))
+            { if (current == _generation) _review.선택해제(); return; }
+            if (loaded && _review.상세.항목?.OutboundPlanId == id) _detailSnapshot = snapshot;
+        }
+        finally { if (current == _generation) _detailLoading = false; }
+    }
+
+    private string StageHref(string stage) => (State with { Stage = stage, BatchKey = null, BatchPage = 0, MemberPage = 0, PlanPage = 0 }).Href().TrimStart('/');
+    private string GroupHref(string key) => (_model is null ? State : OutboundBatchNavigationState.FromModel(_model) with { BatchKey = key, MemberPage = 0 }).Href().TrimStart('/');
+    private async Task QueryAsync()
+    {
+        var pending = _model!.LoadAsync();
+        var version = _model.QueryVersion;
+        await pending;
+        if (!_disposed && version == _model.QueryVersion) await PublishAsync();
+    }
+    private async Task RetryAsync()
+    {
+        var current = _generation;
+        var pending = _model!.InitializeAsync();
+        var version = _model.QueryVersion;
+        await pending;
+        if (!_disposed && current == _generation && version == _model.QueryVersion && _model.WarehousesLoaded)
+            await _model.LoadNavigationAsync(State);
+    }
+    private async Task PublishAsync()
+    {
+        if (_model?.Snapshot is null || _model.Error is not null) return;
+        _applied = OutboundBatchNavigationState.FromModel(_model);
+        _appliedPlan = null;
+        _focus = (_applied, null);
+        await OnNavigationChanged.InvokeAsync(_applied);
+    }
+    private async Task OpenPlanAsync(long id)
+    {
+        if (_detailLoading || _model?.IsLoading != false || !MemberCanOpen(id)) return;
+        var current = ++_generation;
+        _appliedPlan = id;
+        _detailSnapshot = null;
+        await LoadPlanAsync(id, current);
+        if (current == _generation && MemberCanOpen(id))
+        { _focus = (_applied ?? State, id); await OnPlanSelected.InvokeAsync(id); }
+    }
+    private Task RetryPlanAsync() => OutboundPlanId is > 0 ? LoadPlanAsync(OutboundPlanId.Value, ++_generation) : Task.CompletedTask;
+    private async Task ReturnToGroupAsync()
+    {
+        _generation++;
+        _detailLoading = false;
+        _detailSnapshot = null;
+        _review?.선택해제();
+        _appliedPlan = null;
+        _focus = (_applied ?? State, null);
+        await OnPlanSelected.InvokeAsync(null);
+    }
+    private void ModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => _ = InvokeAsync(() =>
+    {
+        if (_detailSnapshot is not null && !ReferenceEquals(_detailSnapshot, _model?.Snapshot))
+        { _detailSnapshot = null; _review?.선택해제(); }
+        if (!_disposed) StateHasChanged();
+    });
+    private static string Time(DateTime value) => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc)).ToOffset(TimeSpan.FromHours(9)).ToString("MM-dd HH:mm");
+    public void Dispose()
+    {
+        _disposed = true;
+        _generation++;
+        if (_model is not null) { _model.PropertyChanged -= ModelChanged; _model.Dispose(); }
+    }
+}

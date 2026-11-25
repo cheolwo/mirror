@@ -43,6 +43,8 @@ internal static class ShipperPlatformModule
                 () => client.BaseAddress);
         });
         services.AddScoped<AuthApiService>();
+        services.AddScoped<ICargoDispatchExplanationClient, ShipperCargoDispatchExplanationClient>();
+        services.AddTransient<Ssalddel.Ui.Common.Areas.App.ViewModels.CargoDispatchExplanationFeedbackViewModel>();
         services.AddScoped<LogisticsServiceContractClient>();
         services.AddSingleton<I꾸미기보유권LocalStore, Maui꾸미기보유권LocalStore>();
         services.AddScoped<꾸미기보유권동기화Service>();

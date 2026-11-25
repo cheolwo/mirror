@@ -383,6 +383,16 @@
 .orderer-mobile-shell ::deep .food-order-history {
     padding: 24px 16px !important;
 }
+
+/* The Orderer shell stays narrow inside wide windows. */
+.orderer-mobile-shell ::deep .food-order-history .food-order-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.orderer-mobile-shell ::deep .food-order-history .food-order-layout--detail .food-order-main {
+    display: none;
+}
+
 .orderer-mobile-shell ::deep .food-order-workspace .food-order-panel {
     padding: 16px;
     border-radius: 16px;

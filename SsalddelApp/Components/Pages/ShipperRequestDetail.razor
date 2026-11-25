@@ -14,7 +14,14 @@
                              HomeHref="@ShipperRoutes.ShipperHome"
                              NewRequestHref="@ShipperRoutes.Request"
                              RefreshRequested="RefreshAsync"
-                             LookupRequested="OpenRequest" />
+                             LookupRequested="OpenRequest">
+    <DispatchExplanation>
+        @if (PageModel.State.Request is { } current)
+        {
+            <CargoDispatchExplanationFeedbackPanel RequestId="@current.RequestId" />
+        }
+    </DispatchExplanation>
+</ShipperRequestSummaryScreen>
 
 @code {
     [Parameter] public string? RequestId { get; set; }

@@ -142,9 +142,13 @@
                                 입고 예정 다시 조회
                             </MudButton>
                         }
-                        <WarehouseExpectedInboundGrid ViewModel="@ViewModel.입고예정조회"
-                                                      ReloadVersion="@ViewModel.목록갱신번호"
-                                                      OnSelect="OpenInbound" />
+                        <div class="expected-inbounds-results">
+                            <WarehouseExpectedInboundGrid ViewModel="@ViewModel.입고예정조회"
+                                                          ReloadVersion="@ViewModel.목록갱신번호"
+                                                          SearchPlaceholder="업체·상품·SKU·참조번호"
+                                                          ShowMobileSelectLabel="true"
+                                                          OnSelect="OpenInbound" />
+                        </div>
                     </MudPaper>
                 }
                 else

@@ -45,6 +45,10 @@
     [
         new("메뉴 관리", "메뉴와 가격을 등록하고, 공개 여부와 품절 상태를 관리하세요.", "/menus", Icons.Material.Filled.RestaurantMenu, Color.Primary),
         new("신규 주문 수신함", "실시간으로 받은 주문을 조회하고 정확한 주문번호의 상세 화면으로 이동합니다.", "/orders", Icons.Material.Filled.ReceiptLong, Color.Primary),
-        new("조리시간 기본값", "음식점 전체 기본시간과 상품별 조리시간을 저장해 신규 주문 추천값으로 사용합니다.", "/settings/preparation-times", Icons.Material.Filled.Timer, Color.Info)
+        new("조리시간 기본값", "음식점 전체 기본시간과 상품별 조리시간을 저장해 신규 주문 추천값으로 사용합니다.", "/settings/preparation-times", Icons.Material.Filled.Timer, Color.Info),
+        new("빌지 출력 설정", "조리용·포장용 두 장 또는 조리·포장용 한 장을 이 기기에 설정합니다.", "/settings/receipts", Icons.Material.Filled.Print, Color.Info),
+#if DEBUG
+        new("가맹 운영 미리보기", "본부와 점포가 주고받는 정보와 카페의 재고·발주 예시를 살펴보세요.", "/store/franchise-operations", Icons.Material.Filled.Store, Color.Info),
+#endif
     ];
 }

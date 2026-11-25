@@ -25,6 +25,9 @@ public sealed partial class 입고검수대상목록ViewModel(
     [NotifyPropertyChangedFor(nameof(비어있음))]
     public partial bool 초기화됨 { get; private set; }
 
+    public (string? Search, string InspectionStatus) 적용조회조건 { get; private set; }
+        = (null, 입고검수조회상태코드.대기);
+
     public IReadOnlyList<입고검수대상목록항목응답> 항목목록 => 응답.Items;
     public IReadOnlyList<string> 조회상태목록 => 입고검수조회상태코드.전체목록;
     public bool 비어있음 => 초기화됨 && !오류발생 && 항목목록.Count == 0;
@@ -40,13 +43,16 @@ public sealed partial class 입고검수대상목록ViewModel(
         var succeeded = await 작업실행Async(
             async token =>
             {
-                응답 = await service.목록조회Async(new 입고검수대상목록조회요청
+                var request = new 입고검수대상목록조회요청
                 {
                     Search = string.IsNullOrWhiteSpace(검색어) ? null : 검색어.Trim(),
                     InspectionStatus = 입고검수조회상태코드.Normalize(조회상태),
                     Page = targetPage,
                     PageSize = 12
-                }, token);
+                };
+                var response = await service.목록조회Async(request, token);
+                적용조회조건 = (request.Search, request.InspectionStatus);
+                응답 = response;
             },
             "입고 검수 대상 목록을 조회했습니다.",
             cancellationToken,

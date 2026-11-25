@@ -16,6 +16,10 @@
     gap: 16px;
 }
 
+.shipper-summary__hero > div {
+    overflow-wrap: anywhere;
+}
+
 .shipper-summary__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -78,6 +82,10 @@
     .shipper-summary__hero {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .shipper-summary__route strong {
+        word-break: keep-all;
     }
 
     .shipper-summary__lookup {

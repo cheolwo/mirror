@@ -71,6 +71,7 @@
                     <MudButton Variant="@(SelectedOrderNo == order.주문번호 ? Variant.Filled : Variant.Outlined)"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.ReceiptLong"
+                               aria-label="@($"주문 상세 {order.주문번호}")"
                                OnClick="@(() => OrderSelected.InvokeAsync(order.주문번호))">
                         주문 상세
                     </MudButton>

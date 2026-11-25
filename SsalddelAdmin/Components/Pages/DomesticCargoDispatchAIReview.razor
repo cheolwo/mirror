@@ -2,6 +2,7 @@
 @page "/admin/freight-delivery/dispatch-ai-review"
 @rendermode InteractiveServer
 @using System.Net
+@using SsalddelAdmin.Components.DispatchTraining
 @inject DomesticCargoDispatchAIReviewAdminService ReviewService
 @inject 관리자인증세션Service AdminSession
 @inject NavigationManager NavigationManager
@@ -57,6 +58,27 @@
     .review-pin.selected {
         outline: 3px solid #111827;
         outline-offset: 2px;
+    }
+
+    @@media (max-width: 600px) {
+        .dispatch-review-map {
+            min-height: 360px;
+        }
+
+        /* 좁은 지도에서도 핀의 글자 크기와 핀 사이 간격을 확보합니다. */
+        .review-pin {
+            width: 24px;
+            height: 24px;
+        }
+
+        .review-pin.driver {
+            width: 27px;
+            height: 27px;
+        }
+
+        .review-pin.selected {
+            outline-offset: 1px;
+        }
     }
 </style>
 
@@ -144,7 +166,7 @@
 
                                 @foreach (var driver in workspace.Drivers)
                                 {
-                                    <div class="@MarkerClass("driver", string.Equals(selectedDriverId, driver.DriverId, StringComparison.Ordinal))"
+                                    <div class="@MarkerClass("driver", IsSelectedDriver(driver.DriverId))"
                                          style="@MarkerStyle(driver.Latitude, driver.Longitude)"
                                          title="@($"{driver.DriverName} · {driver.VehicleType}")">
                                         기
@@ -163,6 +185,7 @@
                                                     <MudButton Size="Size.Small"
                                                                Variant="@RequestVariant(item.RequestId)"
                                                                Color="Color.Primary"
+                                                               aria-pressed="@(IsSelectedRequest(item.RequestId) ? "true" : "false")"
                                                                OnClick="@(() => ToggleRequest(item.RequestId))">
                                                         선택
                                                     </MudButton>
@@ -194,7 +217,7 @@
                                             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Spacing="2" Style="flex-wrap: wrap;">
                                                 <MudStack Spacing="0">
                                                     <MudText Typo="Typo.subtitle2">@bundle.BundleKey</MudText>
-                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@bundle.BundleType · @bundle.BundleSize 건 · 기사 @DisplayDriver(bundle.SuggestedDriverId)</MudText>
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@bundle.BundleType · @bundle.BundleSize 건 · 추천 기사 @DisplayDriver(bundle.SuggestedDriverId)</MudText>
                                                 </MudStack>
                                                 <MudButton Size="Size.Small"
                                                            Variant="@BundleVariant(bundle.BundleKey)"
@@ -206,6 +229,7 @@
                                             </MudStack>
 
                                             <MudText Typo="Typo.body2">@bundle.Reason</MudText>
+                                            <DomesticCargoBundleMembers Bundle="@bundle" Requests="@workspace.Requests" />
                                             <MudStack Row="true" Spacing="1" Style="flex-wrap: wrap;">
                                                 @foreach (var badge in bundle.Badges)
                                                 {
@@ -247,6 +271,7 @@
                                     </MudSelect>
                                     <MudTextField Label="판정 메모"
                                                   @bind-Value="adminNote"
+                                                  Immediate="true"
                                                   Variant="Variant.Outlined"
                                                   Lines="3" />
                                     <MudButton Variant="Variant.Filled"
@@ -284,7 +309,7 @@
 
     private enum WorkspaceReadState { Loading, Ready, Failed, LoginRequired, AccessDenied }
 
-    private static readonly string LoginHref = $"/login?returnUrl={Uri.EscapeDataString("/dispatch/ai-review")}";
+    private static readonly string LoginHref = $"/login?returnUrl={Uri.EscapeDataString("/admin/freight-delivery/dispatch-ai-review")}";
     private bool CanReload => !isSaving && readState is WorkspaceReadState.Ready or WorkspaceReadState.Failed;
 
     protected override async Task OnInitializedAsync()
@@ -325,6 +350,7 @@
 
     private void SelectInitialBundle()
     {
+        if (!IsCurrentDriver(selectedDriverId)) selectedDriverId = string.Empty;
         selectedRequestIds.Clear();
         var first = workspace.Bundles.FirstOrDefault(x => x.IsAISuggested && x.IsBundleAvailable)
                     ?? workspace.Bundles.FirstOrDefault(x => x.IsBundleAvailable);
@@ -335,7 +361,7 @@
         }
 
         selectedBundleKey = string.Empty;
-        selectedDriverId = workspace.Drivers.FirstOrDefault()?.DriverId ?? string.Empty;
+        selectedDriverId = workspace.Drivers.FirstOrDefault(driver => IsCurrentDriver(driver.DriverId))?.DriverId ?? string.Empty;
         foreach (var id in workspace.Requests.Take(1).Select(x => x.RequestId))
         {
             selectedRequestIds.Add(id);
@@ -351,10 +377,11 @@
             selectedRequestIds.Add(id);
         }
 
-        if (!string.IsNullOrWhiteSpace(bundle.SuggestedDriverId))
+        if (IsCurrentDriver(bundle.SuggestedDriverId))
         {
-            selectedDriverId = bundle.SuggestedDriverId;
+            selectedDriverId = bundle.SuggestedDriverId!;
         }
+        else if (!IsCurrentDriver(selectedDriverId)) selectedDriverId = string.Empty;
 
         manualBundle = false;
         decisionType = accepted ? "운영자승인" : "운영자보류";
@@ -373,7 +400,8 @@
 
     private void SelectDriver(string driverId)
     {
-        selectedDriverId = driverId;
+        if (IsCurrentDriver(driverId)) selectedDriverId = driverId;
+        else if (!IsCurrentDriver(selectedDriverId)) selectedDriverId = string.Empty;
     }
 
     private async Task SaveDecisionAsync()
@@ -392,12 +420,14 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(selectedDriverId))
+        if (!IsCurrentDriver(selectedDriverId))
         {
+            selectedDriverId = string.Empty;
             errorMessage = "기사님을 선택해야 합니다.";
             return;
         }
 
+        var submittedNote = adminNote;
         isSaving = true;
         try
         {
@@ -407,12 +437,15 @@
                 BundleKey = selectedBundleKey,
                 RequestIds = selectedRequestIds.ToList(),
                 DriverId = selectedDriverId,
-                AdminNote = adminNote,
+                AdminNote = submittedNote,
                 ManualBundle = manualBundle,
                 Accepted = accepted
             });
             successMessage = response.Message;
-            adminNote = string.Empty;
+            if (string.Equals(adminNote, submittedNote, StringComparison.Ordinal))
+            {
+                adminNote = string.Empty;
+            }
         }
         catch (Exception ex)
         {
@@ -492,7 +525,14 @@
         => selectedRequestIds.Contains(requestId) ? Variant.Filled : Variant.Outlined;
 
     private Variant DriverVariant(string driverId)
-        => string.Equals(selectedDriverId, driverId, StringComparison.Ordinal) ? Variant.Filled : Variant.Outlined;
+        => IsSelectedDriver(driverId) ? Variant.Filled : Variant.Outlined;
+
+    private bool IsCurrentDriver(string? driverId)
+        => !string.IsNullOrWhiteSpace(driverId)
+           && workspace.Drivers.Count(driver => string.Equals(driver.DriverId, driverId, StringComparison.Ordinal)) == 1;
+
+    private bool IsSelectedDriver(string? driverId)
+        => IsCurrentDriver(driverId) && string.Equals(selectedDriverId, driverId, StringComparison.Ordinal);
 
     private Variant BundleVariant(string bundleKey)
         => string.Equals(selectedBundleKey, bundleKey, StringComparison.Ordinal) ? Variant.Filled : Variant.Outlined;

@@ -1,11 +1,15 @@
 using DriverApp.Models.Driver;
 using DriverApp.Models.Driver.Samples;
+using Ssalddel.Contracts.Driver.Transport;
 
 namespace DriverApp.Services;
 
 public interface IDriverSampleDataService
 {
     DriverWorkspaceReadState ReadState => new();
+
+    /// <summary>동일 계정의 현재 서버 조회에서 확인한 작업공간입니다. 예시·실패·빈 조회는 null입니다.</summary>
+    기사화물운송작업공간응답? 화물작업공간 => null;
 
     Task RefreshAsync(
         CancellationToken cancellationToken = default,

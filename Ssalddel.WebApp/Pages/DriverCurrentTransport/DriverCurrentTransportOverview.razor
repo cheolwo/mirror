@@ -23,13 +23,13 @@
                 <MudText Typo="Typo.caption" Color="Color.Secondary">하차</MudText>
                 <MudText Typo="Typo.subtitle1">@DriverCurrentTransportPresentation.Display(Transport.도착지, "-")</MudText>
             </MudItem>
-            <MudItem xs="12" sm="4">
+            <MudItem xs="6" sm="4">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">운임</MudText>
-                <MudText Typo="Typo.body1">@DriverCurrentTransportPresentation.DisplayMoney(Transport.운임)</MudText>
+                <MudText Typo="Typo.body1" Style="overflow-wrap: anywhere;">@DriverCurrentTransportPresentation.DisplayMoney(Transport.운임)</MudText>
             </MudItem>
-            <MudItem xs="12" sm="4">
+            <MudItem xs="6" sm="4">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">결제/증빙</MudText>
-                <MudText Typo="Typo.body1">@DriverCurrentTransportPresentation.Display(Transport.결제방식, "현장 확인")</MudText>
+                <MudText Typo="Typo.body1" Style="overflow-wrap: anywhere;">@DriverCurrentTransportPresentation.Display(Transport.결제방식, "현장 확인")</MudText>
             </MudItem>
             <MudItem xs="12" sm="4">
                 <MudText Typo="Typo.caption" Color="Color.Secondary">최근 갱신</MudText>
@@ -68,7 +68,7 @@
             </MudAlert>
         }
 
-        <DriverCurrentTransportTimeline Status="@Transport.상태" />
+        <DriverCurrentTransportTimeline Status="@Transport.상태" Class="d-none d-lg-block" />
     </MudStack>
 </MudPaper>
 

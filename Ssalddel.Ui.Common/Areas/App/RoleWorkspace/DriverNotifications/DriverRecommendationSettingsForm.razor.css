@@ -5,6 +5,7 @@
 .alert-option-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .alert-option-heading svg { flex: 0 0 32px; width: 32px; height: 32px; stroke: var(--alert-color); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .alert-example { display: grid; gap: 5px; padding: 12px; border-radius: 12px; background: var(--mud-palette-background-grey); border-left: 4px solid var(--alert-color); font-size: 14px; overflow-wrap: anywhere; }
+.example-body { word-break: keep-all; }
 .example-caption, .settings-note { font-size: 13px; color: var(--mud-palette-text-secondary); line-height: 1.6; margin: 0; }
 .alert-methods { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .recommendation-settings ::deep .mud-button-root { min-height: 48px; }

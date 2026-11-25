@@ -8,6 +8,8 @@ namespace SellerApp.Services;
 internal sealed class 주문자수요ReadSession : IAsyncDisposable
 {
     private readonly CancellationTokenSource monitorCancellation = new();
+    private long generation;
+    private bool disposed;
 
     public 개별주문관점페이지응답 IndividualOrders { get; private set; } = new();
     public 공동주문관점페이지응답 GroupOrders { get; private set; } = new();
@@ -25,49 +27,74 @@ internal sealed class 주문자수요ReadSession : IAsyncDisposable
         Func<string, Task<판매자수출원장목록응답>> readExport,
         Func<string> search)
     {
+        if (disposed) return;
+        var request = Interlocked.Increment(ref generation);
         Loading = true;
         ErrorMessage = null;
         ClusteredDemandUnavailableMessage = null;
         ExportUnavailableMessage = null;
         try
         {
-            var individualTask = readIndividual(search());
-            var groupTask = readGroup(search());
+            var query = search();
+            var individualTask = readIndividual(query);
+            _ = ObserveAsync(individualTask);
+            if (!Current(request)) return;
+            var groupRead = readGroup(query);
+            _ = ObserveAsync(groupRead);
 
-            IndividualOrders = await individualTask;
-            GroupOrders = await groupTask;
+            var individual = await individualTask;
+            if (!Current(request)) return;
+            IndividualOrders = individual;
+            var group = await groupRead;
+            if (!Current(request)) return;
+            GroupOrders = group;
             try
             {
-                ClusteredDemands = await readClustered();
+                var clustered = await readClustered();
+                if (!Current(request)) return;
+                ClusteredDemands = clustered;
             }
             catch (SsalddelApiException exception) when (exception.StatusCode is 403 or 404)
             {
+                if (!Current(request)) return;
                 ClusteredDemands = [];
                 ClusteredDemandUnavailableMessage =
                     "집단 수요는 1.0 같이 주문·주문자 집단화 기능이 활성화된 환경에서 확인할 수 있습니다.";
             }
             try
             {
-                ExportLedgers = await readExport(search());
+                var export = await readExport(query);
+                if (!Current(request)) return;
+                ExportLedgers = export;
             }
             catch (SsalddelApiException exception) when (exception.StatusCode is 403 or 404)
             {
+                if (!Current(request)) return;
                 ExportLedgers = new();
                 ExportUnavailableMessage = "수출 판매는 1.5 무역 준비 기능과 판매자 권한이 활성화된 환경에서 확인할 수 있습니다.";
             }
         }
         catch (Exception exception)
         {
-            ErrorMessage = exception.Message;
+            if (Current(request)) ErrorMessage = exception.Message;
         }
         finally
         {
-            Loading = false;
+            if (Current(request)) Loading = false;
         }
     }
 
+    private bool Current(long request) => !disposed && request == Volatile.Read(ref generation);
+
+    private static async Task ObserveAsync(Task task)
+    {
+        // 다른 조회가 먼저 실패하거나 교체돼도 이미 시작한 병렬 조회의 실패는 관측합니다.
+        try { await task; }
+        catch (Exception) { }
+    }
+
     public Task MonitorAsync(Func<Func<Task>, Task> invokeAsync, Func<Task> refresh)
-        => RunMonitorAsync(monitorCancellation.Token, invokeAsync, refresh);
+        => disposed ? Task.CompletedTask : RunMonitorAsync(monitorCancellation.Token, invokeAsync, refresh);
 
     private static async Task RunMonitorAsync(
         CancellationToken cancellationToken,
@@ -89,6 +116,10 @@ internal sealed class 주문자수요ReadSession : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
+        if (disposed) return ValueTask.CompletedTask;
+        disposed = true;
+        Interlocked.Increment(ref generation);
+        Loading = false;
         monitorCancellation.Cancel();
         monitorCancellation.Dispose();
         return ValueTask.CompletedTask;

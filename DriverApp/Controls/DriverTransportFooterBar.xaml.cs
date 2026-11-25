@@ -6,6 +6,15 @@ namespace DriverApp.Controls;
 public partial class DriverTransportFooterBar : ContentView
 {
     private bool _isExpanded;
+    public static readonly BindableProperty IsMapCompactProperty = BindableProperty.Create(
+        nameof(IsMapCompact), typeof(bool), typeof(DriverTransportFooterBar), false,
+        propertyChanged: (view, _, _) => ((DriverTransportFooterBar)view).ApplySummaryDensity());
+
+    public bool IsMapCompact
+    {
+        get => (bool)GetValue(IsMapCompactProperty);
+        set => SetValue(IsMapCompactProperty, value);
+    }
 
     public event EventHandler? OpenMenuRequested;
 
@@ -14,6 +23,7 @@ public partial class DriverTransportFooterBar : ContentView
     public DriverTransportFooterBar()
     {
         InitializeComponent();
+        ApplySummaryDensity();
     }
 
     public void ShowTransport(기사운송샘플항목? transport)
@@ -93,6 +103,16 @@ public partial class DriverTransportFooterBar : ContentView
         _isExpanded = !_isExpanded;
         ExpandedDetailsLayout.IsVisible = _isExpanded;
         ToggleButton.Text = _isExpanded ? "⌄" : "⌃";
+        ApplySummaryDensity();
+    }
+
+    private void ApplySummaryDensity()
+    {
+        // 지도 기본 상태만 간결하게 유지하고 펼침/다른 호출 화면에는 기존 정보를 보존합니다.
+        var visible = !IsMapCompact || _isExpanded;
+        CollapsedPickupLabel.IsVisible = visible;
+        CollapsedDropoffLabel.IsVisible = visible;
+        CollapsedFareLabel.IsVisible = visible;
     }
 
     private void OnOpenMenuClicked(object? sender, EventArgs e)

@@ -67,6 +67,10 @@
     overflow-wrap: anywhere;
 }
 
+.inbound-inspection-detail__time-source {
+    white-space: nowrap;
+}
+
 .inbound-inspection-detail__card > footer {
     display: flex;
     justify-content: flex-end;

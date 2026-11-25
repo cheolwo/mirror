@@ -218,17 +218,20 @@ public sealed class DriverApiClient : IDriverApiClient
         string operationName,
         CancellationToken cancellationToken)
     {
-        var authenticationError = await _authApiService.EnsureAccessTokenAsync(
-            cancellationToken: cancellationToken);
+        await _authSession.RestoreAsync(cancellationToken);
+        var requestSessionRevision = _authSession.SessionRevision;
+        var authenticationError = await _authApiService.EnsureAccessTokenForRequestAsync(
+            requestSessionRevision, cancellationToken);
         if (authenticationError is not null)
         {
             ThrowAuthenticationFailure(authenticationError);
         }
 
+        EnsureSameSessionRevision(requestSessionRevision);
         var requestSessionVersion = _authSession.Version;
-        var requestSessionRevision = _authSession.SessionRevision;
         ApplyRequestHeaders(request);
         EnsureSameSession(requestSessionVersion);
+        EnsureSameSessionRevision(requestSessionRevision);
         using var retryRequest = await CloneRequestAsync(request, cancellationToken);
 
         try
@@ -309,6 +312,12 @@ public sealed class DriverApiClient : IDriverApiClient
         if (_authSession.IsAuthenticated)
             throw new InvalidOperationException(message);
         throw new UnauthorizedAccessException(message);
+    }
+
+    private void EnsureSameSessionRevision(long expectedRevision)
+    {
+        if (_authSession.SessionRevision != expectedRevision)
+            throw new InvalidOperationException("로그인 정보가 변경되었습니다. 현재 업무를 다시 확인해 주세요.");
     }
 
     private void EnsureSameSession(long expectedVersion)

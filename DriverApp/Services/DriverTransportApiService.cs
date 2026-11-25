@@ -14,10 +14,18 @@ public sealed class DriverTransportApiService : IDriverTransportApiService
 
     public async Task<IReadOnlyList<기사운송요약응답>> 목록조회Async(
         CancellationToken cancellationToken = default)
-        => await _client.GetAsync<IReadOnlyList<기사운송요약응답>>(
+    {
+        var rows = await _client.GetAsync<IReadOnlyList<기사운송요약응답>>(
             BasePath,
             "운송 목록 조회",
-            cancellationToken) ?? [];
+            cancellationToken);
+
+        // 목록의 없음은 정상 빈 배열로만 표현한다. 개별 조회의 404 의미는 유지한다.
+        if (rows is null || rows.Any(item => item is null))
+            throw new InvalidOperationException("운송 목록 응답을 확인하지 못했습니다.");
+
+        return rows;
+    }
 
     public Task<기사운송요약응답?> 현재조회Async(CancellationToken cancellationToken = default)
         => _client.GetAsync<기사운송요약응답>(

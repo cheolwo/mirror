@@ -69,4 +69,9 @@
 .role-map-workspace__list li strong { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
 .role-map-workspace__list li small { color: var(--ss-muted, #586b78); font-size: 14px; }
 .role-map-workspace__refresh { display: block; min-height: 48px; margin: 12px auto 0; padding: 8px 16px; background: transparent; border: 0; color: var(--ss-muted, #586b78); font-size: 14px !important; }
-@media (max-width: 540px) { .role-map-workspace__panel { padding: 12px; } .role-map-workspace__canvas { height: clamp(240px, 40dvh, 400px); } }
+@media (max-width: 540px) {
+    .role-map-workspace__panel { padding: 12px; }
+    .role-map-workspace__canvas { height: clamp(240px, 40dvh, 400px); }
+    .role-map-workspace__canvas--unconfigured { height: 0; overflow: hidden; }
+    .role-map-workspace__section dt { word-break: keep-all; overflow-wrap: anywhere; }
+}

@@ -150,12 +150,15 @@ public sealed class 살뜰마트배송ApiClient(HttpClient http, IFDriverAuthSes
             try
             {
                 using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
-                if (document.RootElement.TryGetProperty("errorCode", out var value)
-                    && value.ValueKind == JsonValueKind.String && value.GetString() is { Length: > 0 and <= 128 } code
-                    && code.All(x => char.IsAsciiLetterOrDigit(x) || x is '-' or '_' or '.'))
-                    error.Data["errorCode"] = code;
-                if (document.RootElement.TryGetProperty("commandRejected", out var rejected) && rejected.ValueKind == JsonValueKind.True)
-                    error.Data["commandRejected"] = true;
+                if (document.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    if (document.RootElement.TryGetProperty("errorCode", out var value)
+                        && value.ValueKind == JsonValueKind.String && value.GetString() is { Length: > 0 and <= 128 } code
+                        && code.All(x => char.IsAsciiLetterOrDigit(x) || x is '-' or '_' or '.'))
+                        error.Data["errorCode"] = code;
+                    if (document.RootElement.TryGetProperty("commandRejected", out var rejected) && rejected.ValueKind == JsonValueKind.True)
+                        error.Data["commandRejected"] = true;
+                }
             }
             catch (JsonException) { }
             throw error;

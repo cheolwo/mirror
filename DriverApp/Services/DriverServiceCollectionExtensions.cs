@@ -76,6 +76,8 @@ public static class DriverServiceCollectionExtensions
         services.AddSingleton<DriverNativeHomeWorkspaceState>();
         services.AddTransient<NativeDriverRecommendationPage>();
         services.AddSingleton<IDriverApiClient, DriverApiClient>();
+        services.AddScoped<Ssalddel.Ui.Common.Areas.App.Services.ICargoDispatchExplanationClient, DriverCargoDispatchExplanationClient>();
+        services.AddTransient<CargoDispatchExplanationFeedbackViewModel>();
         services.AddSingleton<IDriverProfileApiService, DriverProfileApiService>();
         services.AddSingleton<IDriverWorkApiService, DriverWorkApiService>();
         services.AddSingleton<IDriverOperationalDispatchApiService, DriverOperationalDispatchApiService>();

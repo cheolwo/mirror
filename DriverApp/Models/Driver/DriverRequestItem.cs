@@ -54,6 +54,13 @@ public sealed class DriverRequestItem
     public decimal? 예상수익 { get; set; }
     public decimal? 추천점수 { get; set; }
     public string 추천사유 { get; set; } = string.Empty;
+    public bool 일정삽입가능여부 { get; set; }
+    public bool 전체일정완수가능여부 { get; set; }
+    public int? 최적삽입인덱스 { get; set; }
+    public IReadOnlyList<string> 권장경로순서 { get; set; } = [];
+    public string 권장방문순서표시 => 권장경로순서.Count > 0 && 일정삽입가능여부 && 전체일정완수가능여부
+        ? "권장 방문 순서 · 수락 시 최신 조건 재검증\n" + string.Join("\n", 권장경로순서.Select((stop, index) => $"{index + 1}. {stop}"))
+        : "방문 순서 · 수락 시 최신 조건 재검증";
     public bool 복귀지기준추천여부 { get; set; }
     public string? 복귀지출처 { get; set; }
     public string? 복귀추천사유 { get; set; }
@@ -154,7 +161,8 @@ public sealed class DriverRequestItem
         => new(운송방식, 차량종류, 화물중량Kg, 화물수량,
             NormalizeConditionTime(상차시간창시작일시), NormalizeConditionTime(상차시간창종료일시),
             NormalizeConditionTime(하차시간창시작일시), NormalizeConditionTime(하차시간창종료일시),
-            당일상차필수, 당일하차필수);
+            당일상차필수, 당일하차필수, System.Text.Json.JsonSerializer.Serialize(권장경로순서),
+            최적삽입인덱스, 일정삽입가능여부, 전체일정완수가능여부);
 
     private static DateTime? NormalizeConditionTime(DateTime? value)
         => value.HasValue ? DriverRecommendationSelectionState.NormalizeServerUtc(value.Value) : null;
@@ -193,4 +201,5 @@ public sealed class DriverRequestItem
 /// <summary>수락 전 재조회로 조건이 바뀌었는지 대조하는 한 화면의 불변 값입니다.</summary>
 public sealed record DriverCargoConditionSnapshot(string Mode, string? VehicleKind, decimal? WeightKg, int? Quantity,
     DateTime? PickupStartUtc, DateTime? PickupEndUtc, DateTime? DropoffStartUtc, DateTime? DropoffEndUtc,
-    bool SameDayPickupRequired, bool SameDayDropoffRequired);
+    bool SameDayPickupRequired, bool SameDayDropoffRequired, string StopOrderJson = "[]",
+    int? InsertionIndex = null, bool ScheduleInsertionFeasible = false, bool AllWorkFeasible = false);

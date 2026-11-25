@@ -61,6 +61,11 @@ public static class WebNavigationCatalog
         new("포장 작업", WarehouseManagerRoutes.PackingTask, Icons.Material.Filled.Inventory2),
         new("출고 인계 준비", WarehouseManagerRoutes.GeneralTransportHandoff, Icons.Material.Filled.LocalShipping),
         new("출고예정 검토", WarehouseManagerRoutes.OutboundPlanReview, Icons.Material.Filled.FactCheck),
+        // 1~4는 출고 공정 안의 기존 표시 순서이며 역할 전체나 다른 업무의 번호가 아닙니다.
+        new("1 출고 검토 묶음", WarehouseManagerRoutes.OutboundPlanReview + "?stage=review", Icons.Material.Filled.FactCheck),
+        new("2 피킹 묶음", WarehouseManagerRoutes.OutboundPlanReview + "?stage=picking", Icons.Material.Filled.Inventory2),
+        new("3 포장 묶음", WarehouseManagerRoutes.OutboundPlanReview + "?stage=packing", Icons.Material.Filled.AllInbox),
+        new("4 운송 인계 묶음", WarehouseManagerRoutes.OutboundPlanReview + "?stage=handoff", Icons.Material.Filled.LocalShipping),
         new("출고 운송의뢰", WarehouseManagerRoutes.TransportRequestDraft, Icons.Material.Filled.LocalShipping),
         new("피킹 작업", WarehouseManagerRoutes.PickingBatch, Icons.Material.Filled.Inventory2)
     ];

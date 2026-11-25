@@ -9,6 +9,11 @@ namespace OrdererApp.Components.GroupPurchase;
 internal sealed class GroupPurchaseDemandSession
 {
     private string? _currentProductId;
+    private long _selectionVersion;
+    private DemandCommandContext? _registeredDemandContext;
+
+    private sealed record DemandCommandContext(long SelectionVersion, string ProductId, string ProductName,
+        string ScopeKey, string DemandSourceKey, string? GroupId);
     internal string GroupScopeKey { get; private set; } = string.Empty;
     internal string GroupScopeName { get; private set; } = string.Empty;
     internal OperatingMarketDeliveryScopePlan? DeliveryScopePlan { get; private set; }
@@ -27,13 +32,13 @@ internal sealed class GroupPurchaseDemandSession
         if (!string.Equals(_currentProductId, productId, StringComparison.Ordinal))
         {
             _currentProductId = productId;
-            RegisteredGroup = null;
-            StatusMessage = null;
+            ClearResult();
         }
     }
 
     internal void ClearResult()
     {
+        _selectionVersion++;
         RegisteredGroup = null;
         StatusMessage = null;
     }
@@ -51,6 +56,7 @@ internal sealed class GroupPurchaseDemandSession
         IsDeliveryScopeLoading = true;
         DeliveryScopeMessage = null;
         DeliveryScopePlan = null;
+        if (!string.IsNullOrEmpty(GroupScopeKey)) ClearResult();
         GroupScopeKey = string.Empty;
         GroupScopeName = string.Empty;
         DeliveryScopeConfirmed = false;
@@ -96,6 +102,7 @@ internal sealed class GroupPurchaseDemandSession
 
     internal void SelectDeliveryScope(OperatingMarketDeliveryScopeCandidate scope)
     {
+        if (!string.Equals(GroupScopeKey, scope.ScopeKey, StringComparison.Ordinal)) ClearResult();
         GroupScopeKey = scope.ScopeKey;
         GroupScopeName = scope.DisplayName;
         DeliveryScopeConfirmed = false;
@@ -109,29 +116,37 @@ internal sealed class GroupPurchaseDemandSession
         Func<HS먹거리공동구매상품카드> currentProduct,
         Func<Task> authenticationExpired)
     {
+        if (IsSubmitting) return;
         IsSubmitting = true;
         RegisteredGroup = null;
+        DemandCommandContext? context = null;
         try
         {
+            context = CaptureCommandContext(currentProduct(), demandSourceKey);
             var group = await register(createRequest());
 
             if (group is null)
             {
+                if (!IsCurrent(context)) return;
                 StatusSeverity = Severity.Error;
                 StatusMessage = "공동 주문 수요를 서버에 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";
                 return;
             }
 
-            RegisteredDemandSourceKey = demandSourceKey;
+            // 확인된 명령 결과는 선택 변경으로 버리지 않고, 화면 반영과 구분해 보존합니다.
+            context = context with { GroupId = group.자동집단Id };
+            RegisteredDemandSourceKey = context.DemandSourceKey;
+            _registeredDemandContext = context;
 
-            var groups = await listGroups(currentProduct().상품카드Id, GroupScopeKey);
+            var groups = await listGroups(context.ProductId, context.ScopeKey);
+            if (!IsCurrent(context)) return;
             RegisteredGroup = groups?.FirstOrDefault(item =>
                 string.Equals(item.자동집단Id, group.자동집단Id, StringComparison.Ordinal));
 
             if (RegisteredGroup is null)
             {
                 StatusSeverity = Severity.Warning;
-                StatusMessage = $"{currentProduct().상품명} 수요는 등록되었지만 자동집단을 다시 읽지 못했습니다. 새로고침 후 확인해 주세요.";
+                StatusMessage = $"{context.ProductName} 수요는 등록되었지만 자동집단을 다시 읽지 못했습니다. 새로고침 후 확인해 주세요.";
                 return;
             }
 
@@ -140,10 +155,13 @@ internal sealed class GroupPurchaseDemandSession
         }
         catch (SsalddelApiException ex)
         {
-            StatusSeverity = Severity.Error;
-            StatusMessage = ex.StatusCode == 401
-                ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
-                : "공동주문 수요 원장을 저장하거나 다시 읽지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Error;
+                StatusMessage = ex.StatusCode == 401
+                    ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
+                    : "공동주문 수요 원장을 저장하거나 다시 읽지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            }
             if (ex.StatusCode == 401)
             {
                 await authenticationExpired();
@@ -151,8 +169,11 @@ internal sealed class GroupPurchaseDemandSession
         }
         catch (InvalidOperationException)
         {
-            StatusSeverity = Severity.Error;
-            StatusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Error;
+                StatusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
+            }
         }
         finally
         {
@@ -166,14 +187,20 @@ internal sealed class GroupPurchaseDemandSession
         Func<HS먹거리공동구매상품카드> currentProduct,
         Func<Task> authenticationExpired)
     {
+        if (IsSubmitting) return;
         IsSubmitting = true;
+        DemandCommandContext? context = null;
         try
         {
+            context = _registeredDemandContext is { } registered
+                ? registered with { SelectionVersion = _selectionVersion }
+                : CaptureCommandContext(currentProduct(), RegisteredDemandSourceKey);
             var response = await withdraw(
-                RegisteredDemandSourceKey,
+                context.DemandSourceKey,
                 "주문자 앱에서 철회");
             if (response is null || !response.철회완료)
             {
+                if (!IsCurrent(context)) return;
                 StatusSeverity = Severity.Error;
                 StatusMessage = response?.안내 ?? "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
                 return;
@@ -181,15 +208,17 @@ internal sealed class GroupPurchaseDemandSession
 
             var withdrawnGroupId = !string.IsNullOrWhiteSpace(response.자동집단Id)
                 ? response.자동집단Id
-                : RegisteredGroup?.자동집단Id;
+                : context.GroupId;
             RegisteredDemandSourceKey = string.Empty;
-            RegisteredGroup = null;
+            _registeredDemandContext = null;
+            if (IsCurrent(context)) RegisteredGroup = null;
 
             try
             {
                 var groups = await listGroups(
-                    currentProduct().상품카드Id,
-                    GroupScopeKey);
+                    context.ProductId,
+                    context.ScopeKey);
+                if (!IsCurrent(context)) return;
                 RegisteredGroup = groups?.FirstOrDefault(item =>
                     string.Equals(item.자동집단Id, withdrawnGroupId, StringComparison.Ordinal));
 
@@ -200,16 +229,20 @@ internal sealed class GroupPurchaseDemandSession
             }
             catch (Exception ex) when (ex is SsalddelApiException or InvalidOperationException)
             {
+                if (!IsCurrent(context)) return;
                 StatusSeverity = Severity.Warning;
                 StatusMessage = "비구속 수요 철회는 완료됐지만 최신 자동집단 원장을 다시 읽지 못했습니다. 새로고침 후 모집 현황을 확인해 주세요.";
             }
         }
         catch (SsalddelApiException ex)
         {
-            StatusSeverity = Severity.Error;
-            StatusMessage = ex.StatusCode == 401
-                ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
-                : "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Error;
+                StatusMessage = ex.StatusCode == 401
+                    ? "로그인 세션이 만료되었습니다. 다시 로그인해 주세요."
+                    : "비구속 수요를 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            }
             if (ex.StatusCode == 401)
             {
                 await authenticationExpired();
@@ -217,14 +250,25 @@ internal sealed class GroupPurchaseDemandSession
         }
         catch (InvalidOperationException)
         {
-            StatusSeverity = Severity.Error;
-            StatusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
+            if (IsCurrent(context))
+            {
+                StatusSeverity = Severity.Error;
+                StatusMessage = "공동주문 API에 연결하지 못했습니다. 서버 상태를 확인해 주세요.";
+            }
         }
         finally
         {
             IsSubmitting = false;
         }
     }
+
+    private DemandCommandContext CaptureCommandContext(HS먹거리공동구매상품카드 product, string sourceKey)
+        => new(_selectionVersion, product.상품카드Id, product.상품명, GroupScopeKey, sourceKey, RegisteredGroup?.자동집단Id);
+
+    private bool IsCurrent(DemandCommandContext? context)
+        => context is null || (context.SelectionVersion == _selectionVersion
+            && string.Equals(context.ProductId, _currentProductId, StringComparison.Ordinal)
+            && string.Equals(context.ScopeKey, GroupScopeKey, StringComparison.Ordinal));
 
     internal static string CreateDemandSourceKey(string? userId, string productCardId)
     {

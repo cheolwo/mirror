@@ -1,3 +1,4 @@
+@using Ssalddel.Contracts.Common
 @using Ssalddel.Ui.Common.Areas.App.Models.Auth
 
 <MudPaper Class="@Class" Elevation="@Elevation" Style="@Style">
@@ -58,21 +59,40 @@
             }
 
             <MudText Typo="Typo.caption" Color="Color.Secondary">@소셜로그인제목</MudText>
-            <MudGrid>
+            <div class="social-login-buttons" role="group" aria-label="@소셜로그인제목">
                 @foreach (var provider in 소셜로그인Provider목록)
                 {
-                    <MudItem xs="12" sm="4">
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="@provider.Color"
-                                   FullWidth="true"
-                                   StartIcon="@provider.Icon"
-                                   Disabled="@IsBusy"
-                                   OnClick="() => SocialLoginAsync(provider)">
-                            @provider.DisplayName
-                        </MudButton>
-                    </MudItem>
+                    var (asset, label) = provider.ProviderId switch
+                    {
+                        소셜로그인ProviderIds.Kakao => ("kakao-login-ko.png", "카카오 로그인"),
+                        소셜로그인ProviderIds.Naver => ("naver-login-ko.png", "네이버 로그인"),
+                        _ => (null, provider.DisplayName)
+                    };
+                    <button type="button"
+                            class="social-login-button @(asset is null ? "social-login-button--text" : "")"
+                            aria-label="@label"
+                            disabled="@(IsBusy || !CanUseSocialLogin(provider))"
+                            @onclick="() => SocialLoginAsync(provider)">
+                        @if (asset is not null)
+                        {
+                            <img class="social-login-button__asset" src="@(소셜로그인Asset경로 + asset)" alt="" />
+                        }
+                        else
+                        {
+                            @if (provider.ProviderId == 소셜로그인ProviderIds.Google)
+                            {
+                                <img class="social-login-button__google-logo"
+                                     src="@(소셜로그인Asset경로 + "google-g.png")" alt="" width="18" height="18" />
+                            }
+                            <span>@label</span>
+                        }
+                    </button>
                 }
-            </MudGrid>
+            </div>
+            @if (소셜로그인Provider목록.Any(provider => !CanUseSocialLogin(provider)))
+            {
+                <MudText Typo="Typo.caption">선택할 수 없는 소셜 로그인은 준비 중입니다.</MudText>
+            }
         }
 
         @if (!string.IsNullOrWhiteSpace(현재사용자표시))
@@ -105,9 +125,12 @@
     [Parameter] public string? Style { get; set; }
     [Parameter] public IReadOnlyList<string> 개발힌트목록 { get; set; } = [];
     [Parameter] public IReadOnlyList<소셜로그인ProviderOption> 소셜로그인Provider목록 { get; set; } = 소셜로그인ProviderOption.기본목록;
+    [Parameter] public IReadOnlyList<string> 활성소셜로그인Provider목록 { get; set; } = [];
     [Parameter] public EventCallback<공통로그인요청> OnPasswordLogin { get; set; }
     [Parameter] public EventCallback<공통소셜로그인요청> OnSocialLogin { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private const string 소셜로그인Asset경로 = "_content/Ssalddel.Ui.Common/auth/";
 
     private string _userNameOrEmail = string.Empty;
     private string _password = string.Empty;
@@ -151,17 +174,17 @@
         }
     }
 
-    private async Task SocialLoginAsync(소셜로그인ProviderOption provider)
-    {
-        _localStatusMessage = null;
+    private bool CanUseSocialLogin(소셜로그인ProviderOption provider)
+        => OnSocialLogin.HasDelegate && 활성소셜로그인Provider목록.Contains(provider.ProviderId, StringComparer.Ordinal);
 
-        if (OnSocialLogin.HasDelegate)
+    private Task SocialLoginAsync(소셜로그인ProviderOption provider)
+    {
+        if (IsBusy || !CanUseSocialLogin(provider))
         {
-            await OnSocialLogin.InvokeAsync(new 공통소셜로그인요청(provider.ProviderId, provider.DisplayName));
-            return;
+            return Task.CompletedTask;
         }
 
-        _localStatusSeverity = Severity.Info;
-        _localStatusMessage = $"{provider.DisplayName}은 서버 OAuth 연결 후 활성화됩니다.";
+        _localStatusMessage = null;
+        return OnSocialLogin.InvokeAsync(new 공통소셜로그인요청(provider.ProviderId, provider.DisplayName));
     }
 }

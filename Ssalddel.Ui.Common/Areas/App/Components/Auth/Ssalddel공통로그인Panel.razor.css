@@ -1,0 +1,52 @@
+.social-login-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    justify-items: center;
+    gap: 8px;
+}
+
+.social-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    max-inline-size: 224px;
+    min-block-size: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.social-login-button--text {
+    gap: 10px;
+    padding-inline: 12px;
+    border: 1px solid #747775;
+    border-radius: 4px;
+    background: #fff;
+    color: #1f1f1f;
+    font: 500 14px/20px "Google Sans", system-ui, sans-serif;
+}
+
+.social-login-button__asset {
+    display: block;
+    max-inline-size: 100%;
+    max-block-size: 48px;
+    object-fit: contain;
+}
+
+.social-login-button__google-logo {
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.social-login-button:focus-visible {
+    outline: 3px solid var(--mud-palette-primary, #0f766e);
+    outline-offset: 2px;
+}
+
+.social-login-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

@@ -20,7 +20,7 @@
         {
         @if (!editing)
         {
-        <MudStack Class="restaurant-home-hero" Spacing="1">
+        <MudStack Class="restaurant-home-hero restaurant-menu-hero" Spacing="1">
             <MudText Typo="Typo.overline">우리 가게 · 메뉴 관리</MudText>
             <MudText Typo="Typo.h4">메뉴 관리</MudText>
             <MudText Typo="Typo.body2">메뉴를 준비하고 주문을 받을 준비를 해보세요.</MudText>
@@ -32,7 +32,7 @@
         }
         @if (!string.IsNullOrWhiteSpace(message))
         {
-            <MudAlert Severity="@severity" role="status">@message</MudAlert>
+            <MudAlert Severity="@severity" role="status" Style="word-break: keep-all; overflow-wrap: anywhere;">@message</MudAlert>
         }
         @if (!editing)
         {
@@ -55,7 +55,7 @@
         {
             <MudPaper @key="menu.Id" Outlined="true" Elevation="0" Class="pa-4 restaurant-home-card">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-order-card-row">
-                    <MudStack Spacing="1">
+                    <MudStack Class="restaurant-menu-copy" Spacing="1">
                         <MudText Typo="Typo.h6">@menu.메뉴명</MudText>
                         <MudText Typo="Typo.body2">@menu.설명</MudText>
                         <MudText Typo="Typo.subtitle1">@menu.판매가.ToString("N0")원</MudText>
@@ -88,7 +88,13 @@
                 <MudTextField T="string" @bind-Value="imageUrl" Label="대표 사진 주소 (선택)" MaxLength="@음식점메뉴입력Policy.사진주소최대길이" HelperText="HTTPS 이미지 주소를 저장합니다. 사진 파일 업로드는 아직 지원하지 않습니다." Variant="Variant.Outlined" Disabled="@FormLocked" />
                 <MudSwitch T="bool" @bind-Value="published" Color="Color.Primary" Disabled="@FormLocked">주문자에게 메뉴 공개</MudSwitch>
                 <MudSwitch T="bool" @bind-Value="soldOut" Color="Color.Warning" Disabled="@FormLocked">일시 품절</MudSwitch>
-                <MudText Typo="Typo.caption">새 메뉴는 기본 비공개입니다. 공개 여부와 가격을 확인한 뒤 저장하세요.</MudText>
+                <MudText Typo="Typo.caption">
+                    @if (editingId is null)
+                    {
+                        <text>새 메뉴는 기본 비공개입니다. </text>
+                    }
+                    공개 여부와 가격을 확인한 뒤 저장하세요.
+                </MudText>
                 <MudButton OnClick="SaveAsync" Disabled="@(busy || !loaded)" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" StartIcon="@Icons.Material.Filled.Save">
                     @(busy ? "처리 중…" : pendingCreate is not null ? "동일 요청으로 등록 재확인" : editingId is null ? "메뉴 등록" : "변경 저장")
                 </MudButton>

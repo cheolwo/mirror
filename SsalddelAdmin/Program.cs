@@ -36,6 +36,7 @@ builder.Services.PostConfigure<관리자ApiOptions>(options =>
     options.BaseUrl = operationalApiBaseAddress.AbsoluteUri);
 builder.Services.AddScoped<ITransportRequestLedgerObserver, TransportRequestLedgerObserver>();
 builder.Services.AddSsalddelUiCommonAppServices<관리자인증세션Service>();
+builder.Services.Add관리자플랫폼Services();
 builder.Services.Add보호지원관리Ui();
 builder.Services.AddTransient<관리자Controller기능모음ViewModel>();
 builder.Services.AddTransient<관리자전체Api기능모음ViewModel>();

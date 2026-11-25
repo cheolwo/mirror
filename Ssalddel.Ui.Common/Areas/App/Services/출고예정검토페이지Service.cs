@@ -38,6 +38,19 @@ public sealed class 출고예정검토페이지Service(ISsalddelJsonApiClient cl
         };
         if (request.WarehouseId is > 0)
             query.Add($"warehouseId={request.WarehouseId.Value.ToString(CultureInfo.InvariantCulture)}");
+        if (request.PeriodStartUtc is { } start)
+            query.Add($"periodStartUtc={Uri.EscapeDataString(start.ToString("O", CultureInfo.InvariantCulture))}");
+        if (request.PeriodEndUtc is { } end)
+            query.Add($"periodEndUtc={Uri.EscapeDataString(end.ToString("O", CultureInfo.InvariantCulture))}");
+        if (request.PeriodStartUtc.HasValue && request.PeriodEndUtc.HasValue && request.PeriodStage is { Length: > 0 } stage)
+        {
+            query.Add($"periodStage={Uri.EscapeDataString(stage)}");
+            query.Add($"batchPage={Math.Max(0, request.BatchPage).ToString(CultureInfo.InvariantCulture)}");
+            query.Add($"batchPageSize={Math.Clamp(request.BatchPageSize, 1, 50).ToString(CultureInfo.InvariantCulture)}");
+            query.Add($"memberPage={Math.Max(0, request.MemberPage).ToString(CultureInfo.InvariantCulture)}");
+            query.Add($"memberPageSize={Math.Clamp(request.MemberPageSize, 1, 50).ToString(CultureInfo.InvariantCulture)}");
+            if (!string.IsNullOrWhiteSpace(request.BatchKey)) query.Add($"batchKey={Uri.EscapeDataString(request.BatchKey)}");
+        }
         if (!string.IsNullOrWhiteSpace(request.Search))
             query.Add($"search={Uri.EscapeDataString(request.Search.Trim())}");
 

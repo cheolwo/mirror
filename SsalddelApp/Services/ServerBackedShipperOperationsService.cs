@@ -1,5 +1,7 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Ssalddel.Client.Infrastructure.Transport;
 using Ssalddel.Contracts.Common.Inbound;
 using Ssalddel.Contracts.Common.Inventory;
@@ -18,6 +20,8 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     private readonly AuthApiService _authApiService;
     private readonly ITransportRequestLedgerObserver _ledgerObserver;
     private readonly TransportRequestLedgerRealtimeClient _realtimeClient;
+
+    private sealed record RequestAuthenticationContext(long SessionRevision, string? UserId, string AccessToken);
 
     public ServerBackedShipperOperationsService(
         HttpClient httpClient,
@@ -44,15 +48,15 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(page, IShipperOperationsService.MaximumRequestPage);
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
-        var userId = ResolveUserId();
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
+        var userId = ResolveUserId(context);
         var path = $"api/v1/shipper/requests?shipperId={Uri.EscapeDataString(userId)}";
         if (page > 1)
-        {
             path += FormattableString.Invariant($"&page={page}");
-        }
-        var response = await GetAuthorizedJsonAsync<IReadOnlyList<화주운송의뢰응답>>(path, cancellationToken);
-        var items = response?.Select(ToRequestItem).ToArray() ?? [];
+        var response = await GetAuthorizedJsonAsync<IReadOnlyList<화주운송의뢰응답>>(path, context, cancellationToken);
+        if (response is null || response.Any(item => item is null))
+            throw new InvalidOperationException("운송 의뢰 목록 응답을 확인하지 못했습니다. 다시 조회해 주세요.");
+        var items = response.Select(ToRequestItem).ToArray();
         foreach (var item in items)
         {
             Observe(item, "SsalddelApp.RequestList");
@@ -63,7 +67,7 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
     public async Task<ShipperRequestItem?> GetRequestAsync(string requestId, CancellationToken cancellationToken = default)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(requestId))
         {
             throw new InvalidOperationException("조회할 의뢰 ID가 없습니다.");
@@ -71,7 +75,7 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
         var response = await GetAuthorizedJsonAsync<화주운송의뢰응답>(
             $"api/v1/shipper/requests/{Uri.EscapeDataString(requestId.Trim())}",
-            cancellationToken);
+            context, cancellationToken);
         if (response is null)
         {
             return null;
@@ -100,16 +104,16 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
     public async Task<ShipperRequestItem?> GetRequestByClientRequestIdAsync(
         string clientRequestId, CancellationToken cancellationToken = default)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(clientRequestId))
             throw new InvalidOperationException("확인할 접수 요청 번호가 없습니다.");
         using var request = CreateAuthorizedRequest(HttpMethod.Get,
-            $"api/v1/shipper/requests/by-client-request/{Uri.EscapeDataString(clientRequestId.Trim())}");
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+            $"api/v1/shipper/requests/by-client-request/{Uri.EscapeDataString(clientRequestId.Trim())}", context);
+        using var response = await SendAsync(request, cancellationToken);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
         if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, "접수 결과 확인", cancellationToken));
-        var source = await response.Content.ReadFromJsonAsync<화주운송의뢰응답>(cancellationToken);
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
+        var source = await ReadJsonAsync<화주운송의뢰응답>(response, cancellationToken);
         if (source is null || string.IsNullOrWhiteSpace(source.의뢰Id))
             throw new InvalidOperationException("접수 결과의 운송 의뢰를 확인하지 못했습니다.");
         var item = ToRequestItem(source);
@@ -119,32 +123,44 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
     public async Task<IReadOnlyList<공개화물요약응답>> GetPublicCargoAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.GetAsync("api/v1/shipper/requests/public", cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "api/v1/shipper/requests/public");
+        using var response = await SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, "api/v1/shipper/requests/public", cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<공개화물요약응답>>(cancellationToken)
-               ?? [];
+        var items = await ReadJsonAsync<IReadOnlyList<공개화물요약응답>>(response, cancellationToken);
+        if (items is null || items.Any(item => item is null))
+            throw new InvalidOperationException("공개 화물 목록 응답을 확인하지 못했습니다. 다시 조회해 주세요.");
+        return items;
     }
 
     public async Task<IReadOnlyList<창고요약응답>> GetWarehousesAsync(CancellationToken cancellationToken = default)
     {
         var response = await GetAuthorizedJsonAsync<창고목록응답>("api/v1/warehouse-operations/warehouses", cancellationToken);
-        return response?.Items ?? [];
+        return 창고목록응답확인(response?.Items, "창고");
     }
 
     public async Task<IReadOnlyList<입고요청항목응답>> GetInboundsAsync(CancellationToken cancellationToken = default)
     {
         var response = await GetAuthorizedJsonAsync<입고요청목록응답>("api/v1/warehouse-operations/inbounds", cancellationToken);
-        return response?.Items ?? [];
+        return 창고목록응답확인(response?.Items, "입고");
     }
 
     public async Task<IReadOnlyList<재고항목응답>> GetInventoryAsync(CancellationToken cancellationToken = default)
     {
         var response = await GetAuthorizedJsonAsync<재고목록응답>("api/v1/warehouse-operations/inventory", cancellationToken);
-        return response?.Items ?? [];
+        return 창고목록응답확인(response?.Items, "재고");
+    }
+
+    private static IReadOnlyList<T> 창고목록응답확인<T>(IReadOnlyList<T>? items, string 목록명)
+        where T : class
+    {
+        if (items is null || items.Any(item => item is null))
+            throw new InvalidOperationException($"{목록명} 목록 응답을 확인하지 못했습니다. 다시 조회해 주세요.");
+
+        return items;
     }
 
     public async Task<IReadOnlyList<string>> GetVehicleTypesAsync(CancellationToken cancellationToken = default)
@@ -192,17 +208,17 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
     public async Task<ShipperRequestItem> AddRequestAsync(ShipperRequestItem request, CancellationToken cancellationToken = default)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
-        using var httpRequest = CreateAuthorizedRequest(HttpMethod.Post, "api/v1/shipper/requests");
-        httpRequest.Content = JsonContent.Create(ToCreateRequest(request));
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
+        using var httpRequest = CreateAuthorizedRequest(HttpMethod.Post, "api/v1/shipper/requests", context);
+        httpRequest.Content = JsonContent.Create(ToCreateRequest(request, context));
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        using var response = await SendAsync(httpRequest, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, "api/v1/shipper/requests", cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
-        var responseItem = await response.Content.ReadFromJsonAsync<화주운송의뢰응답>(cancellationToken)
+        var responseItem = await ReadJsonAsync<화주운송의뢰응답>(response, cancellationToken)
             ?? throw new InvalidOperationException("서버 운송의뢰 생성 응답이 비어 있습니다.");
         var created = ToRequestItem(responseItem);
         Observe(created, "SsalddelApp.RequestCreated");
@@ -214,22 +230,22 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         ShipperRequestItem request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(request.의뢰Id))
         {
             throw new InvalidOperationException("수정할 의뢰 ID가 없습니다.");
         }
 
         var path = $"api/v1/shipper/requests/{Uri.EscapeDataString(request.의뢰Id.Trim())}";
-        using var httpRequest = CreateAuthorizedRequest(HttpMethod.Put, path);
+        using var httpRequest = CreateAuthorizedRequest(HttpMethod.Put, path, context);
         httpRequest.Content = JsonContent.Create(ToUpdateRequest(request));
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        using var response = await SendAsync(httpRequest, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, path, cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
-        var responseItem = await response.Content.ReadFromJsonAsync<화주운송의뢰응답>(cancellationToken)
+        var responseItem = await ReadJsonAsync<화주운송의뢰응답>(response, cancellationToken)
             ?? throw new InvalidOperationException("서버 운송의뢰 수정 응답이 비어 있습니다.");
         var updated = ToRequestItem(responseItem);
         Observe(updated, "SsalddelApp.RequestUpdated");
@@ -239,18 +255,18 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
     public async Task DeleteRequestAsync(string requestId, CancellationToken cancellationToken = default)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(requestId))
         {
             throw new InvalidOperationException("삭제할 의뢰 ID가 없습니다.");
         }
 
         var path = $"api/v1/shipper/requests/{Uri.EscapeDataString(requestId.Trim())}";
-        using var request = CreateAuthorizedRequest(HttpMethod.Delete, path);
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var request = CreateAuthorizedRequest(HttpMethod.Delete, path, context);
+        using var response = await SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, path, cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
         _ledgerObserver.RequestRefresh(requestId, "SsalddelApp.RequestDeleted");
@@ -258,40 +274,56 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
 
     private async Task<T?> GetAuthorizedJsonAsync<T>(string path, CancellationToken cancellationToken)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
-        using var request = CreateAuthorizedRequest(HttpMethod.Get, path);
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
+        return await GetAuthorizedJsonAsync<T>(path, context, cancellationToken);
+    }
+
+    private async Task<T?> GetAuthorizedJsonAsync<T>(string path, RequestAuthenticationContext context,
+        CancellationToken cancellationToken)
+    {
+        using var request = CreateAuthorizedRequest(HttpMethod.Get, path, context);
+        using var response = await SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, path, cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+        return await ReadJsonAsync<T>(response, cancellationToken);
     }
 
     private async Task<TResponse?> PostAuthorizedJsonAsync<TRequest, TResponse>(string path, TRequest payload, CancellationToken cancellationToken)
     {
-        await EnsureAuthorizedConnectionAsync(cancellationToken);
-        using var request = CreateAuthorizedRequest(HttpMethod.Post, path);
+        var context = await EnsureAuthorizedConnectionAsync(cancellationToken);
+        using var request = CreateAuthorizedRequest(HttpMethod.Post, path, context);
         request.Content = JsonContent.Create(payload);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var response = await SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException(await BuildFailureMessageAsync(response, path, cancellationToken));
+            throw new InvalidOperationException(FailureMessage(response.StatusCode));
         }
 
-        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
+        return await ReadJsonAsync<TResponse>(response, cancellationToken);
     }
 
-    private async Task EnsureAuthorizedConnectionAsync(CancellationToken cancellationToken)
+    private async Task<RequestAuthenticationContext> EnsureAuthorizedConnectionAsync(CancellationToken cancellationToken)
     {
-        var authenticationError = await _authApiService.EnsureAccessTokenAsync(
-            cancellationToken: cancellationToken);
-        if (!string.IsNullOrWhiteSpace(authenticationError))
+        long revision;
+        string? userId;
+        try
         {
-            throw new InvalidOperationException(authenticationError);
+            // 인증 API가 복원·갱신 대기부터 유지한 같은 요청의 계정 문맥을 이어받습니다.
+            var prepared = await _authApiService.PrepareRequestAuthenticationAsync(cancellationToken);
+            revision = prepared.Revision;
+            userId = prepared.UserId;
         }
+        catch (Exception error) when (error is IOException or HttpRequestException or JsonException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // 인증 API는 주 보안 저장 실패를 전파합니다. 화면에는 내부 저장소 원문을 보내지 않습니다.
+            throw new InvalidOperationException("화주 인증 상태를 확인하지 못했습니다. 다시 확인해 주세요.");
+        }
+        EnsureSameAuthentication(revision, userId);
 
         try
         {
@@ -301,44 +333,81 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         {
             // 실시간 연결 실패는 30초 보완 조회와 API 호출을 막지 않습니다.
         }
+        cancellationToken.ThrowIfCancellationRequested();
+        EnsureSameAuthentication(revision, userId);
+        var accessToken = _authSession.AccessToken;
+        EnsureSameAuthentication(revision, userId);
+        if (string.IsNullOrWhiteSpace(accessToken))
+            throw new InvalidOperationException("서버 인증 정보가 없어 화주 API를 호출할 수 없습니다.");
+        return new RequestAuthenticationContext(revision, userId, accessToken);
     }
 
-    private HttpRequestMessage CreateAuthorizedRequest(HttpMethod method, string path)
+    private HttpRequestMessage CreateAuthorizedRequest(HttpMethod method, string path, RequestAuthenticationContext context)
     {
-        EnsureAuthenticated();
+        EnsureSameAuthentication(context.SessionRevision, context.UserId);
         var request = new HttpRequestMessage(method, path);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authSession.AccessToken);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
         return request;
     }
 
-    private void EnsureAuthenticated()
+    private void EnsureSameAuthentication(long revision, string? userId)
     {
-        if (string.IsNullOrWhiteSpace(_authSession.AccessToken))
-        {
-            throw new InvalidOperationException("서버 인증 정보가 없어 화주 API를 호출할 수 없습니다.");
-        }
+        if (_authSession.SessionRevision != revision
+            || !string.Equals(_authSession.UserId, userId, StringComparison.Ordinal))
+            throw new InvalidOperationException("화주 로그인 상태가 변경되었습니다. 현재 계정으로 다시 확인해 주세요.");
     }
 
-    private string ResolveUserId()
+    private string ResolveUserId(RequestAuthenticationContext context)
     {
-        EnsureAuthenticated();
-        return string.IsNullOrWhiteSpace(_authSession.UserId)
+        EnsureSameAuthentication(context.SessionRevision, context.UserId);
+        return string.IsNullOrWhiteSpace(context.UserId)
             ? throw new InvalidOperationException("화주 사용자 ID가 없어 서버 의뢰 목록을 조회할 수 없습니다.")
-            : _authSession.UserId!;
+            : context.UserId!;
     }
 
-    private static async Task<string> BuildFailureMessageAsync(HttpResponseMessage response, string path, CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(body))
+        try
         {
-            return $"화주 서버 API 요청에 실패했습니다. path={path}, HTTP {(int)response.StatusCode}";
+            return await _httpClient.SendAsync(request, cancellationToken);
         }
-
-        return $"화주 서버 API 요청에 실패했습니다. path={path}, HTTP {(int)response.StatusCode}: {body}";
+        catch (HttpRequestException exception)
+        {
+            throw new HttpRequestException(exception.StatusCode is { } status ? FailureMessage(status)
+                : "화주 서버와 연결하지 못했습니다. 처리 결과를 다시 확인해 주세요.", null, exception.StatusCode);
+        }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TaskCanceledException("화주 서버 응답 시간이 초과되었습니다. 처리 결과를 다시 확인해 주세요.", null, exception.CancellationToken);
+        }
     }
 
-    private 화주운송의뢰생성요청 ToCreateRequest(ShipperRequestItem source)
+    private static async Task<T?> ReadJsonAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<T>(cancellationToken);
+        }
+        catch (JsonException)
+        {
+            throw new InvalidOperationException("화주 서버 응답을 확인하지 못했습니다. 다시 조회해 주세요.");
+        }
+    }
+
+    private static string FailureMessage(HttpStatusCode status)
+        => (status switch
+        {
+            HttpStatusCode.Unauthorized => "화주 로그인을 확인해 주세요.",
+            HttpStatusCode.Forbidden => "이 화주 업무를 처리할 권한이 없습니다.",
+            HttpStatusCode.NotFound => "화주 요청 정보를 찾지 못했습니다.",
+            HttpStatusCode.Conflict => "화주 요청의 최신 상태를 다시 확인해 주세요.",
+            HttpStatusCode.TooManyRequests => "화주 서버 요청이 많습니다. 잠시 후 다시 확인해 주세요.",
+            HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity => "화주 요청 내용을 확인해 주세요.",
+            _ when (int)status >= 500 => "화주 서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 확인해 주세요.",
+            _ => "화주 서버 요청을 처리하지 못했습니다. 현재 상태를 다시 확인해 주세요."
+        }) + $" (HTTP {(int)status})";
+
+    private 화주운송의뢰생성요청 ToCreateRequest(ShipperRequestItem source, RequestAuthenticationContext context)
     {
         var amount = source.결제예정금액
             ?? (source.기준운임.HasValue ? decimal.ToInt32(source.기준운임.Value) : null);
@@ -350,7 +419,7 @@ public sealed class ServerBackedShipperOperationsService : IShipperOperationsSer
         {
             신청개인정보동의증적Id = source.신청개인정보동의증적Id,
             신청출처Code = source.신청출처Code,
-            화주Id = ResolveUserId(),
+            화주Id = ResolveUserId(context),
             운송방식 = string.IsNullOrWhiteSpace(source.운송방식) ? "일반" : source.운송방식,
             차량종류 = string.IsNullOrWhiteSpace(source.차량종류) ? "1톤 카고" : source.차량종류,
             결제수단 = paymentMethod.ToString(),

@@ -18,4 +18,10 @@ public interface IAuthSession : ISsalddelAccessTokenProvider, ISsalddel현재사
     Task<bool> TryRefreshAsync(ClientAuthTokenSnapshot snapshot, long expectedRevision, string? expectedRefreshToken, CancellationToken cancellationToken = default);
     Task<bool> TryClearAsync(long expectedRevision, string? expectedRefreshToken, CancellationToken cancellationToken = default);
     Task ClearAsync(CancellationToken cancellationToken = default);
+    AuthSessionChange BeginAuthenticationChange(CancellationToken cancellationToken = default);
+    Task<AuthSessionCommitResult> TryApplyAuthenticationAsync(ClientAuthTokenSnapshot snapshot, AuthSessionChange change,
+        Func<CancellationToken, Task> beforeApply, Func<CancellationToken, Task> afterApply);
+    Task<bool> TryEndAuthenticationAsync(AuthSessionChange change, Func<CancellationToken, Task> beforeClear);
+    Task<bool> RunIfCurrentAsync(long expectedRevision, string? expectedRefreshToken,
+        Func<CancellationToken, Task> action, CancellationToken cancellationToken = default);
 }

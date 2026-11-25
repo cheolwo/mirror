@@ -8,3 +8,8 @@
 .cargo-photo-label { display: grid; gap: 8px; }
 .cargo-photo-label ::deep input { max-width: 100%; min-height: 44px; }
 .cargo-action-screen ::deep .mud-button-root { min-height: 44px; }
+
+@media (max-width: 600px) {
+    .cargo-photo-label ::deep input[type="file"] { width: 100%; min-width: 0; }
+    .cargo-photo-label ::deep input[type="file"]::file-selector-button { min-height: 44px; }
+}

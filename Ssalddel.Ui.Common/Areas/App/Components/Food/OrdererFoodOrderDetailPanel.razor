@@ -60,6 +60,13 @@
                      Variant="Variant.Filled">
                 @detail.주문.상태
             </MudChip>
+            @if (Detail.최신상태확인됨 && !Detail.처리중
+                && detail.주문.상태 == 음식주문상태코드.픽업완료
+                && detail.주문.배차상태 == 음식주문배차상태코드.배달중
+                && !detail.배달진행.기사전달완료 && !Detail.수령확인표시)
+            {
+                <MudText Typo="Typo.body2">@OrdererFoodOrderPresentation.DispatchLabel(detail.주문.배차상태)</MudText>
+            }
             <span>@($"{detail.주문.총주문금액:N0}원")</span>
         </div>
 

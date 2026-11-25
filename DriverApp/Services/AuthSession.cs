@@ -122,10 +122,11 @@ public sealed class AuthSession : IAuthSession
     {
         cancellationToken.ThrowIfCancellationRequested();
         await _tokenStore.SaveAsync(snapshot, cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
+        // 저장이 완료됐으면 화면 취소가 와도 메모리·판본을 같은 토큰으로 맞춥니다.
         _restored = true;
         ApplySnapshot(snapshot, startsNewSession);
         Changed?.Invoke();
+        cancellationToken.ThrowIfCancellationRequested();
     }
 
     private async Task ClearCoreAsync(CancellationToken cancellationToken)

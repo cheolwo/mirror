@@ -1,0 +1,13 @@
+@page "/driver/dispatch/{RequestId}/explanation"
+@layout MainLayout
+@using Ssalddel.Ui.Common.Areas.App.Components.Transport
+
+<PageTitle>배차 설명·의견</PageTitle>
+<div class="pa-4">
+    <a href="/driver/menu" class="mud-link">기사 메뉴로</a>
+    <CargoDispatchExplanationFeedbackPanel RequestId="@RequestId" InitiallyExpanded="true" />
+</div>
+
+@code {
+    [Parameter] public string RequestId { get; set; } = string.Empty;
+}

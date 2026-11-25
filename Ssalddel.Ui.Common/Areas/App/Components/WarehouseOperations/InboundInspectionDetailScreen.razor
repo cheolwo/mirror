@@ -119,6 +119,14 @@
     }
 
     private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "-" : value;
-    private static string FormatDateTime(DateTime? value)
-        => value.HasValue ? $"{value.Value.ToLocalTime():yyyy-MM-dd HH:mm} (기기 시각)" : "-";
+    private static RenderFragment FormatDateTime(DateTime? value) => @<text>
+        @if (value is { } timestamp)
+        {
+            <text>@($"{timestamp.ToLocalTime():yyyy-MM-dd HH:mm} ")<span class="inbound-inspection-detail__time-source">(기기 시각)</span></text>
+        }
+        else
+        {
+            <text>-</text>
+        }
+    </text>;
 }

@@ -59,7 +59,7 @@ public sealed partial class 출고예정검토상세ViewModel(I출고예정검�
     public void 조회대상설정(long? id)
     {
         var normalized = id is > 0 ? id : null;
-        if (조회대상Id == normalized) return;
+        if (조회대상Id == normalized && normalized is not null) return;
         조회대상Id = normalized;
         항목 = null;
         대상없음 = false;

@@ -91,6 +91,9 @@ public static class MauiProgram
 #if ANDROID
         builder.Services.AddSingleton<IRestaurantReceiptPrinter, Platforms.Android.AndroidRestaurantReceiptPrinter>();
         builder.Services.AddSingleton<IRestaurantOrderNotificationPlatform, Platforms.Android.AndroidRestaurantOrderNotifications>();
+#elif WINDOWS
+        builder.Services.AddSingleton<IRestaurantReceiptPrinter, Platforms.Windows.WindowsRestaurantReceiptPrinter>();
+        builder.Services.AddSingleton<IRestaurantOrderNotificationPlatform, NoRestaurantOrderNotifications>();
 #else
         builder.Services.AddSingleton<IRestaurantReceiptPrinter, BrowserRestaurantReceiptPrinter>();
         builder.Services.AddSingleton<IRestaurantOrderNotificationPlatform, NoRestaurantOrderNotifications>();
@@ -98,6 +101,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<RestaurantOrderNotificationCoordinator>();
         builder.Services.AddSingleton<I음식점주문SignalRClientService, 음식점주문SignalRClientService>();
         builder.Services.AddSingleton<I음식점조리시간설정Service, 음식점조리시간설정Service>();
+        builder.Services.AddSingleton<I음식점전표출력설정Store, Maui음식점전표출력설정Store>();
+        builder.Services.AddSingleton<I음식점전표출력설정Service, 음식점전표출력설정Service>();
         builder.Services.AddSsalddelUiCommonAppServices<RestaurantAccessTokenProvider>();
         builder.Services.AddTransient<음식Controller기능모음ViewModel>();
         builder.Services.AddTransient<음식점주문조회ViewModel>();

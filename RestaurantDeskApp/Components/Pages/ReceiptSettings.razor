@@ -1,0 +1,143 @@
+@page "/settings/receipts"
+@inject I음식점전표출력설정Service ReceiptSettingsService
+@implements IDisposable
+
+<PageTitle>빌지 출력 설정</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-4">
+    <MudStack Spacing="3">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="restaurant-page-header">
+            <MudText Typo="Typo.h4">빌지 출력 설정</MudText>
+            <MudButton Href="/store" Variant="Variant.Outlined" Disabled="@IsBusy" StartIcon="@Icons.Material.Filled.ArrowBack">가게 관리</MudButton>
+        </MudStack>
+
+        <MudText Typo="Typo.body1">조리와 포장에 사용할 빌지 장수를 선택해 주세요.</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">이 기기의 설정입니다. 다른 기기와 동기화되지 않습니다.</MudText>
+
+        @if (isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" aria-label="빌지 설정을 불러오고 있습니다" />
+        }
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <MudAlert Severity="@messageSeverity" role="@(messageSeverity == Severity.Error ? "alert" : "status")">@message</MudAlert>
+        }
+
+        <MudPaper Outlined="true" Elevation="0" Class="pa-4 restaurant-home-card">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @(confirmedCopies is { } current ? $"현재 설정 · {current}장" : "현재 설정을 확인하지 못했습니다.")
+                </MudText>
+                <fieldset disabled="@ControlsDisabled" style="border:0;padding:0;margin:0;min-width:0;">
+                    <legend style="font-weight:600;margin-bottom:8px;">출력 장수</legend>
+                    <label style="display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 0;cursor:pointer;">
+                        <input type="radio" name="restaurant-receipt-copies" value="2" checked="@(selectedCopies == 2)"
+                               @onchange="@(() => SelectCopies(2))" style="width:20px;height:20px;flex-shrink:0;accent-color:var(--mud-palette-primary,#0F766E);" />
+                        <span>2장 (조리용·포장용) · 기본</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 0;cursor:pointer;">
+                        <input type="radio" name="restaurant-receipt-copies" value="1" checked="@(selectedCopies == 1)"
+                               @onchange="@(() => SelectCopies(1))" style="width:20px;height:20px;flex-shrink:0;accent-color:var(--mud-palette-primary,#0F766E);" />
+                        <span>1장 (조리·포장용)</span>
+                    </label>
+                </fieldset>
+                @if (hasLoaded && confirmedCopies != selectedCopies)
+                {
+                    <MudText Typo="Typo.body2">선택한 @(selectedCopies)장을 사용하려면 저장해 주세요.</MudText>
+                }
+            </MudStack>
+        </MudPaper>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            선택한 장수분을 하나의 인쇄 문서로 만듭니다. 인쇄 창의 부수가 1부인지 확인해 주세요.
+            실제 인쇄·절단 결과는 프린터에서 확인해 주세요.
+        </MudAlert>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true"
+                   Disabled="@ControlsDisabled" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save" Style="min-height:48px;">
+            @(isSaving ? "저장 중" : "설정 저장")
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Disabled="@IsBusy" OnClick="Reload" StartIcon="@Icons.Material.Filled.Refresh" Style="min-height:48px;">다시 불러오기</MudButton>
+        <MudButton Href="/orders" Variant="Variant.Text" Disabled="@IsBusy">주문 수신함</MudButton>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private int selectedCopies = 2;
+    private int? confirmedCopies;
+    private bool isLoading = true, isSaving, hasLoaded, disposed;
+    private string? message;
+    private Severity messageSeverity = Severity.Info;
+    private readonly CancellationTokenSource lifetime = new();
+    private bool IsBusy => isLoading || isSaving;
+    private bool ControlsDisabled => IsBusy || !hasLoaded || disposed;
+
+    protected override void OnInitialized() => LoadCurrent();
+
+    private void Reload()
+    {
+        if (IsBusy || disposed) return;
+        LoadCurrent();
+    }
+
+    private void LoadCurrent()
+    {
+        isLoading = true; message = null; confirmedCopies = null; hasLoaded = false;
+        try
+        {
+            var current = ReceiptSettingsService.현재조회().출력장수;
+            if (current is not (1 or 2)) throw new InvalidDataException();
+            confirmedCopies = selectedCopies = current; hasLoaded = true;
+        }
+        catch
+        {
+            messageSeverity = Severity.Error;
+            message = "빌지 설정을 불러오지 못했습니다. 다시 불러오기를 눌러 확인해 주세요.";
+        }
+        finally { isLoading = false; }
+    }
+
+    private void SelectCopies(int copies)
+    {
+        if (ControlsDisabled || copies is not (1 or 2)) return;
+        selectedCopies = copies; message = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (ControlsDisabled) return;
+        var requestedCopies = selectedCopies;
+        isSaving = true; message = null;
+        try
+        {
+            await ReceiptSettingsService.저장Async(requestedCopies, lifetime.Token);
+            if (disposed) return;
+            var current = ReceiptSettingsService.현재조회().출력장수;
+            if (current is not (1 or 2)) throw new InvalidDataException();
+            confirmedCopies = current;
+            if (current != requestedCopies)
+            {
+                messageSeverity = Severity.Warning;
+                message = "현재 설정이 선택한 장수와 다릅니다. 다시 불러오거나 선택한 장수를 저장해 주세요.";
+                return;
+            }
+            messageSeverity = Severity.Success;
+            message = "빌지 출력 장수를 이 기기에 저장했습니다. 다음 출력부터 적용됩니다.";
+        }
+        catch (OperationCanceledException) when (disposed || lifetime.IsCancellationRequested) { }
+        catch
+        {
+            if (disposed) return;
+            confirmedCopies = null;
+            messageSeverity = Severity.Error;
+            message = "설정 저장 결과를 확인하지 못했습니다. 선택한 장수는 유지했으니 다시 불러오거나 저장해 주세요.";
+        }
+        finally { if (!disposed) isSaving = false; }
+    }
+
+    public void Dispose()
+    {
+        if (disposed) return;
+        disposed = true; lifetime.Cancel(); lifetime.Dispose();
+    }
+}

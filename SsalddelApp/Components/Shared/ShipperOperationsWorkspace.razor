@@ -16,7 +16,7 @@
                 <MudText Typo="Typo.h6">운영 작업대</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">창고, 판매채널, 주문 출고, 통관 검토를 한 곳에서 확인합니다.</MudText>
             </MudStack>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@isBusy" OnClick="LoadAsync">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Style="white-space: nowrap; flex-shrink: 0;" Disabled="@isBusy" OnClick="LoadAsync">
                 새로고침
             </MudButton>
         </MudStack>
@@ -76,7 +76,11 @@
                 <MudPaper Elevation="0" Class="pa-3 h-100" Style="border:1px solid var(--mud-palette-divider); border-radius: 8px;">
                     <MudStack Spacing="2">
                         <MudText Typo="Typo.subtitle1">최근 출고 알림</MudText>
-                        @if (recentNotifications.Count == 0)
+                        @if (!hasLoaded)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@(isBusy ? "출고 알림을 확인하고 있습니다." : "출고 알림을 확인하지 못했습니다.")</MudText>
+                        }
+                        else if (recentNotifications.Count == 0)
                         {
                             <MudText Typo="Typo.body2" Color="Color.Secondary">아직 주문 출고 알림이 없습니다.</MudText>
                         }
@@ -107,6 +111,7 @@
     private IReadOnlyList<CustomsHsReviewRequest> reviews = [];
     private int connectedChannelCount;
     private bool isBusy;
+    private bool hasLoaded;
     private string? message;
     private Severity messageSeverity = Severity.Info;
 
@@ -117,19 +122,21 @@
 
     private IReadOnlyList<WorkspaceMetric> Metrics =>
     [
-        new("입고 대기", PendingInboundCount.ToString(), "창고 입고 처리 필요", Icons.Material.Filled.MoveToInbox, Color.Warning),
-        new("가용 재고", AvailableInventoryCount.ToString(), "판매 또는 재위탁 가능", Icons.Material.Filled.Inventory2, Color.Success),
-        new("출고 대기", ReadyOutboundCount.ToString(), "창고 담당자 알림", Icons.Material.Filled.Outbox, Color.Primary),
-        new("HS 검토", OpenHsReviewCount.ToString(), "관세사 확인 필요", Icons.Material.Filled.FactCheck, Color.Info)
+        new("입고 대기", FormatCount(PendingInboundCount), "창고 입고 처리 필요", Icons.Material.Filled.MoveToInbox, Color.Warning),
+        new("가용 재고", FormatCount(AvailableInventoryCount), "판매 또는 재위탁 가능", Icons.Material.Filled.Inventory2, Color.Success),
+        new("출고 대기", FormatCount(ReadyOutboundCount), "창고 담당자 알림", Icons.Material.Filled.Outbox, Color.Primary),
+        new("HS 검토", FormatCount(OpenHsReviewCount), "관세사 확인 필요", Icons.Material.Filled.FactCheck, Color.Info)
     ];
 
     private IReadOnlyList<WorkspaceTask> PriorityTasks =>
     [
-        new($"입고 예정 {PendingInboundCount}건", "입고 현황에서 창고 도착/재고 전환 흐름을 확인합니다.", ShipperRoutes.InboundRequests, Icons.Material.Filled.Warehouse, PendingInboundCount > 0 ? Color.Warning : Color.Default),
-        new($"재고 후속 업무 {AvailableInventoryCount}건", "가용 재고를 판매 등록 또는 재위탁 운송으로 연결합니다.", ShipperRoutes.WarehouseInventory, Icons.Material.Filled.Inventory2, AvailableInventoryCount > 0 ? Color.Success : Color.Default),
-        new($"판매채널 {connectedChannelCount}개 연결", "상품 출품과 주문 수집을 위한 채널 연결 상태를 확인합니다.", ShipperRoutes.SalesChannels, Icons.Material.Filled.Storefront, connectedChannelCount > 0 ? Color.Primary : Color.Warning),
-        new($"HS 검토 진행 {OpenHsReviewCount}건", "수출입 흐름이 있는 상품의 HS 코드 검토 상태를 확인합니다.", ShipperRoutes.CustomsHsReviews, Icons.Material.Filled.FactCheck, OpenHsReviewCount > 0 ? Color.Info : Color.Default)
+        new($"입고 예정 {FormatCount(PendingInboundCount, "건")}", "입고 현황에서 창고 도착/재고 전환 흐름을 확인합니다.", ShipperRoutes.InboundRequests, Icons.Material.Filled.Warehouse, PendingInboundCount > 0 ? Color.Warning : Color.Default),
+        new($"재고 후속 업무 {FormatCount(AvailableInventoryCount, "건")}", "가용 재고를 판매 등록 또는 재위탁 운송으로 연결합니다.", ShipperRoutes.WarehouseInventory, Icons.Material.Filled.Inventory2, AvailableInventoryCount > 0 ? Color.Success : Color.Default),
+        new($"판매채널 {FormatCount(connectedChannelCount, "개 연결")}", "상품 출품과 주문 수집을 위한 채널 연결 상태를 확인합니다.", ShipperRoutes.SalesChannels, Icons.Material.Filled.Storefront, connectedChannelCount > 0 ? Color.Primary : Color.Warning),
+        new($"HS 검토 진행 {FormatCount(OpenHsReviewCount, "건")}", "수출입 흐름이 있는 상품의 HS 코드 검토 상태를 확인합니다.", ShipperRoutes.CustomsHsReviews, Icons.Material.Filled.FactCheck, OpenHsReviewCount > 0 ? Color.Info : Color.Default)
     ];
+
+    private string FormatCount(int count, string suffix = "") => hasLoaded ? $"{count}{suffix}" : "—";
 
     private int PendingInboundCount => inbounds.Count(x => string.Equals(x.상태, "입고예정", StringComparison.OrdinalIgnoreCase));
 
@@ -156,11 +163,18 @@
 
         try
         {
-            inbounds = await ShipperOperations.GetInboundsAsync();
-            inventory = await ShipperOperations.GetInventoryAsync();
-            notifications = await FulfillmentService.GetNotificationsAsync();
-            reviews = await CustomsReviewService.GetReviewsAsync();
-            connectedChannelCount = (await SalesService.GetAccountsAsync())?.Items.Count ?? 0;
+            var 새입고목록 = await ShipperOperations.GetInboundsAsync();
+            var 새재고목록 = await ShipperOperations.GetInventoryAsync();
+            var 새출고알림 = await FulfillmentService.GetNotificationsAsync();
+            var 새Hs검토목록 = await CustomsReviewService.GetReviewsAsync();
+            var 새연결채널수 = (await SalesService.GetAccountsAsync())?.Items.Count ?? 0;
+
+            inbounds = 새입고목록;
+            inventory = 새재고목록;
+            notifications = 새출고알림;
+            reviews = 새Hs검토목록;
+            connectedChannelCount = 새연결채널수;
+            hasLoaded = true;
         }
         catch (Exception ex)
         {

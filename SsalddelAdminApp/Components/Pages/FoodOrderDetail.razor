@@ -10,7 +10,7 @@
 <PageTitle>음식 주문 확인</PageTitle>
 
 <div class="food-mobile-detail">
-<MudStack Spacing="3">
+<MudStack Spacing="3" @key="(OrderNo, Session.UserId)">
     <MudText Typo="Typo.h4">음식 주문 확인</MudText>
     @if (restoring || state is null) { <MudProgressLinear Indeterminate="true" /> }
     else if (!Session.IsServerAdmin || state.RequiresLogin || !state.AuthenticationCurrent)
@@ -28,6 +28,9 @@
             var actorText = trace.생명주기조화.현재책임주체Codes.Count > 0
                 ? string.Join(" · ", trace.생명주기조화.현재책임주체Codes.Select(AdminFoodOperationsState.ActorText))
                 : trace.생명주기조화.현재단계Code == 음식배달운영생명주기단계Codes.종료 ? "없음 · 주문 종료" : "미확인";
+            var checkpoints = trace.체크포인트.Where(x => x.단계Key != "ledger-sync").ToArray();
+            var completedCheckpoints = checkpoints.Where(완료된단계).ToArray();
+            var currentCheckpoints = checkpoints.Where(x => !완료된단계(x)).ToArray();
             <MudPaper Elevation="0" Outlined="true" Class="pa-4">
                 <MudStack Spacing="2">
                     @if (state.TraceIsStale)
@@ -38,7 +41,9 @@
                     }
                     <MudText Typo="Typo.h6">@trace.음식점명</MudText>
                     <MudText Typo="Typo.body2">@trace.주문번호</MudText>
-                    <MudChip T="string" Color="@(trace.생명주기조화.운영자확인필요여부 ? Color.Warning : Color.Primary)">@AdminFoodOperationsState.StageText(trace.생명주기조화.현재단계Code)</MudChip>
+                    <MudChip T="string"
+                             Color="@(trace.생명주기조화.운영자확인필요여부 ? Color.Warning : Color.Primary)"
+                             Style="align-self: flex-start;">@AdminFoodOperationsState.StageText(trace.생명주기조화.현재단계Code)</MudChip>
                     <MudText Typo="Typo.body2">주문 @trace.주문상태 · 배차 @trace.배차상태</MudText>
                     <MudDivider />
                     <MudText Typo="Typo.body2">@(state.TraceIsStale ? "이전 확인 시 담당" : "다음 담당"): @actorText</MudText>
@@ -50,36 +55,47 @@
             @foreach (var guide in trace.복구안내목록) { <MudAlert Severity="Severity.Info">@guide</MudAlert> }
             @if (trace.배달시도목록.Any(x => x.상태Code == 음식배달시도상태Code.중단))
             { <MudButton Href="@ReviewUrl" Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!state.CanReview)">배달 중단 검토</MudButton> }
-            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
-                <MudStack Spacing="2">
-                    <MudText Typo="Typo.h6">주문 진행</MudText>
-                    @foreach (var point in trace.체크포인트.Where(x => x.단계Key != "ledger-sync"))
-                    {
-                        <div class="food-progress-row">
-                            <MudText Typo="Typo.subtitle2">@point.단계명 · @point.상태</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@AdminFoodOperationsState.DateText(point.변경시각Utc)</MudText>
-                        </div>
-                    }
-                </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="0" Outlined="true" Class="pa-4">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4" data-food-order-settlement-summary>
                 <MudStack Spacing="2">
                     <MudText Typo="Typo.h6">기사 정산</MudText>
                     @if (trace.DriverSettlement is { } settlement)
                     {
                         var display = FoodDeliverySettlementDisplay.From(settlement);
-                        <MudText Typo="Typo.body2">배달료 @display.GrossText · @(settlement.DeductionAmount.HasValue ? $"공제 {display.DeductionText}" : display.DeductionText)</MudText>
                         <MudText Typo="Typo.h6">@(settlement.NetAmount.HasValue ? $"수령액 {display.NetText}" : display.NetText)</MudText>
+                        @if (!settlement.GrossAmount.HasValue)
+                        { <MudText Typo="Typo.body2">@display.GrossText</MudText> }
+                        @if (!settlement.DeductionAmount.HasValue)
+                        { <MudText Typo="Typo.body2">@display.DeductionText</MudText> }
                         <MudText Typo="Typo.body2">@display.ProgressText</MudText>
                         @if (!settlement.IsOperationalPayoutReady)
                         { <MudText Typo="Typo.body2">지급 재원 확인 전입니다. 과거 결제 승인이나 현장결제 메모만으로 실제 지급을 진행하지 않습니다.</MudText> }
                         <MudAlert Severity="Severity.Info">@display.NoticeText</MudAlert>
                         @if (!string.IsNullOrWhiteSpace(settlement.HoldReason)) { <MudAlert Severity="Severity.Warning">@settlement.HoldReason</MudAlert> }
+                        <MudExpansionPanels>
+                            <MudExpansionPanel Text="정산 세부 내역" data-food-order-settlement-detail>
+                                <MudText Typo="Typo.body2">배달료 @display.GrossText · @(settlement.DeductionAmount.HasValue ? $"공제 {display.DeductionText}" : display.DeductionText)</MudText>
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
                     }
                     else { <MudText Typo="Typo.body2">전달 완료 후 정산이 생성됩니다.</MudText> }
                 </MudStack>
             </MudPaper>
+            @if (currentCheckpoints.Length > 0)
+            {
+                <MudPaper Elevation="0" Outlined="true" Class="pa-4" data-food-order-current-progress>
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.h6">현재 진행 단계</MudText>
+                        @foreach (var point in currentCheckpoints) { @진행단계(point) }
+                    </MudStack>
+                </MudPaper>
+            }
             <MudExpansionPanels>
+                @if (completedCheckpoints.Length > 0)
+                {
+                    <MudExpansionPanel Text="@($"완료된 진행 이력 ({completedCheckpoints.Length}단계)")" data-food-order-completed-progress>
+                        @foreach (var point in completedCheckpoints) { @진행단계(point) }
+                    </MudExpansionPanel>
+                }
                 <MudExpansionPanel Text="배달 이력">
                     @foreach (var attempt in trace.배달시도목록.OrderByDescending(x => x.시도순번))
                     {
@@ -105,6 +121,12 @@
     private string DetailUrl => "/food-operations/orders/" + Uri.EscapeDataString(OrderNo);
     private string ReviewUrl => "/food-operations/reviews/" + Uri.EscapeDataString(OrderNo);
     private string LoginUrl => "/login?returnUrl=" + Uri.EscapeDataString(DetailUrl);
+    private static bool 완료된단계(음식주문운영체크포인트응답 point)
+        => string.Equals(point.상태, 음식주문운영추적상태코드.완료, StringComparison.Ordinal);
+    private static RenderFragment 진행단계(음식주문운영체크포인트응답 point) => @<div class="food-progress-row">
+        <MudText Typo="Typo.subtitle2">@point.단계명 · @point.상태</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@AdminFoodOperationsState.DateText(point.변경시각Utc)</MudText>
+    </div>;
     protected override async Task OnInitializedAsync()
     {
         state = new(FoodService, () => Session.IsServerAdmin ? Session.UserId : string.Empty);

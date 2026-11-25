@@ -133,6 +133,7 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
                 ApplyPending(pending);
                 if (pending is null) await RestoreDraftAsync(context);
             }
+            if (!IsCurrent(context)) return;
             RegistrationEnabled = true;
             _initialized = true;
             RegistrationBoundaryMessage = "등록만으로 자동 배차·계약·결제를 확정하지 않습니다. 응답을 확인하지 못한 접수는 같은 번호로 결과를 먼저 확인합니다.";
@@ -149,13 +150,13 @@ public sealed class ShipperRequestAuthoringPageViewModel : IDisposable
             }
             else { StatusMessage = string.Empty; StatusSeverity = Severity.Info; }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             if (_submissionResults.IsDisposed || generation != _submissionResults.Generation) return;
             VehicleTypes = [];
             RegistrationEnabled = false;
             StatusSeverity = Severity.Warning;
-            StatusMessage = $"등록 준비를 확인하지 못했습니다. 입력을 유지했으니 다시 확인해 주세요. {ex.Message}";
+            StatusMessage = "등록 준비를 확인하지 못했습니다. 입력을 유지했으니 다시 확인해 주세요.";
             RegistrationBoundaryMessage = "등록 준비를 다시 확인한 뒤 계속할 수 있습니다. 기존 접수 결과가 있으면 먼저 조회합니다.";
         }
         finally { if (generation == _submissionResults.Generation) _initializing = false; }

@@ -50,17 +50,27 @@ public sealed class FDriverAuthApiService
         bool forceRefresh = false,
         CancellationToken cancellationToken = default)
     {
+        var owner = _session.UserId;
+        await _session.RestoreAsync(cancellationToken);
+        if (owner is not null) EnsureOwner();
+        // 최초 장치 복원의 계정은 채택하되, 이후 갱신 대기에서는 다른 계정으로 넘어가지 않습니다.
+        owner ??= _session.UserId;
+        EnsureOwner();
         await _refreshGate.WaitAsync(cancellationToken);
         try
         {
-            var state = await _session.RestoreAsync(cancellationToken);
+            EnsureOwner();
+            var state = _session.CurrentState;
             if (!forceRefresh && state == ClientAuthSessionRestoreState.Authenticated)
             {
+                EnsureOwner();
                 return FDriverTokenRequestResult.Success;
             }
 
-            if (string.IsNullOrWhiteSpace(_session.UserId)
-                || string.IsNullOrWhiteSpace(_session.RefreshToken)
+            var refreshToken = _session.RefreshToken;
+            EnsureOwner();
+            if (string.IsNullOrWhiteSpace(owner)
+                || string.IsNullOrWhiteSpace(refreshToken)
                 || _session.RefreshTokenExpiresAtUtc <= DateTime.UtcNow)
             {
                 return new FDriverTokenRequestResult(false,
@@ -69,16 +79,18 @@ public sealed class FDriverAuthApiService
 
             var rejectedRevision = _session.SessionRevision;
             var rejectedEpoch = Interlocked.Read(ref _sessionEpoch);
-            var rejectedOwner = _session.UserId;
+            var rejectedOwner = owner;
+            EnsureOwner();
             var result = await SendTokenRequestAsync(
                 "api/v1/auth/refresh",
                 new 토큰갱신요청
                 {
-                    UserId = _session.UserId,
-                    RefreshToken = _session.RefreshToken
+                    UserId = owner,
+                    RefreshToken = refreshToken
                 },
                 "로그인 세션을 갱신하지 못했습니다. 다시 시도해 주세요.",
                 cancellationToken);
+            EnsureOwner();
             if (!result.IsSuccess
                 && result.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized)
             {
@@ -101,6 +113,13 @@ public sealed class FDriverAuthApiService
         finally
         {
             _refreshGate.Release();
+        }
+
+        void EnsureOwner()
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.Equals(owner, _session.UserId, StringComparison.Ordinal))
+                throw new OperationCanceledException("계정이 변경되어 이전 인증 준비를 중단합니다.", cancellationToken);
         }
     }
 
