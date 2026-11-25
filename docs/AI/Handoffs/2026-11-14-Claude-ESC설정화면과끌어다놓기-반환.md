@@ -2,7 +2,7 @@
 
 - **작업실 역할.** 개발 작업실(Claude)의 반환이다. PLANNING · r 문서는 바꾸지 않았다. [음악 파일에 맞춘 빛](2026-11-14-Claude-음악파일에맞춘빛-반환.md)의 뒤를 잇는다.
 - **사용자의 말(2026-11-14 21시경).** 「음악은 ESC 누르면 설정에 들어가고, 그 설정 UI 화면에 음악이 있고, 거기에 wav나 mp3 파일을 넣으면 분석이 되어서 박자 흐름에 맞춰 빛이 움직이는 식으로 하면 좋겠다.」 → Claude가 두 가지를 물음 → 「가운데 큰 설정 화면」, 「파일 창 + 끌어다 놓기」.
-- **쓰기 경로.** `ssalddel/Assets\Ssalddel\WindowsGame\Runtime\`. Kernel은 건드리지 않았다.
+- **쓰기 경로.** `C:\Users\user\ssalddel\Assets\Ssalddel\WindowsGame\Runtime\`. Kernel은 건드리지 않았다.
 - **그림.** `artifacts/local/hongdal-unity-claude-20261112/captures/방향촬영-20261114/설정화면-ESC-음악탭과-지도탭.jpg`. 내부 검토용 · 배포 아님.
 
 ## 1. 무엇이 달라졌나

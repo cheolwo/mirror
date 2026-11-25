@@ -16,8 +16,8 @@
 
 | 대상 | 현재 기준 | 의미 |
 | --- | --- | --- |
-| Hongdal | `Hongdal/`, `dev/mirror-integration`, `7c83c18cf9607b3854120c15f85d5dd8f9ab14d8` | 문서·공통 Core·수집 코드의 기존 작업본. 감사 당시 dirty614 |
-| Unity | `ssalddel/`, `unity/workstream-transition`, `605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77` | 실제 `Assets/Ssalddel/WindowsGame` 소비판. 감사 당시 dirty125 |
+| Hongdal | `C:/Users/user/source/repos/Hongdal`, `dev/mirror-integration`, `7c83c18cf9607b3854120c15f85d5dd8f9ab14d8` | 문서·공통 Core·수집 코드의 기존 작업본. 감사 당시 dirty614 |
+| Unity | `C:/Users/user/ssalddel`, `unity/workstream-transition`, `605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77` | 실제 `Assets/Ssalddel/WindowsGame` 소비판. 감사 당시 dirty125 |
 
 HEAD만으로 미커밋 작업을 재현할 수 없다. dirty 개수는 감사 시점 정보이며 개수가 같다는 것만으로 동일 입력이라고 판단하지 않는다. 색인의 정확한 관련 파일/hash를 편집 직전에 대조한다. 관련 없는 dirty 변경이나 다른 Goal의 존재만으로 차단하거나 정리하지 않는다.
 

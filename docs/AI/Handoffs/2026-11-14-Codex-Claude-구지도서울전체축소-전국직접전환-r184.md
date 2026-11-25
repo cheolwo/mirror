@@ -18,8 +18,8 @@ r171의 서울 보충망 제안, 기존 Claude의 동→구→서울→전국 �
 
 ## 2. 현재 작업본과 소유
 
-- Hongdal: `Hongdal/` · `dev/mirror-integration@7c83c18cf9607b3854120c15f85d5dd8f9ab14d8`.
-- Unity: `ssalddel/` · `unity/workstream-transition@605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`.
+- Hongdal: `C:/Users/user/source/repos/Hongdal` · `dev/mirror-integration@7c83c18cf9607b3854120c15f85d5dd8f9ab14d8`.
+- Unity: `C:/Users/user/ssalddel` · `unity/workstream-transition@605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`.
 - WindowsGame은 미커밋/미추적 입력이다. HEAD가 같아도 입력 지문과 dirty 경계를 다시 비교한다.
 - Claude의 [현재 고도화 순서](2026-11-14-Claude-고도화-순서표.md) A1~A6가 카메라/좌표 계산을 만질 수 있다. 같은 파일의 쓰기는 현재 담당과 조율해 한 소유자가 병합하고 기존 리팩토링을 되돌리지 않는다.
 - 현재 Codex는 읽기 대조와 문서만 작성했다. Unity 파일·빌드·사용자 실행 창·세이브 소유를 인수하지 않았다.
@@ -84,4 +84,4 @@ r184 §5의 완료표를 기준으로 한다.
 
 ## Codex 작성 검증
 
-문서/입력 검증 (로컬 검토 자료 `artifacts/local/district-seoul-plan-r184-20261114/verification.json`)에서 정본 SHA·이 인계의 hash 참조·로컬 연결·UTF-8/공백과 서울25구/고유 코드·원본 제한을 대조했다. 최초 대조13/13 일치 뒤 최종 점검에서 `SagajeongDispatchLevelPrompt.cs`의 동시 변경을 관찰했다. 입력 JSON은 당시 기준으로 보존하고 일치수/변경 목록은 검증 기록에 분리했다. 수용자가 최신 코드 차이와 쓰기 소유를 다시 확인한다. 지정7문서/JSON의 Fast와 `git diff --check`를 통과했으며 Fast 자체의 빌드/시험은 생략됐다. 실제 Unity/화면 검증·새 도형 전체 검사·실행권 수용은 이후 반환 범위다.
+[문서/입력 검증](../../../artifacts/local/district-seoul-plan-r184-20261114/verification.json)에서 정본 SHA·이 인계의 hash 참조·로컬 연결·UTF-8/공백과 서울25구/고유 코드·원본 제한을 대조했다. 최초 대조13/13 일치 뒤 최종 점검에서 `SagajeongDispatchLevelPrompt.cs`의 동시 변경을 관찰했다. 입력 JSON은 당시 기준으로 보존하고 일치수/변경 목록은 검증 기록에 분리했다. 수용자가 최신 코드 차이와 쓰기 소유를 다시 확인한다. 지정7문서/JSON의 Fast와 `git diff --check`를 통과했으며 Fast 자체의 빌드/시험은 생략됐다. 실제 Unity/화면 검증·새 도형 전체 검사·실행권 수용은 이후 반환 범위다.

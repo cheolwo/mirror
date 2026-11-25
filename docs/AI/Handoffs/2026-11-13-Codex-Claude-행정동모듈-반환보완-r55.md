@@ -2,8 +2,8 @@
 
 - 날짜/역할: 2026-11-13, Codex 반환 검토·독립 검사.
 - 정본: [행정동 디오라마 r55](../Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/windows-dong-return-hardening.review.r55.md). r54·첫 반환과의 차이는 정본에 기록했다.
-- 사용자 경계: **Claude 작업 중 — 겹치는 파일은 남겨 두기**. 이번에 `ssalddel/`의 제품/자원/검사/빌드는 변경하지 않았다. 작업 중인 붙여/띄워/이 동만 보기를 덮어쓰지 않는다.
-- 이번 산출물: Hongdal의 읽기 전용 [감사기](../../../eng/neighborhood/audit_windows_dong_module_resources.py), [회귀 검사](../../../eng/neighborhood/test_audit_windows_dong_module_resources.py), 실제 결과 (로컬 검토 자료 `artifacts/local/dong-resource-audit-20261113-codex/resource-audit.json`), 검토 소스 지문 (로컬 검토 자료 `artifacts/local/dong-resource-audit-20261113-codex/reviewed-source-fingerprints.json`).
+- 사용자 경계: **Claude 작업 중 — 겹치는 파일은 남겨 두기**. 이번에 `C:/Users/user/ssalddel/`의 제품/자원/검사/빌드는 변경하지 않았다. 작업 중인 붙여/띄워/이 동만 보기를 덮어쓰지 않는다.
+- 이번 산출물: Hongdal의 읽기 전용 [감사기](../../../eng/neighborhood/audit_windows_dong_module_resources.py), [회귀 검사](../../../eng/neighborhood/test_audit_windows_dong_module_resources.py), [실제 결과](../../../artifacts/local/dong-resource-audit-20261113-codex/resource-audit.json), [검토 소스 지문](../../../artifacts/local/dong-resource-audit-20261113-codex/reviewed-source-fingerprints.json).
 
 ## 검토 후 이어 할 것
 
@@ -17,11 +17,11 @@
 
 ## 실행
 
-Hongdal 루트에서 Python 3.10 이상, 외부 패키지 없이 실행한다. 이 PC에서 `python` 명령이 없으면 `python`를 사용한다.
+Hongdal 루트에서 Python 3.10 이상, 외부 패키지 없이 실행한다. 이 PC에서 `python` 명령이 없으면 `C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe`를 사용한다.
 
 ```powershell
 python -B -m unittest discover -s eng/neighborhood -p test_audit_windows_dong_module_resources.py -v
-python -B eng/neighborhood/audit_windows_dong_module_resources.py --resources ssalddel/Assets/Ssalddel/WindowsGame/Resources --report artifacts/local/dong-resource-audit-20261113-codex/claude-recheck.json
+python -B eng/neighborhood/audit_windows_dong_module_resources.py --resources C:/Users/user/ssalddel/Assets/Ssalddel/WindowsGame/Resources --report artifacts/local/dong-resource-audit-20261113-codex/claude-recheck.json
 ```
 
 종료 code는 0=`Passed`, 1=`Failed`, 2=`InputChangedDuringAudit`다. 입력 폴더 안의 보고서 경로는 거절한다. 파일 수정 중에는 안정된 묶음으로 다시 검사하고 2를 손상 확정이나 통과로 해석하지 않는다.

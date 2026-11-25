@@ -7,20 +7,20 @@
 
 ## 실제 전달물
 
-보관함/안내 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/README.md`) · 파일 지문/검증 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/verification.json`)
+[보관함/안내](../../../artifacts/local/delivery-scooter-model-20261114/README.md) · [파일 지문/검증](../../../artifacts/local/delivery-scooter-model-20261114/verification.json)
 
 | 파일 | 의미 |
 | --- | --- |
-| Blender 원본 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/models/hongdal-delivery-scooter-r1.blend`) | 편집 가능한 부품/재질, 별도 검토용 조명/바닥/4카메라. 열면 사선 카메라와 재질 색으로 검토하도록 저장 |
-| 전체 조합 FBX (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/exports/hongdal-delivery-scooter-r1.fbx`) | 모델 Mesh/Empty만. 검토 바닥/카메라/조명 제외 |
-| 차체 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/exports/scooter-vehicle.fbx`) · 정적 기사 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/exports/courier-static-pose.fbx`) · 배송함 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/exports/insulated-delivery-box.fbx`) | 나눠 조립/검토할 전달물. 정적 기사에 Armature/동작 Clip은 없음 |
-| 사선 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/previews/hero.png`) · 측면 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/previews/side.png`) · 정면 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/previews/front.png`) · 지도 시점 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/previews/map.png`) | Blender 렌더4장. 실제 Unity 지도/게임 화면이 아님 |
+| [Blender 원본](../../../artifacts/local/delivery-scooter-model-20261114/models/hongdal-delivery-scooter-r1.blend) | 편집 가능한 부품/재질, 별도 검토용 조명/바닥/4카메라. 열면 사선 카메라와 재질 색으로 검토하도록 저장 |
+| [전체 조합 FBX](../../../artifacts/local/delivery-scooter-model-20261114/exports/hongdal-delivery-scooter-r1.fbx) | 모델 Mesh/Empty만. 검토 바닥/카메라/조명 제외 |
+| [차체](../../../artifacts/local/delivery-scooter-model-20261114/exports/scooter-vehicle.fbx) · [정적 기사](../../../artifacts/local/delivery-scooter-model-20261114/exports/courier-static-pose.fbx) · [배송함](../../../artifacts/local/delivery-scooter-model-20261114/exports/insulated-delivery-box.fbx) | 나눠 조립/검토할 전달물. 정적 기사에 Armature/동작 Clip은 없음 |
+| [사선](../../../artifacts/local/delivery-scooter-model-20261114/previews/hero.png) · [측면](../../../artifacts/local/delivery-scooter-model-20261114/previews/side.png) · [정면](../../../artifacts/local/delivery-scooter-model-20261114/previews/front.png) · [지도 시점](../../../artifacts/local/delivery-scooter-model-20261114/previews/map.png) | Blender 렌더4장. 실제 Unity 지도/게임 화면이 아님 |
 
 차체·앞/뒤 바퀴 축·조향부·배송함/뚜껑·정적 탑승 기사·헬멧·좌석/그립/발판/배송함 연결 지점이 분리돼 있다. 편집 Mesh127개/수정자 적용 후 삼각형13,034개이며 게임용 병합/LOD·성능 최적화 완료가 아니다. 가상 조합의 크기는 거울 포함 폭1.04m·길이2.104m·기사 포함 높이1.837m다.
 
 ## 검증한 것
 
-실제 Blender5.2.1 LTS의 별도 background 프로세스로 원본 저장·FBX4개 export·렌더4장을 실행했다. 사용자 Blender 창/기존 편집 파일은 열지 않았다. 전체 FBX 왕복 (로컬 검토 자료 `artifacts/local/delivery-scooter-model-20261114/fbx-roundtrip-verification.json`)은 새 Blender 세션으로 다시 읽었다. Mesh127개와 분리 구성·Bounds를 확인했고, 원본과 치수 차이는 최대0.000000235m, 두 타이어의 지면 Z는 약0m, 장갑 중심과 그립 기준점 차이는 약0.013m였다. 검토 바닥/조명/카메라가 FBX에 들어가지 않았고 Armature/Clip도 없음을 확인했다.
+실제 Blender5.2.1 LTS의 별도 background 프로세스로 원본 저장·FBX4개 export·렌더4장을 실행했다. 사용자 Blender 창/기존 편집 파일은 열지 않았다. [전체 FBX 왕복](../../../artifacts/local/delivery-scooter-model-20261114/fbx-roundtrip-verification.json)은 새 Blender 세션으로 다시 읽었다. Mesh127개와 분리 구성·Bounds를 확인했고, 원본과 치수 차이는 최대0.000000235m, 두 타이어의 지면 Z는 약0m, 장갑 중심과 그립 기준점 차이는 약0.013m였다. 검토 바닥/조명/카메라가 FBX에 들어가지 않았고 Armature/Clip도 없음을 확인했다.
 
 네 렌더를 직접 봐서 실루엣·프레임·보이는 손/발/안장/배송함 지지·중앙 정렬을 확인했다. 첫 사선 렌더의 앞바퀴 크롭은 카메라 구도를 바꿔 수정했다. PNG/파일 지문·크기와 실제 산출물도 검사했다. 이는 모델/Blender 검증이며 Unity에서의 적용/앞방향/재질·입력·이동/업무·성능·E 승격을 뜻하지 않는다.
 

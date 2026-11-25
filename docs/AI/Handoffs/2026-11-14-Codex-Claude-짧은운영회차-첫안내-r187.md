@@ -40,7 +40,7 @@ UI의 전체 `state.settlement`/`campaign.latestSummary`를 한 주문의 금액
 
 ## 작업본·쓰기 소유
 
-Hongdal과 Unity 경로/branch/HEAD는 입력 JSON을 기준으로 현재와 대조한다. Unity 대상은 `ssalddel/Assets/Ssalddel/WindowsGame/`다. 미커밋/미추적 입력과 사용자 실행/세이브는 독립적으로 보호한다.
+Hongdal과 Unity 경로/branch/HEAD는 입력 JSON을 기준으로 현재와 대조한다. Unity 대상은 `C:/Users/user/ssalddel/Assets/Ssalddel/WindowsGame/`다. 미커밋/미추적 입력과 사용자 실행/세이브는 독립적으로 보호한다.
 
 [Claude 고도화 순서표](2026-11-14-Claude-고도화-순서표.md)와 [r174 기록 대조](2026-11-14-Claude-개발수용-r174-1부-기록대조.md)를 먼저 확인한다. A1 이후 카메라 작업·r174의 Kernel 시각 칸/일일 결산과 공유 파일을 동시에 덮지 않는다.
 

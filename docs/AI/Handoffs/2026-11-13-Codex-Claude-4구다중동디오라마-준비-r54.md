@@ -12,7 +12,7 @@
 
 기존 [r2 scope](../../../eng/world-seedbeds/administrative-dong-dioramas/northeast-seoul-rider.r2.json)의 모듈30개는 중랑16·광진 중곡4·동대문 일부10이며 노원은 포함하지 않는다. 역사 경계 후보이고 통행/게임/배포 플래그가 false다. 이를 현재 네 구 전체나 바로 사용할 Windows 자료로 보고하지 않는다.
 
-현재 확인한 소비판은 별도 Unity 작업본 `ssalddel/`, `unity/workstream-transition@605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`의 dirty `Assets/Ssalddel/WindowsGame`이다. 이 경로는 이번 대조 위치이며 고정 배포 경로가 아니다. `Runtime/SagajeongDispatchDiorama.cs`는 `hongdal-diorama`, `Runtime/SagajeongDispatchBuildings.cs`는 `hongdal-buildings` 고정 Resource를 읽는다. 실제 수용 전 현행 파일/지문·소유를 다시 확인한다.
+현재 확인한 소비판은 별도 Unity 작업본 `C:/Users/user/ssalddel`, `unity/workstream-transition@605e87ef46b2ebd3b19f65ebd9d650e0ccf44d77`의 dirty `Assets/Ssalddel/WindowsGame`이다. 이 경로는 이번 대조 위치이며 고정 배포 경로가 아니다. `Runtime/SagajeongDispatchDiorama.cs`는 `hongdal-diorama`, `Runtime/SagajeongDispatchBuildings.cs`는 `hongdal-buildings` 고정 Resource를 읽는다. 실제 수용 전 현행 파일/지문·소유를 다시 확인한다.
 
 ## 다음 시안에 필요한 비교 장면
 
