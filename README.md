@@ -18,6 +18,7 @@
 - 플레이어는 동네 가게(카페 · 음식점)와 배달 기사, 물류를 맡아 하루하루 운영합니다.
 - 지도는 **전국 → 수도권 → 구 → 타일(300 m 육각형 칸) → 동(입체 디오라마)** 순서로 가까워집니다.
 - 건물 · 길 · 지하철 승하차 · 날씨 · 생활 시설 · 구별 통계 같은 **실제 공개 자료**를 지도에 보여 주고, 가게 · 기사 · 주문 · 돈은 **가상**입니다.
+- **휴대폰에서 바로 해 보기**: [안드로이드 시험판 0.2.0 내려받기 (APK)](https://github.com/cheolwo/unity/releases/download/hongdal-android-v0.2.0/hongdal-0.2.0.apk) · [설치 방법](https://github.com/cheolwo/unity/releases/tag/hongdal-android-v0.2.0)
 - 자세한 진행은 [Windows판 구현 현황](docs/AI/Handoffs/Unity-Windows-구현현황.md)과 [인계 · 반환 문서](docs/AI/Handoffs/)에 있습니다.
 
 ## 역할 앱 한눈에 보기
