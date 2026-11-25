@@ -1,0 +1,29 @@
+{
+  "platform": "Installed Chrome / integrated WebApp / synthetic order reads",
+  "observedAt": "2026-11-08 00:13 KST",
+  "frozenSourceSHA256": {
+    "Ssalddel.Ui.Common/Areas/App/ViewModels/판매채널주문페이지ViewModels.cs": "3dd4e248c83023a49a19a34f5b116b5c0ede9d8de18bbe13d3675d22fe2defa8",
+    "Ssalddel.Ui.Common/Areas/App/Components/Sales/ShipperSalesOrderWorkspace.razor.cs": "8c2905b09ee719f88cee5cadbc2c8b9499676ee7ca3385f09adc73c10ff043cc",
+    "Ssalddel.Tests/Ui/Common/SellerAppliedQueryReturnTests.cs": "5e7fa45e4dc9d1b9ba37384e7a2309f3e1e73cb66aa460ebde2e688e508202ed"
+  },
+  "captures": [
+    {
+      "source": "C:\\Users\\user\\source\\repos\\Hongdal\\artifacts\\local\\seller-applied-query-return-20261107\\comparison-20261108\\raw\\after-normal-390.png",
+      "target": "C:\\Users\\user\\source\\repos\\Hongdal\\docs\\assets\\changes\\2026-11-08-seller-applied-query-return\\orders-390-full.png",
+      "sha256": "b646ad55b7c447bf28494dee13b0847aa3e2d7263340c56e4b3d2f350389b863",
+      "viewportWidth": 390,
+      "pixelsAltered": false,
+      "meaning": "Actual integrated WebApp normal four-order after capture; normal before/after bytes equal"
+    },
+    {
+      "source": "C:\\Users\\user\\source\\repos\\Hongdal\\artifacts\\local\\seller-applied-query-return-20261107\\comparison-20261108\\raw\\after-normal-1280.png",
+      "target": "C:\\Users\\user\\source\\repos\\Hongdal\\docs\\assets\\changes\\2026-11-08-seller-applied-query-return\\orders-1280-full.png",
+      "sha256": "605ef7e36a58c3f0604496f852ae099db62f3099049bc4c7acc84faf5b6228f6",
+      "viewportWidth": 1280,
+      "pixelsAltered": false,
+      "meaning": "Actual integrated WebApp normal four-order after capture; normal before/after bytes equal"
+    }
+  ],
+  "behaviorChangeEvidence": "C:\\Users\\user\\source\\repos\\Hongdal\\artifacts\\local\\seller-applied-query-return-20261107\\comparison-20261108\\comparison.html",
+  "notStandaloneSellerWeb": true
+}

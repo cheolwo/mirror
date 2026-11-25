@@ -38,5 +38,5 @@
 | [OrdererApp-P04-3 - 마트 비구속 주문 요청](OrdererApp-P04-3/) | `/food/mart/order/{ProductId}` | 확장 | 공개 상품 한 건의 주문 요청 저장과 같은 요청 ID 재조회 | stable-ID·390px 로그인 경계 확인 |
 | [OrdererApp-P05 - 내 주문](OrdererApp-P05/) | `/orders` | 0.5 | 로그인한 주문자의 개별주문 원장 목록과 현재 단계 조회 | 재캡처 필요 |
 | OrdererApp-P05-1 - 개별주문 원장 상세 | `/orders/{OrderLedgerId}` | 0.5 | 주문 당사자 권한으로 한 개별주문과 연결 이행 원장 조회 | 재캡처 필요 |
-| OrdererApp-P05-2 - 음식 주문 이력 | `/orders/food` | 확장 | 기존 음식 주문 목록과 주문번호별 상세 조회 | 재캡처 필요 |
+| OrdererApp-P05-2 - 음식 주문 이력 | `/orders/food` | 확장 | 기존 음식 주문 목록과 주문번호별 상세 조회 | [가상 주문 320px·390px·1280px 브라우저](../../../Changes/2026-11-06-orderer-food-history-layout.md) · [주문별 상세 버튼 이름 검증](../../../Changes/2026-11-07-orderer-order-action-name.md) |
 | [OrdererApp-P99 - 미발견 페이지](OrdererApp-P99/) | /not-found | 시스템 | 미발견 페이지 | 완료 |

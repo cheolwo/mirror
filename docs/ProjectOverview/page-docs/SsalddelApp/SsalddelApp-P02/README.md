@@ -2,6 +2,18 @@
 
 [전체 화면 문서](../../README.md) / [SsalddelApp 화면 목록](../README.md) / [앱 전체 카탈로그](../../../app-page-catalog.md)
 
+## 현재 작성·등록 준비와 오류 후 복귀 (2026-11-04)
+
+화물·상하차지·시간·차량·비용을 같은 초안에 입력하고 `/shipper/request/review`에서 최종 조건과 동의를 확인한다. 화면의 입력, 보호 저장소에 저장·재조회한 초안, 서버에 접수된 의뢰는 구분한다. 저장 실패를 복원 가능한 저장 성공으로 표시하지 않는다.
+
+최종 검토에서 인증 또는 보호 저장소를 읽지 못하면 현재 입력을 유지하고 등록을 막는다. 내부 경로·예외 원문을 표시하지 않으며 `등록 준비 다시 확인`으로 같은 화면에서 재시도한다. 이미 보낸 접수는 기존 번호로 결과를 먼저 확인하고 자동으로 새 접수를 보내지 않는다. 이전 판본의 세션 전용 초안 설명은 아래 이력으로 보존한다.
+
+초안을 읽는 동안 서버가 바뀌거나 화면 수명이 끝나면 늦은 응답으로 등록 준비를 완료하지 않는다. 새 서버에서는 현재 대상의 준비를 다시 확인한 뒤 이어 간다. [해당 경합의 재현과 검증](../../../../Changes/2026-11-04-shipper-initialization-stale-draft-r7.md)은 실제 기기 확인과 구분한다.
+
+2026-11-04 검토용 APK144에서는 정상 메뉴로8단계를 작성하고 최종 검토 요약을 확인한 뒤 비용 입력으로 돌아와 값을 유지했다. 실제 서버 차량 분석·기본 날짜 선택·기존 로그인/조회도 확인했다. 접수/결제와 앱 재시작 복원·저장소 오류의 기기 재현은 포함하지 않는다. [실제 기기와 서버 근거](../../../../Changes/2026-11-04-shipper-apk144-physical-review-r8.md).
+
+[최종 검토 페이지](../../../../../SsalddelApp/Components/Pages/ShipperRequestReviewPage.razor) → [작성 ViewModel](../../../../../SsalddelApp/ViewModels/Shipper/ShipperRequestAuthoringPageViewModel.cs) → 기존 인증·보호 저장소/등록 서비스가 책임을 나눈다. [이번 수정과 검증 범위](../../../../Changes/2026-11-04-shipper-authoring-storage-errors-r5.md)는 자동 회귀·APK·실제 휴대폰·서버를 구분한다.
+
 ## 화면 캡처
 
 <img src="../../../assets/app-pages/SsalddelApp/SsalddelApp-P02.png" alt="SsalddelApp-P02 화면 캡처" width="720">

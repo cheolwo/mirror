@@ -13,6 +13,8 @@
 
 [승인 범위 r5](../../../../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/photo-inbound-request.r5.md) · [구현·검증·화면](../../../../Changes/2026-10-22-photo-inbound-request-r5.md). 기존 신청 route의 기본 진입만 간소화하고 긴 신청서는 `직접 입력`으로 보존한다.
 
+**새 사진 신청**은 제출 전 사진이나 이름이 있을 때 입력을 비울지 확인한다. **계속 작성**이나 Esc로 닫으면 현재 입력을 유지하고, **입력 비우고 시작**을 선택하면 새 신청을 준비한다. [가상 입력 확인 화면](../../../../Changes/2026-11-07-photo-inbound-draft-reset.md)
+
 ## 2026-10-22 신청 응답 유실 복구 책임 r4
 
 신규 신청은 보호 저장 후 서버에 보낸 원요청 ID로 결과를 확인한다. 기존 새로고침·결과 확인 행동을 재사용하며, 결과가 없거나 응답 ID가 다르면 재등록을 허용하지 않는다. 같은 원장의 정본 조회와 확인 기록 정리가 끝난 뒤 다음 업무로 진행한다. 구판 단말 전용 관측 번호는 서버 ID로 소급하지 않는다. [승인 범위](../../../../AI/Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/inbound-submission-recovery.r4.md) · [구현·검증·화면](../../../../Changes/2026-10-22-inbound-submission-recovery-r4.md).

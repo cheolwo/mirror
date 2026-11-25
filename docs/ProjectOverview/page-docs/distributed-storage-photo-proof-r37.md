@@ -12,6 +12,8 @@
 
 사진 전송 후 완료 응답이 끊기면 같은 요청 번호의 결과부터 조회한다. 전송이 시작된 사진의 업무·수량·판본을 다른 입력으로 바꾸지 않는다. 지도·공통 역할 홈 구성과 다음 업무 선택 원칙은 [r36](distributed-fulfillment-r36.md)을 유지한다.
 
+사진이 여러 장이면 **이 사진 다시 촬영**과 **사진 제거**의 접근성 이름에 각 미리보기의 번호가 붙는다. 사진을 제거하면 남은 버튼은 화면의 번호와 함께 다시 매겨진다. [가상 입고 자료로 확인한 결과](../../Changes/2026-11-07-warehouse-photo-action-name.md)
+
 ## 코드
 
 - 계약·사진·묶음 요청: `Ssalddel.Contracts/Common/Warehouse/DistributedStorageProofDtos.cs`, `DistributedPhotoEvidenceDtos.cs`.

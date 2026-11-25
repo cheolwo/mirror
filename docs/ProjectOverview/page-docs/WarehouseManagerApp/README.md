@@ -1,10 +1,16 @@
-﻿# WarehouseManagerApp 화면 문서
+# WarehouseManagerApp 화면 문서
 
 [전체 화면 문서](../README.md) / [앱 전체 카탈로그](../../app-page-catalog.md)
 
 이 문서는 WarehouseManagerApp 에 속한 화면별 README를 모은 색인입니다. 각 화면 문서는 캡처 이미지, 화면 책임, 사용자와 참여자, API/서버 연계, 보안 점검을 별도로 설명합니다.
 
 [창고 하차 연락처 연결](../cargo-menu-handoff-r1.md)은 실제 선택 연락처와 한국시간 입력을 기존 운송 원장에 전달한다. 시험과 실제 역할 앱 확인의 범위는 [변경 기록](../../../Changes/2026-10-03-cargo-menu-handoff-r1.md)에 구분한다.
+
+[입고 예정의 창고 조회 복구](../../../Changes/2026-11-06-warehouse-picker-unavailable.md)에서 조회 실패와 정상 빈 목록의 표시 및 확인 범위를 설명한다.
+
+[입고 예정 목록의 실패와 정상 빈 결과](../../../Changes/2026-11-06-server-grid-empty-after-read.md)는 일반 입고 예정·수입 화물 반입·공동주택 반입 예정에 공통 적용된다. 정상 조회 후에만 목록 결과와 건수를 표시한다.
+
+[일반 입고 예정 목록의 제목과 검색칸](../../../Changes/2026-11-06-warehouse-inbound-readability.md)은 가상 입고 3건이 로드된 320px·390px에서 검색 안내 전체, 입력·조건 해제와 목록 복귀를 확인했다.
 
 [창고 출고예정부터 운송 완료까지](../cargo-warehouse-journey-r1.md)는 출고 인계가 서버 `배차확정` 또는 `상차지도착`을 허용하는 조건과 기사 상차 완료의 별도 선행 조건을 정리한다. 서버 HTTP 흐름과 창고 앱 UI 확인은 별도로 판정한다.
 

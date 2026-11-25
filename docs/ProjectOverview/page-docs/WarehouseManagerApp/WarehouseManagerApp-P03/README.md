@@ -8,6 +8,8 @@
 
 ![입고 검수 공용 실행 mobile 화면](../../../../assets/changes/2026-07-22-inbound-inspection-route-srp/inbound-inspection-record-form-mobile.png)
 
+2026-11-07 · 로컬 브라우저에서 가상 검수 대기·완료 상품을 조회했다. **상세 확인**으로 보관 위치와 검수 상태를 읽고 **검수 목록** 또는 **목록**으로 돌아온다. [390px 목록과 확인 범위](../../../../Changes/2026-11-07-warehouse-inspection-list-guide.md)
+
 ## 기본 정보
 
 | 항목 | 내용 |

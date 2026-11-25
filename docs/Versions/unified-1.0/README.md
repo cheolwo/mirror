@@ -32,5 +32,6 @@
 
 - [포함 범위](scope.md)
 - [업무별 마감표](checklist.md)
+- [최신 변경·검증 판본](current-validation-baseline.md)
 - [호환·이행 기준](migration-notes.md)
 - [공통 공개 관문](../release-gates.md)

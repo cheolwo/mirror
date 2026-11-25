@@ -24,6 +24,8 @@
 
 [이번 화물 보완·검증 범위](../../cargo-workflow-recovery-r1.md) · [최신 변경 기록](../../../../Changes/2026-10-03-cargo-workflow-recovery-r1.md).
 
+목록·상세 조회 중 토큰 갱신의 보안 저장이 끝났다면, 화면을 떠나 취소되더라도 실행 중인 인증 상태를 저장된 토큰과 먼저 맞춘다. 취소는 호출자에게 계속 전달하며 다음 조회가 이전 갱신 토큰을 다시 보내지 않도록 한다. 저장 전 취소·저장 실패는 기존 상태를 보존한다. [저장 완료/화면 취소 경합의 수정과 검증](../../../../Changes/2026-11-04-driver-token-commit-cancellation-r10.md)은 합성 저장소·HTTP 회귀이며 새 수정의 실제 기기 보안 저장 확인은 별도다.
+
 기존 `/login`은 [AuthLayout](../../../../../DriverApp/Components/Layout/AuthLayout.razor)에서 인증 입력·오류·복귀만 표시하고 업무 메뉴·하단 탭을 함께 조립하지 않습니다. 기존 내부 업무 복귀 경로와 토큰 처리는 유지합니다. 표시 책임과 최신 검증은 [로그인·업무 책임 카드](../../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다.
 
 ## 왜 필요한가

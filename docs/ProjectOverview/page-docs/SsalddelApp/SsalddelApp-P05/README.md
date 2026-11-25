@@ -16,11 +16,11 @@
 | 소스 파일 | [SsalddelApp/Components/Pages/WarehouseWorkspace.razor](../../../../../SsalddelApp/Components/Pages/WarehouseWorkspace.razor) |
 | 분류 | 확장 |
 | 2.0 운송 필수 연결 | 직접 연결 없음 |
-| 캡처 상태 | 완료 |
+| 캡처 상태 | 기존 캡처 보존 · r17 실제 화면 검수 보류 |
 
 ## 왜 필요한가
 
-이 화면은 화주 관점 창고 업무 허브을 담당하므로, 1.0 이후의 해외 물류, 창고, 주문자 집단, 판매채널 확장을 화면 단위로 검증하기 위해 필요합니다.
+화주가 입고 예정·가용 재고와 후속 업무를 확인하고 입고 현황·재고 목록 등 필요한 화면으로 이동하는 허브다. 현장 검수·적재·포장 확인은 WarehouseManagerApp이 담당한다.
 
 ## 사용자와 참여자
 
@@ -47,11 +47,18 @@
 ## API 경로와 코드 연결
 
 - 화면 소스: [SsalddelApp/Components/Pages/WarehouseWorkspace.razor](../../../../../SsalddelApp/Components/Pages/WarehouseWorkspace.razor)
-- 클라이언트 서비스/계약: 화면 파일에서 직접 확인하거나 정적/라우팅 화면으로 본다.
+- 현황 조회: [ShipperOperationsWorkspace](../../../../../SsalddelApp/Components/Shared/ShipperOperationsWorkspace.razor) → [ServerBackedShipperOperationsService](../../../../../SsalddelApp/Services/ServerBackedShipperOperationsService.cs). 작업대는 입고·재고를 조회하며, 같은 서비스의 창고 목록은 기존 화주 창고 기능 ViewModel에 연결된다.
+- 기존 목록 API: `GET api/v1/warehouse-operations/warehouses`, `inbounds`, `inventory`. 서버의 [WarehouseOperationService](../../../../../Ssalddel/Services/LogisticsProcessing/Warehouse/WarehouseOperationService.cs)가 사용자 접근 범위의 원장을 조회해 `Items` 목록으로 반환한다. 정상 빈 결과는 `{"items":[]}`다.
 
-현재 문서와 소스에서 직접 연결된 `api/v1/...` 경로를 찾지 못했습니다. 이 화면은 정적 안내, 라우팅, 메뉴 진입, 오류 표시, 또는 다른 화면으로 넘기는 책임이 중심일 수 있습니다.
+응답 전체나 `Items`가 null이거나 null 항목이 섞였으면 정상 빈목록으로 반환하지 않고 기존 오류 안내로 보낸다. 해당 조회가 실패하면 그 목록의 새 대입을 수행하지 않으며, 사용자가 `새로고침`으로 다시 조회한다. 권한·통신 오류와 자동 재요청 금지는 유지한다. 여러 목록의 전체 원자 갱신이나 최초 오류의 기본0 메트릭 표시는 r11 보완 범위 밖이었다. [응답 경계의 재현·보완과 검증](../../../../Changes/2026-11-04-shipper-warehouse-response-contract-r11.md)을 따른다.
 
-검증할 때는 이 화면이 직접 메모리 데이터만 보는지, 위 API 응답을 받아 상태를 표시하는지, 실패했을 때 사용자가 다음 행동을 알 수 있는지 확인합니다.
+후속 r15에서는 최초 로딩/조회 실패를 정상0건과 구분한다. 전체 조회가 성공하기 전의 수치와 업무 제목은 `—`로 표시하고 출고 알림도 조회 중/확인 실패를 안내한다. 정상 빈 결과는0건이며 같은 새로고침으로 다시 확인한다. [최초 오류 상태와 실제 Razor 회귀](../../../../Changes/2026-11-05-warehouse-initial-load-state-r15.md)를 따른다.
+
+r17에서는 이전 성공 뒤 후속 조회가 실패해도 마지막 전체 표시를 유지한다. 다섯 조회를 기존 순서로 수행하고 모두 성공한 뒤 입고·재고·출고 알림·HS 검토·판매채널 표시를 함께 교체한다. 대기 중 일부 새 값만 표시하거나 실패 뒤 자동 재요청하지 않는다. 이는 화면 반영의 경계이며 서버/DB 전체를 같은 시점으로 동결한 조회는 아니다. [재현·최소 보완과 검증](../../../../Changes/2026-11-05-warehouse-refresh-snapshot-r17.md)을 따른다. 브라우저 폭/시각과 이번 소스의 휴대폰 확인은 남는다. 기존 준비147은 r15 소스이며 이번 수정본으로 사용하지 않는다.
+
+좁은 화면에서 `새로고침`이 한 글자씩 꺾이지 않도록 기존 버튼의 줄바꿈과 축소를 막았다. 등록 휴대폰의 화주146에서 한 줄 표시·카드 안 배치와 잘림/겹침 없음을 확인했다. 현재 합성 화주 계정의 조회는 HTTP403이며, 명시 재조회 뒤 같은 권한 안내를 유지하고 정상 홈으로 돌아왔다. 빈 재고나 성공한 창고 조회로 해석하지 않는다. [실제 표시·오류 후 복귀 검증](../../../../Changes/2026-11-04-warehouse-refresh-button-r13.md)을 따른다.
+
+기존 캡처는 보존한다. 내부 응답 검증의 합성 HTTP·ViewModel 시험, 146 포장·설치, 등록 기기 세로 화면의 실제 확인을 구분한다. 다른 폭/가로 화면과 권한 있는 계정의 창고 조회는 별도다.
 
 ## 보안과 개인정보 점검
 

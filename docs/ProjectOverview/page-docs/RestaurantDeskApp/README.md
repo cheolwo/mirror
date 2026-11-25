@@ -6,6 +6,8 @@
 
 기존 `/login`의 [Login](../../../../RestaurantDeskApp/Components/Pages/Login.razor)은 [AuthLayout](../../../../RestaurantDeskApp/Components/Layout/AuthLayout.razor)을 사용해 계정 인증만 담당하고, 로그인 성공 후 기존 가게 업무로 복귀합니다. 업무 drawer·하단 메뉴와 인증 입력을 분리하는 기준과 검증은 [로그인·업무 책임 카드](../auth-workspace-separation-r1.md), [페이지 원칙의 인증 경계](../../../Architecture/WholeRoadmapPagePrinciple.md#인증과-업무의-경계)를 참조합니다. 별도 로그인 상세 README가 없어 이 수동 목차에서 연결하며 기존 페이지 ID는 유지합니다.
 
+[메뉴 관리](../../../../RestaurantDeskApp/Components/Pages/Menus.razor)의 메뉴명·가격·공개·품절 표시와 수정 화면 복귀는 [320px·390px 브라우저 검증](../../../Changes/2026-11-06-restaurant-menu-readability.md)에서 확인했다.
+
 | 페이지 ID / 제목 | 라우트 | 분류 | 화면 책임 | 캡처 |
 | --- | --- | --- | --- | --- |
 | [RestaurantDeskApp-P01 - 음식점 데스크 홈](RestaurantDeskApp-P01/) | / | 보조 | 음식점 데스크 홈 | 완료 |

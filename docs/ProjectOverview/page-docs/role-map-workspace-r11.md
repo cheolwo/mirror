@@ -98,4 +98,6 @@ Web과 MAUI가 같은 공통 UI를 소비한다. 좁은 화면에서 메뉴 기�
 
 새 화면은 Web와 통합 앱이 같은 공통 컴포넌트를 소비한다. 공개 API/JSON·DB·운영 설정은 변경하지 않는다. 실제 여러 계정의 제품 업무 완주·휴대폰·Azure·입금은 별도 증거로 남긴다.
 
+음식기사 상세의 **주문 정보**는 메뉴 글머리표와 수량을 카드 안쪽에 표시한다. **내역 목록**으로 돌아가면 조회한 날짜가 남는다. [390px 가상 상세와 열람 만료 확인](../../Changes/2026-11-07-food-driver-order-menu-indent.md)
+
 구현·시험·실제 공통 렌더와 Figma/단말 미확인 범위는 [r21 변경 기록](../../Changes/2026-10-06-role-handoff-fixes-r21.md)에 결속한다. `/workspace/operator/cargo-incidents`와 `…/{IncidentId}/review`가 목록·검토를, `/workspace/{RoleKey}/history`와 `…/{RecordId}`가 목록·상세를 분리한다. 생활 배송의 Figma 대응은 기존 `01 Community` 배송 진행 카드지만 이번 세션에 node 확인/갱신 도구가 없어 그 부분을 완료로 보고하지 않는다.

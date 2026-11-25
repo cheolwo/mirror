@@ -43,7 +43,7 @@
 | [SsalddelApp-P07 - FCL/LCL 해외 물류 계획](SsalddelApp-P07/) | /shipper/international/fcl-lcl | 확장 | FCL/LCL 해외 물류 계획 | 완료 |
 | [SsalddelApp-P07-1 - HS 코드/통관 검토](SsalddelApp-P07-1/) | /shipper/customs/hs-reviews | 확장 | HS 코드/통관 검토 | 완료 |
 | [SsalddelApp-P08 - 재위탁/재운송 주문](SsalddelApp-P08/) | /shipper/reconsignment/orders | 확장 | 재위탁/재운송 주문 | 완료 |
-| [SsalddelApp-P09 - 운송 업무 워크스페이스](SsalddelApp-P09/) | /shipper/transport | 필수 | 의뢰별 결제·배차·운송 상태 처리 | 캡처 대기 |
+| [SsalddelApp-P09 - 운송 업무 워크스페이스](SsalddelApp-P09/) | /shipper/transport | 필수 | 의뢰별 결제·배차·운송 상태 처리 | 실제 APK140 · 합성 업무 |
 | [SsalddelApp-P10 - 꾸미기 상점](SsalddelApp-P10/) | /community/decorations | 확장 | 홈 테마·노드·괘상 상품 탐색 | 완료 |
 | [SsalddelApp-P10-1 - 꾸미기 상품 상세](SsalddelApp-P10-1/) | /community/decorations/{ProductKey} | 확장 | 전체 테마 미리보기, 구매·적용 판단 | 완료 |
 | [SsalddelApp-P10-2 - 꾸미기 FakePG 결제](SsalddelApp-P10-2/) | /community/decorations/{ProductKey}/checkout | 개발·확장 | 개발용 구매 승인 흐름 | 완료 |

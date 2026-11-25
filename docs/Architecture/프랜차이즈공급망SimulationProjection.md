@@ -1,5 +1,7 @@
 # 프랜차이즈 공급망 Simulation 사본 기반
 
+후속 [공급 계약과 가맹점 물류 조사·통합 설계 r67](../AI/Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/supplier-franchise-logistics.research.r67.md)은 본부 재판매와 운영 공급중개의 차이, 3PL·직송 비교, 창고·검수·정산 연결 과제를 정리한다. 아래 첫 이행 기준과 현재 구현 범위를 바꾸거나 새 기능 완료를 선언하지 않는다.
+
 ## 목적과 경계
 
 첫 범위는 외부 가상 프랜차이즈 본부가 공급사와 조달계약을 맺고,
