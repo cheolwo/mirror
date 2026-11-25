@@ -6,6 +6,16 @@
 
 2026-11-15 사용자 결정. 동네 디오라마를 보는 게임은 Unity 기반 홍달 경영 시뮬레이션 Windows판 하나로 이어간다. 이전에 별도로 열던 시제품은 퇴역시키고, 공용 지도 자료와 배달·매장·물류 규칙은 이 게임에서 재사용한다. 역할 앱에서 다루던 업무는 게임 안에서 각 역할의 화면으로 연결해 간다. 실제 주문·배차·정산의 권한은 기존 운영 앱과 서버가 맡는다. [Windows 구현 현황](Handoffs/Unity-Windows-구현현황.md) · [게임 속 역할 화면](Handoffs/2026-11-15-Claude-역할휴대폰-화물창고가게-반환.md)
 
+2026-11-19 사용자 결정. 통합 게임의 표시 제목은 **홍달 플레이스**이며 배달 플랫폼 경영이 본편의 중심이다. [현행 게임 제목과 본편 기획 r311](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-steam-seoul-discovery.proposal.r310.md)
+
+## 2026-10-27 지도는 수락한 전체 정차 순서와 다음 정차를 구분한다
+
+상태: `ApprovedByUser / ImplementedLocally / ScopedRegressionVerified / NativeScreenNotVerified / OperationalDisabled`. [r21](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-ordered-map.r21.md)은 r20에서 저장한 미완료 typed 순서를 기존 기사 지도에 연결했다. 수락 순서 대신 서버가 확인한 다음 정차 한 곳을 강조하고 나머지 정차는 회색·번호로 표시한다. 지도 선택/접기는 원장 순서나 업무 완료를 변경하지 않는다. 주소·좌표 공개 보류와 현재 계정·조회 실패를 유지하며 지점 연결선을 실제 도로 경로·전역 최단거리 또는 실시간 전체 ETA로 승격하지 않는다. [Fast304·Task16,492통과/16생략과 빌드](../Changes/2026-10-27-cargo-ordered-map-r21.md)는 실제 휴대폰·지도 SDK/내비·실운행 검증과 구분한다.
+
+## 2026-10-27 수락 순서와 약속을 지키는 정차 순서를 분리한다
+
+상태: `ApprovedByUser / ImplementedLocally / ScopedRegressionVerified / OperationalDisabled`. 사용자는 A 수행 중 B를 수락했을 때도 A·B의 시간 약속과 적재·계약 조건을 지키면 B를 먼저 처리할 수 있도록 정정했다. [r20](Planning/공통/PLAN-OPERATIONS-DISPATCH-CORE/cargo-feasible-stop-order.r20.md)이 기존 r3의 A 완료 뒤 B 수행 고정을 이 범위에서 대체한다. 전체 시간창·상하차 작업시간·실제 경로·선상차후하차·구간 적재를 통과한 동일 시도의 순서를 추천·수락·정본 재조회에 연결했다. 운송별 상태는 독립적으로 보존하며 순서 변경으로 상차·완료·정산을 생성하지 않는다. [최종 Fast393·Task16,428통과/16생략](../Changes/2026-10-27-cargo-feasible-stop-order-r20.md)은 합성 회귀/빌드이며 실제 휴대폰·운행 중 재최적화·무제한 배차·운영 활성화를 이 결정으로 완료하지 않는다.
+
 ## 2026-10-26 앱 개발은 같은 업무의 준비부터 복구와 마감까지 연결한다
 
 상태: `ApprovedByUser / WorkflowToolingScope / OperationalDisabled`. 사용자는 앱 개발을 공통 처리 절차로 정리하는 제안 뒤 작업 진행을 요청했다. [공통 제작 절차](Planning/시스템/PLAN-SYSTEM-PLANNING-IMPLEMENTATION-CHECKLIST/app-production-input-guide.md)를 기존 제작 대장과 통합 1.0 업무별 마감표의 진입점으로 사용한다. AI가 기존 자료로 입력을 먼저 작성하고 제품 선택이 필요한 부분만 확인하며, 동일 업무의 원장·역할 인계·결과 재조회·미확정/재실행 복구를 묶어 마감한다.
@@ -5563,6 +5573,8 @@ Web·MAUI·네이티브 페이지 신설 또는 의미 있는 정보/행동/구�
 - 결정일: 2026-11-12
 - 근거: 사용자가 Codex에서 기획과 구현/미구현을 정리하여 Claude가 Windows 게임 개발을 이어받기 쉽게 만들도록 요청했다.
 
-[혼용 운영 기준](Handoffs/Codex-Claude-혼용운영안-2026-11-12.md)을 게임 기획·개발 교대의 단일 기준으로 삼는다. 기본 역할은 Codex 기획·현황·완료 조건 정리와 Claude 구현 계획·개발·검증 반환이다. 기능의 기획, 다른 소비판의 구현, 시제품, 현재 대상 통합, 검증 결과를 구분한다. 도구명이나 코드/캡처의 존재가 승인·실행 소유를 부여하지 않는다.
+[혼용 운영 기준](Handoffs/Codex-Claude-혼용운영안-2026-11-12.md)을 게임 기획·개발 교대의 단일 기준으로 삼는다. 2026-11-12의 기본 배정은 Codex 기획·현황·완료 조건 정리와 Claude 구현 계획·개발·검증 반환이었다. 기능의 기획, 다른 소비판의 구현, 시제품, 현재 대상 통합, 검증 결과를 구분한다. 도구명이나 코드/캡처의 존재가 승인·실행 소유를 부여하지 않는다.
+
+**2026-11-20 후속 결정.** 당시의 기본 배정을 건별 양방향 배정으로 대체한다. Codex와 Claude 모두 기획·개발계획을 작성할 수 있고, 상대에게 승인된 구현을 넘길 수 있다. 작업과 단계별 담당은 [공용 작업 대기열](Handoffs/CODEX-대기열.md)이나 해당 인계에서 확인한다.
 
 같은 PC의 미커밋 교대는 실제 경로·branch/HEAD·기존 dirty 경계·파일 목록/지문·허용 범위를 대조하고, 다른 PC·클라우드 또는 같은 작업본에 직접 접근할 수 없는 별도 계정은 기존 정확한 push commit 인계 기준을 유지한다. 교대를 이유로 commit/push·예약·운영 효과를 자동 실행하지 않는다. 게임 외 담당·계약은 보존한다. 구체 플랫폼 우선순위는 이 장기 결정에 복제하지 않고 해당 PLAN 판본과 구현 현황이 소유한다.

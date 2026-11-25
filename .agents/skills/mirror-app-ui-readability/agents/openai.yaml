@@ -1,0 +1,4 @@
+interface:
+  display_name: "앱 화면 가독성 정리"
+  short_description: "기존 업무 흐름과 입력을 보존하며 역할별 화면 가독성을 정리합니다"
+  default_prompt: "$mirror-app-ui-readability 기존 화면의 가독성을 개선하고 입력과 복귀를 보존해 주세요."

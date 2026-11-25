@@ -14,9 +14,13 @@ GPT Chat, Codex, Claude Code 등 개발 도구는 대화 기록이 아니라 저
 6. 활성 PlayableLoop의 `planningGate.designDocumentRef` 기획서, 그 기획서가 `Required`로 연결한 `Accepted` 전문 심화 연구, E1~E7 상호작용 수직 검증 명세
 7. 작업 경로에 가까운 `AGENTS.md`와 관련 Architecture 문서
 
+게임 기획을 새로 쓰거나 의미 있게 고칠 때는 [기획 전 현재 구현 대조](docs/AI/Handoffs/Codex-Claude-혼용운영안-2026-11-12.md#기획-전-현재-구현-대조)를 먼저 수행한다. 질문 대상의 최신 구현 반환·실제 작업본·실행판 근거를 대조하고, 확인한 현재 상태와 사용자 답변을 결합해 재사용·보완·신규·미확인을 구분한다. 관련 범위의 확인 시점/판본·증거 수준과 이번에 달라질 부분을 기획서에 짧게 남긴다. 오래된 현황표만으로 미구현을 단정하거나 소스 존재를 실제 실행 성공으로 올리지 않는다.
+
 설계실·제작실 사이에서 작업을 인계할 때는 [역할별 인계 진입](docs/Architecture/CodexPlayableLoopGoal운영체계.md#설계실제작실-인계)을 따른다. 서로 다른 계정·데스크톱이 GitHub를 사이에 두고 교대하면 [GitHub 기반 기획·개발 작업실 교대 운영 체계](docs/Architecture/GitHub기반기획개발교대운영체계.md)도 함께 따른다. 설계실은 기존 승인 기획·명세를 준비하고, 제작실은 push된 정확한 commit과 현재 기준선을 점검한 뒤 명시적으로 수용한 범위만 진행한다. 인계 점검 통과는 실행 승인이나 Goal 자동 활성화가 아니다.
 
-2026-11-12 사용자 요청에 따라 게임 개발은 **Unity 기반 Windows 실행판**에 집중한다. Codex는 기획·구현 현황·완료 조건 정리를, Claude는 인계받은 범위의 구현 계획·개발·검증 반환을 기본 역할로 한다. [혼용 운영 기준](docs/AI/Handoffs/Codex-Claude-혼용운영안-2026-11-12.md)과 [Unity Windows 구현 현황](docs/AI/Handoffs/Unity-Windows-구현현황.md)을 읽고 기존 구현·시제품·미구현·검증 대기를 구분한다. 도구 이름만으로 실행권을 부여하지 않는다. 게임 외 개발·수집·통합의 기존 담당과 수집 예약·USB 보호·공유 계약·제품 소유권은 유지하며, 데이터 교대는 [공통 협업 진입](docs/AI/DataCollection/Collaboration.md)을 따른다. 루트 `CLAUDE.md`는 공통 지침과 관련 정본으로 진입하는 역할만 맡는다.
+게임 개발은 **Unity 기반 Windows 실행판**에 집중한다. Codex와 Claude 모두 기획·개발계획·구현·검증을 맡을 수 있다. 작업별로 기획·개발계획 담당, 구현 담당, 반환 검토 담당을 [공용 작업 대기열](docs/AI/Handoffs/CODEX-대기열.md) 또는 개별 인계에 적는다. [혼용 운영 기준](docs/AI/Handoffs/Codex-Claude-혼용운영안-2026-11-12.md)과 [Unity Windows 구현 현황](docs/AI/Handoffs/Unity-Windows-구현현황.md)을 읽고 기존 구현·시제품·미구현·검증 대기를 구분한다. 게임 외 개발·수집·통합은 기존 담당과 수집 예약·USB 보호·공유 계약·제품 소유권 지침을 따르며, 데이터 교대는 [공통 협업 진입](docs/AI/DataCollection/Collaboration.md)을 따른다. 루트 `CLAUDE.md`는 공통 지침과 관련 정본으로 진입하는 역할을 맡는다.
+
+항상 적용할 규칙은 이 AGENTS와 가까운 지침에, 필요한 반복 작업 절차는 [프로젝트 스킬 목차](docs/AI/Skills/README.md)에 구분한다. 기존 앱 UI 가독성은 `mirror-app-ui-readability`, Unity 지도 자료 연결은 `hongdal-unity-map-data-binding`, 2D 객체 배치·조작은 `hongdal-unity-2d-interaction`, 구매한 Synty 자산 검색·측정·외형 적용은 `hongdal-synty-asset-workflow`를 해당 작업에만 읽는다. 상세 설계의 정본은 기존 Architecture/작업 README이며 스킬에 복제하지 않는다.
 
 현재 계정·모델·장치 이름만으로 작업 역할을 추정하지 않는다. 현재 요청이 기획 작업실이면 제품 코드를 바꾸지 않고 canonical PLAN·`PLANNING.md`·`CURRENT_WORK.md`와 필요한 승인 인계만 갱신한다. 개발 작업실이면 `Approved` 기획과 `ReadyToDispatch` 인계, revision/hash, 작업지시서, 허용 `writePaths`가 일치할 때만 구현한다. 다른 PC·클라우드 또는 같은 작업본에 직접 접근할 수 없는 별도 계정은 push된 저장소 문서와 정확한 Git commit으로 교대한다. 같은 PC의 미커밋 교대는 혼용 운영 기준에 따라 실제 경로·branch/HEAD·dirty 경계·파일 지문과 수용 범위를 대조한다. 대화 요약이나 로컬 `artifacts/`의 존재만으로 개발을 승인하지 않는다.
 

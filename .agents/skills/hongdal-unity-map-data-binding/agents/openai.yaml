@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity 지도 데이터 연결"
+  short_description: "검증된 자료의 출처와 판본을 보존해 Unity 지도 객체에 연결합니다"
+  default_prompt: "$hongdal-unity-map-data-binding 검증된 지도 자료를 기존 Unity 객체에 연결해 주세요."

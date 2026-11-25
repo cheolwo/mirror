@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity 2D 지도 객체 조작"
+  short_description: "기존 2D 지도 객체의 배치와 선택 및 카메라 입력을 함께 점검합니다"
+  default_prompt: "$hongdal-unity-2d-interaction 2D 지도 객체의 배치와 선택 및 이동 입력을 정리해 주세요."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Synty 자산 검색·외형 적용"
+  short_description: "보유 Synty 자산을 찾아 크기와 재질을 확인하고 기존 게임의 외형에 연결합니다"
+  default_prompt: "$hongdal-synty-asset-workflow 보유한 Synty 자산에서 기존 도심 매장에 맞는 후보를 찾고 현재 게임 동작을 유지하는 적용 범위를 확인해 주세요."
