@@ -1,26 +1,104 @@
-# [기획·제작 · 개인용 설치형 게임 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r315]
+# 홍달 플레이스 본체 기획
+
+상위 기획 ID `PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION` · [주제별 현재 판](topics/README.md) · [기획에서 화면까지](../../../PLANNING.md#기획에서-화면까지)
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r328"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r327"></a>
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r326"></a>
 
 <a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r293"></a>
 
 <a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r294"></a>
 
-## 현행 기준 — 층별 정본(2026-11-20 정리)
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r315"></a>
 
-[기획 목차](../../../PLANNING.md)와 같은 표다. 아래 절들은 판별 기록(날짜 역순)이다. 이 폴더 파일 이름의 r번호는 처음 판이고, 한 파일에 여러 판이 덧쓰인 곳이 있다(예: delivery-branch-growth-play-loop.design.r257.md 안의 r288~r294).
+## 최상단 기획 — 관찰과 선택적 개입
 
-| 층 | 정본(먼저 읽을 것) | 이어 읽기 | 단계 |
+[관찰과 개입 r1](optional-observation-and-intervention.design.r328.md)은 모든 역할과 지도에서 적용하는 참여 원칙이다. 아래의 역할별 업무와 광고 입찰·과금 같은 세부 규칙은 이 원칙을 따른다.
+
+## 현행 기준 — 입장별 기획과 공통 바탕(2026-11-20)
+
+[기획 목차](../../../PLANNING.md)와 같은 표다. [주제별 판본](topics/README.md)은 각 주제의 개정과 현행 원문을, [입장별 기획 목차](perspectives/README.md)는 역할을 기준으로 찾는 자리다. 기존 파일명의 판본과 절 주소는 과거 인계에서 해당 근거를 찾는 데 쓴다.
+
+| 갈래 | 대표 입장 | 함께 있는 입장 | 단계 |
 | --- | --- | --- | --- |
-| L0 개념 · 정체성 | [r314 개념 구조](hongdal-place-core-concepts.design.r314.md) · [r311 제목 · 본편](hongdal-place-steam-seoul-discovery.proposal.r310.md) | [r261 오행판](five-element-root-management-board.design.r260.md) · [r262 동 · 구 · 전국](map-scale-five-element-management.design.r262.md) · [r263 아래에서 위로](need-driven-bottom-up-growth.design.r263.md) | **지금** |
-| L1 구 지도(출시판) | [r312 구 지도 경영](hongdal-place-district-board-release-map.design.r312.md) · [r315 현실 자료 우선](hongdal-place-map-observation-first.design.r315.md) | [r184 연속 축소 · 전국](district-seoul-continuous-zoom-and-nation-transition.design.r184.md) · [r152](district-map-readability-continuation.design.r152.md) · [r253 확대별 지형](nationwide-freight-management-map.proposal.r155.md) · [r286 레이어](data-packs-and-observation-layers.proposal.r160.md) · [출시판 · 정밀판 제안](../../../Handoffs/2026-11-19-Claude-제안-출시판과내부정밀판.md) · [지도자료층 시안](../../../Handoffs/2026-11-19-Claude-시안-지도자료층.md) | **지금** |
-| L1' 동 디오라마(내부 정밀판) | [ADMIN-DONG-DIORAMA](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [서울 427 공식판](../../../Handoffs/2026-11-18-Claude-서울427동-공식판굽기-반환.md) · [경기 601](../../../Handoffs/2026-11-19-Claude-경기정밀판굽기-반환.md) | [r274 주소 · 건물 · 출입구](jungnang-landmarks-and-address-map-quality.development-plan.r271.md) · [r236 M키](m-key-administrative-dong-diorama-selector.confirmed.r236.md) · [굽기 Codex 인계](../../../Handoffs/2026-11-19-Claude-인계-경기굽기-Codex.md) | **지금(내부)** |
-| L2 첫 플레이 | [r313 역에서 주문 한 건](hongdal-place-station-first-loop.design.r313.md) | [r294 경계를 넘는 첫 배달](delivery-branch-growth-play-loop.design.r257.md) · [r240 라떼 한 잔 → L9](first-latte-order-delivery-development-plan.r240.md) | **지금** |
-| L3 배달 플랫폼 · 지사 | [r293 본사 · 지사 · 세트(r288~r294 같은 파일)](delivery-branch-growth-play-loop.design.r257.md) | [r277 지사장 카드](people-development-and-scoped-delegation.design.r224.md) · [r174 하루 결산](live-calendar-daily-management.baseline.r174.md) | **다음** |
-| L4 길찾기 | [r287 · r279 · r275(같은 파일)](soft-road-following-delivery-lines.design.r212.md) | [길찾기 1차 반환](../../../Handoffs/2026-11-18-Claude-길찾기-1차-반환.md) | **지금(정밀판과 함께)** |
-| L5 화면 | [r259 탑다운 연결](top-down-screen-hierarchy.design.r259.md) · [r258 화면 번호](current-screen-numbering.catalog.r258.md) | [r309 진입 3단계](role-perspective-research-and-relaxed-observation.design.r242.md) · [패키지 구분표](../../../Handoffs/2026-11-18-Claude-패키지별-화면자료-구분표.md) | **다음** |
-| L6 세계관 · 가치 | [r269 함께 밝아지는 세계](warmth-perspective-taking-and-shared-light.direction.r269.md) · [r285 인의예지](multi-entry-management-research-tree.design.r183.md) | [명덕 r204](daxue-mingde-and-dong-growth.research.r204.md) | **배경(유지)** |
-| L7 홍보 · 플레이스 · 중개업자 | [r307 · r239(같은 파일)](traffic-broker-person-card-and-temporary-ranking.design.r239.md) | [r238 검색 · 순위](hongdal-place-population-keyword-search-and-ranking.proposal.r238.md) · [r268 플레이스 조사](naver-place-activity-evidence-and-search-design.research.r268.md) | **보류** |
-| L8 역할 관점 · 스토리 · 사람 | [r302 · r296(같은 파일)](role-perspective-research-and-relaxed-observation.design.r242.md) · [r270 이야기 성장](first-season-story-synthesis.r101.md) | — | **보류** |
-| L9 그 밖 사업 · 연출 | [가맹 운영](../PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md) · [라떼 한 잔 r240](first-latte-order-delivery-development-plan.r240.md) | [원두 r196](coffee-import-food-safety-and-learning-flow.research.r196.md) · [미니게임 r145](direct-riding-delivery-minigame.design.r145.md) · [음악 · 빛 r210](music-reactive-light-and-beat-sync.proposal.r210.md) · [모델 r191](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md) · [법적 준비 r255](map-legal-delegation-and-operating-orders.research.r254.md) | **보류** |
+| 1. [배달 플랫폼](perspectives/p01-delivery-platform.r316.md) · [동부권 한 판](perspectives/p01-delivery-platform-east-seoul.r321.md) | 배달 플랫폼 본사 운영자 ★ | 지사장 · 배차 담당자 · 플랫폼 정산 담당자 | **지금 · 첫 입장** |
+| 2. [배달 기사](perspectives/p02-delivery-rider.r316.md) | 음식 배달기사 | — | **다음** |
+| 3. [카페 · 음식점](perspectives/p03-cafe-restaurant.r316.md) | 카페 점주 | 일반 음식점주 · 제과점주 · 바리스타 · 조리 담당자 · 픽업 인계 담당 · 매장 정산 담당자 | **다음** |
+| 4. [가맹](perspectives/p04-franchise.r316.md) | 가맹점주 | 가맹본부 공급 담당자 · 점포 검수 담당자 | **보류** |
+| 5. [홍달 플레이스 · 광고](perspectives/p05-place-advertising.r316.md) · [공통 목록 r1](hongdal-place-shared-listing-and-exposure.design.r326.md) · [광고 r1](hongdal-place-click-bid-and-budget.design.r327.md) | 홍달 플레이스 운영자 | 입점 점주 · 광고 운영자 · 트래픽 중개업자 · 참여 보상 앱 운영자 · 탈취 계정 유통업자 | **공통 목록·광고 기획 · 중개·공급 보류** |
+| 6. [손님 · 동네 사람](perspectives/p06-customers-residents.r316.md) | 주문자 | 장소를 찾는 고객 · 동네 주민 · 방문자 · 통근자 · 대중교통 이용자 | **관찰(주문자는 다음)** |
+| 7. [창고 · 물류](perspectives/p07-warehouse-logistics.r316.md) | 센터 운영자 | 센터 출고 담당자 · 피킹 작업자 · 포장 작업자 · 상차 작업자 · 화물기사 | **보류** |
+| 8. [전자상거래](perspectives/p08-ecommerce.r316.md) | 온라인 판매자 | 주문 · 출고 담당자 | **보류** |
+| 9. [조달 · 무역](perspectives/p09-procurement-trade.r316.md) | 원두 구매 담당자 | 수입 담당자 · 통관 담당자 · 식품검사 담당자 · 항만 물류 담당자 · 공항 물류 담당자 | **보류** |
+| 10. [생산 · 산지](perspectives/p10-production-origin.r316.md) | 농업인 | 축산 농가 운영자 · 어업인 · 산지유통센터 운영자 · 위판장 운영자 | **보류** |
+| 11. [정산 · 회계 지원](perspectives/p11-settlement-accounting.r316.md) | 회계 검토 담당자 | 세무 검토 담당자 | **보류** |
+
+| 바탕 | 정본 | 이어 읽기 | 단계 |
+| --- | --- | --- | --- |
+| 개념 · 정체성 | [r314 개념 구조](hongdal-place-core-concepts.design.r314.md) · [r311 홍달 플레이스 본편](hongdal-place-steam-seoul-discovery.proposal.r310.md) | [r261 00 오행판](five-element-root-management-board.design.r260.md) · [r285 인의예지 연구 트리](multi-entry-management-research-tree.design.r183.md) | **지금** |
+| 구 지도(출시판) | [r312 구 지도 경영](hongdal-place-district-board-release-map.design.r312.md) · [r315 현실 자료 우선](hongdal-place-map-observation-first.design.r315.md) · [구 지도는 시안 6](../../../Handoffs/2026-11-20-Claude-정리-구지도는시안6으로.md) | [r184 연속 축소 · 전국](district-seoul-continuous-zoom-and-nation-transition.design.r184.md) · [r286 자료팩 · 레이어](data-packs-and-observation-layers.proposal.r160.md) · [출시판 · 정밀판 제안](../../../Handoffs/2026-11-19-Claude-제안-출시판과내부정밀판.md) | **지금** |
+| 동 디오라마(내부 정밀판) | [동 디오라마 목차](../PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [서울 427 공식판](../../../Handoffs/2026-11-18-Claude-서울427동-공식판굽기-반환.md) · [경기 601](../../../Handoffs/2026-11-19-Claude-경기정밀판굽기-반환.md) | [r274 주소 · 건물 · 출입구](jungnang-landmarks-and-address-map-quality.development-plan.r271.md) · [r236 M키 동 선택](m-key-administrative-dong-diorama-selector.confirmed.r236.md) | **지금(내부)** |
+| 길찾기 | [r287 길을 따르는 배달 선](soft-road-following-delivery-lines.design.r212.md) | [길찾기 1차 반환](../../../Handoffs/2026-11-18-Claude-길찾기-1차-반환.md) | **지금** |
+| 화면 틀 | [r259 탑다운 화면](top-down-screen-hierarchy.design.r259.md) · [r258 화면 번호](current-screen-numbering.catalog.r258.md) · [r309 역할 선택 · 로딩 · 지도](role-perspective-research-and-relaxed-observation.design.r242.md) | [패키지별 화면 · 자료 구분표](../../../Handoffs/2026-11-18-Claude-패키지별-화면자료-구분표.md) · [r146 집중 · 이완](focus-relax-shared-management.design.r146.md) | **다음** |
+| 시간 · 결산 | [r174 하루 결산](live-calendar-daily-management.baseline.r174.md) | [r188 회차 증감](round-resource-icons-and-deltas.design.r188.md) | **다음** |
+| 세계관 · 가치 | [r269 함께 밝아지는 세계](warmth-perspective-taking-and-shared-light.direction.r269.md) | [r204 명덕](daxue-mingde-and-dong-growth.research.r204.md) | **배경** |
+| 이야기 | [r270 첫 시즌 이야기](first-season-story-synthesis.r101.md) | [r299 업무 UX와 스토리 구분](role-perspective-research-and-relaxed-observation.design.r242.md#r299-보존--역할별-업무-ux와-스토리-기획) · [r244 같은 배달의 세 입장](same-delivery-three-perspectives.confirmed.r244.md) | **보류** |
+| 연출 · 모델 · 법 | [r210 음악 · 빛](music-reactive-light-and-beat-sync.proposal.r210.md) · [r191 기사 · 오토바이 모델](3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md) | [r255 지도 법적 준비](map-legal-delegation-and-operating-orders.research.r254.md) | **보류** |
+
+## 판별 기록 — 최근 판부터
+
+여기부터는 공통 순번으로 기록하던 이력이다. 이후 개정은 [주제별 판본](topics/README.md)에 기록한다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r329"></a>
+
+[엔진 레벨업은 돈 + 경험 r329](perspectives/p01-delivery-platform-east-seoul.r321.md#13-r329-엔진-레벨업은-돈--경험--확정). 사용자 11-20: r324의 제안을 받아들였다. 배차 엔진은 돈과 경험이 둘 다 차야 오른다. 경험은 닫힌 주문(켜 두기)과 고비 카드 해결(개입)로 쌓인다. 값(고비 카드 +30 · Lv3에 1,500)은 가안이다. r325의 환류 방향은 따로 미정이다.
+
+[홍달 플레이스 클릭 과금과 광고 경쟁 r327](hongdal-place-click-bid-and-budget.design.r327.md). 유효 클릭마다 예치한 캠페인 예산을 차감하고 소진되면 다음 광고로 넘긴다. 광고 자리는 클릭당 입찰가 순을 제안했고 실제 금액과 동점 규칙은 미정이다.
+
+[홍달 플레이스 공통 목록과 노출 r326](hongdal-place-shared-listing-and-exposure.design.r326.md). 장소 검색·배달 음식 목록의 공통 점포와 노출 기록을 제안했다. 배달 목록 상단 광고 한 칸에서 주문과 배달 완료까지 읽을 수 있는지를 첫 검토로 잡았다. 집행 시점·비용·경합은 미정이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r325"></a>
+
+[플랫폼 이익이 다시 순환하는 방향 r325](perspectives/p01-delivery-platform-east-seoul.r321.md#12-r325-플랫폼의-이익이-다시-순환하는-방향). 최신 Claude 기획/구현 근거를 대조하고 이 대화에서 기획을 이어간다. r324의 성장→수익에 더해, 얻은 여력이 참여자와 현장으로 돌아오는 방향을 기록했다. 기존 주문 간 조정 풀과 이익 환류는 구별한다. 대상·비율·시점·수단·구현은 미정이며 기사에게 체감되는 환류부터 검토하는 질문은 `Asked`다. K1/K2의 현재 구현 범위를 자동 확대하지 않는다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r324"></a>
+
+[성장 보상은 돈 버는 힘으로 r324](perspectives/p01-delivery-platform-east-seoul.r321.md#11-r324-성장-보상은-결국-돈을-더-잘-버는-힘으로). 사용자 11-20: 보상으로 얻은 것이 결국 돈을 더 잘 벌게 되는 구조. 개입의 보상은 엔진 경험 · 사람 · 빛으로 주고, 그것이 처리 여력 · 범위 · 묶음 · 정시 · 수요로 하루 수입을 올린다. 예시: Lv3이 되면 하루 +21,400원, 개입하면 그날이 하루 먼저 온다. 그래서 엔진 레벨업은 돈 + 경험(제안).
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r323"></a>
+
+[그래픽 기본 r323](perspectives/p01-delivery-platform-east-seoul.r321.md#10-r323-그래픽-기본--역사-문양-아이콘과-흐르는-빛-알갱이). 사용자 11-20: 지하철 역사 문양 아이콘이 서고 빛 알갱이가 노선을 따라 흐르는 시안 6의 그림을 기본으로 한다. 엔진 범위는 테두리 없는 옅은 빛. 동부권 시안 네 장을 게임 구 지도 바탕으로 다시 그렸다(v2).
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r322"></a>
+
+[켜 두기와 직접 개입 r322](perspectives/p01-delivery-platform-east-seoul.r321.md#9-r322-켜-두기와-직접-개입--보상을-나눈다). 사용자 11-20: 켜 두기만 해도 자라고, 직접 플레이하면 보상을 더 준다. r146(기본 수익 같음 · 직접 완료만큼 보너스)을 본사 운영자에게 넓혀, 고비 카드를 직접 처리하면 빛 · 엔진 경험 · 사람 성장 보너스를 주고 돈은 같게 두는 안(가안). [시안 네 장](../../../Handoffs/2026-11-20-Claude-시안-동부권한판.md).
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r321"></a>
+
+[동부권 다섯 지역 한 판 r321](perspectives/p01-delivery-platform-east-seoul.r321.md). 사용자 11-20: 수수료는 음식값의 5%로 정했다(실제 기록 평균으로 운영 칸 +363원 / 건). 10월의 [r3 동북권 플랫폼 경영 게임](regional-platform-management-direction.r3.md)을 이어받아 중랑 · 동대문 · 광진 · 노원 · 구리 다섯 지역에서 하루 한 판(7~23시, 점심 · 저녁 두 고비), 사가정역 3동에서 맞닿은 구로 넓히는 차례, 조정의 세 가지 결산을 제안했다. 다음 질문은 하루 한 판의 길이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r320"></a>
+
+[내 배달 기록으로 맞춘 첫 값 r320](perspectives/p01-delivery-platform.r316.md#r320-내-배달-기록으로-맞춘-첫-값). 사용자 11-20: 실제 배달 기록(음식점 · 메뉴 · 정산)을 게임에 쓴다. 앱 관측 1,210건의 요금 항목이 「픽업 700 · 전달 700 · 100m당 80 버림 + 시간대 · 지역 할증」과 모두 맞았다. 실제 거리 분포(중앙값 1.71 km)에서 배달비 3,000원은 기본 배달료를 덮고 건당 159원이 남지만, 할증(건당 평균 931원 · 주문 금액의 3.6%)은 덮지 못한다. 다음 질문은 할증을 누가 내는지다. 원본은 PC에 두고 집계만 옮겼다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r319"></a>
+
+[플랫폼은 조정하는 곳이다 r319](perspectives/p01-delivery-platform.r316.md#r319-플랫폼은-조정하는-곳이다--가까운-배달로-먼-배달을-채운다). 사용자 11-20: 플랫폼은 여러 역할의 소통을 돕고 조정하는 곳이며 배차 엔진은 그 도구다. 수입은 배달비 + 수수료 — 배달비는 고르게(가안 3,000원) 받아 가까운 배달에서 남은 몫으로 먼 배달을 채우고(조정 풀), 수수료는 서버 운용 비용을 덮는다. 플랫폼은 주문자 앱 · 기사 앱 · 음식점 POS를 내준다. 검산에서 관찰값(700 · 700 · 100m당 80)이면 본전 거리 2.0 km라, 다음 질문은 기사 배달료의 첫 값이다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r318"></a>
+
+[배달 플랫폼의 돈 r318](perspectives/p01-delivery-platform.r316.md#r318-배달-플랫폼의-돈--기사-배달료가-나가고-수수료가-들어온다). 사용자 11-20: 배차 범위는 행정동 칸으로 센다. 배차 엔진이 기사 배달료(픽업 + 전달 + 100m당 거리 + 시간대 할증 + 추가 할증, Mirror 요금 구성 재사용)를 계산하고, 배차될 때 자본금에서 나간다. 전달 완료 때 총 주문 금액의 수수료가 들어온다. 검산 예시에서 수수료만으로는 건당 손해라, 다음 질문은 배달비 수입을 더할지다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r317"></a>
+
+[배차는 배차 엔진이 한다 r317](perspectives/p01-delivery-platform.r316.md#r317-배차는-배차-엔진이-한다). 사용자 11-20: 한 건씩 배차하는 사람은 없고 배차 엔진이 배차한다. 엔진 레벨이 오르면 배차 속도와 배차 범위(배차할 수 있는 지역)가 넓어진다. 지금 코드의 Lv1~Lv5 · +12%/Lv는 속도 몫이고 범위는 새로 더한다(제안). r313의 배차 확정 단계와 r293의 지사 건별 배차는 이 방향으로 바뀐다. 다음 질문은 범위를 무엇으로 셀지(추천: 행정동 칸)다.
+
+<a id="기획제작--개인용-설치형-게임--plan-system-regional-operator-simulation--r316"></a>
+
+[입장별 기획 목차 r316](perspectives/README.md). 사용자 11-20의 「각각의 입장에 따라서 기획들을 나눠두고 … 유니티 상에서 어떻게 표현할지 결정」에 따라 예전 역할 48개를 사업 단위 11갈래로 다시 나누고, 입장마다 같은 9칸을 두었다. 첫 입장은 배달 플랫폼 본사 운영자이며, 다음 질문은 첫 고리에서 본사가 주문 한 건을 직접 배차하는지(r313) 세트를 할당하는지(r293 · r312)다. 틀과 목차만 만들었고 제품 코드는 바꾸지 않았다.
 
 [행정동을 넘는 첫 배달 검증 r294](delivery-branch-growth-play-loop.design.r257.md). 면목제3·8동 픽업과 면목본동 가상 전달의 경로를 재현했고 같은 주문의 지사 실적 검증 조건을 묶었다.
 

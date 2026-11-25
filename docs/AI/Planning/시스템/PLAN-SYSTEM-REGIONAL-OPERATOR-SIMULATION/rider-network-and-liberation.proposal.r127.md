@@ -1,5 +1,7 @@
 # [기획 · 기사 네트워크와 광복 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r127]
 
+- 후속 방향: [따뜻한 역지사지와 교류의 빛 r269](warmth-perspective-taking-and-shared-light.direction.r269.md). 지역에서 대한민국·장기적으로 북한의 사람들까지 이어지는 정서를 기록한다. 아래 오토바이 색 표현은 과거 제안이며 현행 기사는 빛으로 표현한다. 새 수치/해금·교류 구현을 승인한 것은 아니다.
+
 - 기준일 2026-11-10
 - 상태 `UserGoalConfirmed / RegionalPlayProposed / ImplementationPending`
 - 상위 기준은 [게임 상위 목적 — 오행 순환·회복·광복기](../../../게임상위목적-오행순환과광복기-기획-2026-09-02.md)다. 이 판본은 지역 운영자 플레이를 그 목적에 연결한다.

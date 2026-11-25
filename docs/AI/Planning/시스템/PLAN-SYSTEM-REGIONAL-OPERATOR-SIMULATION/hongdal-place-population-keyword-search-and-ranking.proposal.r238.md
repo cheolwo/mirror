@@ -1,5 +1,7 @@
 # [기획 · 인구 기반 가상 검색량과 홍달 플레이스 순위·페이지 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r238]
 
+- 후속 참고: [공식 활동 근거와 검색 설계 r268](naver-place-activity-evidence-and-search-design.research.r268.md). 2026-11-17 현재 고객 화면/순수 규칙과 대조한 연구다. 이 문서의 시험 비중·미정 산식/승인 상태를 대체하지 않는다.
+
 - 상태: PopulationBasedVirtualSearchRequested / KeywordVolumeAndRankedPagesRequested / ExistingDemandAndPlacePlansReviewed / SearchFirstSliceProposed / BalanceValuesProposed / ClaudePlanningInputPrepared / NotReadyToDispatch / ProductUnchanged
 - 기준일은 2026-11-15 KST다. 사용자는 시뮬레이션의 인구에서 가상 고객의 검색을 만들고, 키워드별 검색량을 기록하며, 점수에 따라 매장이 1·2·3페이지 등에 놓이는 홍달 플레이스를 먼저 기획하기를 원했다.
 - 이번 우선순위는 **검색하는 고객 → 검색 기록 → 순위·페이지 → 경영 결과 비교**다. 사진·메뉴·개인 음식점 상세를 전부 채우는 작업을 첫 검색 모형의 선행조건으로 두지 않는다.

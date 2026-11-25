@@ -2,7 +2,7 @@
 
 이 목록은 탐색용이다. 승인/미승인·개발 수용·실행 증거는 원문 상태와 현재 인계를 따른다. 높은 판본 번호 하나가 모든 기획을 대체하지 않는다.
 
-별도 원문 222개와 README 초기 본문 32절을 경로/앵커로 구분했다. 같은 r번호는 고유 키가 아니며 파일명/앵커를 유지한다. 본문 참조는 폐기 판정이 아니다.
+별도 원문 227개와 README 초기 본문 32절을 경로/앵커로 구분했다. 같은 r번호는 고유 키가 아니며 파일명/앵커를 유지한다. 본문 참조는 폐기 판정이 아니다.
 
 [주제별 첫 읽기](README.md) · [분류·원문 상태·지문 대장](context-index.json)
 
@@ -26,14 +26,17 @@
 
 ## 첫 시작·반복·참여 방식
 
-<details><summary>원문 14개 · README 본문 0절</summary>
+<details><summary>원문 17개 · README 본문 0절</summary>
 
 | 원문 | 형식/읽는 역할 | 원문 기획/인계 상태와 이어 읽기 |
 | --- | --- | --- |
-| [r241 · 역할을 골라 사람과 인계를 관찰하는 지도](role-centered-observation.design.r241.md) | 관찰 흐름 제안 · 우선 읽기 | RoleSelectionRequested / ObservationFlowProposed / NotReadyToDispatch. |
+| [r251 · 턴 전 방향 결정·턴 후 현장 수행 분리](next-todo-fire-to-center-observation.design.r245.md) | 현재 기능의 턴 전/후 분류 · 우선 읽기 | PreTurnDirectionDecisionsConfirmed / PostTurnFieldActionsAndMiniGamesConfirmed / CurrentActionsClassified / NewTurnPlanSourceReviewed / PhaseRoutingImplementationPending / StrategyChangeCarryoverAsked / EditableTurnPlanConfirmed / CommitOnTurnAdvanceConfirmed / UnselectedTaskDeferralConfirmed / OptionalPostTurnInterventionConfirmed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged. 방향/준비와 현장 수행 분리; 새 턴 계획 소스의 검수·제조·배차 담기/화 판정 조정 제안; 빌드·실제 입력·미니게임 구현은 미확인. |
+| [r244 · 배달 한 건을 세 입장에서 이어 읽기](same-delivery-three-perspectives.confirmed.r244.md) | 첫 역할 원고 순서 확정 · 우선 읽기 | FirstNarrativeSequenceConfirmed / SharedOrderBindingPending / CustomerReceiptViewPending. |
+| [r242 · 역할별 연구 서술과 편안한 자율 관찰](role-perspective-research-and-relaxed-observation.design.r242.md) | 역할 연구·기본 관찰 경험 · 우선 읽기 | RelaxedObservationDirectionConfirmed / RoleResearchFrameworkProposed / DevelopmentAcceptancePending. |
+| [r249 · 기사 클릭·휴대폰 업무 상태와 역할 관찰](role-centered-observation.design.r241.md) | 기사 클릭·휴대폰 상태와 역할 관찰 · 우선 읽기 | RiderClickPhoneStatusConfirmed / PhoneFirstConfirmed / CameraFollowOptionalConfirmed / ExistingRiderPhoneReviewed / MapClickObservationBindingPending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged. 휴대폰 먼저·카메라 따라가기 별도 선택 확정; 현재 업무 연결 보완·시안/개발 대기. |
 | [r187 · 같은 날 반복하는 운영 회차와 첫 안내](operating-round-first-play.prototype.r187.md) | 기획 · 우선 읽기 | - 상태: OperatingRoundConfirmed / ApprovedPlanningBaseline / PrototypeHandoffPrepared / DevelopmentAcceptancePending / RuntimeReviewPending / ProductUnchanged. |
 | [r165 · 스테이지와 혼합 턴의 경영 진행](stage-turn-progression.framework.r165.md) | 기획 · 우선 읽기 | - 상태: HybridTurnChosenByUser / LatestSixMockupsReviewed / StageFrameworkProposed / VisualReviewPending / ProductUnchanged; 이어 읽기 r187 (ClarifiesInScope): 운영 회차=하루 해석 정리; 혼합 진행 전체 폐기 아님 |
-| [r151 · 다음 작업 버튼 확정](next-task-button-confirmed.design.r151.md) | 기획 · 우선 읽기 | - 상태: NextTaskButtonConfirmed / DesignDocumented / ProductUnchanged |
+| [r151 · 다음 작업 버튼 확정](next-task-button-confirmed.design.r151.md) | 기획 · 우선 읽기 | - 상태: NextTaskButtonConfirmed / DesignDocumented / ProductUnchanged; 이어 읽기 [현행 r251](next-todo-fire-to-center-observation.design.r245.md) (ClarifiesInScope): 다음 한 작업 시작과 필요한 선택창 안내를 구분하며 전체 대체 아님 |
 | [r150 · 원하는 직무를 연속 수행하는 작업 대기열](preferred-role-continuous-tasks.design.r150.md) | 기획 · 우선 읽기 | - 상태: PreferredRoleDirectionConfirmed / ContinuousTaskFlowDocumented / NextTaskStartProposed / ProductUnchanged |
 | [r147 · 역할별 미니게임과 현실 기반 카페 레시피](multi-role-minigames-and-realistic-recipes.design.r147.md) | 기획 · 우선 읽기 | - 상태: MultiRoleDirectionConfirmed / TaskProfilesProposed / RecipeSourcesReviewed / DesignDocumented / ProductNotImplemented |
 | [r146 · 집중 · 이완을 오가는 경영](focus-relax-shared-management.design.r146.md) | 기획 · 우선 읽기 | - 상태: UserPlanApproved / ParticipationModesDocumented / ControlHandoffPlanned / EconomyValuesPending / GameplayNotImplemented |
@@ -170,7 +173,7 @@
 | [r168 · 동네 · 구의 사업 목록과 입점 배치](district-business-catalog-and-placement.proposal.r168.md) | 기획 · 우선 읽기 | - 기획 분야·상태: 사업 선택·입점/설치·턴별 준비 · BusinessPlacementCatalogRequested / PlacementFlowProposed / VisualReviewPending / ProductUnchanged |
 | [r167 · 공개 인테리어를 참고한 카페 작업 맵](cafe-work-map-and-franchise-interiors.research.r167.md) | 전문 조사 · 우선 읽기 | - 기획 분야·상태: 카페 현장 공간·바리스타 작업 · OfficialReferencesReviewed / CafeWorkMapProposed / VisualReviewPending / ProductUnchanged |
 | [r166 · 배달 현장과 물류센터 작업 맵](delivery-and-center-work-maps.proposal.r166.md) | 기획 · 우선 읽기 | - 기획 분야·상태: 현장별 미니게임 공간 · MapRoleSeparationRequested / InteriorWorkMapProposed / VisualReviewPending / ProductUnchanged |
-| [r164 · 다층 물류센터 내부 모형](logistics-center-multifloor-cutaway.design.r164.md) | 기획 · 우선 읽기 | - 상태: UserDirectionConfirmed / MultifloorLayoutProposed / PreparedForClaudeVisualDesign / VisualReviewPending / ProductUnchanged |
+| [r256 · 대형 차량·캠프 분류·배송차 상차 관찰 구상](logistics-center-multifloor-cutaway.design.r164.md) | 아이디어 기록 · 우선 읽기 | ParcelLinehaulCampObservationIdeaRecorded / VehicleClassAndProcessDetailsUndecided / FacilitySpecificProcessUnverified / NoImplementationRequested / ProductUnchanged; r164 내부 기획 보존, 구현·차량 제원 확정 없음. |
 | [r163 · 물류센터 · 자동 분류 뼈대](logistics-centers-sortation-skeleton.research.r163.md) | 전문 조사 · 우선 읽기 | - 상태: OfficialSourcesCollected / RegistryRawAcquired / CenterProcessSkeletonProposed / ResearchNotYetAccepted / ProductUnchanged |
 | [r132 · 음식점 확보와 기사 업무 흐름](restaurant-coverage-and-rider-flow.proposal.r132.md) | 기획 · 우선 읽기 | UserDirectionConfirmed / FlowBalanceProposed / ImplementationPending |
 | [r169 · 프로젝트 스타일의 입점 · 설치 시안](business-placement-ui.concept.r169.md) | 기획/시안 · 관련 원문 | - 상태: ProjectStyleReused / ThreeMockupsRendered / VisualFeedbackPending / ProductUnchanged |
@@ -260,7 +263,7 @@
 | [r184 · 구 지도 연속 축소와 전국 직접 전환](district-seoul-continuous-zoom-and-nation-transition.design.r184.md) | 기획 · 우선 읽기 | - 상태: UserDirectionConfirmed / ApprovedPlanningBaseline / HandoffPrepared / DevelopmentAcceptancePending / ProductUnchanged. |
 | [r182 · 한 행정동에 집중하는 군중 비교](single-dong-crowd-focus.confirmed.r182.md) | 기획 · 우선 읽기 | - 상태: SingleAdministrativeDongChosen / ImmersionFocusRecorded / DongSelectionUnresolved / NotReadyToDispatch / ProductUnchanged. |
 | [r157 · 지도 시각 효과 선택](optional-map-visual-effects.design.r157.md) | 기획 · 우선 읽기 | - 상태: OptionalMapEffectsConfirmed / EffectsControlsProposed / DefaultsPending / ProductUnchanged |
-| [r155 · 대한민국 전국 화물 경영 지도](nationwide-freight-management-map.proposal.r155.md) | 기획 · 우선 읽기 | - 상태: NationwideFreightViewRequested / RepublicOfKoreaFirstConfirmed / FreightManagementDesignProposed / ProductUnchanged |
+| [r253 · 확대별 지형과 전국 시설 빛](nationwide-freight-management-map.proposal.r155.md) | 기획·자료 · 우선 읽기 | `ZoomDependentBasemapDetailRequested / ExistingFourMockupsReviewed / TerrainSourcesReconciled / FourLevelBasemapDetailProposed / L1ToL6StillAsked / VisualComparisonPrepared / GameBindingPending / NotReadyToDispatch / CaptureOnlyCommitted`; 빛 집계와 바탕 상세도 분리. 기존 자료 비교/촬영 commit과 새 기능 구현을 구분. |
 | [r152 · 개발 · 구 지도 정밀화 이어받기](district-map-readability-continuation.design.r152.md) | 기획 · 우선 읽기 | - 상태: UserContinuationRequested / ScopedPresentationFixAccepted / Implemented / IsolatedWindowsRenderVerified / NameSelectionDetailPending |
 | [r144 · 축척별 OS 경영과 창고 내부 보기](scale-os-management-focus.design.r144.md) | 기획 · 우선 읽기 | - 상태: ScaleFocusPlanApproved / WarehouseInteriorDirectionConfirmed / DesignDocumented / VisualReviewPending / ProductUnchanged |
 | [r181 · 면목동 오전 · 점심 · 저녁 군중 비교](myeonmok-three-period-crowd-comparison.confirmed.r181.md) | 기획 · 관련 원문 | - 상태: MyeonmokThreePeriodComparisonConfirmed / DesignDocumented / SpatialAndTimeMappingUnresolved / NotReadyToDispatch / ProductUnchanged.; 이어 읽기 r182 (Refines): 첫 행정동 하나에 집중 |
@@ -291,10 +294,12 @@
 
 ## 자료·팩·관찰
 
-<details><summary>원문 11개 · README 본문 0절</summary>
+<details><summary>원문 13개 · README 본문 0절</summary>
 
 | 원문 | 형식/읽는 역할 | 원문 기획/인계 상태와 이어 읽기 |
 | --- | --- | --- |
+| [r255 · 업무 시작 전 등록·허가·신고 법령 참고 조사](map-legal-delegation-and-operating-orders.research.r254.md) | 정보조사 · 우선 읽기 | `InformationResearchOnlyConfirmed / PreOperationLegalRequirementsResearchContextConfirmed / ExistingSourcesPreserved / PriorGameDesignInferenceWithdrawn / LegalGameplayUndecided / NoImplementationRequested / ProductUnchanged`; 게임화 확정 해석 철회, 자료 보존·활용 미정. |
+| [r243 · 데이터 시각 효과 모음과 사용자 관찰 레이어](data-driven-visual-effects-and-user-layers.proposal.r243.md) | 표현 자료 수집·사용자 입력 제안 · 우선 읽기 | VisualResourcesCollectionRequested / UserLayerPreparationRequested / ImportWorkflowProposed / DevelopmentAcceptancePending. |
 | [r234 · 픽업 매장의 주소·건물 사전 검증](pickup-location-verification-before-lighting.research.r234.md) | 수집·검증 연구 · 우선 읽기 | 지역을 넓힌 위치 검사·보완 후보·정보 수집/기획 중심 |
 | [r201 · 게임 전반의 부족 자료와 준비 우선순위](gameplay-data-gaps-and-collection-priorities.research.r201.md) | 분야별 조사 · 우선 읽기 | 보유/미연결·공식 후보·허용 표본/설계값을 구분. P0/P1/P2 추천·원자료/DB/예약/코드 변경 없음 |
 | [r160 · 자료팩과 관찰 레이어](data-packs-and-observation-layers.proposal.r160.md) | 기획 · 우선 읽기 | - 상태: PackAndLayerDesignProposed / CurrentDbReadOnlyReviewed / ProductUnchanged |

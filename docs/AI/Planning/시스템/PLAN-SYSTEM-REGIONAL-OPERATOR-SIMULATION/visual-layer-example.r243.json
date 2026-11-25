@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "hongdal.visual-layer-research-example.v1",
+  "status": "ExampleOnlyNotRuntimeInput",
+  "title": "사용자 지점 자료를 후광으로 보는 합성 예제",
+  "description": "값과 위치는 전부 설명용이다. 실제 업소나 지점을 나타내지 않는다.",
+  "runtimeImportSupported": false,
+  "gameStateEffects": false,
+  "dataset": {
+    "id": "example:personal-observation-points",
+    "revision": "example.1",
+    "dataKind": "SyntheticExample",
+    "unit": "example_count",
+    "period": {
+      "startInclusive": "2026-11-15T00:00:00+09:00",
+      "endExclusive": "2026-11-16T00:00:00+09:00",
+      "isRealObservation": false
+    },
+    "source": "이 파일 안에서 만든 합성 예제",
+    "rights": "ProjectAuthoredSyntheticExample",
+    "referenceSystem": {
+      "kind": "LocalMetresExample",
+      "georeferenced": false,
+      "mapModuleId": null,
+      "origin": null,
+      "axes": {
+        "x": "eastM",
+        "y": "upM",
+        "z": "northM"
+      }
+    },
+    "records": [
+      {
+        "id": "example-point-a",
+        "eastM": 10,
+        "northM": 10,
+        "upM": 0,
+        "value": 20,
+        "quality": "Synthetic"
+      },
+      {
+        "id": "example-point-b",
+        "eastM": 30,
+        "northM": 10,
+        "upM": 0,
+        "value": 80,
+        "quality": "Synthetic"
+      },
+      {
+        "id": "example-point-zero",
+        "eastM": 10,
+        "northM": 30,
+        "upM": 0,
+        "value": 0,
+        "quality": "Synthetic"
+      },
+      {
+        "id": "example-point-unknown",
+        "eastM": 30,
+        "northM": 30,
+        "upM": 0,
+        "value": null,
+        "quality": "Missing"
+      }
+    ]
+  },
+  "bindingProposal": {
+    "spatialBinding": "ExplicitLocalPlacement",
+    "idColumn": "id",
+    "valueColumn": "value",
+    "effect": "point.halo",
+    "scale": {
+      "kind": "LinearFixedDomain",
+      "domain": [0, 100],
+      "radiusMetres": [1, 6],
+      "clampOutOfRange": true,
+      "flagClampedValue": true,
+      "preserveRawValue": true
+    },
+    "style": {
+      "color": "#E9AE57",
+      "opacity": 0.28,
+      "persistentCenter": true,
+      "pulseEnabled": false,
+      "zero": "CenterOnly",
+      "missing": "HollowGreyCenterWithMissingLabel"
+    },
+    "placementPrerequisites": [
+      "표현안 예제이며 실제 게임 반입 형식은 아직 미구현임을 확인한다",
+      "대상 지도 모듈과 로컬 원점을 고른다",
+      "미터 단위와 게임 좌표의 대응을 확인한다"
+    ]
+  }
+}

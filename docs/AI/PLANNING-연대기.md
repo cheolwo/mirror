@@ -2,6 +2,74 @@
 
 > 2026-11-20 12:53 분리. 지금 기준은 [기획 목차](PLANNING.md). 이 파일은 2026-08~11-20의 판 요약을 날짜 역순으로 그대로 둔다. 옛 아래쪽 표의 깨진 글자(I→m)는 기획 ID · 링크만 고쳤다. 새 판 요약은 이 줄 아래에 덧붙인다.
 
+## 홍달 플레이스 주제별 판본 시작 (2026-11-20)
+
+- [주제별 판본](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/README.md)에서 여덟 주제의 첫 기준을 각각 `r1`로 등록했다. 공통 순번으로 기록한 판은 기존 파일과 절에서 이어 읽는다.
+
+## 엔진 레벨업은 돈 + 경험 r329 (2026-11-20)
+
+- [r329](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#13-r329-엔진-레벨업은-돈--경험--확정). 사용자가 r324의 제안을 받아들였다. 배차 엔진 레벨업 = 돈 + 경험. 경험 값은 가안. `EngineLevelNeedsMoneyAndExperienceConfirmed / ExperienceValuesStillDraft / NotReadyToDispatch / ProductUnchanged`
+
+## 관찰과 선택적 개입을 최상단 기획으로 r328 (2026-11-20)
+
+- [r328](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/optional-observation-and-intervention.design.r328.md). 관찰과 선택적 개입을 모든 영역에 적용하고 광고 입찰·과금은 영역별 세부 기획으로 연결했다. `OptionalInterventionPrincipleConfirmed / PlanningLevelsLinked / NotReadyToDispatch`
+
+## 홍달 플레이스 클릭 과금과 광고 경쟁 r327 (2026-11-20)
+
+- [r327](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-click-bid-and-budget.design.r327.md). 광고를 유효 클릭할 때마다 예치한 캠페인 예산에서 차감하고, 소진되면 다음 광고가 올라온다. 첫 시험은 클릭당 입찰가 순을 제안했다. `ClickDebitAndBudgetHandoffConfirmed / PerClickBidPriorityProposed / NotReadyToDispatch`
+
+## 홍달 플레이스 공통 목록과 노출 r326 (2026-11-20)
+
+- [r326](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-shared-listing-and-exposure.design.r326.md). 손님이 모이는 장소 검색과 배달 음식 목록에 동일 점포·공통 노출 기록을 쓴다. 첫 광고 자리는 사가정역 배달 목록 상단 한 칸으로 제안했다. `SharedDiscoveryDirectionRequested / FirstListingAndAdSlotProposed / NotReadyToDispatch`
+
+## 홍달 플레이스 주소 매핑과 배포 r60 (2026-11-20)
+
+- [r60](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/hongdal-place-address-data-and-distribution.proposal.r60.md). 1.0 공개 상가정보와 2.0에서 쓰는 신청 자료의 제공 조건 및 Steam 배포 검토 항목을 확인했다. 개별 승인과 가공 산출물별 배포 범위는 미정이다. `OfficialSourcesReviewed / PublicDataPilotProposed / SuppliedDataTermsUnconfirmed`
+
+## 2.0 골목과 출입구 화면 시안 r59 (2026-11-20)
+
+- [r59](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/myeonmok-alley-preview-and-mangubon-review.r59.md). 2.0 실물 모형과 자료를 읽어 면목제3·8동 검토 화면을 그렸다. 망우본동 27채 인접 골목망은 세 원본을 대조한 결과 연결 보류다. `PreviewRendered / MangubonAuditContinued / TraversalUnverified`
+
+## 2.0 동 디오라마 골목 접속과 정밀화 우선순위 r58 (2026-11-20)
+
+- [r58](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/myeonmok-alley-links-and-precision-priority.r58.md). 사가정역 주변 두 동을 먼저 정밀화하고 중랑구 16동 품질표로 확대 대상을 고른다. 면목제3·8동에서 OSM 골목 접속 후보를 찾았고 현행 통행은 미확인이다. `LocalAuditCompleted / RoadLinkCandidateFound / TraversalUnverified`
+
+## 성장 보상은 돈 버는 힘으로 r324 (2026-11-20)
+
+- [r324](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#11-r324-성장-보상은-결국-돈을-더-잘-버는-힘으로): 사용자 「결국 보상으로 얻은 게 돈을 더 잘 벌게 되는 그런 … 구조」. 보상 = 성장(엔진 경험 · 사람 · 빛) → 처리 여력 · 범위 · 묶음 · 정시 · 수요 → 하루 수입. 검산 예시(Lv3 하루 +21,400원, 개입으로 하루 먼저). 다음 질문: 레벨업 = 돈 + 경험. `GrowthRewardConvertsToEarningPowerConfirmed / EngineLevelNeedsMoneyAndExperienceProposed / NotReadyToDispatch / ProductUnchanged`
+
+## 그래픽 기본 r323 (2026-11-20)
+
+- [r323](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#10-r323-그래픽-기본--역사-문양-아이콘과-흐르는-빛-알갱이): 사용자 「지하철 역사 관련한 … 아이콘이 나오고 했던 … 시안이 더 나은 것 같아서 … 빛이 막 알갱이들이 막 이동하고 … 그거를 … 기본으로」. 바탕 = 게임 구 지도(역사 문양 · 노선 · 지형), 빛 알갱이가 노선을 따라 흐름, 범위는 테두리 없는 옅은 빛. 시안 v2 네 장. `GraphicBaseStationEmblemsAndFlowingLightConfirmed / MockupsRedrawnOnGameMap / NotReadyToDispatch / ProductUnchanged`
+
+## 켜 두기와 직접 개입 r322 (2026-11-20)
+
+- [r322](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#9-r322-켜-두기와-직접-개입--보상을-나눈다): 사용자 「켜두기만 해도 … 성장 … 직접적으로 플레이를 하는 경우 … 보상을 더」. r146을 본사 운영자에게 넓혀 고비 카드 처리 = 직접, 보상은 성장(빛 · 엔진 경험 · 사람)으로(가안). 시안 네 장(점심 고비 · 엔진 레벨업 · 하루 결산 · 켜 두기와 개입). `IdleGrowthAndActiveBonusSplitRequested / GrowthOnlyBonusProposed / MockupsRendered / NotReadyToDispatch / ProductUnchanged`
+
+## 동부권 다섯 지역 한 판 r321 (2026-11-20)
+
+- [r321](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md): 사용자 「음식값의 한 5% 정도를 수수료」 · 「서울 동부권 … 중랑구, 동대문구, 광진구, 노원구, 구리시 … 전에 기획을 했던 게 … 참고」. 수수료 5% 확정(운영 칸 +363원 / 건), r3(10-25)를 이어 다섯 지역 · 하루 한 판 · 넓히는 차례 · 조정의 세 가지 결산 제안. 다음 질문: 하루 한 판의 길이. `EastSeoulFiveRegionsRevived / CommissionFivePercentConfirmed / DayRoundProposed / RoundLengthAsked / NotReadyToDispatch / ProductUnchanged`
+
+## 내 배달 기록으로 맞춘 첫 값 r320 (2026-11-20)
+
+- [r320](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform.r316.md#r320-내-배달-기록으로-맞춘-첫-값): 사용자 「음식점 정보 … 메뉴 정보 … 배달 정산 정보 … 전부 좀 활용 … 의욕이 있게」. 앱 관측 1,210건으로 기사 배달료 규칙(700 · 700 · 100m당 80 버림 + 시간대 · 지역 할증) 확인, 거리 · 금액 · 시간 분포, 배달비 3,000원 검산(기본은 +159원/건, 할증 931원/건은 못 덮음). 다음 질문: 할증을 누가 내나. `RealDeliveryRecordsAdopted / RiderFeeRuleFromRecords / FlatFeeValidatedOnRealDistances / SurchargeFundingAsked / NotReadyToDispatch / ProductUnchanged`
+
+## 플랫폼은 조정하는 곳이다 r319 (2026-11-20)
+
+- [r319](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform.r316.md#r319-플랫폼은-조정하는-곳이다--가까운-배달로-먼-배달을-채운다): 사용자 「수수료 플러스 … 배달비」 · 「가까운 데서 … 얻어지는 배달 비용을 축적 … 멀리서 배달시키는 사람한테 … 보충」 · 「여러 사람의 의사소통을 돕기 위해서 배달 플랫폼 같은 게 존재」. 장부 두 칸(조정 풀: 배달비 ↔ 기사 배달료 / 운영: 수수료 ↔ 서버 비용), 플랫폼이 내주는 앱 셋, 검산(관찰값이면 본전 2.0 km · 세 건 합 +720). 다음 질문: 기사 배달료 첫 값. `PlatformAsCoordinatorConfirmed / FlatDeliveryFeeCrossSubsidyConfirmed / CommissionCoversServerCost / FirstRiderFeeValuesAsked / NotReadyToDispatch / ProductUnchanged`
+
+## 배달 플랫폼의 돈 r318 (2026-11-20)
+
+- [r318](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform.r316.md#r318-배달-플랫폼의-돈--기사-배달료가-나가고-수수료가-들어온다): 사용자 「픽업 비용, 전달 비용, … 100m당 … 거리 비용, … 시간대별 할증, … 추가 할증 … 배차를 할 때마다 돈이 … 빠져나가고 … 전달 완료 … 총 주문 금액에 대한 … 수수료」 · 「행정동 칸」. 범위 단위 확정(행정동 칸), 기사 배달료 구성(Mirror 요금 재사용, 첫 값 1,000 · 1,000 · 100m당 100), 배차 때 지출 · 전달 완료 때 수수료. 검산: 수수료만이면 건당 −2,700원. 다음 질문: 배달비 수입을 더할지. `DispatchRangeByAdminDongCellConfirmed / PlatformRevenueByRiderFeeAndCommissionDirectionConfirmed / DeliveryFeeIncomeAsked / NotReadyToDispatch / ProductUnchanged`
+
+## 배차는 배차 엔진이 한다 r317 (2026-11-20)
+
+- [r317](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform.r316.md#r317-배차는-배차-엔진이-한다): 사용자 「배차는 배차 엔진이 하는 걸로 … 레벨업을 시키면 … 배차 속도 … 배차할 수 있는 지역의 범위가 늘어나는」. 본사 · 지사 모두 건별 배차를 하지 않고 엔진이 한다. 레벨표 가안(Lv1 역에 딸린 동 → Lv5 노선 따라 이웃 구), 범위 · 기사 · 제휴점이 모두 맞아야 처리, r313 첫 고리 수정안. 다음 질문: 범위 단위. `DispatchByEngineDirectionConfirmed / EngineLevelSpeedAndRangeProposed / RangeUnitAsked / NotReadyToDispatch / ProductUnchanged`
+
+## 홍달 입장별 기획 목차 r316 (2026-11-20)
+
+- [입장별 기획 목차 r316](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/README.md): 사용자 11-20 「각각의 입장에 따라서 기획들을 이렇게 나눠두고 … 유니티 상에서 어떻게 표현을 할지 결정」. 예전 역할 48개(r302 · r296)를 사업 단위 11갈래로 다시 나누고 입장마다 같은 9칸(누구 · 자리 · 하는 일 · 보는/못 보는 정보 · 데이터 · 화면 · 유니티 표현 · 같은 건의 상대 · 정할 것)을 둔다. 첫 입장은 배달 플랫폼 본사 운영자, 다음 질문은 첫 고리에서 본사가 주문 한 건을 직접 배차하나(r313) 세트를 할당하나(r293 · r312). `PerspectiveFirstPlanningConfirmed / AllRolesRegrouped / FrameAndIndexOnly / NotReadyToDispatch / ProductUnchanged`
+
 ## 홍달 플레이스 현실 자료 우선 지도 r315 (2026-11-20)
 
 [동·구·전국 표현 후보와 실제 통계 비교도](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-map-observation-first.design.r315.md) · `MapObservationPriorityConfirmed / DisplayCandidatesProposed / LocalComparisonRendered / NotReadyToDispatch`. r314의 지도 계층을 관찰 경로로 먼저 사용하고 r313의 플레이 연결은 뒤에 둔다.

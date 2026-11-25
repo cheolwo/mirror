@@ -4,31 +4,117 @@
 
 이 목차는 [기획 문서 독립 관리 체계](../Architecture/기획문서독립관리체계.md)대로 **기획 ID · 현재 판 · 상태 · 정본**만 담는다. 판마다의 요약(2026-08~11-20, 옛 목차 381절 그대로)은 [기획 연대기](PLANNING-연대기.md)에 있다. 파일은 옮기지 않았다(eng 장부 · 도구 · 문서가 경로를 참조). 이전 구상은 [보관 목록](archive/README.md)에서 자리 그대로 찾는다.
 
+## 겨울 기획·개발 검토
+
+[겨울 기획·개발 검토 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/winter-planning-review.plan.r1.md) · 보관 실행 결과와 기획 자료를 모아, 기존 A·B·C의 대표 장면을 준비하고 검증하는 순서를 제안한다.
+
+## 최상단 플레이 원칙 — 역지사지
+
+**[역지사지 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warmth-perspective-taking-and-shared-light.direction.r269.md#역지사지-r1--모든-업무에-적용하는-플레이-원칙)** · 같은 일을 상대의 입장에서 보고, 그 사정을 내 다음 결정에 반영한다. 역할·업무 OS·지도·결산에 공통으로 적용한다.
+
+## 게임의 경영 목표 — 욕심과 양심의 조화
+
+**[거점 경영 목표 r5](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daekan-participant-awakening-and-income.proposal.r133.md#거점-경영-목표-r5--os-발전에서-플랫폼-승리까지)** · 각 장에서 업무 OS를 발전시켜 역할 목표와 깨어 있는 사람의 증가를 달성한다. 모든 캠페인 OS가 제 역할을 하며 인계까지 이어지는 운영이 최종 목표다. OS별 첫 운영 기준은 `Asked`다.
+
+## 최상단 기획 — 관찰과 선택적 개입
+
+**[관찰과 개입 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/optional-observation-and-intervention.design.r328.md)** · `OptionalInterventionPrincipleConfirmed`. 모든 역할에서 관찰을 이어 가거나 원하는 일에 개입한다.
+
+## 기획에서 화면까지
+
+[기획·화면 연결 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/planning-screen-tree.md#한-장면씩-기획하고-시안과-실행-결과를-확인한다) · 기획 한 건 → 이미지 한 장 → 검토와 기획 개정 → 개발 → 실행 결과 확인. 첫 적용에서 상단 골드와 기사 개인 스탯의 배치를 검토 중이다.
+
+```text
+홍달 플레이스
+├─ 역지사지 · 같은 일의 상대 보기 → 내 자리에서 판단 → 상대가 받은 결과 확인
+├─ 경영 목표 · 각 장의 두 조건과 전체 OS의 운영 안정 [01 역할 선택 / 00 총괄 / 14 결산]
+├─ 관찰과 개입 · 19 운영 방침·맡김 / 11 역할 보기
+├─ 총괄 관찰 · 01 역할 선택 → 로딩 → 04 구 지도 레이어 [첫 화면 시안 검토]
+│  └─ 기사 현장 개입 · 04 기사 빛 → 11-1 휴대폰 → 동네 픽업 → 04 복귀 [첫 조작 제안]
+├─ 구 지도와 표현 · 04 구 지도 → 사가정역 카드 [기존 화면 확인]
+│  └─ 동 디오라마 관찰 · 자료 창 → 절기 비교 → 현재로 [첫 시안 제안]
+├─ 배달 운영 · 새 주문 효과음 → 수락 방식 선택 → 기사 자동 배달
+│  ├─ 04 방향키 순서 / Space 타이밍 / 기사에게 맡기기 [실제 주문 연결 필요]
+│  └─ 지도/11-1 기사 진행 → 14-1 결산·골드 보상 → 04 같은 역 [실제 연결 검증 대기]
+├─ 배달 요금·정산 · 상단 가용 골드와 이번 턴 증감 → 상세 / 기사 모집 [04 구 지도 시안 검토]
+├─ 인물 스탯 · 02 기사 카드 / 09 점포 운영의 직원 카드 [기사 카드 시안 검토]
+├─ 원두 유통 · 09 카페 재료 → 공급처 견적 → 구 지도 납품 → 점포 입고 [첫 장면 제안]
+├─ 배달 플랫폼 발전 · 업무 OS 선택 → 21 연구 / 19 정책 → 14 하루 결산
+├─ 엔진 성장 / 이익 환류 · 14 결산 / 15 본사 장부 [연결 방식 검토]
+└─ 공통 목록 · 10-1 검색 결과 → 10-3 매장 상세 [기존 화면 확인]
+   └─ 광고 · 목록의 선택 사항 [입찰·클릭 차감 실행 검증 대기]
+```
+
+[기획·화면 연결과 첫 주문 확인표](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/planning-screen-tree.md)에서 확정·미정인 규칙과 현재 확인한 화면 근거를 각각 읽는다. 화면 이름과 기존 번호는 [화면 번호 대장](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/current-screen-numbering.catalog.r258.md)을 따른다.
+
+[배달 플랫폼 연구와 정책 r3](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/voluntary-rider-recruitment-and-operating-tech-tree.design.r264.md#배달-플랫폼-연구와-정책-r3--창고와-커머스) · 창고와 커머스를 각각의 갈래로 둔다. 두 갈래 사이의 첫 인계 장면은 `Asked`다.
+
+**[게임 기획 점검표](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/game-design-checklist.md)**로 각 가지의 목표·규칙·대가·결과·실패 후 복귀가 채워졌는지 확인한다. 사가정역 첫 주문의 작성 예가 들어 있다.
+
+## 홍달 플레이스 주제별 판본
+
+[주제별 현재 판과 원문](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/README.md). 각 주제는 `r1`에서 시작한다. 새 결정은 해당 주제의 판만 올린다.
+
+[전국 산업·생활 자료 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/national-industry-and-livelihood-data.plan.r1.md#전국-산업생활-자료-r2--지도-관찰부터) · 한국 주요 분야의 지도 관찰을 먼저 준비한다. 첫 플레이 장면과 규칙 연결은 후속이다.
+
+[원두 유통 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-one-cup-chain-and-multiscale-balance.design.r214.md#원두-유통-r1--원두가-온-길을-보고-거래한다) · 카페 점주가 원두의 이동을 관찰하고 원할 때 납품 조건을 고른다. 국내 볶은 원두의 발주·입고 한 건을 첫 검토로 제안했다.
+
+[총괄 관찰 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md#총괄-관찰-r1--구-지도의-역할-레이어) · 시작 역할로 고른 뒤 구 지도에서 업무·지역 데이터 레이어를 조절한다. 첫 진입의 기본 레이어는 `Asked`다.
+
+[입장 카드와 자료 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r1.md) · 입장별 첫 질문과 자료를 연구한다. 같은 배달 한 건에서 픽업 대기를 보는 첫 장면은 `Asked`다. 상위 [역할 관찰 기획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md).
+
+[입장별 플레이와 정보 발견 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-information-discovery.plan.r1.md) · 행동과 상황에 따라 정보를 펼치는 플레이 표현. [입장 카드와 자료](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r1.md)의 연결 기획 · `MapPinBehaviorAsked / NotReadyToDispatch`.
+
+[절기별 디오라마 관찰 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/seasonal-diorama-observation.plan.r2.md) · 사가정시장의 대서·입동 첫 장면을 선택했다. [비교 시안과 검증](Handoffs/2026-11-24-Codex-사가정시장-절기비교-1차.md) · `BrowserPrototypeVerified / UnityDispatchPending`.
+
 ## 지금 단계 — 지도 정밀화
 
+[사가정 URP와 전국 동 디오라마 r2](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-urp-dong-detail.plan.r2.md) · 항목별 출처 범례 확정. 사가정 Windows 격리 렌더링 비교 완료, 제품 적용 검토 대기. [S1 인계와 검증 명세](Handoffs/2026-11-24-Codex-인계-사가정-URP-S1-격리시험.md) · [실행 반환](Handoffs/2026-11-24-Codex-사가정-URP-S1-실행반환.md).
+
+[사가정 건물 외형 r1](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-building-facades.proposal.r1.md) · URP 후속 검토. 정면·층별 창·옥상의 유형별 외형과 첫 비교 표본.
+
+- 이익을 돌려주는 방식의 문답: [이익 환류 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#12-r325-플랫폼의-이익이-다시-순환하는-방향) · `PlatformBenefitCirculationDirectionRequested / BeneficiariesAndAllocationUndecided / RiderFirstReturnAsked / NotReadyToDispatch`. 배분 대상·방식과 구현은 미정이다.
 - 게임: **홍달 플레이스** — 배달 플랫폼 경영(r311)
 - 놀이 지도는 **구(시군) 지도**, 운영 단위는 행정동(r312). **동 디오라마는 내부 정밀판**(배포 아님, 사용자 11-19)
-- 첫 플레이 정본: **역에서 주문 한 건 r313**(사용자 11-20 확정). 라떼 한 잔 r240은 카페 사업의 첫 고리로 보류(L9)
-- 개념 트리 r314 · 지도 표시 원칙 r315(현실 자료 우선)
+- 기획은 **입장별로** 정한다(사용자 11-20) — 첫 입장 **배달 플랫폼 본사 운영자**, 이어 배달 기사 · 카페 점주
+- 첫 플레이: [배달 운영 r5](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-station-first-loop.design.r313.md#배달-운영-r5--미니게임-보상은-게임-자금) · 방향키 순서·Space 타이밍·기사에게 맡기기를 고른다. 직접 참여의 첫 보상은 게임 자금이다. 라떼 한 잔 r240은 카페 점주 입장의 첫 고리다.
+- [배달 요금·정산 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/round-resource-icons-and-deltas.design.r188.md#배달-요금정산-r2--턴당-골드와-기사-모집) · 이번 턴 골드와 기사 모집에 쓸 가용 골드를 구분한다. 모집 등 일회 지출을 상단 순증감에 반영하는 안은 `Asked`다.
+- [개념 트리](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-core-concepts.design.r314.md) · [구 지도와 표현 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-map-observation-first.design.r315.md#구-지도와-표현-r2--현실-자료를-먼저-관찰한다)
 - 지금 할 일: 동 디오라마 정밀판(서울 427 · 경기 601 끝, 다른 시도 Codex) · 구 지도 출시판 · 역 한 곳의 첫 고리
 
-## 층별 정본 — 홍달 플레이스
+## 입장별 기획 — 홍달 플레이스
 
-| 층 | 정본(먼저 읽을 것) | 이어 읽기 | 단계 |
+사용자 11-20: 기획을 **입장별로** 나눠 두고, 입장마다 화면 · 정보 · 데이터 · 유니티 표현을 하나씩 정한다. 입장마다 같은 9칸(누구 · 자리 · 하는 일 · 보는/못 보는 정보 · 데이터 · 화면 · 유니티 표현 · 같은 건의 상대 · 정할 것)을 쓴다. 예전 역할 48개(r302 · r296)를 11갈래로 다시 나눴다. → [입장별 기획 목차 r316](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/README.md)
+
+| 갈래 | 대표 입장 | 함께 있는 입장 | 단계 |
 | --- | --- | --- | --- |
-| L0 개념 · 정체성 | [r314 개념 구조](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-core-concepts.design.r314.md) · [r311 제목 · 본편](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-steam-seoul-discovery.proposal.r310.md) | [r261 오행판](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/five-element-root-management-board.design.r260.md) · [r262 동 · 구 · 전국](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-scale-five-element-management.design.r262.md) · [r263 아래에서 위로](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/need-driven-bottom-up-growth.design.r263.md) | **지금** |
-| L1 구 지도(출시판) | [r312 구 지도 경영](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-district-board-release-map.design.r312.md) · [r315 현실 자료 우선](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-map-observation-first.design.r315.md) | [r184 연속 축소 · 전국](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md) · [r152](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-map-readability-continuation.design.r152.md) · [r253 확대별 지형](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/nationwide-freight-management-map.proposal.r155.md) · [r286 레이어](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/data-packs-and-observation-layers.proposal.r160.md) · [출시판 · 정밀판 제안](Handoffs/2026-11-19-Claude-제안-출시판과내부정밀판.md) · [지도자료층 시안](Handoffs/2026-11-19-Claude-시안-지도자료층.md) | **지금** |
-| L1' 동 디오라마(내부 정밀판) | [ADMIN-DONG-DIORAMA](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [서울 427 공식판](Handoffs/2026-11-18-Claude-서울427동-공식판굽기-반환.md) · [경기 601](Handoffs/2026-11-19-Claude-경기정밀판굽기-반환.md) | [r274 주소 · 건물 · 출입구](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/jungnang-landmarks-and-address-map-quality.development-plan.r271.md) · [r236 M키](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/m-key-administrative-dong-diorama-selector.confirmed.r236.md) · [굽기 Codex 인계](Handoffs/2026-11-19-Claude-인계-경기굽기-Codex.md) | **지금(내부)** |
-| L2 첫 플레이 | [r313 역에서 주문 한 건](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-station-first-loop.design.r313.md) | [r294 경계를 넘는 첫 배달](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/delivery-branch-growth-play-loop.design.r257.md) · [r240 라떼 한 잔 → L9](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-latte-order-delivery-development-plan.r240.md) | **지금** |
-| L3 배달 플랫폼 · 지사 | [r293 본사 · 지사 · 세트(r288~r294 같은 파일)](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/delivery-branch-growth-play-loop.design.r257.md) | [r277 지사장 카드](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/people-development-and-scoped-delegation.design.r224.md) · [r174 하루 결산](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/live-calendar-daily-management.baseline.r174.md) | **다음** |
-| L4 길찾기 | [r287 · r279 · r275(같은 파일)](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-road-following-delivery-lines.design.r212.md) | [길찾기 1차 반환](Handoffs/2026-11-18-Claude-길찾기-1차-반환.md) | **지금(정밀판과 함께)** |
-| L5 화면 | [r259 탑다운 연결](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/top-down-screen-hierarchy.design.r259.md) · [r258 화면 번호](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/current-screen-numbering.catalog.r258.md) | [r309 진입 3단계](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md) · [패키지 구분표](Handoffs/2026-11-18-Claude-패키지별-화면자료-구분표.md) | **다음** |
-| L6 세계관 · 가치 | [r269 함께 밝아지는 세계](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warmth-perspective-taking-and-shared-light.direction.r269.md) · [r285 인의예지](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-entry-management-research-tree.design.r183.md) | [명덕 r204](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daxue-mingde-and-dong-growth.research.r204.md) | **배경(유지)** |
-| L7 홍보 · 플레이스 · 중개업자 | [r307 · r239(같은 파일)](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/traffic-broker-person-card-and-temporary-ranking.design.r239.md) | [r238 검색 · 순위](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-population-keyword-search-and-ranking.proposal.r238.md) · [r268 플레이스 조사](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/naver-place-activity-evidence-and-search-design.research.r268.md) | **보류** |
-| L8 역할 관점 · 스토리 · 사람 | [r302 · r296(같은 파일)](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md) · [r270 이야기 성장](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-season-story-synthesis.r101.md) | — | **보류** |
-| L9 그 밖 사업 · 연출 | [가맹 운영](Planning/시스템/PLAN-SYSTEM-FRANCHISE-OPERATIONS/README.md) · [라떼 한 잔 r240](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-latte-order-delivery-development-plan.r240.md) | [원두 r196](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-import-food-safety-and-learning-flow.research.r196.md) · [미니게임 r145](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/direct-riding-delivery-minigame.design.r145.md) · [음악 · 빛 r210](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/music-reactive-light-and-beat-sync.proposal.r210.md) · [모델 r191](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md) · [법적 준비 r255](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-legal-delegation-and-operating-orders.research.r254.md) | **보류** |
+| 1. [배달 플랫폼](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform.r316.md) · [동부권 한 판](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md) | 배달 플랫폼 본사 운영자 ★ | 지사장 · 배차 담당자 · 플랫폼 정산 담당자 | **지금 · 첫 입장** |
+| 2. [배달 기사](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p02-delivery-rider.r316.md) | 음식 배달기사 | — | **다음** |
+| 3. [카페 · 음식점](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p03-cafe-restaurant.r316.md) | 카페 점주 | 일반 음식점주 · 제과점주 · 바리스타 · 조리 담당자 · 픽업 인계 담당 · 매장 정산 담당자 | **다음** |
+| 4. [가맹](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p04-franchise.r316.md) | 가맹점주 | 가맹본부 공급 담당자 · 점포 검수 담당자 | **보류** |
+| 5. [홍달 플레이스 · 광고](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p05-place-advertising.r316.md) · [공통 목록 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-shared-listing-and-exposure.design.r326.md) · [광고 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-click-bid-and-budget.design.r327.md) | 홍달 플레이스 운영자 | 입점 점주 · 광고 운영자 · 트래픽 중개업자 · 참여 보상 앱 운영자 · 탈취 계정 유통업자 | **공통 목록·광고 기획 · 중개·공급 보류** |
+| 6. [손님 · 동네 사람](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p06-customers-residents.r316.md) | 주문자 | 장소를 찾는 고객 · 동네 주민 · 방문자 · 통근자 · 대중교통 이용자 | **관찰(주문자는 다음)** |
+| 7. [창고 · 물류](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p07-warehouse-logistics.r316.md) | 센터 운영자 | 센터 출고 담당자 · 피킹 작업자 · 포장 작업자 · 상차 작업자 · 화물기사 | **보류** |
+| 8. [전자상거래](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p08-ecommerce.r316.md) | 온라인 판매자 | 주문 · 출고 담당자 | **보류** |
+| 9. [조달 · 무역](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p09-procurement-trade.r316.md) | 원두 구매 담당자 | 수입 담당자 · 통관 담당자 · 식품검사 담당자 · 항만 물류 담당자 · 공항 물류 담당자 | **보류** |
+| 10. [생산 · 산지](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p10-production-origin.r316.md) | 농업인 | 축산 농가 운영자 · 어업인 · 산지유통센터 운영자 · 위판장 운영자 | **보류** |
+| 11. [정산 · 회계 지원](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p11-settlement-accounting.r316.md) | 회계 검토 담당자 | 세무 검토 담당자 | **보류** |
 
-「보류」는 버림이 아니다. 지도 정밀화 동안 새 판을 쌓지 않고, 다시 열 때 정본 하나부터 읽는다. 다시 여는 때(제안): 구 지도 출시판 첫 판과 역 한 곳의 첫 고리가 돌 때.
+## 공통 바탕 — 모든 입장이 같이 쓰는 것
+
+| 바탕 | 정본 | 이어 읽기 | 단계 |
+| --- | --- | --- | --- |
+| 개념 · 정체성 | [r314 개념 구조](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-core-concepts.design.r314.md) · [r311 홍달 플레이스 본편](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-steam-seoul-discovery.proposal.r310.md) | [r261 00 오행판](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/five-element-root-management-board.design.r260.md) · [r285 인의예지 연구 트리](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/multi-entry-management-research-tree.design.r183.md) | **지금** |
+| 구 지도(출시판) | [r312 구 지도 경영](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-district-board-release-map.design.r312.md) · [r315 현실 자료 우선](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hongdal-place-map-observation-first.design.r315.md) · [구 지도는 시안 6](Handoffs/2026-11-20-Claude-정리-구지도는시안6으로.md) | [r184 연속 축소 · 전국](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/district-seoul-continuous-zoom-and-nation-transition.design.r184.md) · [r286 자료팩 · 레이어](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/data-packs-and-observation-layers.proposal.r160.md) · [출시판 · 정밀판 제안](Handoffs/2026-11-19-Claude-제안-출시판과내부정밀판.md) | **지금** |
+| 동 디오라마(내부 정밀판) | [동 디오라마 목차](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [서울 427 공식판](Handoffs/2026-11-18-Claude-서울427동-공식판굽기-반환.md) · [경기 601](Handoffs/2026-11-19-Claude-경기정밀판굽기-반환.md) | [r274 주소 · 건물 · 출입구](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/jungnang-landmarks-and-address-map-quality.development-plan.r271.md) · [r236 M키 동 선택](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/m-key-administrative-dong-diorama-selector.confirmed.r236.md) | **지금(내부)** |
+| 길찾기 | [r287 길을 따르는 배달 선](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/soft-road-following-delivery-lines.design.r212.md) | [길찾기 1차 반환](Handoffs/2026-11-18-Claude-길찾기-1차-반환.md) | **지금** |
+| 화면 틀 | [r259 탑다운 화면](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/top-down-screen-hierarchy.design.r259.md) · [r258 화면 번호](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/current-screen-numbering.catalog.r258.md) · [r309 역할 선택 · 로딩 · 지도](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md) | [패키지별 화면 · 자료 구분표](Handoffs/2026-11-18-Claude-패키지별-화면자료-구분표.md) · [r146 집중 · 이완](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/focus-relax-shared-management.design.r146.md) | **다음** |
+| 시간 · 결산 | [r174 하루 결산](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/live-calendar-daily-management.baseline.r174.md) | [r188 회차 증감](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/round-resource-icons-and-deltas.design.r188.md) | **다음** |
+| 세계관 · 가치 | [r269 함께 밝아지는 세계](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warmth-perspective-taking-and-shared-light.direction.r269.md) | [r204 명덕](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/daxue-mingde-and-dong-growth.research.r204.md) | **배경** |
+| 이야기 | [r270 첫 시즌 이야기](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/first-season-story-synthesis.r101.md) | [r299 업무 UX와 스토리 구분](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md#r299-보존--역할별-업무-ux와-스토리-기획) · [r244 같은 배달의 세 입장](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/same-delivery-three-perspectives.confirmed.r244.md) | **보류** |
+| 연출 · 모델 · 법 | [r210 음악 · 빛](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/music-reactive-light-and-beat-sync.proposal.r210.md) · [r191 기사 · 오토바이 모델](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md) | [r255 지도 법적 준비](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/map-legal-delegation-and-operating-orders.research.r254.md) | **보류** |
+
+「보류」는 버림이 아니다. 지도 정밀화 동안 새 판을 쌓지 않고, 다시 열 때 그 갈래 파일부터 읽는다. 다시 여는 때(제안): 구 지도 출시판 첫 판과 역 한 곳의 첫 고리가 돌 때.
 
 ## 기획 ID — 홍달 플레이스
 
@@ -36,8 +122,8 @@
 
 | 기획 ID | 현재 문서 | 상태 | 단계 |
 | --- | --- | --- | --- |
-| `PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION` | [배달 플랫폼 운영 캠페인 r108](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md) · [지천태·천지비 이화 전환축 r106](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-li-transition-axis.r106.md) · [9~16괘 핵심효 중심 국소 삼효상 r105](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex09-16-minority-line-local-trigram.r105.md) · [1~8괘 물·지혜 오행 작용 검토 r104](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex01-08-water-wisdom-five-elements.r104.md) | `Draft / ProductDirectionReframed / SeasonalCampaignUnityObservationFoundationImplemented / WorldBindingSourceImplemented / CardNpcRevisionBindingImplemented / ActualUnityCompilePassed / LogicE4 / PresentationE4 / SceneBindingPending / ExceptionFirstOperatorReturnConfirmed / HexagramPlanningReuseConfirmed / DioramaRequirementAccumulationConfirmed / Hex03ZhunFirstCampaignConfirmed / HexagramSeasonalIndependenceConfirmed / WholeHexagramCampaignConfirmed / LineByLineOperationalMappingRejected / ZhunScarcityMeaningConfirmed / IntentionBeforeCapacityConfirmed / MinimumStartingCashConfirmed / MengLearningConfirmed / PerspectiveTakingConfirmed / ResourceAccumulationConfirmed / FlexiblePairExplanationConfirmed / StrictOddEvenPolarityRejected / XuGrowingCapabilityRiskConfirmed / SongHumilityConflictConfirmed / SystemStillImmatureConfirmed / ShiBiSourceReviewCompleted / ShiInnerSubstanceConfirmed / QuietWisdomCultivationConfirmed / BiVoluntaryRecognitionConfirmed / XiaoXuLuSourceReviewCompleted / UpperLowerTrigramsExplained / Hex01To08LearningArcConfirmed / Hex09To16EarlyManagementArcConfirmed / DisorderToEmergingOrderConfirmed / XiaoXuLuOperationalMeaningConfirmed / LearningPutIntoPracticeConfirmed / OverlookedWorkOrganizedConfirmed / OrderBeginsToEmergeConfirmed / TaiPiPlanningClosed / DistributedCoordinationSupportConfirmed / OperatingSystemRefinementConfirmed / ManagerNpcRecruitmentConfirmed / TongRenDaYouSourceReviewCompleted / TongRenDaYouOperationalMeaningConfirmed / EarlierProblemsRevisited / AutomationAndDelegationConfirmed / OperationalControlCapacityConfirmed / QianYuSourceReviewCompleted / QianYuOperationalMeaningConfirmed / InternalGerminationConfirmed / SeedCoatBreakConfirmed / StillHiddenUnderSoilConfirmed / Hex01To16InternalFormationArcConfirmed / Hex01To16InnerMindFormationConfirmed / Hex17OutwardStartConfirmed / Hex17OutwardRelationshipConfirmed / InnerToOuterStoryBoundaryConfirmed / SuiGuSourceReviewCompleted / SuiOperationalMeaningConfirmed / ZhunContrastConfirmed / PlatformOrderFormedConfirmed / GuOperationalMeaningConfirmed / GrowthWithPersistentRiskConfirmed / LinGuanSourceReviewCompleted / LinOperationalMeaningConfirmed / RootGripsSoilConfirmed / GuanOperationalMeaningConfirmed / WholeEnvironmentReviewConfirmed / SettlementPlanAndGoalsConfirmed / NonBindingPersonalReflectionConfirmed / Hex01To16UnityPreparationAnalogyConfirmed / Hex17ExternalAppRelationshipAnalogyConfirmed / ShiHeBiSourceReviewCompleted / HexagramMeaningFirst / StorySynthesisDeferred / CodeImplementationDeferred / WoodFireEarthSequenceObserved / Hex01To08WaterWisdomCandidate / MinorityLineLocalTrigramLensConfirmed / LiPatternObserved / KanInversePatternObserved / TaiPiLiTransitionAxisConfirmed / CommunicationGapPreserved / ManagerNeedPreserved / OperationalActivationStillGated / DistributionDataBlocked / NotReadyForOperationalRelease` | **지금 · 본체 — 현재 판 r315, 위 층별 정본** |
-| `PLAN-SYSTEM-ADMIN-DONG-DIORAMA` | [행정동 디오라마 목차](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [2.0 면목 두 동 정밀화 r57](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/myeonmok-precision-and-strategy-input.r57.md) | `TwoDongPrecisionLayersBuilt / PickupCandidatesVerified / RuntimeIntegrationPending` | **지금 · 내부 정밀판** |
+| `PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION` | [배달 플랫폼 운영 캠페인 r108](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/README.md) · [지천태·천지비 이화 전환축 r106](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/tai-pi-li-transition-axis.r106.md) · [9~16괘 핵심효 중심 국소 삼효상 r105](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex09-16-minority-line-local-trigram.r105.md) · [1~8괘 물·지혜 오행 작용 검토 r104](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/hex01-08-water-wisdom-five-elements.r104.md) | `Draft / ProductDirectionReframed / SeasonalCampaignUnityObservationFoundationImplemented / WorldBindingSourceImplemented / CardNpcRevisionBindingImplemented / ActualUnityCompilePassed / LogicE4 / PresentationE4 / SceneBindingPending / ExceptionFirstOperatorReturnConfirmed / HexagramPlanningReuseConfirmed / DioramaRequirementAccumulationConfirmed / Hex03ZhunFirstCampaignConfirmed / HexagramSeasonalIndependenceConfirmed / WholeHexagramCampaignConfirmed / LineByLineOperationalMappingRejected / ZhunScarcityMeaningConfirmed / IntentionBeforeCapacityConfirmed / MinimumStartingCashConfirmed / MengLearningConfirmed / PerspectiveTakingConfirmed / ResourceAccumulationConfirmed / FlexiblePairExplanationConfirmed / StrictOddEvenPolarityRejected / XuGrowingCapabilityRiskConfirmed / SongHumilityConflictConfirmed / SystemStillImmatureConfirmed / ShiBiSourceReviewCompleted / ShiInnerSubstanceConfirmed / QuietWisdomCultivationConfirmed / BiVoluntaryRecognitionConfirmed / XiaoXuLuSourceReviewCompleted / UpperLowerTrigramsExplained / Hex01To08LearningArcConfirmed / Hex09To16EarlyManagementArcConfirmed / DisorderToEmergingOrderConfirmed / XiaoXuLuOperationalMeaningConfirmed / LearningPutIntoPracticeConfirmed / OverlookedWorkOrganizedConfirmed / OrderBeginsToEmergeConfirmed / TaiPiPlanningClosed / DistributedCoordinationSupportConfirmed / OperatingSystemRefinementConfirmed / ManagerNpcRecruitmentConfirmed / TongRenDaYouSourceReviewCompleted / TongRenDaYouOperationalMeaningConfirmed / EarlierProblemsRevisited / AutomationAndDelegationConfirmed / OperationalControlCapacityConfirmed / QianYuSourceReviewCompleted / QianYuOperationalMeaningConfirmed / InternalGerminationConfirmed / SeedCoatBreakConfirmed / StillHiddenUnderSoilConfirmed / Hex01To16InternalFormationArcConfirmed / Hex01To16InnerMindFormationConfirmed / Hex17OutwardStartConfirmed / Hex17OutwardRelationshipConfirmed / InnerToOuterStoryBoundaryConfirmed / SuiGuSourceReviewCompleted / SuiOperationalMeaningConfirmed / ZhunContrastConfirmed / PlatformOrderFormedConfirmed / GuOperationalMeaningConfirmed / GrowthWithPersistentRiskConfirmed / LinGuanSourceReviewCompleted / LinOperationalMeaningConfirmed / RootGripsSoilConfirmed / GuanOperationalMeaningConfirmed / WholeEnvironmentReviewConfirmed / SettlementPlanAndGoalsConfirmed / NonBindingPersonalReflectionConfirmed / Hex01To16UnityPreparationAnalogyConfirmed / Hex17ExternalAppRelationshipAnalogyConfirmed / ShiHeBiSourceReviewCompleted / HexagramMeaningFirst / StorySynthesisDeferred / CodeImplementationDeferred / WoodFireEarthSequenceObserved / Hex01To08WaterWisdomCandidate / MinorityLineLocalTrigramLensConfirmed / LiPatternObserved / KanInversePatternObserved / TaiPiLiTransitionAxisConfirmed / CommunicationGapPreserved / ManagerNeedPreserved / OperationalActivationStillGated / DistributionDataBlocked / NotReadyForOperationalRelease` | **지금 · 본체 — [주제별 현재 판](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/README.md)** |
+| `PLAN-SYSTEM-ADMIN-DONG-DIORAMA` | [행정동 디오라마 목차](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/README.md) · [주소 매핑과 배포 r60](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/hongdal-place-address-data-and-distribution.proposal.r60.md) | `OfficialSourcesReviewed / PublicDataPilotProposed / SuppliedDataTermsUnconfirmed` | **지금 · 구 지도와 내부 정밀판** |
 
 목차 표 밖의 같은 단계 기획 폴더(표 등록은 catalog 검사와 함께 Codex):
 
@@ -180,9 +266,9 @@
 
 ## 새 판을 적는 법
 
-1. 판 본문은 그 기획 문서에 쓴다. 이 목차에서는 **층별 정본 표와 기획 ID 표의 해당 줄만** 고친다.
+1. 홍달 플레이스의 새 개정은 [주제별 판본](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/README.md)에 적고 해당 주제만 `r2`, `r3`으로 올린다. 본문은 주제와 연결된 기획 문서에 쓰고, 입장별 업무 내용은 `perspectives/`의 해당 갈래에 둔다. 이 목차에는 현행 링크와 상태를 갱신한다.
 2. 날짜순 판 요약은 [기획 연대기](PLANNING-연대기.md) 맨 위(H1 바로 아래)에 덧붙인다.
-3. 옛 파일에 새 판을 덧쓸 때는 그 파일 맨 위에 「현행」 절을 두고 이전 판을 아래로 둔다. 파일 이름의 r번호는 처음 판이다(이름은 바꾸지 않음).
+3. 기존 파일명과 과거 판의 절 주소는 인계와 이력 참조에 쓴다. 새 판은 주제 이름과 함께 표시하고, 개발 인계는 승인 원문을 정확히 가리킨다.
 4. 단계어는 `지금 / 다음 / 보류 / 보관 / Mirror 앱` 중 하나. 개발 상태어(NotReadyToDispatch 등)는 그대로 쓴다.
 5. Mirror 앱 기획은 위 Mirror 표와 연대기에만 쓰고, 홍달 층 표에 섞지 않는다.
 

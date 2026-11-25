@@ -1,4 +1,34 @@
-# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r55]
+# [기획 · 월드·공간·배치 · PLAN-SYSTEM-ADMIN-DONG-DIORAMA · r60]
+
+## r60 홍달 플레이스 주소 매핑과 배포
+
+[주소정보 법령과 적용안](hongdal-place-address-data-and-distribution.proposal.r60.md). 공개 상가정보를 쓰는 사가정역 장소 검색과 신청 자료를 쓰는 내부 정밀판을 제안했다. 제공 조건과 배포할 산출물의 범위는 미확정이다.
+
+<a id="기획--월드공간배치--plan-system-admin-dong-diorama--r59"></a>
+
+## r59 면목 골목·출입구 화면 시안과 망우본동 검토
+
+[화면 시안과 검증 결과](myeonmok-alley-preview-and-mangubon-review.r59.md). 실제 면목 모형 위에 검토 중인 골목을 표시하고 건물 접근 정보의 배치를 제안했다. 망우본동의 첫 골목망은 보행·도로 자료를 대조해 연결 보류로 남겼다.
+
+<a id="기획--월드공간배치--plan-system-admin-dong-diorama--r58"></a>
+
+## r58 골목 접속과 2.0 정밀화 우선순위
+
+[골목 접속 검토와 우선순위](myeonmok-alley-links-and-precision-priority.r58.md). 면목제3·8동의 끊긴 골목에서 OSM 연결 후보를 찾고 서울시 과거 보행망과 대조했다. 주행 편입은 보류했다. 중랑구 16동을 비교해 망우본동을 후속 검토 대상으로 잡았다.
+
+<a id="기획--월드공간배치--plan-system-admin-dong-diorama--r57"></a>
+
+<a id="기획--월드공간배치--plan-system-admin-dong-diorama--r56"></a>
+
+## r57 면목 두 동 정밀 레이어와 전략판 입력
+
+[면목 두 동 정밀화 결과](myeonmok-precision-and-strategy-input.r57.md). 공식 경계·건물 출입구에 연결된 1층 픽업 후보·경계 근접 배달 경로를 PC 내부 자료로 준비했다. 제휴 후보 비교는 후속 전략 제안이다.
+
+<a id="기획--월드공간배치--plan-system-admin-dong-diorama--r55"></a>
+
+## r56 홍달 플레이스 2.0 정밀 모듈 준비
+
+[2.0 동 디오라마 개발계획](hongdal-place-v2-dong-module-preparation.plan.r56.md). 구 지도 1.0의 경영과 연결할 내부 정밀판을 준비한다. 첫 인계는 면목제3·8동과 면목본동의 모듈 목록·공유 길망·품질표·대표 배달 경로다. 두 동의 2.0 실행 검증은 후속이다.
 
 ## r55 실제 자료 수집·첫 소비판 반환 검토
 

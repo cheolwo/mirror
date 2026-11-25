@@ -1,5 +1,7 @@
 # [기획 · 하단 사업 버튼과 선택 동의 고용·입점 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r198]
 
+> [음식점 입점 상세 r278](district-business-catalog-and-placement.proposal.r168.md)에서 음식점 차리기의 왼쪽 상세와 지도 후보 비교를 구체화했다. 기존 제휴와 신규 내 점포를 구별하고 보증금·지출·월 임대료·준비 턴을 따로 읽는다.
+
 - 기준일: 2026-11-14 · 분야: 지역 문맥·사업 운영 창·고용/입점 진입.
 - 상태: `BusinessTabEntryDirectionConfirmed / DongScopedActionsDocumented / DetailedInteractionProposed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`.
 - 사용자 확정 방향: 동을 선택한 뒤 하단 `기사 운영`·`음식점` 등 사업 버튼에서 해당 운영 창을 연다. 기사 추가/고용과 음식점 추가는 이 창에서 시작하며, 음식점 입점은 지도 건물 선택으로 이어진다. 지역 운영 네모 카드에 여러 사업의 확장 행동을 모아 두는 진입을 바꾼다.

@@ -1,16 +1,16 @@
 {
   "schemaVersion": "regional-operator-planning-context-index.v1",
-  "catalogRevision": "context-order.20261115.r55",
-  "indexedAtUtc": "2026-11-15T05:30:20.363259+00:00",
+  "catalogRevision": "context-order.20261116.r70",
+  "indexedAtUtc": "2026-11-15T16:30:42.344849+00:00",
   "purpose": "Navigation only; no gameplay/approval/implementation state changes",
   "planId": "PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION",
-  "currentGameplayRevision": "r241",
+  "currentGameplayRevision": "r256",
   "scope": {
-    "standaloneMarkdownFiles": 222,
+    "standaloneMarkdownFiles": 227,
     "inlineReadmeSections": 32,
     "preexistingMarkdownIncludingReadme": 169,
     "physicalDocumentMoves": 0,
-    "currentSourceMarkdownIncludingReadme": 223
+    "currentSourceMarkdownIncludingReadme": 228
   },
   "groups": [
     {
@@ -57,6 +57,9 @@
       "offline-personal-player-first.decision.r123.md"
     ],
     "opening": [
+      "next-todo-fire-to-center-observation.design.r245.md",
+      "same-delivery-three-perspectives.confirmed.r244.md",
+      "role-perspective-research-and-relaxed-observation.design.r242.md",
       "role-centered-observation.design.r241.md",
       "operating-round-first-play.prototype.r187.md",
       "focus-relax-shared-management.design.r146.md",
@@ -87,6 +90,7 @@
       "rider-munyeom-tarot-direction.decision.r124.md"
     ],
     "business": [
+      "map-legal-delegation-and-operating-orders.research.r254.md",
       "field-work-delegation-and-player-decisions.confirmed.r225.md",
       "dong-business-selection-and-platform-growth.design.r222.md",
       "store-specific-left-management-panel.design.r215.md",
@@ -117,6 +121,8 @@
       "traffic-broker-introduction.confirmed.r178.md"
     ],
     "map": [
+      "map-legal-delegation-and-operating-orders.research.r254.md",
+      "nationwide-freight-management-map.proposal.r155.md",
       "m-key-administrative-dong-diorama-selector.confirmed.r236.md",
       "pickup-location-verification-before-lighting.research.r234.md",
       "personal-delivery-history-diorama-and-lights.proposal.r233.md",
@@ -143,11 +149,13 @@
       "3d-rider-motorcycle-modeling-and-unity-preparation.design.r191.md",
       "scale-os-management-focus.design.r144.md",
       "district-map-readability-continuation.design.r152.md",
-      "nationwide-freight-management-map.proposal.r155.md",
       "optional-map-visual-effects.design.r157.md",
       "single-dong-crowd-focus.confirmed.r182.md"
     ],
     "data": [
+      "map-legal-delegation-and-operating-orders.research.r254.md",
+      "nationwide-freight-management-map.proposal.r155.md",
+      "data-driven-visual-effects-and-user-layers.proposal.r243.md",
       "hongdal-place-population-keyword-search-and-ranking.proposal.r238.md",
       "hongdal-place-recorded-pickup-profiles-first.proposal.r237.md",
       "pickup-location-verification-before-lighting.research.r234.md",
@@ -167,21 +175,92 @@
   },
   "documents": [
     {
-      "id": "role-centered-observation.design.r241.md",
-      "path": "role-centered-observation.design.r241.md",
-      "revisionHint": 241,
-      "titleRaw": "# [기획 · 역할을 골라 사람과 인계를 관찰하는 지도 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r241]",
-      "label": "역할을 골라 사람과 인계를 관찰하는 지도",
+      "id": "next-todo-fire-to-center-observation.design.r245.md",
+      "path": "next-todo-fire-to-center-observation.design.r245.md",
+      "revisionHint": 251,
+      "titleRaw": "# [기획 · 턴 전 방향 결정·턴 후 현장 수행 분리 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r251]",
+      "label": "턴 전 방향 결정·턴 후 현장 수행 분리",
       "primaryContext": "opening",
       "classificationReason": "entry",
-      "documentKind": "역할별 관찰 흐름 제안",
-      "statusRaw": "2026-11-15 · 설계실 기획 · `RoleSelectionRequested / ObservationFlowProposed / NotReadyToDispatch`",
+      "documentKind": "현재 기능의 턴 전/후 분류",
+      "statusRaw": "2026-11-16 · 설계실 기획 · `PreTurnDirectionDecisionsConfirmed / PostTurnFieldActionsAndMiniGamesConfirmed / CurrentActionsClassified / NewTurnPlanSourceReviewed / PhaseRoutingImplementationPending / StrategyChangeCarryoverAsked / EditableTurnPlanConfirmed / CommitOnTurnAdvanceConfirmed / UnselectedTaskDeferralConfirmed / OptionalPostTurnInterventionConfirmed / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`",
       "statusLine": 3,
       "indexRole": "우선 읽기",
       "notes": [
-        "지도에서 역할을 고른 뒤 그 사람이나 사업장에 머물고, 궁금할 때 같은 업무의 상대에게 시점을 넘겼다가 돌아오는 흐름을 제안한다."
+        "운영 방향·준비 계획은 주로 턴 전, 실제 현장 개입/미니게임은 턴 후로 구분한다. 현재 방침·모집/제휴·발주·검수·제조·개별 배차·조회와 설비/직원 미연결을 대조했다.",
+        "새 NextTodo 소스는 화를 계획으로 판정하고 검수/제조/배차도 계획에 담는다. 턴 후 화의 현장 수행과 분리할 조정 제안이며 새 코드의 빌드/실행 성공은 미확인이다. 직접 미니게임·보너스 구현을 완료로 올리지 않는다. 차기 계획 이월 질문은 Asked다. 기존 경로를 보존한 현행 본문은 r251이다."
       ],
-      "sha256": "773c0a7289d82dde7d82ad154e330f0c183ad6c0fb4742fae12c35fd6c60d5fe"
+      "sha256": "ca5a6b2ae698ded1fa0c0c7fe2b6b9ab5eaca6023cbc6b1484f27ec751b25a02"
+    },
+    {
+      "id": "same-delivery-three-perspectives.confirmed.r244.md",
+      "path": "same-delivery-three-perspectives.confirmed.r244.md",
+      "revisionHint": 244,
+      "titleRaw": "# [기획 · 배달 한 건을 세 입장에서 이어 읽기 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r244]",
+      "label": "배달 한 건을 세 입장에서 이어 읽기",
+      "primaryContext": "opening",
+      "classificationReason": "entry",
+      "documentKind": "첫 역할 원고 순서 확정",
+      "statusRaw": "2026-11-15 · 설계실 · `FirstNarrativeSequenceConfirmed / SharedOrderBindingPending / CustomerReceiptViewPending`",
+      "statusLine": 3,
+      "indexRole": "우선 읽기",
+      "notes": [
+        "첫 역할 원고에서 같은 배달 한 건을 음식점·음식 배달기사·주문자 순서로 읽는다. 관2의 원 주문 고정과 주문자 수령 화면·서술 칸은 후속이다."
+      ],
+      "sha256": "0f0a6e5c1798c2b6155b7a385aa152768a77c9b7cc62f336cb22033bda5822e9"
+    },
+    {
+      "id": "data-driven-visual-effects-and-user-layers.proposal.r243.md",
+      "path": "data-driven-visual-effects-and-user-layers.proposal.r243.md",
+      "revisionHint": 243,
+      "titleRaw": "# [기획 · 데이터 시각 효과 모음과 사용자 관찰 레이어 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r243]",
+      "label": "데이터 시각 효과 모음과 사용자 관찰 레이어",
+      "primaryContext": "data",
+      "classificationReason": "entry",
+      "documentKind": "표현 자료 수집·사용자 입력 제안",
+      "statusRaw": "2026-11-15 · 자료 조사·설계실 기획 · `VisualResourcesCollectionRequested / UserLayerPreparationRequested / ImportWorkflowProposed / DevelopmentAcceptancePending`",
+      "statusLine": 3,
+      "indexRole": "우선 읽기",
+      "notes": [
+        "현행 효과·자료·공식 기술 문서를 수집 대장으로 연결하고, 사용자 자료의 위치·값·기간을 표현하는 흐름과 합성 예제를 제안한다. 실제 임의 파일 반입·Unity 적용은 후속."
+      ],
+      "sha256": "99e45c487ff85c9eed1323167a8d7f064a2e5db43a1c13ffdccce5d9650c54b5"
+    },
+    {
+      "id": "role-perspective-research-and-relaxed-observation.design.r242.md",
+      "path": "role-perspective-research-and-relaxed-observation.design.r242.md",
+      "revisionHint": 242,
+      "titleRaw": "# [기획 · 역할별 연구 서술과 편안한 자율 관찰 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r242]",
+      "label": "역할별 연구 서술과 편안한 자율 관찰",
+      "primaryContext": "opening",
+      "classificationReason": "entry",
+      "documentKind": "역할 연구·기본 관찰 경험",
+      "statusRaw": "2026-11-15 · 설계실 기획 · `RelaxedObservationDirectionConfirmed / RoleResearchFrameworkProposed / DevelopmentAcceptancePending`",
+      "statusLine": 3,
+      "indexRole": "우선 읽기",
+      "notes": [
+        "기본은 켜 둔 세계의 자율 관찰이며 직접 참여는 선택이다. 역할의 정보·기다림·인계를 같은 사건에서 연구·서술한다.",
+        "r187의 수동 회차와 r206의 주기적 발동을 기본 관찰의 필수 진행 조건으로 해석하는 부분을 조정한다. 세부 수치·개발 수용은 후속."
+      ],
+      "sha256": "6643d2062a66c0dfc5e1f9c6f68c03a5b6a6a50cd2d81f3d4ed6a69c39fb1fb6"
+    },
+    {
+      "id": "role-centered-observation.design.r241.md",
+      "path": "role-centered-observation.design.r241.md",
+      "revisionHint": 249,
+      "titleRaw": "# [기획 · 기사 클릭·휴대폰 업무 상태와 역할 관찰 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r249]",
+      "label": "기사 클릭·휴대폰 업무 상태와 역할 관찰",
+      "primaryContext": "opening",
+      "classificationReason": "entry",
+      "documentKind": "기사 클릭·휴대폰 상태와 역할 관찰",
+      "statusRaw": "2026-11-16 · 설계실 기획 · `RiderClickPhoneStatusConfirmed / PhoneFirstConfirmed / CameraFollowOptionalConfirmed / ExistingRiderPhoneReviewed / MapClickObservationBindingPending / VisualReviewPending / NotReadyToDispatch / ProductUnchanged`",
+      "statusLine": 3,
+      "indexRole": "우선 읽기",
+      "notes": [
+        "기사 클릭 때 휴대폰만 먼저 열어 같은 기사·현재 업무와 픽업/배달 상태를 읽고, 카메라 따라가기는 별도로 선택한다. 기존 클릭·관찰·추적을 재사용하며 정확한 원 주문 연결은 보완 대상이다.",
+        "r247 이번 턴 미루기를 재확인했고 미룬 일 재안내는 Asked로 유지한다. 복수 업무·상태 문구·시안/개발 수용은 후속이다. 파일명의 r241은 링크 보존용이며 현행 본문 판본은 r249이다."
+      ],
+      "sha256": "8b413130b7ade8a33362184ec02775851996617855fee0fae39844790725cc48"
     },
     {
       "id": "first-latte-order-delivery-development-plan.r240.md",
@@ -1602,17 +1681,19 @@
     {
       "id": "logistics-center-multifloor-cutaway.design.r164.md",
       "path": "logistics-center-multifloor-cutaway.design.r164.md",
-      "revisionHint": 164,
-      "titleRaw": "# [기획 · 다층 물류센터 내부 모형 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r164]",
-      "label": "다층 물류센터 내부 모형",
+      "revisionHint": 256,
+      "titleRaw": "# [구상 · 대형 차량·캠프 분류·배송차 상차 관찰 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r256]",
+      "label": "대형 차량·캠프 분류·배송차 상차 관찰 구상",
       "primaryContext": "business",
       "classificationReason": "entry",
-      "documentKind": "기획",
-      "statusRaw": "- 상태: `UserDirectionConfirmed / MultifloorLayoutProposed / PreparedForClaudeVisualDesign / VisualReviewPending / ProductUnchanged`",
-      "statusLine": 5,
+      "documentKind": "구상",
+      "statusRaw": "- 상태: `ParcelLinehaulCampObservationIdeaRecorded / VehicleClassAndProcessDetailsUndecided / FacilitySpecificProcessUnverified / NoImplementationRequested / ProductUnchanged`.",
+      "statusLine": 4,
       "indexRole": "우선 읽기",
-      "notes": [],
-      "sha256": "11d184614da08dce328f49b2ddd32e805d0355cc3997b50f0b0dfde6aca54ca1"
+      "notes": [
+        "r256은 관찰하고 싶은 전체 물류 인계 흐름의 아이디어 기록. r164 다층 제안 보존, 차급/실제 회사 절차/구현은 미정. 질문 없음."
+      ],
+      "sha256": "546a02258cab146a744a124b4d14f65fe549313a1eede32168fbe06fff4d1bf4"
     },
     {
       "id": "logistics-centers-sortation-skeleton.research.r163.md",
@@ -1967,17 +2048,19 @@
     {
       "id": "nationwide-freight-management-map.proposal.r155.md",
       "path": "nationwide-freight-management-map.proposal.r155.md",
-      "revisionHint": 155,
-      "titleRaw": "# [기획 · 대한민국 전국 화물 경영 지도 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r155]",
-      "label": "대한민국 전국 화물 경영 지도",
+      "revisionHint": 253,
+      "titleRaw": "# [기획 · 확대별 지형과 전국 시설 빛 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r253]",
+      "label": "확대별 지형과 전국 시설 빛",
       "primaryContext": "map",
       "classificationReason": "entry",
       "documentKind": "기획",
-      "statusRaw": "- 상태: `NationwideFreightViewRequested / RepublicOfKoreaFirstConfirmed / FreightManagementDesignProposed / ProductUnchanged`",
+      "statusRaw": "- 상태: `ZoomDependentBasemapDetailRequested / ExistingFourMockupsReviewed / TerrainSourcesReconciled / FourLevelBasemapDetailProposed / L1ToL6StillAsked / VisualComparisonPrepared / GameBindingPending / NotReadyToDispatch / CaptureOnlyCommitted`.",
       "statusLine": 4,
       "indexRole": "우선 읽기",
-      "notes": [],
-      "sha256": "6ad51ac8d88ce5c41f04c2c6be5039d547111c08d29853844e1f3f9d21339088"
+      "notes": [
+        "r253은 확대별 바탕 지도 상세화 제안. 기존 N1~N4/현재 동일 텍스처 3배 확대/보유 DSM을 대조. L1~L6 미답변 유지. 촬영 관련 최소 commit과 시설/지형 기능 미구현 구분."
+      ],
+      "sha256": "4e9c607ebe2bf9816df27c508ba752d9364ae66077e98aaa417cafeca09d101b"
     },
     {
       "id": "next-task-button-confirmed.design.r151.md",
@@ -3700,6 +3783,23 @@
         "프로필 목록·상세 확인을 개인 배달 빛보다 먼저 준비. 실제 기록과 게임 점포의 출처 관계 보존."
       ],
       "sha256": "e0bc33336e84e5693200bf06acbe98667e412c03708ddd69d180adb63f0b90e3"
+    },
+    {
+      "id": "map-legal-delegation-and-operating-orders.research.r254.md",
+      "path": "map-legal-delegation-and-operating-orders.research.r254.md",
+      "revisionHint": 255,
+      "titleRaw": "# [참고 조사 · 업무 시작 전 등록·허가·신고와 법령 근거 · PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION · r255]",
+      "label": "업무 시작 전 등록·허가·신고 법령 참고 조사",
+      "primaryContext": "data",
+      "classificationReason": "entry",
+      "documentKind": "참고 조사",
+      "statusRaw": "- 상태: `InformationResearchOnlyConfirmed / PreOperationLegalRequirementsResearchContextConfirmed / ExistingSourcesPreserved / PriorGameDesignInferenceWithdrawn / LegalGameplayUndecided / NoImplementationRequested / ProductUnchanged`.",
+      "statusLine": 4,
+      "indexRole": "우선 읽기",
+      "notes": [
+        "r255 사용자 정정: 정보조사에 한정. r254 운영방침 배치 확정 해석 철회; 게임 활용 전체 미정. 원문·출처·분류 자료 보존. 다음 카드/구현 질문 없음."
+      ],
+      "sha256": "20c47adc6b050903a1b2a61e7b67073d8ebe499d6e099176f93813937a85c412"
     }
   ],
   "inlineSections": [
@@ -4217,6 +4317,11 @@
     }
   ],
   "supportingJson": [
+    {
+      "path": "visual-layer-example.r243.json",
+      "kind": "기획 검토용 사용자 지점·후광 합성 입력 예제",
+      "sha256": "b12a1d85b12fc04e12d16ae0fb3f8f09f435783553a53fb413448ea1c7f52a9c"
+    },
     {
       "path": "consolidated-sources.r162.json",
       "kind": "기존 입력 대장",
@@ -5780,7 +5885,81 @@
       ],
       "after": "role-centered-observation.design.r241.md",
       "relation": "ClarifiesInScope",
-      "scopeKo": "선택한 역할의 사람과 실제 업무 인계를 읽는 지도 관찰 흐름을 정리한다.",
+      "scopeKo": "역할·동일 업무·상대 보기/복귀와 r248 기사 클릭·휴대폰 업무 상태 연결을 유지하고 r249에서 휴대폰 먼저·카메라 따라가기 별도 선택을 확정한다. r247 미루기도 재확인하며 재안내 시점·시안·실제 입력/구현은 후속이다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "role-centered-observation.design.r241.md",
+        "focus-relax-shared-management.design.r146.md"
+      ],
+      "after": "role-perspective-research-and-relaxed-observation.design.r242.md",
+      "relation": "ExtendsInScope",
+      "scopeKo": "역할의 입장을 연구·서술하고, 자율 업무를 보며 이해하는 것을 충분한 기본 경험으로 구체화한다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "operating-round-first-play.prototype.r187.md",
+        "awake-activities-and-mindfulness-skill.design.r206.md"
+      ],
+      "after": "role-perspective-research-and-relaxed-observation.design.r242.md",
+      "relation": "PartiallySupersedes",
+      "scopeKo": "기본 관찰에서 회차 마감·다음 버튼과 주기적 스킬 발동을 필수 진행·유지 조건으로 해석하는 부분. 직접 경영 안내와 인물의 경·명덕 규칙 전체를 대체하지 않는다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "data-packs-and-observation-layers.proposal.r160.md",
+        "optional-map-visual-effects.design.r157.md",
+        "role-perspective-research-and-relaxed-observation.design.r242.md"
+      ],
+      "after": "data-driven-visual-effects-and-user-layers.proposal.r243.md",
+      "relation": "ExtendsInScope",
+      "scopeKo": "보유 자료와 표현 코드·기술 문서를 모으고, 편안한 관찰용 사용자 자료 연결 형식을 제안한다. 기존 데이터 의미·업무 권위·승인 범위는 유지한다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "role-perspective-research-and-relaxed-observation.design.r242.md"
+      ],
+      "after": "same-delivery-three-perspectives.confirmed.r244.md",
+      "relation": "ExtendsInScope",
+      "scopeKo": "r242의 다음 질문 중 첫 연구 원고의 소재와 세 입장의 순서를 확정한다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "focus-relax-shared-management.design.r146.md",
+        "operating-round-first-play.prototype.r187.md",
+        "store-specific-left-management-panel.design.r215.md",
+        "minimap-default-and-work-summary-toggle.confirmed.r217.md",
+        "m-key-administrative-dong-diorama-selector.confirmed.r236.md",
+        "role-perspective-research-and-relaxed-observation.design.r242.md"
+      ],
+      "after": "next-todo-fire-to-center-observation.design.r245.md",
+      "relation": "ExtendsInScope",
+      "scopeKo": "화에서 다음 할 일 안내·왼쪽 선택창·명시적 턴 인계 뒤 중으로 돌아와 같은 선택 결과를 관찰하는 직접 참여 순환에, 턴 넘김 전 수정 가능한 계획과 턴 넘김 시 확정, 미선택 일 미루기와 그 지연·부족 보존을 반영한다. 작은 지도·M 동 이동·기본 자율 관찰은 유지하며 턴 시간·미룬 일 재안내·전체 기획을 대체하지 않는다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "next-task-button-confirmed.design.r151.md"
+      ],
+      "after": "next-todo-fire-to-center-observation.design.r245.md",
+      "relation": "ClarifiesInScope",
+      "scopeKo": "다음 한 작업의 수락·실행 시작과, 필요한 선택창으로 안내하는 다음 할 일을 구분한다. r151을 폐기하거나 안내 클릭을 실제 업무 실행으로 합치지 않는다.",
+      "wholeDocumentSuperseded": false
+    },
+    {
+      "before": [
+        "focus-relax-shared-management.design.r146.md",
+        "multi-role-minigames-and-realistic-recipes.design.r147.md",
+        "role-perspective-research-and-relaxed-observation.design.r242.md"
+      ],
+      "after": "next-todo-fire-to-center-observation.design.r245.md",
+      "relation": "ExtendsInScope",
+      "scopeKo": "r250의 규칙 기반 관찰·선택적 개입과 기본 수익/직접 수행 보너스·복귀를 유지한다. r251은 현재 기능의 턴 전 방향 결정·턴 후 현장 수행을 분류하고 새 NextTodo의 화=계획 판정/검수·제조·배차 담기를 조정 대상으로 남긴다. 구간별 라우팅·미니게임/보너스·시안/실제 검증은 후속이다.",
       "wholeDocumentSuperseded": false
     }
   ],
@@ -5789,7 +5968,7 @@
     "end": "<!-- preserved-original-body:end -->"
   },
   "organizedAtUtc": "2026-11-14T10:27:58.670124+09:00",
-  "updatedAtUtc": "2026-11-15T11:41:01.370691+00:00",
+  "updatedAtUtc": "2026-11-16T08:04:51.803523+00:00",
   "productionReturns": [
     {
       "kind": "original_model_prototype",
