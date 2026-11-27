@@ -2,6 +2,8 @@
 
 2026-11-20 KST · `CoreConceptHierarchyProposed / StationFirstDirectionConfirmed / NotReadyToDispatch`
 
+2026-11-27 기준 도시의 단위와 이웃 운영의 현행 방향은 [행정동 도시와 이웃 AI r1](topics/dong-cities-and-neighboring-operators.plan.r1.md)에서 읽는다. 행정동을 도시로 두고, 역은 연결점으로 활용하는 안이다. 아래는 r314 당시의 개념과 근거다.
+
 플레이어는 **역을 골라 주변을 보고, 지사를 운영하며, 주문 한 건의 결과를 확인한다.** 이 문서는 지도·사업·업무·성장이 각각 무엇을 가리키는지 정리한다. 화면 배치와 규칙의 기준은 연결한 기획에서 이어 간다. [화면 탑다운 r259](top-down-screen-hierarchy.design.r259.md) · [구 지도 경영 r312](hongdal-place-district-board-release-map.design.r312.md) · [역 중심 첫 플레이 r313](hongdal-place-station-first-loop.design.r313.md)
 
 ## 한눈에 보는 개념 트리

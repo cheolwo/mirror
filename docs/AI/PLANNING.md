@@ -10,7 +10,7 @@
 
 ## 최상단 플레이 원칙 — 역지사지
 
-**[역지사지 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warmth-perspective-taking-and-shared-light.direction.r269.md#역지사지-r1--모든-업무에-적용하는-플레이-원칙)** · 같은 일을 상대의 입장에서 보고, 그 사정을 내 다음 결정에 반영한다. 역할·업무 OS·지도·결산에 공통으로 적용한다.
+**[역지사지 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/warmth-perspective-taking-and-shared-light.direction.r269.md#역지사지-r2--기존-역할-앱에서-이어받는-업무)** · 기존 역할 앱의 업무 단계와 인계를 홍달 모바일의 같은 업무 관찰로 연결하는 제안이다. 첫 복귀 카드의 정보는 `Asked`다.
 
 ## 게임의 경영 목표 — 욕심과 양심의 조화
 
@@ -55,15 +55,19 @@
 
 [주제별 현재 판과 원문](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/README.md). 각 주제는 `r1`에서 시작한다. 새 결정은 해당 주제의 판만 올린다.
 
+[행정동 도시와 이웃 AI r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/dong-cities-and-neighboring-operators.plan.r1.md) · 행정동 도시와 자율 이웃 운영의 방향을 기록했다. 지도 관찰과 턴 기획을 이어받고 두 동의 첫 관계는 `Asked`다.
+
 [전국 산업·생활 자료 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/national-industry-and-livelihood-data.plan.r1.md#전국-산업생활-자료-r2--지도-관찰부터) · 한국 주요 분야의 지도 관찰을 먼저 준비한다. 첫 플레이 장면과 규칙 연결은 후속이다.
 
 [원두 유통 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/coffee-one-cup-chain-and-multiscale-balance.design.r214.md#원두-유통-r1--원두가-온-길을-보고-거래한다) · 카페 점주가 원두의 이동을 관찰하고 원할 때 납품 조건을 고른다. 국내 볶은 원두의 발주·입고 한 건을 첫 검토로 제안했다.
 
 [총괄 관찰 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md#총괄-관찰-r1--구-지도의-역할-레이어) · 시작 역할로 고른 뒤 구 지도에서 업무·지역 데이터 레이어를 조절한다. 첫 진입의 기본 레이어는 `Asked`다.
 
-[입장 카드와 자료 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r1.md) · 입장별 첫 질문과 자료를 연구한다. 같은 배달 한 건에서 픽업 대기를 보는 첫 장면은 `Asked`다. 상위 [역할 관찰 기획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md).
+[입장 카드와 자료 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r2.md) · 같은 주문의 도착·픽업 기록과 가상 비교 시안을 준비했다. 첫 장면은 `Asked`다. 상위 [역할 관찰 기획](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/role-perspective-research-and-relaxed-observation.design.r242.md).
 
-[입장별 플레이와 정보 발견 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-information-discovery.plan.r1.md) · 행동과 상황에 따라 정보를 펼치는 플레이 표현. [입장 카드와 자료](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r1.md)의 연결 기획 · `MapPinBehaviorAsked / NotReadyToDispatch`.
+[입장별 플레이와 정보 발견 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-information-discovery.plan.r2.md) · 기존의 간단한 조작을 익힌 뒤 지도에서 살핀 조건으로 다른 운영 선택을 하는 방향이다. [입장 카드와 자료](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-card-perspective-data.plan.r2.md)의 연결 기획 · `FirstMapComparisonPromptAsked / NotReadyToDispatch`.
+
+[입장별 타일 자료 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/stance-tile-data.plan.r1.md) · 같은 칸에 입장별 첫 자료·추가 조회·업무 기록을 제안한다. 9개 역할의 자료 대장과 9가지 수집 결과는 [Claude 인계](Handoffs/2026-11-26-Codex-타일자료수집-반환.md) · `Proposed / NotReadyToDispatch`.
 
 [절기별 디오라마 관찰 r2](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/topics/seasonal-diorama-observation.plan.r2.md) · 사가정시장의 대서·입동 첫 장면을 선택했다. [비교 시안과 검증](Handoffs/2026-11-24-Codex-사가정시장-절기비교-1차.md) · `BrowserPrototypeVerified / UnityDispatchPending`.
 
@@ -72,6 +76,8 @@
 [사가정 URP와 전국 동 디오라마 r2](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-urp-dong-detail.plan.r2.md) · 항목별 출처 범례 확정. 사가정 Windows 격리 렌더링 비교 완료, 제품 적용 검토 대기. [S1 인계와 검증 명세](Handoffs/2026-11-24-Codex-인계-사가정-URP-S1-격리시험.md) · [실행 반환](Handoffs/2026-11-24-Codex-사가정-URP-S1-실행반환.md).
 
 [사가정 건물 외형 r1](Planning/시스템/PLAN-SYSTEM-STATION-AREA-DIORAMA-MODULES/sagajeong-building-facades.proposal.r1.md) · URP 후속 검토. 정면·층별 창·옥상의 유형별 외형과 첫 비교 표본.
+
+[동 단위 전투의 지휘 역할 r1](Planning/시스템/PLAN-SYSTEM-ADMIN-DONG-DIORAMA/dong-command-perspectives.research.r1.md) · 동 디오라마 2.0에서 같은 가상 사건을 분대장·중대장·대대장으로 보는 시안 연구. `ResearchDraft / NotReadyToDispatch`.
 
 - 이익을 돌려주는 방식의 문답: [이익 환류 r1](Planning/시스템/PLAN-SYSTEM-REGIONAL-OPERATOR-SIMULATION/perspectives/p01-delivery-platform-east-seoul.r321.md#12-r325-플랫폼의-이익이-다시-순환하는-방향) · `PlatformBenefitCirculationDirectionRequested / BeneficiariesAndAllocationUndecided / RiderFirstReturnAsked / NotReadyToDispatch`. 배분 대상·방식과 구현은 미정이다.
 - 게임: **홍달 플레이스** — 배달 플랫폼 경영(r311)

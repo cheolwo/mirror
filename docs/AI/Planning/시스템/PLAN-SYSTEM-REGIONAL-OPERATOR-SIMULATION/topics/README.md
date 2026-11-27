@@ -12,8 +12,11 @@
 
 | 주제별 현재 판 | 맡는 범위와 현재 상태 | 이어받는 원문 |
 | --- | --- | --- |
-| **역지사지 r1** | 모든 업무에서 상대의 사정을 보고 내 다음 결정과 상대가 받은 결과로 잇는다. 첫 주문 카드에 표시할 내용은 `Asked`다. | [전체 적용 원칙](../warmth-perspective-taking-and-shared-light.direction.r269.md#역지사지-r1--모든-업무에-적용하는-플레이-원칙) |
+| **역지사지 r2** | 각 역할 앱에서 같은 업무를 읽는 방식을 모바일 관찰에 활용한다. 첫 주문 복귀 카드에 표시할 내용은 `Asked`다. | [역할 앱 적용안](../warmth-perspective-taking-and-shared-light.direction.r269.md#역지사지-r2--기존-역할-앱에서-이어받는-업무) · [입장 카드와 자료 r2](stance-card-perspective-data.plan.r2.md) |
 | **관찰과 개입 r1** | 모든 역할에 적용하는 최상단 원칙. 관찰하거나 원하는 일에 개입하는 방식은 확정. 첫 진입 모드와 역할별 보상은 상세 기획에서 결정한다. | [참여 상위 기획 r328](../optional-observation-and-intervention.design.r328.md) · [개념 트리 r314](../hongdal-place-core-concepts.design.r314.md) |
+| **행정동 도시와 이웃 AI r1** | 행정동을 도시 단위로 두고 이웃 AI도 스스로 움직인다. 편하게 한 턴씩 보는 두 동의 첫 관계는 `Asked`다. | [현행 기획](dong-cities-and-neighboring-operators.plan.r1.md) · [턴 전·후 기준](../next-todo-fire-to-center-observation.design.r245.md) |
+| **입장별 타일 자료 r1** | 9개 입장에 자료의 표시 순서·원래 공간 단위·출처를 연결한다. 첫 사례는 사가정역 북동 세부칸의 기사·점주·경영자 비교다. `Proposed / NotReadyToDispatch`. | [현행 기획](stance-tile-data.plan.r1.md) · [자료 수집 인계](../../../../Handoffs/2026-11-26-Codex-타일자료수집-반환.md) |
+| **입장별 플레이와 정보 발견 r2** | 기존 조작을 재사용해 간단히 시작하고, 지도에서 본 조건에 따라 운영을 고른다. 첫 비교 진입은 `Asked`다. | [현행 기획](stance-information-discovery.plan.r2.md) · [행정동 도시와 이웃 AI](dong-cities-and-neighboring-operators.plan.r1.md) |
 | **거점 경영 목표 r5** | 각 장에서 서로 다른 OS를 발전시키며 두 승리 조건을 채운다. 전체 캠페인의 마지막 목표는 모든 OS의 운영과 필수 인계다. OS별 첫 운영 기준은 `Asked`다. | [OS 발전에서 플랫폼 승리까지](../daekan-participant-awakening-and-income.proposal.r133.md#거점-경영-목표-r5--os-발전에서-플랫폼-승리까지) · [각 장의 승리 조건 r4](../daekan-participant-awakening-and-income.proposal.r133.md#거점-경영-목표-r4--각-장의-승리-조건) |
 | **구 지도와 표현 r2** | 현실 자료 관찰을 우선한다. 전국 중랑구→사가정역→면목제3·8동을 첫 비교로 대조했고, 한 화면에서 잇는 방식과 기본 지표는 미정이다. | [현실 자료 관찰 우선](../hongdal-place-map-observation-first.design.r315.md#구-지도와-표현-r2--현실-자료를-먼저-관찰한다) · [구 지도 r312](../hongdal-place-district-board-release-map.design.r312.md) · [그래픽 기본 r323](../perspectives/p01-delivery-platform-east-seoul.r321.md#10-r323-그래픽-기본--역사-문양-아이콘과-흐르는-빛-알갱이) |
 | **절기별 디오라마 관찰 r2** | 사가정시장 대서·입동 첫 장면을 선택했고 브라우저에서 비교·복귀를 확인했다. Unity 연결은 대기다. | [현행 기획](seasonal-diorama-observation.plan.r2.md) · [첫 제작 반환](../../../../Handoffs/2026-11-24-Codex-사가정시장-절기비교-1차.md) · [r1](seasonal-diorama-observation.plan.r1.md) |
