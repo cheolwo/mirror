@@ -129,6 +129,18 @@ class PublicMapTransportTests(unittest.TestCase):
                 with self.assertRaisesRegex(transport.IntakeError, "^vworld_domain_missing$"):
                     transport.credentials(self.catalog["parcels_bbox"])
 
+    def test_vworld_app_key_allows_unregistered_domain(self):
+        with TemporaryDirectory() as directory, patch.dict(os.environ, {"VWORLD_KEY_TYPE": "APP"}, clear=True), \
+                patch.object(transport.Path, "home", return_value=Path(directory)):
+            secrets = Path(directory) / "secrets"
+            secrets.mkdir()
+            (secrets / "vworld_key.txt").write_text("fixture-app-key", encoding="utf-8")
+            operation = self.catalog["parcels_bbox"]
+            self.assertEqual(transport.credentials(operation), {"key": "fixture-app-key"})
+            with patch.dict(os.environ, {"VWORLD_DOMAIN": "https://example.org"}):
+                self.assertEqual(transport.credentials(operation),
+                                 {"key": "fixture-app-key", "domain": "https://example.org"})
+
     def test_credentials_can_reuse_existing_government_configuration(self):
         with TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=True), \
                 patch.object(transport.Path, "home", return_value=Path(directory)), \

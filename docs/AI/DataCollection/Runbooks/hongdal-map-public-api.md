@@ -29,7 +29,7 @@ python -B -X utf8 eng/data-collection/map_public_api.py list
 python -B -X utf8 eng/data-collection/map_public_api.py status
 ```
 
-공공데이터포털 키는 `DATA_GO_KR_KEY` 환경변수, `%USERPROFILE%\secrets\data_go_kr_key.txt`의 Decoding 키, Ssalddel의 기존 로컬 User Secrets `PublicData:DataGoKrServiceKey` 순으로 읽는다. 브이월드는 별도 `VWORLD_KEY` 또는 `%USERPROFILE%\secrets\vworld_key.txt`와 발급 도메인 `VWORLD_DOMAIN`을 사용한다.
+공공데이터포털 키는 `DATA_GO_KR_KEY` 환경변수, `%USERPROFILE%\secrets\data_go_kr_key.txt`의 Decoding 키, Ssalddel의 기존 로컬 User Secrets `PublicData:DataGoKrServiceKey` 순으로 읽는다. 브이월드는 별도 `VWORLD_KEY` 또는 `%USERPROFILE%\secrets\vworld_key.txt`를 읽는다. 웹용 키의 `VWORLD_DOMAIN`에는 등록 URL을 넣는다. 등록 URL이 없는 APP 키는 조회할 PowerShell 창에서 `$env:VWORLD_KEY_TYPE = 'app'`을 설정한다. 이때 `VWORLD_DOMAIN`이 비어 있으면 요청에서 도메인을 생략한다. [브이월드 공식 명세](https://www.vworld.kr/dev/v4dv_2ddataguide2_s002.do?svcIde=cadastral&apiVer=2)
 
 ```powershell
 python -B -X utf8 eng/data-collection/map_public_api.py collect building_titles --param sigunguCd=11260 --param bjdongCd=10100 --rows 3

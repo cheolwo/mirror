@@ -141,9 +141,11 @@ def credentials(operation):
     secret = {operation["keyParam"]: key}
     if vworld:
         domain = os.environ.get("VWORLD_DOMAIN", "").strip()
-        require(domain and len(domain) <= 240 and not any(c.isspace() for c in domain),
-                "vworld_domain_missing", blocked=True)
-        secret["domain"] = domain
+        app_key = os.environ.get("VWORLD_KEY_TYPE", "").strip().lower() == "app"
+        if domain or not app_key:
+            require(domain and len(domain) <= 240 and not any(c.isspace() for c in domain),
+                    "vworld_domain_missing", blocked=True)
+            secret["domain"] = domain
     return secret
 
 
